@@ -7,18 +7,21 @@
 $baseurl=$_SERVER['HOST_NAME'];
 $base=array_slice(explode(".",$baseurl),-2);
 $cookiename=implode(".",$base);
-$cookiename=str_replace(" ","",$title);
 $cookieuser=$cookiename."_user";
 $cookieauth=$cookiename."_auth";
 $cookiealg=$cookiename."_alg";
 $cookiepic=$cookiename."_pic";
 
+require_once('CONFIG.php');
 require_once('handlers/login_functions.php');
 require_once('handlers/functions.php');
 require_once('handlers/db_hook.php');
 require_once('handlers/xml.php');
 
+global $default_table;
+
 $xml=new Xml;
+$user=new UserFunctions;
 
 $alt_forms="<div id='alt_logins'>
 <!-- OpenID, Google, Twitter, Facebook -->
@@ -43,7 +46,7 @@ if($_REQUEST['q']=='submitlogin')
   {
     if(!empty($_POST['username']) && !empty($_POST['password']))
       { 
-        $res = lookupUser($_POST['username'], $_POST['password'],true);
+        $res = $user->lookupUser($_POST['username'], $_POST['password'],true);
         if($res[0] !==FALSE)
           {
             // Successful login
@@ -51,7 +54,7 @@ if($_REQUEST['q']=='submitlogin')
             $id=$userdata['id'];
             echo "<h3>Welcome back, ".$xml->getTagContents($userdata['dec_name'],"<fname>")."</h3>"; //Welcome message
 		       
-            $cookie_result=createCookieTokens($userdata,$title);
+            $cookie_result=$user->createCookieTokens($userdata,$title);
             if(!$cookie_result['status']) 
               {
                 echo "<div class='error'>".$result['error']."</div>";
@@ -138,8 +141,8 @@ if($_REQUEST['q']=='submitlogin')
                     $userdata=mysqli_fetch_assoc($result);
                     $id=$userdata['id'];
                   }
-                $query="UPDATE validusers SET dtime=".microtime_float()." WHERE id=$id";
-                $query2="UPDATE validusers SET disabled=true WHERE id=$id";
+                $query="UPDATE `$default_table` SET dtime=".$user->microtime_float()." WHERE id=$id";
+                $query2="UPDATE `$default_table` SET disabled=true WHERE id=$id";
                 $l=openDB();
                 $result1=mysqli_query($l,$query);
                 if(!$result1) echo "<p class='error'>".mysqli_error($l)."</p>";
@@ -168,7 +171,6 @@ else if($_REQUEST['q']=='create')
     // display login form
     // include a captcha and honeypot
     require_once('handlers/recaptchalib.php');
-    require_once('CONFIG.php');
     if(!empty($recaptcha_public_key) && !empty($recaptcha_private_key))
       {
 
@@ -246,10 +248,10 @@ else if($_REQUEST['q']=='create')
                       {
                         if(preg_match('/(?=^.{6,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',$_POST['password']) || strlen($_POST['password'])>20) // validate email, use in validation to notify user.
                           {
-                            $res=createUser($_POST['username'],$_POST['password'],$_POST['name'],$_POST['dname']);
+                            $res=$user->createUser($_POST['username'],$_POST['password'],$_POST['name'],$_POST['dname']);
                             if($res[0]) 
                               {
-                                $cookie_result=createCookieTokens($res,$title);
+                                $cookie_result=$user->createCookieTokens($res,$title);
                                 echo "<h3>".$res[1]."</h3><p>Now, let's flesh out your profile. <a href='edit.php'>Continue &#187;</a>.</p>"; //jumpto1
                                 // email user
                                 $to=$_POST['username'];
@@ -304,7 +306,7 @@ else if($_REQUEST['confirm']!=null)
                 $status='activated';
 			       
               }
-            $query="UPDATE validusers SET flag=$flag WHERE id=$id";
+            $query="UPDATE `$default_table` SET flag=$flag WHERE id=$id";
             $l=openDB();
             $result=execAndCloseDB($l,$query);
             if(!$result) echo "<p class='error'>" . mysqli_error($l) . "</p>";

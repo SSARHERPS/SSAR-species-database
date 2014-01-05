@@ -3,7 +3,7 @@
 class UserFunctions {
 
 
-  private function microtime_float()
+  public function microtime_float()
   {
     list($usec, $sec) = explode(" ", microtime());
     return ((float)$usec + (float)$sec);
@@ -289,7 +289,81 @@ class UserFunctions {
   }
 
 
+  public function getUserPicture($id,$path)
+  {
+    if(substr($path,-1)!="/") $path=$path."/";
+    $valid_ext=array('jpg','jpeg','png','bmp','gif');
+    foreach($valid_ext as $ext)
+      {
+        $file=$id.".".$ext;
+        if(file_exists($path.$file)) return $path.$file;
+      }
+    return $path."default.jpg";
+  }
 
+  public function validateUser($userid,$hash,$strong=false,$detail=false)
+  {
+    // return true or false based on user validation. 
+    // Prevent ajax or post call manually -- has to be called from a webpage
+    // maybe this should check the cookies?
+    /*
+      Notes: This does not prevent inspected HTML data on a hacked account. This ensures that either:
+      1) The person gained access to the account
+      2) The person hacked both the database and the webserver
+    */
+    $result=lookupItem($userid,'hardlink',null,null,false);
+    if($result!==false)
+      {
+        global $authsalt;
+        $userdata=mysqli_fetch_assoc($result);
+        $salt=$userdata['salt'];
+        $data=$authsalt.$userid.$salt;
+        $conf=sha1($data);
+        // possibly compare to the cookie
+        //$retval = $strong!==false ? true && doesThis($strong,$userid):true;
+        if($conf==$hash) return $retval;
+      }
+    if($detail) return array("uid"=>$userid,"auth"=>$authsalt,"salt"=>$salt,"conf"=>$conf,"given_conf"=>$hash);
+    return false;
+  }
 
+  public function createCookieTokens($userdata,$title) {
+    $id=$userdata['id'];
+    //Set a cookie
+    $baseurl=$_SERVER['HOST_NAME'];
+    $base=array_slice(explode(".",$baseurl),-2);
+    $cookiename=implode(".",$base);
+    $domain=".".substr($baseurl,strpos($baseurl,'.'));
+    $expire=time()+3600*24*7; // one week
+    // Create a one-time key, store serverside
+    require_once('stronghash/php-stronghash.php');
+    require_once('handlers/db_hook.php');
+    $hash=new Stronghash;
+    $otsalt=$hash->genUnique();
+    //store it
+    global $default_table;
+    $query="UPDATE `$default_table` SET cookie_key='$otsalt' WHERE id='$id'";
+    $l=openDB();
+    $result=mysqli_query($l,$query);
+    if(!$result) return array(false,'status'=>false,'error'=>"<p>".myslqi_error($l)."<br/><br/>ERROR: Could not log in.</p>");
+    $value_create=$userdata['salt'].$otsalt.$_SERVER['REMOTE_ADDR']; 
+    // authenticated since last login. Nontransposable outside network.
+    $value=sha1($value_create);
+    $cookieuser=$cookiename."_user";
+    $cookieauth=$cookiename."_auth";
+    $cookiealg=$cookiename."_alg";
+    $cookiepic=$cookiename."_pic";
+    /*echo "<pre>";
+      echo "Cookie Info: $cookieuser $cookiealg $cookiepic \n $cookieauth :";
+      print_r($value);
+      echo "/<pre>";*/
+    setcookie($cookieauth,$value['hash'],$expire);
+    setcookie($cookiealg,$value['algo'],$expire);//,null,$domain);
+    setcookie($cookieuser,$userdata['username'],$expire);//,null,$domain);
+    $path=$this->getUserPicture($userdata['id'],'userdata/profilepics');
+    setcookie($cookiepic,$path,$expire);//,null,$domain);
+    return array(true,'status'=>true,'user'=>"{ $cookieuser :".$userdata['username']."}",'auth'=>"{ $cookieauth :".$value['hash']."}",'algo'=>"{ $cookiealg :".$value['algo']."}");
+  }
+  
 }
 ?>

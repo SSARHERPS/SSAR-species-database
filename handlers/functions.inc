@@ -3,11 +3,7 @@
 include_once('handlers/crypt_functions.php');
 include_once('handlers/xml.php');
 
-function microtime_float()
-{
-  list($usec, $sec) = explode(" ", microtime());
-  return ((float)$usec + (float)$sec);
-}
+
 
 function curPageURL() {
   $pageURL = 'http';
@@ -51,92 +47,6 @@ function dirListPHP ($directory,$filter=null)
 }
 
 
-function lookupUser($username,$pw,$return=false)
-{
-  // check it's a valid email! validation skipped.
-  $xml=new Xml;
-  $result=lookupItem($username,'username',null,null,false);
-  $userdata=mysqli_fetch_assoc($result);
-  if($result!==false && is_numeric($userdata['id']))
-    {
-      /*    echo "<pre>Lookup User Function for '$username' ..\n";
-            print_r($userdata);
-            echo "\nResult data:\n";
-            print_r($result);
-            echo "</pre>";*/
-      // check password
-      require_once('stronghash/php-stronghash.php');
-      $hash=new Stronghash;
-      $data=json_decode($userdata['password'],true);
-      if($hash->verifyHash($pw,$data))
-        {
-          if($userdata['flag'] && !$userdata['disabled']) 
-            {
-              //This user is OK and not disabled, nor pending validation
-              if(!$return) 
-                {
-                  //Return decrypted userdata, if applicable
-                  $decname=decryptThis($userdata['name'],$pw,$salt);
-                  if(empty($decname))$decname=$userdata['name'];
-                  return array(true,$decname);
-                }
-              else 
-                {
-                  $decname=decryptThis($userdata['name'],$pw,$salt);
-                  if(empty($decname))$decname=$userdata['name'];
-                  $userdata['dec_name']=$decname;
-                  $returning=array(true,$userdata);
-                  return $returning;
-                }
-            }
-          else 
-            {
-              if(!$userdata['flag'])return array(false,'Your login information is correct, but your account is still being validated, or has been disabled. Please try again later.');
-              if($userdata['disabled'])
-                {
-                  // do a time check
-                  if($userdata['dtime']+3600>microtime_float()) 
-                    {
-                      $rem=intval($userdata['dtime'])-intval(microtime_float())+3600;
-                      $min=$rem%60;
-                      $sec=$rem-60*$min;
-                      return array(false,'Your account has been disabled for too many failed login attempts. Please try again in '.$min.' minutes and '.$sec.' seconds.');
-                    }
-                  else 
-                    {
-                      // Clear login disabled flag
-                      global $default_table;
-                      $query1="UPDATE `$default_table` SET disabled=false WHERE id=".$userdata['id'];
-                      $res1=openDB();
-                      $result=execAndCloseDB($query1);
-                    }
-                }
-              // All checks passed.
-              if(!$return) 
-                {
-                  //echo "<p>Return was false.</p>";
-                  $decname=decryptThis($userdata['name'],$pw,$salt);
-                  if(empty($decname))$decname=$userdata['name'];
-                  return array(true,$decname);
-                }
-              else 
-                {
-                  $decname=decryptThis($userdata['name'],$pw,$salt);
-                  if(empty($decname))$decname=$userdata['name'];
-                  $userdata['dec_name']=$decname;
-                  $returning=array(true,$userdata);
-                  return $returning;
-                }
-            }
-        }
-      else
-        {
-          return array(false,'Bad password');
-        }
-      // end good username loop 
-    }
-  else return array(false,'Unrecognized username');
-}
 
 
 function displayDebug($string)
@@ -158,9 +68,6 @@ function datestamp()
 
 
 
-
-
-
 function array_find($needle, $haystack, $search_keys = false, $strict = false) 
 {
   if(!is_array($haystack)) return false;
@@ -174,18 +81,6 @@ function array_find($needle, $haystack, $search_keys = false, $strict = false)
       else if(@strpos($what, $needle)!==false) return $key;
     }
   return false;
-}
-
-function getUserPicture($id,$path)
-{
-  if(substr($path,-1)!="/") $path=$path."/";
-  $valid_ext=array('jpg','jpeg','png','bmp','gif');
-  foreach($valid_ext as $ext)
-    {
-      $file=$id.".".$ext;
-      if(file_exists($path.$file)) return $path.$file;
-    }
-  return $path."default.jpg";
 }
 
 
@@ -298,31 +193,7 @@ function getNestedKey($array,$key)
   return false;
 }
 
-function validateUser($userid,$hash,$strong=false,$detail=false)
-{
-  // return true or false based on user validation. 
-  // Prevent ajax or post call manually -- has to be called from a webpage
-  // maybe this should check the cookies?
-  /*
-    Notes: This does not prevent inspected HTML data on a hacked account. This ensures that either:
-    1) The person gained access to the account
-    2) The person hacked both the database and the webserver
-  */
-  $result=lookupItem($userid,'hardlink',null,null,false);
-  if($result!==false)
-    {
-      global $authsalt;
-      $userdata=mysqli_fetch_assoc($result);
-      $salt=$userdata['salt'];
-      $data=$authsalt.$userid.$salt;
-      $conf=hash('sha512',$data);
-      // possibly compare to the cookie
-      $retval = $strong!==false ? true && doesThis($strong,$userid):true;
-      if($conf==$hash) return $retval;
-    }
-  if($detail) return array("uid"=>$userid,"auth"=>$authsalt,"salt"=>$salt,"conf"=>$conf,"given_conf"=>$hash);
-  return false;
-}
+
 
 function encode64($data) { return base64_encode($data); }
 function decode64($data) 
@@ -367,37 +238,5 @@ function smart_decode64($data,$clean_this=true) {
   return $prepped_data;
 }
 
-function createCookieTokens($userdata,$title) {
-  require_once('base.inc');
-  $id=$userdata['id'];
-  //Set a cookie
-  $cookiename=str_replace(" ","",$title);
-  $domain=".".substr($baseurl,strpos($baseurl,'.'));
-  $expire=time()+3600*24*7; // one week
-  // Create a one-time key, store serverside
-  $otsalt=genUnique();
-  //store it
-  global $default_table;
-  $query="UPDATE `$default_table` SET cookie_key='$otsalt' WHERE id='$id'";
-  $l=openDB();
-  $result=mysqli_query($l,$query);
-  if(!$result) return array(false,'status'=>false,'error'=>"<p>".myslqi_error($l)."<br/><br/>ERROR: Could not log in.</p>");
-  $value_create=$userdata['salt'].$otsalt.$_SERVER['REMOTE_ADDR']; 
-  // authenticated since last login. Nontransposable outside network.
-  $value=hash('sha512',$value_create);
-  $cookieuser=$cookiename."_user";
-  $cookieauth=$cookiename."_auth";
-  $cookiealg=$cookiename."_alg";
-  $cookiepic=$cookiename."_pic";
-  /*echo "<pre>";
-    echo "Cookie Info: $cookieuser $cookiealg $cookiepic \n $cookieauth :";
-    print_r($value);
-    echo "/<pre>";*/
-  setcookie($cookieauth,$value['hash'],$expire);
-  setcookie($cookiealg,$value['algo'],$expire);//,null,$domain);
-  setcookie($cookieuser,$userdata['username'],$expire);//,null,$domain);
-  $path=getUserPicture($userdata['id'],'userdata/profilepics');
-  setcookie($cookiepic,$path,$expire);//,null,$domain);
-  return array(true,'status'=>true,'user'=>"{ $cookieuser :".$userdata['username']."}",'auth'=>"{ $cookieauth :".$value['hash']."}",'algo'=>"{ $cookiealg :".$value['algo']."}");
-}
+
 ?>
