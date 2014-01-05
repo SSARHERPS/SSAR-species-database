@@ -67,7 +67,7 @@ function lookupUser($username,$pw,$return=false)
       // check password
       require_once('stronghash/php-stronghash.php');
       $hash=new Stronghash;
-      $data=json_decode($userdata['password']);
+      $data=json_decode($userdata['password'],true);
       if($hash->verifyHash($pw,$data))
         {
           if($userdata['flag'] && !$userdata['disabled']) 

@@ -3,6 +3,7 @@
 function createUser($username,$pw_in,$name,$dname,$zip=null)
 {
   // Send email for validation
+  require_once('handlers/db_hook.inc');
   $user=sanitize($username); // fix this
   //$user=$username;
   $preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
@@ -20,12 +21,12 @@ function createUser($username,$pw_in,$name,$dname,$zip=null)
       if($data['username']==$username) return array(false,'Your chosen username is already taken. Please try again.');
     }
   require_once('stronghash/php-stronghash.php');
+  $hash=new Stronghash;
   $creation=microtime_float();
-  $salt=genUnique(); // Get a unique salt for the user. Long hash.
-  $input=$salt . $pw_in . $creation;
-  $pw1=sha($input,$salt);
-  $pw_store=$pw1['hash'];
+  $pw1=$hash->hasher($pw_in);
+  $pw_store=json_encode($pw1);
   $algo=$pw1['algo'];
+  $salt=$pw1['salt'];
   if(!empty($pw1['rounds'])) $rounds="<rounds>".$pw1['rounds']."</rounds>";
   $data_init="<xml><algo>$algo</algo>$rounds</xml>";
   $ne=encryptThis($name,$pw_in,$salt); // only encrypt if requested, then put in secdata
@@ -33,17 +34,19 @@ function createUser($username,$pw_in,$name,$dname,$zip=null)
   $names="<xml><fname>$name</fname><dname>$dname</dname></xml>";
   $hardlink=sha1($salt.$creation);
   //echo "<pre>Storing:\n";
-  $fields=array('username','pass','creation','salt','name','flag','disabled','dtime','cookie_key','data','secdata','dblink','lat','lng','hidden','news','hardlink','friendlist','prefs');
+  $fields=array('username','password','pass_meta','creation','status_tracker','name','flag','admin_flag','su_flag','disabled','dtime','auth_key','data','secdata','special_1','special_2','dblink','defaults','public_key','private_key');
   //print_r($fields);
   //echo "\nwith the following information\n";
-  $store=array($user,$pw_store,$creation,$salt,$names,true,false,0,'',$data_init,$sdata_init,'<xml></xml>','','',false,false,$hardlink,'<xml></xml>','<xml></xml>'); // set flag to FALSE if authentication wanted.
+  $store=array($user,$pw_store,'',$creation,'',$names,true,false,false,false,0,'',$data_init,$sdata_init,'','',$hardlink,'','',''); // set flag to FALSE if authentication wanted.
   //print_r($store);
   $test_res=addItem($fields,$store);
   if($test_res)
     {
       // Get ID value
-      $result=lookupItem($user,'username','validusers',null,false,true);
-      echo "\nLooking up $user ...obtained \n ";
+      require_once('CONFIG.php');
+      global $default_table;
+      $result=lookupItem($user,'username',$default_table,null,false,true);
+      //echo "\nLooking up $user ...obtained \n ";
       $data=@mysqli_fetch_assoc($result);
       $id=$data['id'];
       /*print_r($test_res);
@@ -92,7 +95,7 @@ function createUser($username,$pw_in,$name,$dname,$zip=null)
           // Create a one-time key, store serverside
           $otsalt=genUnique();
           //store it
-          $query="UPDATE validusers SET cookie_key='$otsalt' WHERE id='$id'";
+          $query="UPDATE $default_table SET auth_key='$otsalt' WHERE id='$id'";
           $l=openDB();
           mysqli_query($l,'BEGIN');
           $result=mysqli_query($l,$query);
@@ -115,7 +118,7 @@ function createUser($username,$pw_in,$name,$dname,$zip=null)
               mysqli_close($l);
               $value_create=$userdata['salt'].$otsalt.$_SERVER['REMOTE_ADDR']; 
               // authenticated since last login. Nontransposable outside network.
-              $value=sha($value_create,null,'sha512',false);
+              $value=sha1($value_create);
               $cookieuser=$cookiename."_user";
               $cookieauth=$cookiename."_auth";
               $cookiealg=$cookiename."_alg";
@@ -142,9 +145,9 @@ function createUser($username,$pw_in,$name,$dname,$zip=null)
                       $cookiedebug.=' check-auth';
                       $userdata=mysqli_fetch_assoc($result);
                       $salt=$userdata['salt'];
-                      $unique=$userdata['cookie_key'];
+                      $unique=$userdata['auth_key'];
                       $ip=$_SERVER['REMOTE_ADDR'];
-                      $auth=sha($salt.$unique.$ip,null,'sha512',false);
+                      $auth=sha1($salt.$unique.$ip);
                       if($auth['hash']==$_COOKIE[$cookieauth])
                         {
                           // Good cookie
