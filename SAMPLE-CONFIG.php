@@ -10,6 +10,8 @@ $default_user="";
 $default_password="";
 $sql_url = 'localhost';
 
+$recaptcha_public_key="";
+$recaptcha_private_key="";
 
 $service_email='';
 $minimum_password_length='15';

@@ -159,10 +159,13 @@ else if($_REQUEST['q']=='create')
     // Create a new user
     // display login form
     // include a captcha and honeypot
-    require_once('modular/recaptchalib.php');
-    $publickey = "6LcJDcoSAAAAAIvVXnP3YniCQvHK5JD0Q7xHGl3l"; // you got this from the signup page
-    $recaptcha=recaptcha_get_html($publickey);
-    $createform = "
+    require_once('handlers/recaptchalib.php');
+    require_once('CONFIG.php');
+    if(!empty($recaptcha_public_key) && !empty($recaptcha_private_key))
+      {
+
+        $recaptcha=recaptcha_get_html($recaptcha_public_key);
+        $createform = "
 	    <form id='login' method='post' action='?q=create&amp;s=next'>
               <div class='left'>
 	      <label for='username'>
@@ -202,70 +205,69 @@ else if($_REQUEST['q']=='create')
               <br class='clear'/>
 	      <input type='submit' value='Create' id='createUser_submit' disabled='disabled'/>
 	    </form><br class='clear'/>";
-    $secnotice="<p>You will have the option after login to store your information encrypted on this server.</p><p><small>Remember your security best practices! Do not use the same password you use for other sites. While your information is encrypted and <a href='http://en.wikipedia.org/wiki/Cryptographic_hash_function' $newwindow>hashed</a> with a multiple-round hash function, <a href='http://arstechnica.com/security/2013/05/how-crackers-make-minced-meat-out-of-your-passwords/' $newwindow>passwords are easy to crack!</a></small></p>";
-    $createform.=$secnotice; // comment out if SSL is used.
-    $deferredJS.="$('#password').keypress(function(){checkPasswordLive()});\n$('#password').change(function(){checkPasswordLive()});\n$('#password').keyup(function(){checkPasswordLive()});";
-    $deferredJS.="$('#password2').keypress(function(){checkMatchPassword()});\n$('#password2').change(function(){checkMatchPassword()});\n$('#password2').keyup(function(){checkMatchPassword()});";
+        $secnotice="<p>You will have the option after login to store your information encrypted on this server.</p><p><small>Remember your security best practices! Do not use the same password you use for other sites. While your information is encrypted and <a href='http://en.wikipedia.org/wiki/Cryptographic_hash_function' $newwindow>hashed</a> with a multiple-round hash function, <a href='http://arstechnica.com/security/2013/05/how-crackers-make-minced-meat-out-of-your-passwords/' $newwindow>passwords are easy to crack!</a></small></p>";
+        $createform.=$secnotice; // comment out if SSL is used.
+        $deferredJS.="$('#password').keypress(function(){checkPasswordLive()});\n$('#password').change(function(){checkPasswordLive()});\n$('#password').keyup(function(){checkPasswordLive()});";
+        $deferredJS.="$('#password2').keypress(function(){checkMatchPassword()});\n$('#password2').change(function(){checkMatchPassword()});\n$('#password2').keyup(function(){checkMatchPassword()});";
 
-    if($_REQUEST['s']=='next')
-      {
-        $email_preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
-        if(!empty($_POST['honey'])) 
+        if($_REQUEST['s']=='next')
           {
-            echo "<p class='error'>Whoops! You tripped one of our bot tests. If you are not a bot, please go back and try again. Read your fields carefully!</p>";
-            $_POST['email']='bob';
-          }
-        $privatekey = "6LcJDcoSAAAAAI5UFN3nxZJwrJqeRk46Y6o92GPZ"; //REPLACE THIS KEY
-        $resp = recaptcha_check_answer ($privatekey,
-        $_SERVER["REMOTE_ADDR"],
-        $_POST["recaptcha_challenge_field"],
-        $_POST["recaptcha_response_field"]);
-
-        if (!$resp->is_valid) 
-          {
-            // What happens when the CAPTCHA was entered incorrectly
-            die ("The reCAPTCHA wasn't entered correctly. Go back and try it again." .
-            "(reCAPTCHA said: " . $resp->error . ")
-	    <!-- End <article> -->".include('modular/commonfooter.inc'));
-          } 
-        else 
-          {
-            // Successful verification
-            if(preg_match($email_preg,$_POST['username']))
+            $email_preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
+            if(!empty($_POST['honey'])) 
               {
-                if($_POST['password']==$_POST['password2'])
-                  {
-                    if(preg_match('/(?=^.{6,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',$_POST['password']) || strlen($_POST['password'])>20) // validate email, use in validation to notify user.
-                      {
-                        $res=createUser($_POST['username'],$_POST['password'],$_POST['name'],$_POST['dname']);
-                        if($res[0]) 
-                          {
-                            $cookie_result=createCookieTokens($res,$title);
-                            echo "<h3>".$res[1]."</h3><p>Now, let's flesh out your profile. <a href='edit.php'>Continue &#187;</a>.</p>"; //jumpto1
-                            // email user
-                            $to=$_POST['username'];
-                            $headers  = 'MIME-Version: 1.0' . "\r\n";
-                            $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-                            $headers .= "From: Really Active People <blackhole@reallyactivepeople.com>";
-                            $subject='New Account Creation';
-                            $body = "<p>Congratulations! Your new account has been created. Your username is this email address ($to). We do not keep a record of your password we can access, so please be sure to remember it!</p><p>If you do forget your password, you can <a href='mailto:support@reallyactivepeople.com?subject=Reset%20Password'>email support</a> to reset your password for you with a picture of government ID with your registered name and zip code. All secure data will be lost in the reset.</p>";
-                            if(mail($to,$subject,$body,$headers)) echo "<p>A confirmation email has been sent to your inbox at $to .</p>";
-					   
-                          }
-                        else echo "<p class='error'>".$res[1]."</p><p>Use your browser's back button to try again.</p>";
-                        ob_end_flush();
-                      }
-                    else
-                      { 
-                        echo "<p class='error'>Your password was not long enough (6 characters) or did not match minimum complexity levels (one upper case letter, one lower case letter, one digit or special character). You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least 21 characters. Please go back and try again.</p>";
-                      }
-                  }
-                else echo "<p class='error'>Your passwords did not match. Please go back and try again.</p>";
+                echo "<p class='error'>Whoops! You tripped one of our bot tests. If you are not a bot, please go back and try again. Read your fields carefully!</p>";
+                $_POST['email']='bob';
               }
-            else echo "<p class='error'>Error: Your email address was invalid. Please enter a valid email.</p>";
+            $resp = recaptcha_check_answer ($recaptcha_private_key,
+            $_SERVER["REMOTE_ADDR"],
+            $_POST["recaptcha_challenge_field"],
+            $_POST["recaptcha_response_field"]);
+
+            if (!$resp->is_valid) 
+              {
+                // What happens when the CAPTCHA was entered incorrectly
+                die ("The reCAPTCHA wasn't entered correctly. Go back and try it again." .
+                "(reCAPTCHA said: " . $resp->error . ")");
+              } 
+            else 
+              {
+                // Successful verification
+                if(preg_match($email_preg,$_POST['username']))
+                  {
+                    if($_POST['password']==$_POST['password2'])
+                      {
+                        if(preg_match('/(?=^.{6,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',$_POST['password']) || strlen($_POST['password'])>20) // validate email, use in validation to notify user.
+                          {
+                            $res=createUser($_POST['username'],$_POST['password'],$_POST['name'],$_POST['dname']);
+                            if($res[0]) 
+                              {
+                                $cookie_result=createCookieTokens($res,$title);
+                                echo "<h3>".$res[1]."</h3><p>Now, let's flesh out your profile. <a href='edit.php'>Continue &#187;</a>.</p>"; //jumpto1
+                                // email user
+                                $to=$_POST['username'];
+                                $headers  = 'MIME-Version: 1.0' . "\r\n";
+                                $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+                                $headers .= "From: Really Active People <blackhole@reallyactivepeople.com>";
+                                $subject='New Account Creation';
+                                $body = "<p>Congratulations! Your new account has been created. Your username is this email address ($to). We do not keep a record of your password we can access, so please be sure to remember it!</p><p>If you do forget your password, you can <a href='mailto:support@reallyactivepeople.com?subject=Reset%20Password'>email support</a> to reset your password for you with a picture of government ID with your registered name and zip code. All secure data will be lost in the reset.</p>";
+                                if(mail($to,$subject,$body,$headers)) echo "<p>A confirmation email has been sent to your inbox at $to .</p>";
+					   
+                              }
+                            else echo "<p class='error'>".$res[1]."</p><p>Use your browser's back button to try again.</p>";
+                            ob_end_flush();
+                          }
+                        else
+                          { 
+                            echo "<p class='error'>Your password was not long enough (6 characters) or did not match minimum complexity levels (one upper case letter, one lower case letter, one digit or special character). You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least 21 characters. Please go back and try again.</p>";
+                          }
+                      }
+                    else echo "<p class='error'>Your passwords did not match. Please go back and try again.</p>";
+                  }
+                else echo "<p class='error'>Error: Your email address was invalid. Please enter a valid email.</p>";
+              }
           }
+        else echo $createform;
       }
-    else echo $createform;
   }
 else if($_REQUEST['confirm']!=null)
   {
