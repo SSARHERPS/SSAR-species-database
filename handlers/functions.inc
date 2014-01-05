@@ -1,5 +1,7 @@
 <?php
 
+include_once('handlers/crypt_functions.php');
+
 function microtime_float()
 {
   list($usec, $sec) = explode(" ", microtime());
@@ -25,10 +27,6 @@ function appendQuery($query) {
   if(strpos($url,"?")!==FALSE) $url .= "&amp;" . $query;
   else $url .= "?" . $query;
   return $url;
-}
-
-function isHere($page,$title) {
-  if(strtolower($page) == strtolower($title)) echo " class='here'";
 }
 
 function dirListPHP ($directory,$filter=null) 
