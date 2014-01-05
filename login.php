@@ -321,8 +321,7 @@ else
     echo $login_preamble . $loginform.$loginform_close;
   }
 echo "<script type='text/javascript'>
-  function loadScript(url, callback)
-{
+function loadScript(url, callback) {
     // Adding the script tag to the head as suggested before
     var head = document.getElementsByTagName('head')[0];
     var script = document.createElement('script');
@@ -338,11 +337,6 @@ echo "<script type='text/javascript'>
     head.appendChild(script);
 }
 
-    window.onload = function() {
-        if (!window.jQuery) {
-            loadScript('//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js',lateJS);
-        } 
-    }
 var lateJS= function() {
     try {
         $.getScript('js/base64.js');
@@ -353,7 +347,16 @@ var lateJS= function() {
     }
     catch (e) {
         // failed to load anyway
+        console.log('Failed to load jQuery');
+        // Draw an error
     }
+}
+
+window.onload = function() {
+    if (!window.jQuery) {
+        loadScript('//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js',lateJS);
+    }
+    else lateJS;
 }
 </script>":
 ?>
