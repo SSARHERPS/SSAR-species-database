@@ -1,14 +1,8 @@
 <?php
 /*
- * This file is going to be updated to use the hashing script from 
- * https://github.com/tigerhawkvok/php-stronghash 
- * and fold in authentication from
- * https://github.com/tigerhawkvok/php-multioauth
+ * This is designed to be included in a page, and doesn't have the page framework on its own.
  */
 
-$subtitle = "Login"; 
-$xml_escape=true;
-require('modular/commonheader.inc');
 // Global cookie vars
 $cookiename=str_replace(" ","",$title);
 $cookieuser=$cookiename."_user";
@@ -16,7 +10,7 @@ $cookieauth=$cookiename."_auth";
 $cookiealg=$cookiename."_alg";
 $cookiepic=$cookiename."_pic";
 
-require('modular/login_functions.php');
+require_once('modular/login_functions.php');
 
 $alt_forms="<div id='alt_logins'>
 <!-- OpenID, Google, Twitter, Facebook -->
@@ -326,6 +320,40 @@ else
   {
     echo $login_preamble . $loginform.$loginform_close;
   }
+echo "<script type='text/javascript'>
+  function loadScript(url, callback)
+{
+    // Adding the script tag to the head as suggested before
+    var head = document.getElementsByTagName('head')[0];
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = url;
+
+    // Then bind the event to the callback function.
+    // There are several events for cross browser compatibility.
+    script.onreadystatechange = callback;
+    script.onload = callback;
+
+    // Fire the loading
+    head.appendChild(script);
+}
+
+    window.onload = function() {
+        if (!window.jQuery) {
+            loadScript('//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js',lateJS);
+        } 
+    }
+var lateJS= function() {
+    try {
+        $.getScript('js/base64.js');
+        $.getScript('js/user_common.js');
+        $(document).ready{function(){
+            $deferredJS
+        });
+    }
+    catch (e) {
+        // failed to load anyway
+    }
+}
+</script>":
 ?>
-<!-- End <article> -->
-<?php include('modular/commonfooter.inc'); ?>
