@@ -56,7 +56,7 @@ function lookupUser($username,$pw,$return=false)
   // check it's a valid email! validation skipped.
   $xml=new Xml;
   $result=lookupItem($username,'username',null,null,false);
-  $userdata=@mysqli_fetch_assoc($result);
+  $userdata=mysqli_fetch_assoc($result);
   if($result!==false && is_numeric($userdata['id']))
     {
       /*    echo "<pre>Lookup User Function for '$username' ..\n";
@@ -65,20 +65,13 @@ function lookupUser($username,$pw,$return=false)
             print_r($result);
             echo "</pre>";*/
       // check password
+      require_once('stronghash/php-stronghash.php');
       $salt=$userdata['salt'];
       $creation=$userdata['creation'];
       $input=$salt . $pw . $creation;
       $algo=$xml->getTagContents($userdata['data'],"<algo>");
-      /*
-        if(strpos($algo,"_pbkdf2")!==false || strpos($algo,"_crypt")!==false ) $pw1=sha($input,$salt);
-        else $pw1=sha($input);
-      */
-      // temp for old accounts
-      if($algo=='sha512') $saltin="";
-      else $saltin=$salt;
-      // end temp for old accounts
       $rounds=$xml->getTagContents($userdata['data'],"<rounds>");
-      $pw1=sha($input,$saltin,$algo,false,$rounds);
+      $pw1=sha($input,$salt,$algo,false,$rounds);
       if($algo!=$pw1['algo']) 
         {
           // do it manually if algorithms don't match
@@ -89,7 +82,7 @@ function lookupUser($username,$pw,$return=false)
             }
           else return array(false,"This server does not support hashing algorithm $algo (This server attempted to use ".$pw1['algo'].")");
         }
-      @require_once('modular/pbkdf2.php');
+      require_once('handlers/pbkdf2.php');
       if(slow_equals($pw1['hash'],$userdata['pass']))
         {
           if($userdata['flag'] && !$userdata['disabled']) 
@@ -127,7 +120,8 @@ function lookupUser($username,$pw,$return=false)
                   else 
                     {
                       // Clear login disabled flag
-                      $query1="UPDATE validusers SET disabled=false WHERE id=".$userdata['id'];
+                      global $default_table;
+                      $query1="UPDATE `$default_table` SET disabled=false WHERE id=".$userdata['id'];
                       $res1=openDB();
                       $result=execAndCloseDB($query1);
                     }
@@ -398,7 +392,8 @@ function createCookieTokens($userdata,$title) {
   // Create a one-time key, store serverside
   $otsalt=genUnique();
   //store it
-  $query="UPDATE validusers SET cookie_key='$otsalt' WHERE id='$id'";
+  global $default_table;
+  $query="UPDATE `$default_table` SET cookie_key='$otsalt' WHERE id='$id'";
   $l=openDB();
   $result=mysqli_query($l,$query);
   if(!$result) return array(false,'status'=>false,'error'=>"<p>".myslqi_error($l)."<br/><br/>ERROR: Could not log in.</p>");

@@ -19,6 +19,7 @@ function createUser($username,$pw_in,$name,$dname,$zip=null)
         echo "</pre>";*/
       if($data['username']==$username) return array(false,'Your chosen username is already taken. Please try again.');
     }
+  require_once('stronghash/php-stronghash.php');
   $creation=microtime_float();
   $salt=genUnique(); // Get a unique salt for the user. Long hash.
   $input=$salt . $pw_in . $creation;
