@@ -4,13 +4,21 @@
  */
 
 // Global cookie vars
+$baseurl=$_SERVER['HOST_NAME'];
+$base=array_slice(explode(".",$baseurl),-2);
+$cookiename=implode(".",$base);
 $cookiename=str_replace(" ","",$title);
 $cookieuser=$cookiename."_user";
 $cookieauth=$cookiename."_auth";
 $cookiealg=$cookiename."_alg";
 $cookiepic=$cookiename."_pic";
 
-require_once('modular/login_functions.php');
+require_once('handlers/login_functions.php');
+require_once('handlers/functions.php');
+require_once('handlers/db_hook.php');
+require_once('handlers/xml.php');
+
+$xml=new Xml;
 
 $alt_forms="<div id='alt_logins'>
 <!-- OpenID, Google, Twitter, Facebook -->
@@ -41,7 +49,7 @@ if($_REQUEST['q']=='submitlogin')
             // Successful login
             $userdata=$res[1];
             $id=$userdata['id'];
-            echo "<h3>Welcome back, ".getTagContents($userdata['dec_name'],"<fname>")."</h3>"; //Welcome message
+            echo "<h3>Welcome back, ".$xml->getTagContents($userdata['dec_name'],"<fname>")."</h3>"; //Welcome message
 		       
             $cookie_result=createCookieTokens($userdata,$title);
             if(!$cookie_result['status']) 
