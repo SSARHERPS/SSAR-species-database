@@ -1,16 +1,13 @@
 <?php
 /***
-    Simple DB hooks for a single database site.
-***/
-$default_table='validusers';
-$default_database="mysql_test_reallyactivepeople";
-$default_user="tzi25l7a3t_activ";
-$default_password="90Sj!kog0HhJK59E&r";
-
+ * Core hooks to use for user management
+ * Uses MySQLi as the main interface
+ ***/
+require_once('CONFIG.php');
 
 function openDB($test=false,$user=null,$password=null,$database=null)
 {
-  global $default_database,$default_user,$default_password;
+  global $default_database,$default_user,$default_password,$sql_url;
   if(!is_bool($test) && $database==null)
     {
       $database=$test;
@@ -22,7 +19,7 @@ function openDB($test=false,$user=null,$password=null,$database=null)
   if ($database==null) $database=$default_database;
   if(!$test)
     {
-      if($l=@mysqli_connect('mysql.test.reallyactivepeople.com',$user,$password))
+      if($l=@mysqli_connect($sql_url,$user,$password))
         {
           if(mysqli_select_db($l,$database)) return $l;
         }
@@ -30,7 +27,7 @@ function openDB($test=false,$user=null,$password=null,$database=null)
     }
   else
     {
-      return @mysqli_connect('mysql.test.reallyactivepeople.com',$user,$password);
+      return @mysqli_connect($sql_url,$user,$password);
     }
 }
 
