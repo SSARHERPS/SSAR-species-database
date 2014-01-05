@@ -66,24 +66,9 @@ function lookupUser($username,$pw,$return=false)
             echo "</pre>";*/
       // check password
       require_once('stronghash/php-stronghash.php');
-      $salt=$userdata['salt'];
-      $creation=$userdata['creation'];
-      $input=$salt . $pw . $creation;
-      $algo=$xml->getTagContents($userdata['data'],"<algo>");
-      $rounds=$xml->getTagContents($userdata['data'],"<rounds>");
-      $pw1=sha($input,$salt,$algo,false,$rounds);
-      if($algo!=$pw1['algo']) 
-        {
-          // do it manually if algorithms don't match
-          $hash=@hash($algo,$input);
-          if($hash!==false)
-            {
-              $pw1=array('hash'=>$hash,'algo'=>$algo);
-            }
-          else return array(false,"This server does not support hashing algorithm $algo (This server attempted to use ".$pw1['algo'].")");
-        }
-      require_once('handlers/pbkdf2.php');
-      if(slow_equals($pw1['hash'],$userdata['pass']))
+      $hash=new Stronghash;
+      $data=json_decode($userdata['password']);
+      if($hash->verifyHash($pw,$data))
         {
           if($userdata['flag'] && !$userdata['disabled']) 
             {
@@ -399,7 +384,7 @@ function createCookieTokens($userdata,$title) {
   if(!$result) return array(false,'status'=>false,'error'=>"<p>".myslqi_error($l)."<br/><br/>ERROR: Could not log in.</p>");
   $value_create=$userdata['salt'].$otsalt.$_SERVER['REMOTE_ADDR']; 
   // authenticated since last login. Nontransposable outside network.
-  $value=sha($value_create,null,'sha512',false);
+  $value=hash('sha512',$value_create);
   $cookieuser=$cookiename."_user";
   $cookieauth=$cookiename."_auth";
   $cookiealg=$cookiename."_alg";
