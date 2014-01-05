@@ -29,4 +29,8 @@ defaults
 public_key
 private_key
 creation
+secdata
+data
+disabled
+dtime
 ```
