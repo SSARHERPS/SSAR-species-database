@@ -42,6 +42,8 @@ $loginform = "
 $loginform_close="	      <br/>
 	      <input type='submit' value='Login' id='login_button'/>
 	    </form>$alt_forms<br/><p><small>Don't have an account yet? <a href='login.php?q=create'>Create one</a>!</small></p>";
+$big_login=$login_preabmle.$loginform.$loginform_close;
+$small_login=$loginform.$loginform_close;
 if($_REQUEST['q']=='submitlogin')
   {
     if(!empty($_POST['username']) && !empty($_POST['password']))
