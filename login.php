@@ -18,6 +18,10 @@ require_once('handlers/functions.php');
 require_once('handlers/db_hook.php');
 require_once('handlers/xml.php');
 
+/*
+ * Test the database ...
+ */
+
 global $default_table;
 
 $xml=new Xml;
