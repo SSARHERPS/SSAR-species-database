@@ -85,7 +85,7 @@ if($_REQUEST['q']=='submitlogin')
     if(!empty($_POST['username']) && !empty($_POST['password']))
       { 
         $res = $user->lookupUser($_POST['username'], $_POST['password'],true);
-        if($res[0] !==FALSE)
+        if($res[0] !==false)
           {
             // Successful login
             $userdata=$res[1];
@@ -95,7 +95,8 @@ if($_REQUEST['q']=='submitlogin')
             $cookie_result=$user->createCookieTokens($userdata,$title);
             if(!$cookie_result['status']) 
               {
-                echo "<div class='error'>".$result['error']."</div>";
+                echo "<div class='error'>".$cookie_result['error']."</div>";
+                if($debug) echo "<p>Got a cookie error:<br/></p>".displayDebug($cookie_result);
               }
             else
               {
@@ -153,8 +154,12 @@ if($_REQUEST['q']=='submitlogin')
                     $logged_in=false;
                     $cookiedebug.='cookies not set for '.$domain;
                   }
-                //echo $cookiedebug;
-                header("Refresh: 0; url=$baseurl"); // was at 3
+                if($debug)
+                  {
+                    echo $cookiedebug;
+                    displayDebug($cookie_result);
+                  }
+                else header("Refresh: 0; url=$baseurl"); // was at 3
               }
             //ob_end_flush(); // Flush the buffer, start displaying
 

@@ -269,7 +269,6 @@ class UserFunctions {
                 // All checks passed.
                 if(!$return) 
                   {
-                    //echo "<p>Return was false.</p>";
                     $decname=decryptThis($userdata['name'],$pw,$salt);
                     if(empty($decname))$decname=$userdata['name'];
                     return array(true,$decname);
@@ -332,13 +331,28 @@ class UserFunctions {
     return false;
   }
 
-  public function createCookieTokens($userdata,$title) {
+  public function createCookieTokens($username,$password_or_is_data)
+  {
+    if(is_bool($password_or_is_data)) $userdata=$username;
+    else
+      {
+        $r = $this->lookupUser($username,$password_or_is_data,true);
+        if($r[0]===false) return array(false,'status'=>false,'error'=>"<p>Bad user credentials</p>","username"=>$username);
+        $userdata=$r[1];
+      }
     $id=$userdata['id'];
     //Set a cookie
-    $baseurl=$_SERVER['HOST_NAME'];
+    $baseurl = 'http';
+    if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
+    $baseurl .= "://www.";
+    $baseurl.=$_SERVER['HTTP_HOST'];
+
+    require_once('CONFIG.php');
+
     $base=array_slice(explode(".",$baseurl),-2);
-    $cookiename=implode(".",$base);
-    $domain=".".substr($baseurl,strpos($baseurl,'.'));
+    $domain=$base[0];
+    $shorturl=implode(".",$base);
+
     $expire=time()+3600*24*7; // one week
     // Create a one-time key, store serverside
     require_once('stronghash/php-stronghash.php');
@@ -353,11 +367,14 @@ class UserFunctions {
     if(!$result) return array(false,'status'=>false,'error'=>"<p>".mysqli_error($l)."<br/><br/>ERROR: Could not log in.</p>");
     $value_create=$userdata['salt'].$otsalt.$_SERVER['REMOTE_ADDR']; 
     // authenticated since last login. Nontransposable outside network.
+    
     $value=sha1($value_create);
-    $cookieuser=$cookiename."_user";
-    $cookieauth=$cookiename."_auth";
-    $cookiealg=$cookiename."_alg";
-    $cookiepic=$cookiename."_pic";
+
+    $cookieuser=$domain."_user";
+    $cookieauth=$domain."_auth";
+    $cookiealg=$domain."_alg";
+    $cookiepic=$domain."_pic";
+    
     /*echo "<pre>";
       echo "Cookie Info: $cookieuser $cookiealg $cookiepic \n $cookieauth :";
       print_r($value);
