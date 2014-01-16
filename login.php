@@ -376,7 +376,7 @@ else if($_REQUEST['q']=='logout')
     setcookie($cookieauth,false,time()-3600*24*365,null,$domain);
     setcookie($cookiekey,false,time()-3600*24*365,null,$domain);
     setcookie($cookiepic,false,time()-3600*24*365,null,$domain);
-    header("Refresh: 0; url=".curPageUrl());
+    header("Refresh: 0; url=".$baseurl.$_SERVER['PHP_SELF']);
     ob_end_flush();
   }
 else if($_REQUEST['confirm']!=null)
