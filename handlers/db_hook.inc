@@ -4,6 +4,18 @@
  * Uses MySQLi as the main interface
  ***/
 require_once('CONFIG.php');
+require_once('handlers/functions.inc');
+
+function createTable() {
+  global $db_cols,$default_table;
+  $query="CREATE TABLE $default_table (id int(10) NOT NULL auto_increment";
+  foreach($db_cols as $col=>$type) $query.=", $col $type NOT NULL";
+  $query.=",PRIMARY KEY (id),UNIQUE id (id),KEY id_2 (id))";
+
+  $l=openDB();
+  $r=mysqli_query($l,$query);
+  return boolstr($r);
+}
 
 function openDB($test=false,$user=null,$password=null,$database=null)
 {
@@ -19,15 +31,22 @@ function openDB($test=false,$user=null,$password=null,$database=null)
   if ($database==null) $database=$default_database;
   if(!$test)
     {
-      if($l=@mysqli_connect($sql_url,$user,$password))
+      try
         {
-          if(mysqli_select_db($l,$database)) return $l;
+          if($l=mysqli_connect($sql_url,$user,$password))
+            {
+              if(mysqli_select_db($l,$database)) return $l;
+            }
+          else return false;
         }
-      else return false;
+      catch(Exception $e)
+        {
+          return false;
+        }
     }
   else
     {
-      return @mysqli_connect($sql_url,$user,$password);
+      return mysqli_connect($sql_url,$user,$password);
     }
 }
 
