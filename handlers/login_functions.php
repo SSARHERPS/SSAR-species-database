@@ -409,6 +409,33 @@ class UserFunctions {
         return array('status'=>false,'error'=>"Unexpected exception: $e");
       }
   }
+
+
+  public function writeToUser($data,$col,$validation_data=null,$replace=true)
+  {
+    $validated=false;
+    if(is_array($validation_data))
+      {
+        if(array_key_exists('dblink',$validation_data))
+          {
+            // confirm with validateUser();
+          }
+        else if(array_key_exists('password',$validation_data))
+          {
+            // confirm with lookupUser();
+          }
+        else return array('status'=>false,"error"=>"Bad validation data");
+      }
+    else
+      {
+        // get data from cookies and user validateUser();
+      }
+    if($validated)
+      {
+        // write it to the db
+        // replace or append based on flag
+      }
+  }
   
 }
 ?>
