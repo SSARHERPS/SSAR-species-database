@@ -179,7 +179,7 @@ class UserFunctions {
                         $rem=intval($userdata['dtime'])-intval($this->microtime_float())+3600;
                         $min=$rem%60;
                         $sec=$rem-60*$min;
-                        return array(false,'Your account has been disabled for too many failed login attempts. Please try again in '.$min.' minutes and '.$sec.' seconds.');
+                        return array(false,'message'=>'Your account has been disabled for too many failed login attempts. Please try again in '.$min.' minutes and '.$sec.' seconds.');
                       }
                     else 
                       {

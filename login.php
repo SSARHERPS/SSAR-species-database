@@ -3,7 +3,7 @@
  * This is designed to be included in a page, and doesn't have the page framework on its own.
  */
 
-$debug=true;
+//$debug=true;
 
 // Global cookie vars
 /*
