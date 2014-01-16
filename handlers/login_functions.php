@@ -8,6 +8,8 @@ class UserFunctions {
     list($usec, $sec) = explode(" ", microtime());
     return ((float)$usec + (float)$sec);
   }
+
+
   
   public function createUser($username,$pw_in,$name,$dname,$zip=null)
   {
@@ -15,7 +17,10 @@ class UserFunctions {
     require_once('handlers/db_hook.inc');
     $user=sanitize($username); 
     $preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
-    if($user!=$username) return array(false,'Your chosen email contained injectable code. Please try again.');
+    /***
+     * Uncomment the next line if strict username comparison is needed
+     ***/
+    //if($user!=$username) return array(false,'Your chosen email contained injectable code. Please try again.');
     if(preg_match($preg,$username)!=1) return array(false,'Your email is not a valid email address. Please try again.');
     else $username=$user; // synonymize
     $result=lookupItem($user,'username',null,null,false,true);
@@ -102,7 +107,7 @@ class UserFunctions {
             $domain=".".substr($baseurl,strpos($baseurl,'.'));
             $expire=time()+3600*24*7; // one week
             // Create a one-time key, store serverside
-            $otsalt=genUnique();
+            $otsalt=$hash->genUnique();
             //store it
             $query="UPDATE $default_table SET auth_key='$otsalt' WHERE id='$id'";
             $l=openDB();
@@ -136,7 +141,7 @@ class UserFunctions {
                 setcookie($cookieauth,$value['hash'],$expire);
                 setcookie($cookiealg,$value['algo'],$expire);//,null,$domain);
                 setcookie($cookieuser,$userdata['username'],$expire);//,null,$domain);
-                $path=getUserPicture($userdata['id'],'userdata/profilepics');
+                $path=$this->getUserPicture($userdata['id'],'userdata/profilepics');
                 setcookie($cookiepic,$path,$expire);//,null,$domain);
                 // some secure, easy way to access their name?
                 // Need access -- name (id), email. Give server access?

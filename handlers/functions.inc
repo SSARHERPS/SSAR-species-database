@@ -3,8 +3,6 @@
 include_once('handlers/crypt_functions.php');
 include_once('handlers/xml.php');
 
-
-
 function curPageURL() {
   $pageURL = 'http';
   if ($_SERVER["HTTPS"] == "on") {$pageURL .= "s";}
@@ -14,7 +12,7 @@ function curPageURL() {
   } else {
     $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
   }
-  require_once('modular/db_hook.inc');
+  require_once('handlers/db_hook.inc');
   return cleanInput($pageURL);
 }
 
