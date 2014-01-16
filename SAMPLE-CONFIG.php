@@ -4,6 +4,8 @@
  * Update the variables in here and re-save as config.php for use.
  ***/
 
+$captive_login=false; // pulls the user back to the main page if not logged in
+
 $default_table='userdata';
 $default_database="";
 $default_user="";

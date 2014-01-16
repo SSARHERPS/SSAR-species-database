@@ -72,6 +72,11 @@ if($logged_in)
     $first_name=$xml->getTagContents($_COOKIE[$cookieperson],"<fname>");
     $display_name=$xml->getTagContents($_COOKIE[$cookieperson],"<dname>");
   }
+else
+  {
+    if($captive_login) header("Refresh: 0; url=$baseurl");
+    ob_end_flush();
+  }
 
 $alt_forms="<div id='alt_logins'>
 <!-- OpenID, Google, Twitter, Facebook -->
@@ -200,7 +205,7 @@ if($_REQUEST['q']=='submitlogin')
                   }
                 else header("Refresh: 0; url=$baseurl"); 
               }
-            //ob_end_flush(); // Flush the buffer, start displaying
+            ob_end_flush(); // Flush the buffer, start displaying
           }
         else
           {
@@ -371,7 +376,7 @@ else if($_REQUEST['q']=='logout')
     setcookie($cookieauth,false,time()-3600*24*365,null,$domain);
     setcookie($cookiekey,false,time()-3600*24*365,null,$domain);
     setcookie($cookiepic,false,time()-3600*24*365,null,$domain);
-    header("Refresh: 0; url=$baseurl");
+    header("Refresh: 0; url=".curPageUrl());
     ob_end_flush();
   }
 else if($_REQUEST['confirm']!=null)
