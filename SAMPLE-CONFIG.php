@@ -10,6 +10,7 @@ $default_user="";
 $default_password=""; // https://www.random.org/passwords/?num=5&len=24&format=plain&rnd=new
 $sql_url = 'localhost';
 
+// https://www.google.com/recaptcha/admin/create
 $recaptcha_public_key="";
 $recaptcha_private_key="";
 

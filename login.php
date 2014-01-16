@@ -37,8 +37,11 @@ require_once('handlers/xml.php');
 
 $r=testDefaults();
 
-if($r===true) echo "<p>(Database OK)</p>";
-else echo "<p>(Database Error - ' $r ')</p>";
+if($debug==true)
+  {
+    if($r===true) echo "<p>(Database OK)</p>";
+    else echo "<p>(Database Error - ' $r ')</p>";
+  }
 
 $xml=new Xml;
 $user=new UserFunctions;
@@ -197,13 +200,13 @@ else if($_REQUEST['q']=='create')
       {
 
         $recaptcha=recaptcha_get_html($recaptcha_public_key);
-        $createform = "
+        $createform = "<style type='text/css'>.hide { display:none !important; }</style>
 	    <form id='login' method='post' action='?q=create&amp;s=next'>
               <div class='left'>
 	      <label for='username'>
 		Email:
 	      </label>
-	      <input type='email' name='username' id='username' autofocus='autofocus'placeholder='user@domain.com' required='required'/>
+	      <input type='email' name='username' id='username' autofocus='autofocus' placeholder='user@domain.com' required='required'/>
 	      <br/>
 	      <label for='password'>
 		Password:
@@ -218,14 +221,14 @@ else if($_REQUEST['q']=='create')
               <label for='name'>
                 Name
               </label>
-	      <input type='text' name='name' id='name' placeholder='Your full name' required='required'/>
+	      <input type='text' name='name' id='name' placeholder='Leslie Smith' required='required'/>
 	      <br/>
               <label for='dname'>
                 Display name: 
               </label>
-	      <input type='text' name='dname' id='dname' placeholder='dinoman12' required='required'/>
+	      <input type='text' name='dname' id='dname' placeholder='ThatUserY2K' required='required'/>
 	      <br/>
-              <label for='honey' class='hide'>
+              <label for='honey' class='hide' >
                 Do not fill this field
               </label>
 	      <input type='text' name='honey' id='honey' class='hide'/>
@@ -237,11 +240,11 @@ else if($_REQUEST['q']=='create')
               <br class='clear'/>
 	      <input type='submit' value='Create' id='createUser_submit' disabled='disabled'/>
 	    </form><br class='clear'/>";
-        $secnotice="<p>You will have the option after login to store your information encrypted on this server.</p><p><small>Remember your security best practices! Do not use the same password you use for other sites. While your information is encrypted and <a href='http://en.wikipedia.org/wiki/Cryptographic_hash_function' $newwindow>hashed</a> with a multiple-round hash function, <a href='http://arstechnica.com/security/2013/05/how-crackers-make-minced-meat-out-of-your-passwords/' $newwindow>passwords are easy to crack!</a></small></p>";
+        $secnotice="<p><small>Remember your security best practices! Do not use the same password you use for other sites. While your information is <a href='http://en.wikipedia.org/wiki/Cryptographic_hash_function' $newwindow>hashed</a> with a multiple-round hash function, <a href='http://arstechnica.com/security/2013/05/how-crackers-make-minced-meat-out-of-your-passwords/' $newwindow>passwords are easy to crack!</a></small></p>";
         $createform.=$secnotice; // comment out if SSL is used.
         $deferredJS.="$('#password').keypress(function(){checkPasswordLive()});\n$('#password').change(function(){checkPasswordLive()});\n$('#password').keyup(function(){checkPasswordLive()});";
         $deferredJS.="$('#password2').keypress(function(){checkMatchPassword()});\n$('#password2').change(function(){checkMatchPassword()});\n$('#password2').keyup(function(){checkMatchPassword()});";
-
+        
         if($_REQUEST['s']=='next')
           {
             $email_preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
@@ -300,6 +303,7 @@ else if($_REQUEST['q']=='create')
           }
         else echo $createform;
       }
+    else die("Your ReCAPTCHA library hasn't been set up. Please store your public and private keys in CONFIG.php.");
   }
 else if($_REQUEST['confirm']!=null)
   {
@@ -373,9 +377,10 @@ function loadScript(url, callback) {
 
 var lateJS= function() {
     try {
+        console.log('Loading late libraries');
         $.getScript('js/base64.js');
         $.getScript('js/user_common.js');
-        $(document).ready{function(){
+        $(document).ready(function(){
             $deferredJS
         });
     }
