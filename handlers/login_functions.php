@@ -402,7 +402,11 @@ class UserFunctions {
 
   public function createCookieTokens($username,$password_or_is_data=true)
   {
-    if($password_or_is_data===true) $userdata=$username;
+    if($password_or_is_data===true)
+      {
+        $userdata=$username;
+        $username=$userdata['username'];
+      }
     else
       {
         $r = $this->lookupUser($username,$password_or_is_data,true);
@@ -449,28 +453,30 @@ class UserFunctions {
     $cookiekey=$domain."_secret";
     $cookiepic=$domain."_pic";
 
-    /*echo "<pre>";
-      echo "Cookie Info: $cookieuser $cookiealg $cookiepic \n $cookieauth :";
-      print_r($value);
-      echo "/<pre>";*/
+    $user_greet=$userdata['name'];
+    
     setcookie($cookieauth,$value,$expire);
     setcookie($cookiekey,$cookie_secret,$expire);
-    setcookie($cookieuser,$userdata['username'],$expire);
-    setcookie($cookieperson,$userdata['name'],$expire);
+    setcookie($cookieuser,$username,$expire);
+    setcookie($cookieperson,$user_greet,$expire);
     $path=$this->getUserPicture($userdata['id']); 
     setcookie($cookiepic,$path,$expire);
 
-    $js_expires="{expires:$expire_days,path:'/'}";
-    $jquerycookie="";
+    $js_expires="{expires:$expire_days,path:'/'});\n";
+    $jquerycookie="$.cookie('$cookieauth','$value'".$js_expires;
+    $jquerycookie.="$.cookie('$cookiekey','$cookie_secret'".$js_expires;
+    $jquerycookie.="$.cookie('$cookieuser','$username'".$js_expires;
+    $jquerycookie.="$.cookie('$cookieperson','$user_greet'".$js_expires;
+    $jquerycookie.="$.cookie('$cookiepicture','$path'".$js_expires;
     
     return array(
       true,
       'status'=>true,
-      'user'=>"{ '$cookieuser':'".$userdata['username']."'}",
+      'user'=>"{ '$cookieuser':'$username'}",
       'auth'=>"{'$cookieauth':'$value'}",
       'secret'=>"{'$cookiekey':'$cookie_secret'}",
       'pic'=>"{'$cookiepic':'$path'}",
-      'name'=>"{'$cookieperson':'".$userdata['name']."'",
+      'name'=>"{'$cookieperson':'$user_greet'",
       'js'=>$jquerycookie;
     );
   }
