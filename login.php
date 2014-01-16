@@ -53,7 +53,7 @@ if($debug==true)
     echo "<p>Visiting $baseurl on '$shorturl' with a human domain '$domain'</p>";
     echo "<p>".displayDebug(sanitize('tigerhawk_vok-goes.special@gmail.com'))."</p>";
     $xkcd_check="Robert'); DROP TABLE Students;--"; // https://xkcd.com/327/
-    echo "<p>".displayDebug(sanitize($xkcd_check))."</p>";
+    echo "<p>".displayDebug(sanitize($xkcd_check))."</p>"; // This should have escaped code
   }
 
 $xml=new Xml;
