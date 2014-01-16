@@ -358,7 +358,7 @@ class UserFunctions {
      * Can be spoofed with inspected code at the same IP
      ***/
     $result=lookupItem($userid,'hardlink');
-    if($result!==false)
+    if($result!==false && !is_array($result))
       {
         $authsalt = $this-> getSiteKey();
         $userdata=mysqli_fetch_assoc($result);
@@ -396,7 +396,12 @@ class UserFunctions {
         if($detail) return array("uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"from_cookie"=>strbool($from_cookie));
         return $conf==$hash;
       }
-    if($detail) return array("uid"=>$userid,"basis_conf"=>$hash,"have_secret"=>strbool(empty($secret)));
+    if($detail)
+      {
+        $detail=array("uid"=>$userid,"basis_conf"=>$hash,"have_secret"=>strbool(empty($secret)));
+        if(is_array($result)) $detail['error']=>$result['error'];
+        return $detail;
+      }
     return false;
   }
 

@@ -141,7 +141,7 @@ if($_REQUEST['q']=='submitlogin')
                             $cookiedebug.=' bad-auth ('.print_r($cookie_result,true).") for $cookieuser. \nExpecting ".print_r($auth,true)." \nRaw cookie:".print_r($_COOKIE,true);
                             if(!$debug)
                               {
-                                $cookiedebug=."\n\nWiping ...";
+                                $cookiedebug.="\n\nWiping ...";
                                 setcookie($cookieuser,false,time()-3600*24*365,null,$domain);
                                 setcookie($cookieperson,false,time()-3600*24*365,null,$domain);
                                 setcookie($cookieauth,false,time()-3600*24*365,null,$domain);
@@ -156,7 +156,7 @@ if($_REQUEST['q']=='submitlogin')
                         $cookiedebug.=' bad-user';
                         if(!$debug)
                           {
-                            $cookiedebug=."\n\nWiping ...";
+                            $cookiedebug.="\n\nWiping ...";
                             setcookie($cookieuser,false,time()-3600*24*365,null,$domain);
                             setcookie($cookieperson,false,time()-3600*24*365,null,$domain);
                             setcookie($cookieauth,false,time()-3600*24*365,null,$domain);

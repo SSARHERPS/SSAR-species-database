@@ -165,8 +165,8 @@ function is_entry($item,$field_name=null,$table_name=null,$database_name=null,$t
 function lookupItem($item,$field_name=null,$table_name=null,$database_name=null,$closedb=false,$skipsan=false)
 {
   global $default_table;
-  if($field_name==null) $field_name = "id";
-  if($table_name==null) $table_name = $default_table;
+  if(empty($field_name)) $field_name = "id";
+  if(empty($table_name)) $table_name = $default_table;
   if($skipsan===false) 
     {
       $sitem=sanitize($item);
@@ -184,10 +184,10 @@ function lookupItem($item,$field_name=null,$table_name=null,$database_name=null,
       $query="SELECT * FROM `$table_name` WHERE $field_name='$item'";
       $result=mysqli_query($l,$query);
       if($closedb)mysqli_close($l);
-      if($result===false) return array(false,mysqli_error($l));
+      if($result===false) return array(false,'error'=>mysqli_error($l));
       return $result;
     }
-  else return false;
+  return array(false,'error'=>"Injectable item code for '$item' vs. '$sitem'");
 }
 
 function decrementItemQuantity($item,$lookup_name=null,$field_name=null,$table_name=null,$database_name=null)
