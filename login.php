@@ -14,7 +14,7 @@ if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
 $baseurl .= "://www.";
 $baseurl.=$_SERVER['HTTP_HOST'];
 
-require_once('CONFIG.php');
+require_once(dirname(__FILE__).'/CONFIG.php');
 
 $base=array_slice(explode(".",$baseurl),-2);
 $domain=$base[0];
@@ -39,10 +39,10 @@ $cookielink=$domain."_link";
  * Required inclusions
  */
 
-require_once('handlers/login_functions.php');
-require_once('handlers/functions.inc');
-require_once('handlers/db_hook.inc');
-require_once('handlers/xml.php');
+require_once(dirname(__FILE__).'/handlers/login_functions.php');
+require_once(dirname(__FILE__).'/handlers/functions.inc');
+require_once(dirname(__FILE__).'/handlers/db_hook.inc');
+require_once(dirname(__FILE__).'/handlers/xml.php');
 
 /*
  * Test the database ...
@@ -255,7 +255,7 @@ else if($_REQUEST['q']=='create')
     // Create a new user
     // display login form
     // include a captcha and honeypot
-    require_once('handlers/recaptchalib.php');
+    require_once(dirname(__FILE__).'/handlers/recaptchalib.php');
     if(!empty($recaptcha_public_key) && !empty($recaptcha_private_key))
       {
 

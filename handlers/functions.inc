@@ -1,7 +1,7 @@
 <?php
 
-include_once('handlers/crypt_functions.php');
-include_once('handlers/xml.php');
+require_once(dirname(__FILE__).'/handlers/crypt_functions.php');
+require_once(dirname(__FILE__).'/handlers/xml.php');
 
 function curPageURL() {
   $pageURL = 'http';
@@ -12,7 +12,7 @@ function curPageURL() {
   } else {
     $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
   }
-  require_once('handlers/db_hook.inc');
+  require_once(dirname(__FILE__).'/handlers/db_hook.inc');
   return cleanInput($pageURL);
 }
 
