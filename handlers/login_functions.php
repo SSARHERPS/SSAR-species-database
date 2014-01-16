@@ -5,7 +5,7 @@ class UserFunctions {
   function __construct()
   {
     require_once('CONFIG.php');
-
+    global $user_data_storage,$profile_picture_storage,$site_security_token;
     if(!empty($user_data_storage))
       {
         $user_data_storage .= substr($user_data_storage,-1)=="/" ? '':'/';
@@ -398,10 +398,11 @@ class UserFunctions {
           }
         else $from_cookie=false;
         
-        $value_create=$secret.$salt.$userdata['auth_key'].$_SERVER['REMOTE_ADDR'].$authsalt; 
-        $conf=sha1($value_create);
-        if($detail) return array("uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"from_cookie"=>strbool($from_cookie),'user_pass_info'=>$pw_characters,'userdata'=>$userdata,'raw'=>$userdata_raw);
-        return $conf==$hash;
+        $value_create=array($secret,$salt,$userdata['auth_key'],$_SERVER['REMOTE_ADDR'],$authsalt); 
+        $conf=sha1(implode('',$value_create));
+        $state= $conf==$hash ? true:false;
+        if($detail) return array('state'=>strbool($state),"uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"from_cookie"=>strbool($from_cookie),'got_user_pass_info'=>is_array($pw_characters),'got_userdata'=>is_array($userdata),'source'=>$value_create);
+        return $state;
       }
     if($detail)
       {
@@ -414,87 +415,104 @@ class UserFunctions {
 
   public function createCookieTokens($username,$password_or_is_data=true)
   {
-    if($password_or_is_data===true)
+    try
       {
-        $userdata=$username;
-        $username=$userdata['username'];
+        if($password_or_is_data===true)
+          {
+            $userdata=$username;
+            $username=$userdata['username'];
+          }
+        else
+          {
+            $r = $this->lookupUser($username,$password_or_is_data,true);
+            if($r[0]===false) return array(false,'status'=>false,'error'=>"<p>Bad user credentials</p>","username"=>$username);
+            $userdata=$r[1];
+          }
+        $id=$userdata['id'];
+        //Set a cookie
+        $baseurl = 'http';
+        if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
+        $baseurl .= "://www.";
+        $baseurl.=$_SERVER['HTTP_HOST'];
+
+        require_once('CONFIG.php');
+
+        $base=array_slice(explode(".",$baseurl),-2);
+        $domain=$base[0];
+        $shorturl=implode(".",$base);
+
+        $expire_days=7;
+        $expire=time()+3600*24*$expire_days;
+        // Create a one-time key, store serverside
+        require_once('stronghash/php-stronghash.php');
+        require_once('handlers/db_hook.inc');
+        $hash=new Stronghash;
+        $otsalt=$hash->createSalt();
+        $cookie_secret=$hash->createSalt();
+        $pw_characters=json_decode($userdata['password'],true);
+        $salt=$pw_characters['salt'];
+        //store it
+        global $default_table;
+        $query="UPDATE `$default_table` SET auth_key='$otsalt' WHERE id='$id'";
+        $l=openDB();
+        $result=mysqli_query($l,$query);
+        if(!$result) return array(false,'status'=>false,'error'=>"<p>".mysqli_error($l)."<br/><br/>ERROR: Could not update login state.</p>");
+
+    
+        $value_create=array(
+          'secret'=>$cookie_secret,
+          'salt'=>$salt,
+          'server_salt'=>$otsalt,
+          'ip'=>$_SERVER['REMOTE_ADDR'],
+          'server_key'=>$this->getSiteKey()
+        ); 
+
+        // authenticated since last login. Nontransposable outside network.
+    
+        $value=sha1(implode('',$value_create));
+
+        $cookieuser=$domain."_user";
+        $cookieperson=$domain."_name";
+        $cookieauth=$domain."_auth";
+        $cookiekey=$domain."_secret";
+        $cookiepic=$domain."_pic";
+        $cookielink=$domain."_link";
+
+        $user_greet=$userdata['name'];
+        $dblink=$userdata['dblink'];
+    
+        setcookie($cookieauth,$value,$expire);
+        setcookie($cookiekey,$cookie_secret,$expire);
+        setcookie($cookieuser,$username,$expire);
+        setcookie($cookieperson,$user_greet,$expire);
+        $path=$this->getUserPicture($userdata['id']); 
+        setcookie($cookielink,$dblink,$expire);
+
+        $js_expires="{expires:$expire_days,path:'/'});\n";
+        $jquerycookie="$.cookie('$cookieauth','$value'".$js_expires;
+        $jquerycookie.="$.cookie('$cookiekey','$cookie_secret'".$js_expires;
+        $jquerycookie.="$.cookie('$cookieuser','$username'".$js_expires;
+        $jquerycookie.="$.cookie('$cookieperson','$user_greet'".$js_expires;
+        $jquerycookie.="$.cookie('$cookiepicture','$path'".$js_expires;
+        $jquerycookie.="$.cookie('$cookielink','$dblink'".$js_expires;
+    
+        return array(
+          'status'=>true,
+          'user'=>"{ '$cookieuser':'$username'}",
+          'auth'=>"{'$cookieauth':'$value'}",
+          'secret'=>"{'$cookiekey':'$cookie_secret'}",
+          'pic'=>"{'$cookiepic':'$path'}",
+          'name'=>"{'$cookieperson':'$user_greet'",
+          'name'=>"{'$cookielink':'$dblink'",
+          'js'=>$jquerycookie,
+          'source'=>$value_create,
+          'raw_auth'=>$value
+        );
       }
-    else
+    catch(Exception $e)
       {
-        $r = $this->lookupUser($username,$password_or_is_data,true);
-        if($r[0]===false) return array(false,'status'=>false,'error'=>"<p>Bad user credentials</p>","username"=>$username);
-        $userdata=$r[1];
+        return array('status'=>false,'error'=>"Unexpected exception: $e");
       }
-    $id=$userdata['id'];
-    //Set a cookie
-    $baseurl = 'http';
-    if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
-    $baseurl .= "://www.";
-    $baseurl.=$_SERVER['HTTP_HOST'];
-
-    require_once('CONFIG.php');
-
-    $base=array_slice(explode(".",$baseurl),-2);
-    $domain=$base[0];
-    $shorturl=implode(".",$base);
-
-    $expire_days=7;
-    $expire=time()+3600*24*$expire_days;
-    // Create a one-time key, store serverside
-    require_once('stronghash/php-stronghash.php');
-    require_once('handlers/db_hook.inc');
-    $hash=new Stronghash;
-    $otsalt=$hash->createSalt();
-    $cookie_secret=$hash->createSalt();
-    $pw_characters=json_decode($userdata['password'],true);
-    $salt=$pw_characters['salt'];
-    //store it
-    global $default_table;
-    $query="UPDATE `$default_table` SET auth_key='$otsalt' WHERE id='$id'";
-    $l=openDB();
-    $result=mysqli_query($l,$query);
-    if(!$result) return array(false,'status'=>false,'error'=>"<p>".mysqli_error($l)."<br/><br/>ERROR: Could not update login state.</p>");
-    $value_create=$cookie_secret.$salt.$otsalt.$_SERVER['REMOTE_ADDR'].$this->getSiteKey(); 
-    // authenticated since last login. Nontransposable outside network.
-    
-    $value=sha1($value_create);
-
-    $cookieuser=$domain."_user";
-    $cookieperson=$domain."_name";
-    $cookieauth=$domain."_auth";
-    $cookiekey=$domain."_secret";
-    $cookiepic=$domain."_pic";
-    $cookielink=$domain."_link";
-
-    $user_greet=$userdata['name'];
-    $dblink=$userdata['dblink'];
-    
-    setcookie($cookieauth,$value,$expire);
-    setcookie($cookiekey,$cookie_secret,$expire);
-    setcookie($cookieuser,$username,$expire);
-    setcookie($cookieperson,$user_greet,$expire);
-    $path=$this->getUserPicture($userdata['id']); 
-    setcookie($cookielink,$dblink,$expire);
-
-    $js_expires="{expires:$expire_days,path:'/'});\n";
-    $jquerycookie="$.cookie('$cookieauth','$value'".$js_expires;
-    $jquerycookie.="$.cookie('$cookiekey','$cookie_secret'".$js_expires;
-    $jquerycookie.="$.cookie('$cookieuser','$username'".$js_expires;
-    $jquerycookie.="$.cookie('$cookieperson','$user_greet'".$js_expires;
-    $jquerycookie.="$.cookie('$cookiepicture','$path'".$js_expires;
-    $jquerycookie.="$.cookie('$cookielink','$dblink'".$js_expires;
-    
-    return array(
-      true,
-      'status'=>true,
-      'user'=>"{ '$cookieuser':'$username'}",
-      'auth'=>"{'$cookieauth':'$value'}",
-      'secret'=>"{'$cookiekey':'$cookie_secret'}",
-      'pic'=>"{'$cookiepic':'$path'}",
-      'name'=>"{'$cookieperson':'$user_greet'",
-      'name'=>"{'$cookielink':'$dblink'",
-      'js'=>$jquerycookie
-    );
   }
   
 }

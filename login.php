@@ -49,6 +49,9 @@ require_once('handlers/xml.php');
 
 $r=testDefaults();
 
+$xml=new Xml;
+$user=new UserFunctions;
+
 if($debug==true)
   {
     if($r===true) echo "<p>(Database OK)</p>";
@@ -57,10 +60,10 @@ if($debug==true)
     echo "<p>".displayDebug(sanitize('tigerhawk_vok-goes.special@gmail.com'))."</p>";
     $xkcd_check="Robert'); DROP TABLE Students;--"; // https://xkcd.com/327/
     echo "<p>".displayDebug(sanitize($xkcd_check))."</p>"; // This should have escaped code
+    echo "<p>User Validation:</p>";
+    echo displayDebug($user->validateUser($_COOKIE[$cookielink],null,null,true));
   }
 
-$xml=new Xml;
-$user=new UserFunctions;
 
 $alt_forms="<div id='alt_logins'>
 <!-- OpenID, Google, Twitter, Facebook -->
@@ -100,8 +103,6 @@ if($_REQUEST['q']=='submitlogin')
               {
                 echo "<p>Cookie Result:</p>";
                 echo displayDebug($cookie_result);
-                echo "<p>User Validation:</p>";
-                echo displayDebug($user->validateUser($userdata['dblink'],null,null,true));
                 echo "<p>Entering cookie handling post call ...</p>";
               }
             if(!$cookie_result['status']) 
@@ -131,21 +132,21 @@ if($_REQUEST['q']=='submitlogin')
                         // pieces:
                         $salt=$pw_characters['salt'];
                         $otsalt=$userdata['auth_key'];
-                        $cookie_secret=$_COOKIE[$cookiekey];
+                        $cookie_secret=$cookie_result['source']['secret']; // won't grab new data until refresh, use passed
                         
-                        $value_create=$cookie_secret.$salt.$otsalt.$_SERVER['REMOTE_ADDR'].$site_security_token;
-                        $value=sha1($value_create);
-                        if($value==$_COOKIE[$cookieauth])
+                        $value_create=array($cookie_secret,$salt,$otsalt,$_SERVER['REMOTE_ADDR'],$site_security_token);
+                        $value=sha1(implode('',$value_create));
+                        if($value==$cookie_result['raw_auth'])
                           {
                             // Good cookie
-                            $cookiedebug.='good-auth';
+                            $cookiedebug.=' good-auth';
                             $logged_in=true;
                             $user=$_COOKIE[$cookieuser];
                           }
                         else
                           {
                             // bad cookie
-                            $cookiedebug.='\n bad-auth '.print_r($cookie_result,true)." for $cookieuser. \nExpecting: $value \n Got:\n ".$_COOKIE[$cookieauth]." \nRaw cookie:\n".print_r($_COOKIE,true);
+                            $cookiedebug.="\n bad-auth ".print_r($cookie_result,true)." for $cookieuser. \nExpecting: $value \n Given:\n ".$_COOKIE[$cookieauth]." \nRaw cookie:\n".print_r($_COOKIE,true);
                             if(!$debug)
                               {
                                 $cookiedebug.="\n\nWiping ...";
