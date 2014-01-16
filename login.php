@@ -104,7 +104,7 @@ if($_REQUEST['q']=='submitlogin')
             // Successful login
             $userdata=$res[1];
             $id=$userdata['id'];
-            echo "<h3>Welcome back, ".$xml->getTagContents($userdata['dec_name'],"<fname>")."</h3>"; //Welcome message
+            echo "<h3 id='welcome_back'>Welcome back, ".$xml->getTagContents($userdata['dec_name'],"<fname>")."</h3>"; //Welcome message
 		       
             $cookie_result=$user->createCookieTokens($userdata);
             if($debug)
@@ -198,17 +198,15 @@ if($_REQUEST['q']=='submitlogin')
                     displayDebug($_COOKIE);
                     
                   }
-                else header("Refresh: 0; url=$baseurl"); // was at 3
+                else header("Refresh: 0; url=$baseurl"); 
               }
             //ob_end_flush(); // Flush the buffer, start displaying
-
-            //echo manageFiles('protected/');
           }
         else
           {
             ob_end_flush();
             echo $login_preamble;
-            echo "<div class='error'><p>Sorry! <br/>" . $res[1] . "</p><aside class='ssmall'>Did you mean to <a href=''>create a new account instead?</a></aside></div>";
+            echo "<div class='error'><p>Sorry! <br/>" . $res['message'] . "</p><aside class='ssmall'>Did you mean to <a href=''>create a new account instead?</a></aside></div>";
             $failcount=intval($_POST['failcount'])+1;
             $loginform_whole = $loginform."
               <input type='hidden' name='failcount' id='failcount' value='$fail'/>".$loginform_close;
@@ -366,6 +364,16 @@ else if($_REQUEST['q']=='create')
       }
     else echo "<p class='error'>This site's ReCAPTCHA library hasn't been set up. Please contact the site administrator.</p>";
   }
+else if($_REQUEST['q']=='logout')
+  {
+    setcookie($cookieuser,false,time()-3600*24*365,null,$domain);
+    setcookie($cookieperson,false,time()-3600*24*365,null,$domain);
+    setcookie($cookieauth,false,time()-3600*24*365,null,$domain);
+    setcookie($cookiekey,false,time()-3600*24*365,null,$domain);
+    setcookie($cookiepic,false,time()-3600*24*365,null,$domain);
+    header("Refresh: 0; url=$baseurl");
+    ob_end_flush();
+  }
 else if($_REQUEST['confirm']!=null)
   {
     // toggle user flag
@@ -418,7 +426,7 @@ else if($_REQUEST['confirm']!=null)
 else
   {
     if(!$logged_in) echo $login_preamble . $loginform.$loginform_close;
-    else echo "<p id='signin_greeting'>Welcome back, $first_name</p><br/><p id='logout_para'><small><a href='?q=logout'>(Logout)</a></small></p>";
+    else echo "<p id='signin_greeting'>Welcome back, $first_name</p><br/><p id='logout_para'><aside class='ssmall'><a href='?q=logout'>(Logout)</a></aside></p>";
   }
 echo "<script type='text/javascript'>
 function loadScript(url, callback) {
