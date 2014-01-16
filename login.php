@@ -3,24 +3,33 @@
  * This is designed to be included in a page, and doesn't have the page framework on its own.
  */
 
+$debug=true;
+
 // Global cookie vars
 /*
  * Baseurl is overwritten if specified in config
  */
-$baseurl=$_SERVER['HOST_NAME'];
+$baseurl = 'http';
+if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
+$baseurl .= "://www.";
+$baseurl.=$_SERVER['HTTP_HOST'];
+
 require_once('CONFIG.php');
 
 $base=array_slice(explode(".",$baseurl),-2);
+$domain=$base[0];
+$shorturl=implode(".",$base);
+
+if(!is_numeric($minimum_password_length) || $minimum_password_length < 8 ) $minimum_password_length=21;
 
 /*
  * Cookie names for tracking
  */
 
-$cookiename=implode(".",$base);
-$cookieuser=$cookiename."_user";
-$cookieauth=$cookiename."_auth";
-$cookiealg=$cookiename."_alg";
-$cookiepic=$cookiename."_pic";
+$cookieuser=$domain."_user";
+$cookieauth=$domain."_auth";
+$cookiealg=$domain."_alg";
+$cookiepic=$domain."_pic";
 
 /*
  * Required inclusions
@@ -41,6 +50,8 @@ if($debug==true)
   {
     if($r===true) echo "<p>(Database OK)</p>";
     else echo "<p>(Database Error - ' $r ')</p>";
+    echo "<p>Visiting $baseurl on '$shorturl' with a human domain '$domain'</p>";
+    echo "<p>".sanitize('tigerhawk_vok-goes.special@gmail.com')."</p>";
   }
 
 $xml=new Xml;
@@ -138,7 +149,7 @@ if($_REQUEST['q']=='submitlogin')
                 else 
                   {
                     $logged_in=false;
-                    $cookiedebug.='cookies not set for '.$cookiename;
+                    $cookiedebug.='cookies not set for '.$domain;
                   }
                 //echo $cookiedebug;
                 header("Refresh: 0; url=$baseurl"); // was at 3
@@ -219,12 +230,12 @@ else if($_REQUEST['q']=='create')
 	      <input type='password' name='password2' id='password2' placeholder='Confirm password' required='required'/>
 	      <br/>
               <label for='name'>
-                Name
+                Name:
               </label>
 	      <input type='text' name='name' id='name' placeholder='Leslie Smith' required='required'/>
 	      <br/>
               <label for='dname'>
-                Display name: 
+                Display Name: 
               </label>
 	      <input type='text' name='dname' id='dname' placeholder='ThatUserY2K' required='required'/>
 	      <br/>
@@ -235,7 +246,7 @@ else if($_REQUEST['q']=='create')
               $recaptcha
               </div>
               <div class='right' style='width:25%'>
-              <p><small>We require a password of at least six characters with at least one upper case letter, at least one lower case letter, and at least one digit or special character. You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least 21 characters, with no security requirements.</small></p>
+              <p><small>We require a password of at least six characters with at least one upper case letter, at least one lower case letter, and at least one digit or special character. You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least $minimum_password_length characters, with no security requirements.</small></p>
               </div>
               <br class='clear'/>
 	      <input type='submit' value='Create' id='createUser_submit' disabled='disabled'/>
@@ -277,14 +288,14 @@ else if($_REQUEST['q']=='create')
                             if($res[0]) 
                               {
                                 $cookie_result=$user->createCookieTokens($res,$title);
-                                echo "<h3>".$res[1]."</h3><p>Now, let's flesh out your profile. <a href='edit.php'>Continue &#187;</a>.</p>"; //jumpto1
+                                echo "<h3>".$res[1]."</h3>"; //jumpto1
                                 // email user
                                 $to=$_POST['username'];
                                 $headers  = 'MIME-Version: 1.0' . "\r\n";
                                 $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-                                $headers .= "From: Really Active People <blackhole@reallyactivepeople.com>";
+                                $headers .= "From: Account Registration <blackhole@".$base.">";
                                 $subject='New Account Creation';
-                                $body = "<p>Congratulations! Your new account has been created. Your username is this email address ($to). We do not keep a record of your password we can access, so please be sure to remember it!</p><p>If you do forget your password, you can <a href='mailto:support@reallyactivepeople.com?subject=Reset%20Password'>email support</a> to reset your password for you with a picture of government ID with your registered name and zip code. All secure data will be lost in the reset.</p>";
+                                $body = "<p>Congratulations! Your new account has been created. Your username is this email address ($to). We do not keep a record of your password we can access, so please be sure to remember it!</p><p>If you do forget your password, you can <a href='mailto:".$service_email."?subject=Reset%20Password'>email support</a> to reset your password for you with a picture of government ID with your registered name and zip code. All secure data will be lost in the reset.</p>";
                                 if(mail($to,$subject,$body,$headers)) echo "<p>A confirmation email has been sent to your inbox at $to .</p>";
 					   
                               }
@@ -293,7 +304,7 @@ else if($_REQUEST['q']=='create')
                           }
                         else
                           { 
-                            echo "<p class='error'>Your password was not long enough (6 characters) or did not match minimum complexity levels (one upper case letter, one lower case letter, one digit or special character). You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least 21 characters. Please go back and try again.</p>";
+                            echo "<p class='error'>Your password was not long enough (6 characters) or did not match minimum complexity levels (one upper case letter, one lower case letter, one digit or special character). You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least $minimum_password_length characters. Please go back and try again.</p>";
                           }
                       }
                     else echo "<p class='error'>Your passwords did not match. Please go back and try again.</p>";
@@ -378,6 +389,7 @@ function loadScript(url, callback) {
 var lateJS= function() {
     try {
         console.log('Loading late libraries');
+        passLengthOverride=$minimum_password_length;
         $.getScript('js/base64.js');
         $.getScript('js/user_common.js');
         $(document).ready(function(){

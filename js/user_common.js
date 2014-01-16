@@ -2,7 +2,7 @@ function checkPasswordLive() {
     var goodbg='#cae682';
     var badbg='#e5786d';
     var pass=$('#password').val();
-    if(pass.length>=21) {
+    if(pass.length>=passLengthOverride) {
         $('#password').css('background',goodbg);
         basepwgood=true;
     }

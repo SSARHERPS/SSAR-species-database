@@ -17,7 +17,11 @@ $recaptcha_private_key="";
 $service_email='';
 $minimum_password_length='15';
 
-$baseurl=""; // define if other than the hosted URL
+/***
+
+ $baseurl=""; // define if other than the hosted URL
+ 
+***/
 
 $db_cols=array(
   "username"=>"text",

@@ -29,6 +29,8 @@ class UserFunctions {
           echo "</pre>";*/
         if($data['username']==$username) return array(false,'Your chosen username is already taken. Please try again.');
       }
+    require_once('CONFIG.php');
+    if(strlen($pw_in)<$minimum_password_length) return array(false,'Your password is too short. Please try again.');
     require_once('stronghash/php-stronghash.php');
     $hash=new Stronghash;
     $creation=$this->microtime_float();
@@ -52,7 +54,6 @@ class UserFunctions {
     if($test_res)
       {
         // Get ID value
-        require_once('CONFIG.php');
         global $default_table;
         $result=lookupItem($user,'username',$default_table,null,false,true);
         //echo "\nLooking up $user ...obtained \n ";
