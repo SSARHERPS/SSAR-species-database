@@ -387,9 +387,10 @@ class UserFunctions {
         
         $value_create=$secret.$userdata['salt'].$userdata['auth_key'].$_SERVER['REMOTE_ADDR'].$authsalt; 
         $conf=sha1($value_create);
+        if($detail) return array("uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"from_cookie"=>strbool($from_cookie));
         return $conf==$hash;
       }
-    if($detail) return array("uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"given_conf"=>$hash,"from_cookie"=>strbool($from_cookie));
+    if($detail) return array("uid"=>$userid,"basis_conf"=>$hash,"given_secret"=>strbool(empty($secret)));
     return false;
   }
 
