@@ -117,10 +117,10 @@ if($_REQUEST['q']=='submitlogin')
                         $cookiedebug.=' check-auth '.print_r($_COOKIE[$cookieuser],true);
                         $userdata=mysqli_fetch_assoc($result);
                         $salt=$userdata['salt'];
-                        $unique=$userdata['auth_key'];
-                        $ip=$_SERVER['REMOTE_ADDR'];
-                        $auth=sha($salt.$unique.$ip,null,'sha512',false);
-                        if($auth['hash']==$_COOKIE[$cookieauth])
+                        $otsalt=$userdata['auth_key'];
+                        $value_create=$userdata['salt'].$userdata['auth_key'].$_SERVER['REMOTE_ADDR']; 
+                        $value=sha1($value_create);
+                        if($value==$_COOKIE[$cookieauth])
                           {
                             // Good cookie
                             $cookiedebug.='good auth';

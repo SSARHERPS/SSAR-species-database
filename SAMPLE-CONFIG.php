@@ -10,12 +10,24 @@ $default_user="";
 $default_password=""; // https://www.random.org/passwords/?num=5&len=24&format=plain&rnd=new
 $sql_url = 'localhost';
 
-// https://www.google.com/recaptcha/admin/create
+/***
+ * Required, but free to generate. Generate here: 
+ * https://www.google.com/recaptcha/admin/create
+ ***/
 $recaptcha_public_key="";
 $recaptcha_private_key="";
 
+
+/***
+ * Very important! I suggest taking all three results and concatenating them
+ ***/
+$site_security_token=""; // https://www.random.org/passwords/?num=3&len=24&format=plain&rnd=new
+
+/***
+ * If not set, minimum password length defaults to 21.
+ ***/
 $service_email='';
-$minimum_password_length='15';
+$minimum_password_length='';
 
 
 /***

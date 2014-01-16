@@ -19,14 +19,32 @@ class UserFunctions {
         $this->picture_path = $this->data_path . $profile_picture_storage;
       }
     else $this->picture_path = $this->data_path . "profilepics/";
-          
+
+    $this->siteKey = $site_security_token;
   }
+
+  /***
+   * Helper functions
+   ***/
+  private function getSiteKey() { return $this->siteKey }
 
   public function microtime_float()
   {
     list($usec, $sec) = explode(" ", microtime());
     return ((float)$usec + (float)$sec);
   }
+
+  private function strbool($bool)
+  {
+    // returns the string of a boolean as 'true' or 'false'.
+    if(is_string($bool)) $bool=boolstr($bool); // if a string is passed, convert it to a bool
+    if(is_bool($bool)) return $bool ? 'true' : 'false';
+    else return 'non_bool';
+  }
+
+  /***
+   * Primary functions
+   ***/
   
   public function createUser($username,$pw_in,$name,$dname,$zip=null)
   {
@@ -312,9 +330,10 @@ class UserFunctions {
   }
 
 
-  public function getUserPicture($id,$path=$this->picture_path,$extra_types_array=null)
+  public function getUserPicture($id,$path=null,$extra_types_array=null)
   {
-    $path.= substr($path,-1)=='/' ? '':'/';
+    if(empty($path)) $path=$this->picture_path;
+    else $path.= substr($path,-1)=='/' ? '':'/';
     $valid_ext=array('jpg','jpeg','png','bmp','gif','svg');
     if(is_array($extra_types_array)) $valid_ext = array_merge($extra_types_array);
     foreach($valid_ext as $ext)
@@ -325,29 +344,52 @@ class UserFunctions {
     return $path."default.jpg";
   }
 
-  public function validateUser($userid,$hash,$strong=false,$detail=false)
+  public function validateUser($userid,$hash=null,$secret=null,$detail=false)
   {
-    // return true or false based on user validation. 
-    // Prevent ajax or post call manually -- has to be called from a webpage
-    // maybe this should check the cookies?
-    /*
-      Notes: This does not prevent inspected HTML data on a hacked account. This ensures that either:
-      1) The person gained access to the account
-      2) The person hacked both the database and the webserver
-    */
-    $result=lookupItem($userid,'hardlink',null,null,false);
+    /***
+     * Returns true or false based on user validation
+     *
+     * Requires:
+     * 1) a device that has logged in (via a cookie-based secret)
+     * 2) is originating at the same IP address
+     * 3) Pinged server has correct config file
+     * 4) Has database value
+     *
+     * Can be spoofed with inspected code at the same IP
+     ***/
+    $result=lookupItem($userid,'hardlink');
     if($result!==false)
       {
-        global $authsalt;
+        $authsalt = $this-> getSiteKey();
         $userdata=mysqli_fetch_assoc($result);
         $salt=$userdata['salt'];
-        $data=$authsalt.$userid.$salt;
-        $conf=sha1($data);
-        // possibly compare to the cookie
-        //$retval = $strong!==false ? true && doesThis($strong,$userid):true;
-        if($conf==$hash) return $retval;
+
+        if(empty($hash) || empty($secret))
+          {
+            $baseurl = 'http';
+            if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
+            $baseurl .= "://www.";
+            $baseurl.=$_SERVER['HTTP_HOST'];
+            
+            require_once('CONFIG.php');
+            
+            $base=array_slice(explode(".",$baseurl),-2);
+            $domain=$base[0];
+            
+            $cookiekey=$domain."_secret";
+            $cookieauth=$domain."_auth";
+
+            $secret=$_COOKIE[$cookiekey];
+            $hash=$_COOKIE[$cookieauth];
+            $from_cookie=true;
+          }
+        else $from_cookie=false;
+        
+        $value_create=$secret.$userdata['salt'].$userdata['auth_key'].$_SERVER['REMOTE_ADDR'].$authsalt; 
+        $conf=sha1($value_create);
+        return $conf==$hash;
       }
-    if($detail) return array("uid"=>$userid,"auth"=>$authsalt,"salt"=>$salt,"conf"=>$conf,"given_conf"=>$hash);
+    if($detail) return array("uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"given_conf"=>$hash,"from_cookie"=>strbool($from_cookie));
     return false;
   }
 
@@ -378,29 +420,29 @@ class UserFunctions {
     require_once('stronghash/php-stronghash.php');
     require_once('handlers/db_hook.inc');
     $hash=new Stronghash;
-    $otsalt=$hash->genUnique();
+    $otsalt=$hash->createSalt();
+    $cookie_secret=$hash->createSalt();
     //store it
-    global $default_table;
     $query="UPDATE `$default_table` SET auth_key='$otsalt' WHERE id='$id'";
     $l=openDB();
     $result=mysqli_query($l,$query);
     if(!$result) return array(false,'status'=>false,'error'=>"<p>".mysqli_error($l)."<br/><br/>ERROR: Could not log in.</p>");
-    $value_create=$userdata['salt'].$otsalt.$_SERVER['REMOTE_ADDR']; 
+    $value_create=$cookie_secret.$userdata['salt'].$otsalt.$_SERVER['REMOTE_ADDR'].$this->getSiteKey(); 
     // authenticated since last login. Nontransposable outside network.
     
     $value=sha1($value_create);
 
     $cookieuser=$domain."_user";
     $cookieauth=$domain."_auth";
-    $cookiealg=$domain."_alg";
+    $cookiekey=$domain."_secret";
     $cookiepic=$domain."_pic";
     
     /*echo "<pre>";
       echo "Cookie Info: $cookieuser $cookiealg $cookiepic \n $cookieauth :";
       print_r($value);
       echo "/<pre>";*/
-    setcookie($cookieauth,$value['hash'],$expire,null,$domain);
-    setcookie($cookiealg,$value['algo'],$expire,null,$domain);
+    setcookie($cookieauth,$value,$expire,null,$domain);
+    setcookie($cookiekey,$cookie_secret,$expire,null,$domain);
     setcookie($cookieuser,$userdata['username'],$expire,null,$domain);
     $path=$this->getUserPicture($userdata['id']);
     setcookie($cookiepic,$path,$expire,null,$domain);
