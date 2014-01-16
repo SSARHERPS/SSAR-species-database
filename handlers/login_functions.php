@@ -357,7 +357,7 @@ class UserFunctions {
      *
      * Can be spoofed with inspected code at the same IP
      ***/
-    $result=lookupItem($userid,'hardlink');
+    $result=lookupItem($userid,'dblink');
     if($result!==false && !is_array($result))
       {
         $authsalt = $this-> getSiteKey();
@@ -399,7 +399,7 @@ class UserFunctions {
     if($detail)
       {
         $detail=array("uid"=>$userid,"basis_conf"=>$hash,"have_secret"=>strbool(empty($secret)));
-        if(is_array($result)) $detail['error']=>$result['error'];
+        if(is_array($result)) $detail['error']=$result['error'];
         return $detail;
       }
     return false;
@@ -482,7 +482,7 @@ class UserFunctions {
       'secret'=>"{'$cookiekey':'$cookie_secret'}",
       'pic'=>"{'$cookiepic':'$path'}",
       'name'=>"{'$cookieperson':'$user_greet'",
-      'js'=>$jquerycookie;
+      'js'=>$jquerycookie
     );
   }
   
