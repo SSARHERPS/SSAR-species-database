@@ -362,7 +362,8 @@ class UserFunctions {
       {
         $authsalt = $this-> getSiteKey();
         $userdata=mysqli_fetch_assoc($result);
-        $salt=$userdata['salt'];
+        $pw_characters=json_decode($userdata['password'],true);
+        $salt=$pw_character['salt'];
 
         if(empty($hash) || empty($secret))
           {
@@ -382,6 +383,11 @@ class UserFunctions {
             $secret=$_COOKIE[$cookiekey];
             $hash=$_COOKIE[$cookieauth];
             $from_cookie=true;
+            if(empty($hash) || empty($secret))
+              {
+                if($detail) return array("uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"have_secret"=>strbool(empty($secret)),"from_cookie"=>strbool($from_cookie));
+                return false;
+              }
           }
         else $from_cookie=false;
         
@@ -390,7 +396,7 @@ class UserFunctions {
         if($detail) return array("uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"from_cookie"=>strbool($from_cookie));
         return $conf==$hash;
       }
-    if($detail) return array("uid"=>$userid,"basis_conf"=>$hash,"given_secret"=>strbool(empty($secret)));
+    if($detail) return array("uid"=>$userid,"basis_conf"=>$hash,"have_secret"=>strbool(empty($secret)));
     return false;
   }
 
@@ -416,41 +422,57 @@ class UserFunctions {
     $domain=$base[0];
     $shorturl=implode(".",$base);
 
-    $expire=time()+3600*24*7; // one week
+    $expire_days=7;
+    $expire=time()+3600*24*$expire_days;
     // Create a one-time key, store serverside
     require_once('stronghash/php-stronghash.php');
     require_once('handlers/db_hook.inc');
     $hash=new Stronghash;
     $otsalt=$hash->createSalt();
     $cookie_secret=$hash->createSalt();
+    $pw_characters=json_decode($userdata['password'],true);
+    $salt=$pw_character['salt'];
     //store it
     global $default_table;
     $query="UPDATE `$default_table` SET auth_key='$otsalt' WHERE id='$id'";
     $l=openDB();
     $result=mysqli_query($l,$query);
     if(!$result) return array(false,'status'=>false,'error'=>"<p>".mysqli_error($l)."<br/><br/>ERROR: Could not update login state.</p>");
-    $value_create=$cookie_secret.$userdata['salt'].$otsalt.$_SERVER['REMOTE_ADDR'].$this->getSiteKey(); 
+    $value_create=$cookie_secret.$salt.$otsalt.$_SERVER['REMOTE_ADDR'].$this->getSiteKey(); 
     // authenticated since last login. Nontransposable outside network.
     
     $value=sha1($value_create);
 
     $cookieuser=$domain."_user";
-    $cookieuser=$domain."_name";
+    $cookieperson=$domain."_name";
     $cookieauth=$domain."_auth";
     $cookiekey=$domain."_secret";
     $cookiepic=$domain."_pic";
-    
+
     /*echo "<pre>";
       echo "Cookie Info: $cookieuser $cookiealg $cookiepic \n $cookieauth :";
       print_r($value);
       echo "/<pre>";*/
-    setcookie($cookieauth,$value,$expire,null,$domain);
-    setcookie($cookiekey,$cookie_secret,$expire,null,$domain);
-    setcookie($cookieuser,$userdata['username'],$expire,null,$domain);
-    setcookie($cookieuser,$userdata['name'],$expire,null,$domain);
-    $path=$this->getUserPicture($userdata['id']);
-    setcookie($cookiepic,$path,$expire,null,$domain);
-    return array(true,'status'=>true,'user'=>"{ $cookieuser :".$userdata['username']."}",'auth'=>"{ $cookieauth :".$value['hash']."}",'algo'=>"{ $cookiealg :".$value['algo']."}");
+    setcookie($cookieauth,$value,$expire);
+    setcookie($cookiekey,$cookie_secret,$expire);
+    setcookie($cookieuser,$userdata['username'],$expire);
+    setcookie($cookieperson,$userdata['name'],$expire);
+    $path=$this->getUserPicture($userdata['id']); 
+    setcookie($cookiepic,$path,$expire);
+
+    $js_expires="{expires:$expire_days,path:'/'}";
+    $jquerycookie="";
+    
+    return array(
+      true,
+      'status'=>true,
+      'user'=>"{ '$cookieuser':'".$userdata['username']."'}",
+      'auth'=>"{'$cookieauth':'$value'}",
+      'secret'=>"{'$cookiekey':'$cookie_secret'}",
+      'pic'=>"{'$cookiepic':'$path'}",
+      'name'=>"{'$cookieperson':'".$userdata['name']."'",
+      'js'=>$jquerycookie;
+    );
   }
   
 }

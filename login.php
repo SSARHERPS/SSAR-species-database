@@ -27,8 +27,9 @@ if(!is_numeric($minimum_password_length) || $minimum_password_length < 8 ) $mini
  */
 
 $cookieuser=$domain."_user";
+$cookieperson=$domain."_name";
 $cookieauth=$domain."_auth";
-$cookiealg=$domain."_alg";
+$cookiekey=$domain."_secret";
 $cookiepic=$domain."_pic";
 
 /*
@@ -95,13 +96,16 @@ if($_REQUEST['q']=='submitlogin')
             $cookie_result=$user->createCookieTokens($userdata);
             if($debug)
               {
-                $user->validateUser($_POST['username']);
+                echo "<p>Cookie Result:</p>";
+                echo displayDebug($cookie_result);
+                echo "<p>User Validation:</p>";
+                echo displayDebug($user->validateUser($_POST['username'],null,null,true));
                 echo "<p>Entering cookie handling post call ...</p>";
               }
             if(!$cookie_result['status']) 
               {
                 echo "<div class='error'>".$cookie_result['error']."</div>";
-                if($debug) echo "<p>Got a cookie error:<br/></p>".displayDebug($cookie_result);
+                if($debug) echo "<p>Got a cookie error, see above cookie result</p>";
               }
             else
               {
@@ -118,7 +122,7 @@ if($_REQUEST['q']=='submitlogin')
                       {
                         // good user
                         // Check auth
-                        $cookiedebug.=' check-auth '.print_r($_COOKIE[$cookieuser],true);
+                        $cookiedebug.='good-user check-auth '.print_r($_COOKIE[$cookieuser],true);
                         $userdata=mysqli_fetch_assoc($result);
                         $salt=$userdata['salt'];
                         $otsalt=$userdata['auth_key'];
@@ -127,28 +131,38 @@ if($_REQUEST['q']=='submitlogin')
                         if($value==$_COOKIE[$cookieauth])
                           {
                             // Good cookie
-                            $cookiedebug.='good auth';
+                            $cookiedebug.='good-auth';
                             $logged_in=true;
                             $user=$_COOKIE[$cookieuser];
                           }
                         else
                           {
                             // bad cookie
-                            $cookiedebug.=' bad-auth ('.print_r($cookie_result,true).") for $cookieuser (expecting ".print_r($auth,true)." )<br/>".print_r($_COOKIE);
-                            setcookie($cookieuser,false,time()-3600*24*365,null,$domain);
-                            setcookie($cookieauth,false,time()-3600*24*365,null,$domain);
-                            setcookie($cookiealg,false,time()-3600*24*365,null,$domain);
-                            setcookie($cookiealg,false,time()-3600*24*365,null,$domain);
+                            $cookiedebug.=' bad-auth ('.print_r($cookie_result,true).") for $cookieuser. \nExpecting ".print_r($auth,true)." \nRaw cookie:".print_r($_COOKIE,true);
+                            if(!$debug)
+                              {
+                                $cookiedebug=."\n\nWiping ...";
+                                setcookie($cookieuser,false,time()-3600*24*365,null,$domain);
+                                setcookie($cookieperson,false,time()-3600*24*365,null,$domain);
+                                setcookie($cookieauth,false,time()-3600*24*365,null,$domain);
+                                setcookie($cookiekey,false,time()-3600*24*365,null,$domain);
+                                setcookie($cookiepic,false,time()-3600*24*365,null,$domain);
+                              }
                           }
                       }
                     else
                       {
                         // bad user
                         $cookiedebug.=' bad-user';
-                        setcookie($cookiuser,false,time()-3600*24*365,null,$domain);
-                        setcookie($cookieauth,false,time()-3600*24*365,null,$domain);
-                        setcookie($cookiealg,false,time()-3600*24*365,null,$domain);
-                        setcookie($cookiealg,false,time()-3600*24*365,null,$domain);
+                        if(!$debug)
+                          {
+                            $cookiedebug=."\n\nWiping ...";
+                            setcookie($cookieuser,false,time()-3600*24*365,null,$domain);
+                            setcookie($cookieperson,false,time()-3600*24*365,null,$domain);
+                            setcookie($cookieauth,false,time()-3600*24*365,null,$domain);
+                            setcookie($cookiekey,false,time()-3600*24*365,null,$domain);
+                            setcookie($cookiepic,false,time()-3600*24*365,null,$domain);
+                          }
                       }
                   }
                 else 
