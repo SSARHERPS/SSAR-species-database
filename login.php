@@ -64,6 +64,13 @@ if($debug==true)
     echo displayDebug($user->validateUser($_COOKIE[$cookielink],null,null,true));
   }
 
+$logged_in=$user->validateUser($_COOKIE[$cookielink]);
+if($logged_in)
+  {
+    $full_name=$xml->getTagContents($_COOKIE[$cookieperson],"<name>");
+    $first_name=$xml->getTagContents($_COOKIE[$cookieperson],"<fname>");
+    $display_name=$xml->getTagContents($_COOKIE[$cookieperson],"<dname>");
+  }
 
 $alt_forms="<div id='alt_logins'>
 <!-- OpenID, Google, Twitter, Facebook -->
@@ -267,10 +274,15 @@ else if($_REQUEST['q']=='create')
 	      </label>
 	      <input type='password' name='password2' id='password2' placeholder='Confirm password' required='required'/>
 	      <br/>
-              <label for='name'>
-                Name:
+              <label for='fname'>
+                First Name:
               </label>
-	      <input type='text' name='name' id='name' placeholder='Leslie Smith' required='required'/>
+	      <input type='text' name='fname' id='fname' placeholder='Leslie' required='required'/>
+	      <br/>
+              <label for='lname'>
+                Last Name:
+              </label>
+	      <input type='text' name='lname' id='lname' placeholder='Smith' required='required'/>
 	      <br/>
               <label for='dname'>
                 Display Name: 
@@ -322,7 +334,7 @@ else if($_REQUEST['q']=='create')
                       {
                         if(preg_match('/(?=^.{6,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',$_POST['password']) || strlen($_POST['password'])>20) // validate email, use in validation to notify user.
                           {
-                            $res=$user->createUser($_POST['username'],$_POST['password'],$_POST['name'],$_POST['dname']);
+                            $res=$user->createUser($_POST['username'],$_POST['password'],array($_POST['fname'],$_POST['lname']),$_POST['dname']);
                             if($res[0]) 
                               {
                                 $cookie_result=$user->createCookieTokens($res);
@@ -405,7 +417,8 @@ else if($_REQUEST['confirm']!=null)
   }
 else
   {
-    echo $login_preamble . $loginform.$loginform_close;
+    if(!$logged_in) echo $login_preamble . $loginform.$loginform_close;
+    echo echo "Welcome back, ";
   }
 echo "<script type='text/javascript'>
 function loadScript(url, callback) {

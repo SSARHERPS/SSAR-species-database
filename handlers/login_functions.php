@@ -81,7 +81,7 @@ class UserFunctions {
     $data_init="<xml><algo>$algo</algo>$rounds</xml>";
     $ne=encryptThis($name,$pw_in,$salt); // only encrypt if requested, then put in secdata
     $sdata_init="<xml><name>".$ne[0]."</name></xml>";
-    $names="<xml><fname>$name</fname><dname>$dname</dname></xml>";
+    $names="<xml><name>".implode(" ",$name)."</name><fname>".$name[0]."</fname><lname>".$name[1]."</lname><dname>$dname</dname></xml>";
     $hardlink=sha1($salt.$creation);
     //echo "<pre>Storing:\n";
     $fields=array('username','password','pass_meta','creation','status_tracker','name','flag','admin_flag','su_flag','disabled','dtime','auth_key','data','secdata','special_1','special_2','dblink','defaults','public_key','private_key');
@@ -128,7 +128,7 @@ class UserFunctions {
         */
         if (is_numeric($id)) 
           {
-            $res = $this->lookupUser($username, $pw_in,true);
+            $res = $this->lookupUser($username, $pw_in);
             $userdata=$res[1];
             $id=$userdata['id'];
 
@@ -241,7 +241,7 @@ class UserFunctions {
     else return array(false,'Failure: unknown database error. Your user was unable to be saved.');
   }
 
-  public function lookupUser($username,$pw,$return=false)
+  public function lookupUser($username,$pw,$return=true)
   {
     // check it's a valid email! validation skipped.
     require_once('handlers/xml.php');
@@ -424,7 +424,7 @@ class UserFunctions {
           }
         else
           {
-            $r = $this->lookupUser($username,$password_or_is_data,true);
+            $r = $this->lookupUser($username,$password_or_is_data);
             if($r[0]===false) return array(false,'status'=>false,'error'=>"<p>Bad user credentials</p>","username"=>$username);
             $userdata=$r[1];
           }
