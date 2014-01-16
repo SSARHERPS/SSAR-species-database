@@ -4,15 +4,28 @@
  */
 
 // Global cookie vars
+/*
+ * Baseurl is overwritten if specified in config
+ */
 $baseurl=$_SERVER['HOST_NAME'];
+require_once('CONFIG.php');
+
 $base=array_slice(explode(".",$baseurl),-2);
+
+/*
+ * Cookie names for tracking
+ */
+
 $cookiename=implode(".",$base);
 $cookieuser=$cookiename."_user";
 $cookieauth=$cookiename."_auth";
 $cookiealg=$cookiename."_alg";
 $cookiepic=$cookiename."_pic";
 
-require_once('CONFIG.php');
+/*
+ * Required inclusions
+ */
+
 require_once('handlers/login_functions.php');
 require_once('handlers/functions.php');
 require_once('handlers/db_hook.php');
@@ -22,7 +35,7 @@ require_once('handlers/xml.php');
  * Test the database ...
  */
 
-global $default_table;
+testDefaults();
 
 $xml=new Xml;
 $user=new UserFunctions;

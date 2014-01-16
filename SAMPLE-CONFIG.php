@@ -4,10 +4,10 @@
  * Update the variables in here and re-save as config.php for use.
  ***/
 
-$default_table='';
+$default_table='userdata';
 $default_database="";
 $default_user="";
-$default_password="";
+$default_password=""; // https://www.random.org/passwords/?num=5&len=24&format=plain&rnd=new
 $sql_url = 'localhost';
 
 $recaptcha_public_key="";

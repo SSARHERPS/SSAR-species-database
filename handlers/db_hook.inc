@@ -6,6 +6,27 @@
 require_once('CONFIG.php');
 require_once('handlers/functions.inc');
 
+function testDefaults() {
+  global $default_table;
+  try
+    {
+      $l=openDB();
+      if($l!==false)
+        {
+          if(mysqli_query($l,"SELECT * FROM $default_table LIMIT 1")===false)
+            {
+              if(createTable()) return true;
+              or die("Table $default_table does not exist and could not be created");
+            }
+        }
+      or die("Unable to connect to database");
+    }
+  catch(Exception $e)
+    {
+      die("An unexpected error occured -- the system reported '$e'");
+    }
+}
+
 function createTable() {
   global $db_cols,$default_table;
   $query="CREATE TABLE $default_table (id int(10) NOT NULL auto_increment";
