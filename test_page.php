@@ -1,5 +1,5 @@
 <?php
-
+   ob_start( 'ob_gzhandler' ); // handles headers
 /*
  * Sample page to show the whole kit n' kaboodle in action.
  */

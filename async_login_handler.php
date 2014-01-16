@@ -1,8 +1,8 @@
 <?php
 
-require_once('handlers/login_functions.php');
-require_once('handlers/functions.inc');
-require_once('handlers/db_hook.inc');
+require_once(dirname(__FILE__).'/handlers/login_functions.php');
+require_once(dirname(__FILE__).'/handlers/functions.inc');
+require_once(dirname(__FILE__).'/handlers/db_hook.inc');
 
 function returnAjax($data)
 {
