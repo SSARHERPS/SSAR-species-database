@@ -17,6 +17,13 @@ $recaptcha_private_key="";
 $service_email='';
 $minimum_password_length='15';
 
+
+/***
+ * Path to user data storage
+ ***/
+$user_data_storage='';
+$profile_picture_storage = $user_data_storage.'';
+
 /***
 
  $baseurl=""; // define if other than the hosted URL

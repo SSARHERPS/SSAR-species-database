@@ -2,14 +2,31 @@
 
 class UserFunctions {
 
+  function __construct()
+  {
+    require_once('CONFIG.php');
+
+    if(!empty($user_data_storage))
+      {
+        $user_data_storage .= substr($user_data_storage,-1)=="/" ? '':'/';
+        $this->data_path=$user_data_storage;
+      }
+    else $this->data_path = "userdata/";
+
+    if(!empty($profile_picture_storage))
+      {
+        $profile_picture_storage .= substr($profile_picture_storage,-1)=='/' ? '':'/';
+        $this->picture_path = $this->data_path . $profile_picture_storage;
+      }
+    else $this->picture_path = $this->data_path . "profilepics/";
+          
+  }
 
   public function microtime_float()
   {
     list($usec, $sec) = explode(" ", microtime());
     return ((float)$usec + (float)$sec);
   }
-
-
   
   public function createUser($username,$pw_in,$name,$dname,$zip=null)
   {
@@ -141,7 +158,7 @@ class UserFunctions {
                 setcookie($cookieauth,$value['hash'],$expire);
                 setcookie($cookiealg,$value['algo'],$expire);//,null,$domain);
                 setcookie($cookieuser,$userdata['username'],$expire);//,null,$domain);
-                $path=$this->getUserPicture($userdata['id'],'userdata/profilepics');
+                $path=$this->getUserPicture($userdata['id']);
                 setcookie($cookiepic,$path,$expire);//,null,$domain);
                 // some secure, easy way to access their name?
                 // Need access -- name (id), email. Give server access?
@@ -295,10 +312,11 @@ class UserFunctions {
   }
 
 
-  public function getUserPicture($id,$path)
+  public function getUserPicture($id,$path=$this->picture_path,$extra_types_array=null)
   {
-    if(substr($path,-1)!="/") $path=$path."/";
-    $valid_ext=array('jpg','jpeg','png','bmp','gif');
+    $path.= substr($path,-1)=='/' ? '':'/';
+    $valid_ext=array('jpg','jpeg','png','bmp','gif','svg');
+    if(is_array($extra_types_array)) $valid_ext = array_merge($extra_types_array);
     foreach($valid_ext as $ext)
       {
         $file=$id.".".$ext;
@@ -363,7 +381,7 @@ class UserFunctions {
     $otsalt=$hash->genUnique();
     //store it
     global $default_table;
-    $query="UPDATE `$default_table` SET cookie_key='$otsalt' WHERE id='$id'";
+    $query="UPDATE `$default_table` SET auth_key='$otsalt' WHERE id='$id'";
     $l=openDB();
     $result=mysqli_query($l,$query);
     if(!$result) return array(false,'status'=>false,'error'=>"<p>".mysqli_error($l)."<br/><br/>ERROR: Could not log in.</p>");
@@ -381,11 +399,11 @@ class UserFunctions {
       echo "Cookie Info: $cookieuser $cookiealg $cookiepic \n $cookieauth :";
       print_r($value);
       echo "/<pre>";*/
-    setcookie($cookieauth,$value['hash'],$expire);
-    setcookie($cookiealg,$value['algo'],$expire);//,null,$domain);
-    setcookie($cookieuser,$userdata['username'],$expire);//,null,$domain);
-    $path=$this->getUserPicture($userdata['id'],'userdata/profilepics');
-    setcookie($cookiepic,$path,$expire);//,null,$domain);
+    setcookie($cookieauth,$value['hash'],$expire,null,$domain);
+    setcookie($cookiealg,$value['algo'],$expire,null,$domain);
+    setcookie($cookieuser,$userdata['username'],$expire,null,$domain);
+    $path=$this->getUserPicture($userdata['id']);
+    setcookie($cookiepic,$path,$expire,null,$domain);
     return array(true,'status'=>true,'user'=>"{ $cookieuser :".$userdata['username']."}",'auth'=>"{ $cookieauth :".$value['hash']."}",'algo'=>"{ $cookiealg :".$value['algo']."}");
   }
   

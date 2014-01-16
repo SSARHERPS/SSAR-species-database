@@ -117,7 +117,7 @@ if($_REQUEST['q']=='submitlogin')
                         $cookiedebug.=' check-auth '.print_r($_COOKIE[$cookieuser],true);
                         $userdata=mysqli_fetch_assoc($result);
                         $salt=$userdata['salt'];
-                        $unique=$userdata['cookie_key'];
+                        $unique=$userdata['auth_key'];
                         $ip=$_SERVER['REMOTE_ADDR'];
                         $auth=sha($salt.$unique.$ip,null,'sha512',false);
                         if($auth['hash']==$_COOKIE[$cookieauth])
@@ -131,7 +131,6 @@ if($_REQUEST['q']=='submitlogin')
                           {
                             // bad cookie
                             $cookiedebug.=' bad-auth ('.print_r($cookie_result,true).") for $cookieuser (expecting ".print_r($auth,true)." )<br/>".print_r($_COOKIE);
-                            $domain=".".substr($baseurl,strpos($baseurl,'.'));
                             setcookie($cookieuser,false,time()-3600*24*365,null,$domain);
                             setcookie($cookieauth,false,time()-3600*24*365,null,$domain);
                             setcookie($cookiealg,false,time()-3600*24*365,null,$domain);
@@ -142,7 +141,6 @@ if($_REQUEST['q']=='submitlogin')
                       {
                         // bad user
                         $cookiedebug.=' bad-user';
-                        $domain=".".substr($baseurl,strpos($baseurl,'.'));
                         setcookie($cookiuser,false,time()-3600*24*365,null,$domain);
                         setcookie($cookieauth,false,time()-3600*24*365,null,$domain);
                         setcookie($cookiealg,false,time()-3600*24*365,null,$domain);
