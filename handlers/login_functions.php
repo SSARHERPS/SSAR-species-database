@@ -206,7 +206,7 @@ class UserFunctions {
     else return array(false,'Failure: unknown database error. Your user was unable to be saved.');
   }
 
-  function lookupUser($username,$pw,$return=false)
+  public function lookupUser($username,$pw,$return=false)
   {
     // check it's a valid email! validation skipped.
     $xml=new Xml;
@@ -342,7 +342,7 @@ class UserFunctions {
     $expire=time()+3600*24*7; // one week
     // Create a one-time key, store serverside
     require_once('stronghash/php-stronghash.php');
-    require_once('handlers/db_hook.php');
+    require_once('handlers/db_hook.inc');
     $hash=new Stronghash;
     $otsalt=$hash->genUnique();
     //store it
@@ -350,7 +350,7 @@ class UserFunctions {
     $query="UPDATE `$default_table` SET cookie_key='$otsalt' WHERE id='$id'";
     $l=openDB();
     $result=mysqli_query($l,$query);
-    if(!$result) return array(false,'status'=>false,'error'=>"<p>".myslqi_error($l)."<br/><br/>ERROR: Could not log in.</p>");
+    if(!$result) return array(false,'status'=>false,'error'=>"<p>".mysqli_error($l)."<br/><br/>ERROR: Could not log in.</p>");
     $value_create=$userdata['salt'].$otsalt.$_SERVER['REMOTE_ADDR']; 
     // authenticated since last login. Nontransposable outside network.
     $value=sha1($value_create);

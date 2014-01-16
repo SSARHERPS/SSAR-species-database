@@ -44,21 +44,16 @@ function dirListPHP ($directory,$filter=null)
   return $results;
 }
 
-
-
-
-function displayDebug($string)
-{
-  // alias
-  return debugDisplay($string);
-}
 function debugDisplay($string)
 {
+  $string=print_r($string,true);
   $string=str_replace("&","&amp;",$string);
   $string=str_replace("<","&lt;",$string);
   $string=str_replace(">","&gt;",$string);
-  return $string;
+  return "<pre>".$string."</pre>";
 }
+function displayDebug($string){ return debugDisplay($string); }
+
 function datestamp()
 {
   return date("Ymd-HisO");
@@ -148,7 +143,7 @@ function strbool($bool)
   // returns the string of a boolean as 'true' or 'false'.
   if(is_string($bool)) $bool=boolstr($bool); // if a string is passed, convert it to a bool
   if(is_bool($bool)) return $bool ? 'true' : 'false';
-  else return false;
+  else return 'non_bool';
 }
 function boolstr($string)
 {
