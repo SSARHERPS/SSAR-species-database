@@ -27,8 +27,8 @@ $cookiepic=$cookiename."_pic";
  */
 
 require_once('handlers/login_functions.php');
-require_once('handlers/functions.php');
-require_once('handlers/db_hook.php');
+require_once('handlers/functions.inc');
+require_once('handlers/db_hook.inc');
 require_once('handlers/xml.php');
 
 /*
@@ -389,5 +389,5 @@ window.onload = function() {
     }
     else lateJS;
 }
-</script>":
+</script>";
 ?>
