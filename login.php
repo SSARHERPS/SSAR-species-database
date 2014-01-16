@@ -51,7 +51,9 @@ if($debug==true)
     if($r===true) echo "<p>(Database OK)</p>";
     else echo "<p>(Database Error - ' $r ')</p>";
     echo "<p>Visiting $baseurl on '$shorturl' with a human domain '$domain'</p>";
-    echo "<p>".sanitize('tigerhawk_vok-goes.special@gmail.com')."</p>";
+    echo "<p>".displayDebug(sanitize('tigerhawk_vok-goes.special@gmail.com'))."</p>";
+    $xkcd_check="Robert'); DROP TABLE Students;--"; // https://xkcd.com/327/
+    echo "<p>".displayDebug(sanitize($xkcd_check))."</p>";
   }
 
 $xml=new Xml;
@@ -293,7 +295,7 @@ else if($_REQUEST['q']=='create')
                                 $to=$_POST['username'];
                                 $headers  = 'MIME-Version: 1.0' . "\r\n";
                                 $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-                                $headers .= "From: Account Registration <blackhole@".$base.">";
+                                $headers .= "From: Account Registration <blackhole@".$shorturl.">";
                                 $subject='New Account Creation';
                                 $body = "<p>Congratulations! Your new account has been created. Your username is this email address ($to). We do not keep a record of your password we can access, so please be sure to remember it!</p><p>If you do forget your password, you can <a href='mailto:".$service_email."?subject=Reset%20Password'>email support</a> to reset your password for you with a picture of government ID with your registered name and zip code. All secure data will be lost in the reset.</p>";
                                 if(mail($to,$subject,$body,$headers)) echo "<p>A confirmation email has been sent to your inbox at $to .</p>";

@@ -13,8 +13,7 @@ class UserFunctions {
   {
     // Send email for validation
     require_once('handlers/db_hook.inc');
-    $user=sanitize($username); // fix this
-    //$user=$username;
+    $user=sanitize($username); 
     $preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
     if($user!=$username) return array(false,'Your chosen email contained injectable code. Please try again.');
     if(preg_match($preg,$username)!=1) return array(false,'Your email is not a valid email address. Please try again.');
