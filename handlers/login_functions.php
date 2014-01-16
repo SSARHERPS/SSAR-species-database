@@ -231,7 +231,7 @@ class UserFunctions {
     return $path."default.jpg";
   }
 
-  public function validateUser($userid,$hash=null,$secret=null,$detail=false)
+  public function validateUser($userid=null,$hash=null,$secret=null,$detail=false)
   {
     /***
      * Returns true or false based on user validation
@@ -244,7 +244,19 @@ class UserFunctions {
      *
      * Can be spoofed with inspected code at the same IP
      ***/
+    $baseurl = 'http';
+    if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
+    $baseurl .= "://www.";
+    $baseurl.=$_SERVER['HTTP_HOST'];
+            
+    require_once(dirname(__FILE__).'/CONFIG.php');
+            
+    $base=array_slice(explode(".",$baseurl),-2);
+    $domain=$base[0];
+    $cookielink=$domain."_link";
+    
     $col='dblink';
+    if(empty($userid)) $userid=$_COOKIE[$cookielink];
     $result=lookupItem($userid,$col);
     if($result!==false && !is_array($result))
       {
@@ -261,15 +273,6 @@ class UserFunctions {
 
         if(empty($hash) || empty($secret))
           {
-            $baseurl = 'http';
-            if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
-            $baseurl .= "://www.";
-            $baseurl.=$_SERVER['HTTP_HOST'];
-            
-            require_once(dirname(__FILE__).'/CONFIG.php');
-            
-            $base=array_slice(explode(".",$baseurl),-2);
-            $domain=$base[0];
             
             $cookiekey=$domain."_secret";
             $cookieauth=$domain."_auth";
