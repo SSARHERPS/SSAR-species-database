@@ -93,6 +93,11 @@ if($_REQUEST['q']=='submitlogin')
             echo "<h3>Welcome back, ".$xml->getTagContents($userdata['dec_name'],"<fname>")."</h3>"; //Welcome message
 		       
             $cookie_result=$user->createCookieTokens($userdata);
+            if($debug)
+              {
+                $user->validateUser($_POST['username']);
+                echo "<p>Entering cookie handling post call ...</p>";
+              }
             if(!$cookie_result['status']) 
               {
                 echo "<div class='error'>".$cookie_result['error']."</div>";
@@ -100,7 +105,6 @@ if($_REQUEST['q']=='submitlogin')
               }
             else
               {
-                // some secure, easy way to access their name?
                 // Need access -- name (id), email. Give server access?
                 echo "<p>Logging in from another device or browser will end your session here. You will be redirected in 3 seconds...</p>";
                 $logged_in=true;
@@ -154,8 +158,13 @@ if($_REQUEST['q']=='submitlogin')
                   }
                 if($debug)
                   {
+                    echo "<pre>CookieDebug:\n";
                     echo $cookiedebug;
+                    echo "\nCookie Result:\n</pre>";
                     displayDebug($cookie_result);
+                    echo "<p>Cookie Supervar</p>";
+                    displayDebug($_COOKIE);
+                    
                   }
                 else header("Refresh: 0; url=$baseurl"); // was at 3
               }
@@ -396,6 +405,7 @@ var lateJS= function() {
         console.log('Loading late libraries');
         passLengthOverride=$minimum_password_length;
         $.getScript('js/base64.js');
+        $.getScript('js/jquery.cookie.js');
         $.getScript('js/user_common.js');
         $(document).ready(function(){
             $deferredJS

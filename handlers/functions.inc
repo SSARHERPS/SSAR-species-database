@@ -46,7 +46,14 @@ function dirListPHP ($directory,$filter=null)
 
 function debugDisplay($string)
 {
-  $string=print_r($string,true);
+  if(is_array($string))
+    {
+      foreach($string as $k=>$el)
+        {
+          if(is_bool($el)) $string[$k]="(bool) ".strbool($el);
+        }
+      $string=print_r($string,true);
+    }
   $string=str_replace("&","&amp;",$string);
   $string=str_replace("<","&lt;",$string);
   $string=str_replace(">","&gt;",$string);

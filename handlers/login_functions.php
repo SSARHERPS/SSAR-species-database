@@ -26,7 +26,7 @@ class UserFunctions {
   /***
    * Helper functions
    ***/
-  private function getSiteKey() { return $this->siteKey }
+  private function getSiteKey() { return $this->siteKey; }
 
   public function microtime_float()
   {
@@ -424,16 +424,18 @@ class UserFunctions {
     $otsalt=$hash->createSalt();
     $cookie_secret=$hash->createSalt();
     //store it
+    global $default_table;
     $query="UPDATE `$default_table` SET auth_key='$otsalt' WHERE id='$id'";
     $l=openDB();
     $result=mysqli_query($l,$query);
-    if(!$result) return array(false,'status'=>false,'error'=>"<p>".mysqli_error($l)."<br/><br/>ERROR: Could not log in.</p>");
+    if(!$result) return array(false,'status'=>false,'error'=>"<p>".mysqli_error($l)."<br/><br/>ERROR: Could not update login state.</p>");
     $value_create=$cookie_secret.$userdata['salt'].$otsalt.$_SERVER['REMOTE_ADDR'].$this->getSiteKey(); 
     // authenticated since last login. Nontransposable outside network.
     
     $value=sha1($value_create);
 
     $cookieuser=$domain."_user";
+    $cookieuser=$domain."_name";
     $cookieauth=$domain."_auth";
     $cookiekey=$domain."_secret";
     $cookiepic=$domain."_pic";
@@ -445,6 +447,7 @@ class UserFunctions {
     setcookie($cookieauth,$value,$expire,null,$domain);
     setcookie($cookiekey,$cookie_secret,$expire,null,$domain);
     setcookie($cookieuser,$userdata['username'],$expire,null,$domain);
+    setcookie($cookieuser,$userdata['name'],$expire,null,$domain);
     $path=$this->getUserPicture($userdata['id']);
     setcookie($cookiepic,$path,$expire,null,$domain);
     return array(true,'status'=>true,'user'=>"{ $cookieuser :".$userdata['username']."}",'auth'=>"{ $cookieauth :".$value['hash']."}",'algo'=>"{ $cookiealg :".$value['algo']."}");
