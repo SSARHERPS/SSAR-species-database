@@ -300,7 +300,7 @@ else if($_REQUEST['q']=='create')
               $recaptcha
               </div>
               <div class='right' style='width:25%'>
-              <p><small>We require a password of at least $minimum_password_length characters with at least one upper case letter, at least one lower case letter, and at least one digit or special character. You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least $minimum_password_length characters, with no security requirements.</small></p>
+              <p><small>We require a password of at least $minimum_password_length characters with at least one upper case letter, at least one lower case letter, and at least one digit or special character. You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least $password_threshold_length characters, with no security requirements.</small></p>
               </div>
               <br class='clear'/>
 	      <input type='submit' value='Create' id='createUser_submit' disabled='disabled'/>
