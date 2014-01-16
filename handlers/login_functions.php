@@ -62,13 +62,10 @@ class UserFunctions {
     if($result!==false) 
       {
         $data=mysqli_fetch_assoc($result);
-        /*echo "<pre>";
-          print_r($data);
-          echo "\n" . microtime_float() . "\n";
-          echo "</pre>";*/
-        if($data['username']==$username) return array(false,'Your chosen username is already taken. Please try again.');
+        if($data['username']==$username) return array(false,'Your email is already registered. Please try again. Did you forget your password?');
       }
     require_once('CONFIG.php');
+    global $minimum_password_length,$password_threshold_length;
     if(strlen($pw_in)<$minimum_password_length) return array(false,'Your password is too short. Please try again.');
     require_once('stronghash/php-stronghash.php');
     $hash=new Stronghash;
@@ -93,17 +90,10 @@ class UserFunctions {
     if($test_res)
       {
         // Get ID value
-        global $default_table;
-        $result=lookupItem($user,'username',$default_table,null,false,true);
-        //echo "\nLooking up $user ...obtained \n ";
-        $data=@mysqli_fetch_assoc($result);
-        $id=$data['id'];
-        /*print_r($test_res);
-          print_r($result);
-          print_r($data);
-          echo addItem($fields,$store,null,null,true);
-          echo "</pre>";*/
-
+        $res = $this->lookupUser($username, $pw_in);
+        $userdata=$res[1];
+        $id=$userdata['id'];
+        
         /* Uncomment if authentication has been requested */
         /*
         // Create hash - user + encrypted name + salt
@@ -117,7 +107,7 @@ class UserFunctions {
         $to='admin@'.substr($baseurl,strpos($baseurl,'.'));
         $headers  = 'MIME-Version: 1.0' . "\r\n";
         $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-        $headers .= "From: $name (via $title) <$email>";
+        $headers .= "From: $name (via $domain) <$email>";
         $subject="[User Signup] New User - $name";
         $body="<p>$name is requesting access to files for $title. You can click the following link to enable access to the files, and click the link later to disable access.</p>\n<p><a href='$validlink'>$validlink</a><p>\n<p>Thank you. For debugging purposes, the user was hashed with $algo.</p>";
         if(mail($to,$subject,$body,$headers))
@@ -126,114 +116,11 @@ class UserFunctions {
         return array(true,"Success! You will receive confirmation when your account has been activated.");
         }
         */
-        if (is_numeric($id)) 
+        if (is_numeric($id) && !empty($userdata)) 
           {
-            $res = $this->lookupUser($username, $pw_in);
-            $userdata=$res[1];
-            $id=$userdata['id'];
 
-            /*echo "<pre>";
-              print_r($userdata);
-              echo "\nRes\n";
-              print_r($res);
-              echo "</pre>";*/
-            //Set a cookie
-            $cookiename=str_replace(" ","",$title);
-            $domain=".".substr($baseurl,strpos($baseurl,'.'));
-            $expire=time()+3600*24*7; // one week
-            // Create a one-time key, store serverside
-            $otsalt=$hash->genUnique();
-            //store it
-            $query="UPDATE $default_table SET auth_key='$otsalt' WHERE id='$id'";
-            $l=openDB();
-            mysqli_query($l,'BEGIN');
-            $result=mysqli_query($l,$query);
-            /*echo "<pre>Sent query: $query obtaining result:\n";
-              print_r($result);
-              echo "</pre>";*/
-            if(!$result) 
-              {
-                $r=mysqli_query($l,'ROLLBACK');
-                echo "<p class='error'>".mysqli_error($l)."<br/><br/>ERROR: Could not log in.</p>";
-                if($r===false)
-                  {
-                    // error reporting
-                  }
-                mysqli_close($l);
-              }
-            else
-              {
-                $r=mysqli_query($l,'COMMIT');
-                mysqli_close($l);
-                $value_create=$userdata['salt'].$otsalt.$_SERVER['REMOTE_ADDR']; 
-                // authenticated since last login. Nontransposable outside network.
-                $value=sha1($value_create);
-                $cookieuser=$cookiename."_user";
-                $cookieauth=$cookiename."_auth";
-                $cookiealg=$cookiename."_alg";
-                $cookiepic=$cookiename."_pic";
-                $cookiepic=$cookiename."_pic";
-                setcookie($cookieauth,$value['hash'],$expire);
-                setcookie($cookiealg,$value['algo'],$expire);//,null,$domain);
-                setcookie($cookieuser,$userdata['username'],$expire);//,null,$domain);
-                $path=$this->getUserPicture($userdata['id']);
-                setcookie($cookiepic,$path,$expire);//,null,$domain);
-                // some secure, easy way to access their name?
-                // Need access -- name (id), email. Give server access?
-                $logged_in=true;
-
-                if(isset($_COOKIE[$cookieuser]) || $logged_in===true)
-                  {
-                    $cookiedebug.="cookie-enter";
-                    // Cookies are set
-                    $result=lookupItem($_COOKIE[$cookieuser],'username',null,null,false,true);
-                    if($result!==false)
-                      {
-                        // good user
-                        // Check auth
-                        $cookiedebug.=' check-auth';
-                        $userdata=mysqli_fetch_assoc($result);
-                        $salt=$userdata['salt'];
-                        $unique=$userdata['auth_key'];
-                        $ip=$_SERVER['REMOTE_ADDR'];
-                        $auth=sha1($salt.$unique.$ip);
-                        if($auth['hash']==$_COOKIE[$cookieauth])
-                          {
-                            // Good cookie
-                            $cookiedebug.=' good auth';
-                            $logged_in=true;
-                            $user=$_COOKIE[$cookieuser];
-                          }
-                        else
-                          {
-                            // bad cookie
-                            $cookiedebug.=' bad-auth';
-                            $domain=".".substr($baseurl,strpos($baseurl,'.'));
-                            setcookie($cookieuser,false,time()-3600*24*365,null,$domain);
-                            setcookie($cookieauth,false,time()-3600*24*365,null,$domain);
-                            setcookie($cookiealg,false,time()-3600*24*365,null,$domain);
-                            setcookie($cookiealg,false,time()-3600*24*365,null,$domain);
-                          }
-                      }
-                    else
-                      {
-                        // bad user
-                        $cookiedebug.=' bad-user';
-                        $domain=".".substr($baseurl,strpos($baseurl,'.'));
-                        setcookie($cookiuser,false,time()-3600*24*365,null,$domain);
-                        setcookie($cookieauth,false,time()-3600*24*365,null,$domain);
-                        setcookie($cookiealg,false,time()-3600*24*365,null,$domain);
-                        setcookie($cookiealg,false,time()-3600*24*365,null,$domain);
-                      }
-                  }
-                else 
-                  {
-                    $logged_in=false;
-                    $cookiedebug.='cookies not set for '.$cookiename;
-                  }
-                ob_end_flush();
-              }
-
+            $this->createCookieTokens($userdata,true);
+            
             return array_merge(array(true,'Sucess!'),$userdata);
           }
         else return array(false,'Failure: Unable to verify user creation');
@@ -322,11 +209,11 @@ class UserFunctions {
           }
         else
           {
-            return array(false,'Bad password');
+            return array(false,'message'=>'Sorry, your username or password is incorrect.','error'=>'Bad Password');
           }
         // end good username loop 
       }
-    else return array(false,'Unrecognized username');
+    else return array(false,'meassage'=>'Sorry, your username or password is incorrect.','error'=>'Bad username');
   }
 
 
@@ -455,10 +342,15 @@ class UserFunctions {
         global $default_table;
         $query="UPDATE `$default_table` SET auth_key='$otsalt' WHERE id='$id'";
         $l=openDB();
+        mysqli_query($l,'BEGIN');
         $result=mysqli_query($l,$query);
-        if(!$result) return array(false,'status'=>false,'error'=>"<p>".mysqli_error($l)."<br/><br/>ERROR: Could not update login state.</p>");
-
-    
+        if(!$result)
+          {
+            $r=mysqli_query($l,'ROLLBACK');
+            return array(false,'status'=>false,'error'=>"<p>".mysqli_error($l)."<br/><br/>ERROR: Could not update login state.</p>");
+          }
+        else $r=mysqli_query($l,'COMMIT');
+        
         $value_create=array(
           'secret'=>$cookie_secret,
           'salt'=>$salt,

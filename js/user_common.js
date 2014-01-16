@@ -1,4 +1,5 @@
 function checkPasswordLive() {
+    // the "8" needs to be passMinLen
     var goodbg='#cae682';
     var badbg='#e5786d';
     var pass=$('#password').val();
@@ -6,7 +7,7 @@ function checkPasswordLive() {
         $('#password').css('background',goodbg);
         basepwgood=true;
     }
-    else if(pass.match(/^(?:(?=^.{6,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$)$/)) {
+    else if(pass.match(/^(?:(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$)$/)) {
         $('#password').css('background',goodbg);
         basepwgood=true;
     }

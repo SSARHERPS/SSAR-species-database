@@ -24,11 +24,11 @@ $recaptcha_private_key="";
 $site_security_token=""; // https://www.random.org/passwords/?num=3&len=24&format=plain&rnd=new
 
 /***
- * If not set, minimum password length defaults to 21.
+ * If not set, minimum password length defaults to 8, with a threshold of 20.
  ***/
 $service_email='';
 $minimum_password_length='';
-
+$password_threshold_length='';
 
 /***
  * Path to user data storage

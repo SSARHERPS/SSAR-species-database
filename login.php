@@ -20,7 +20,8 @@ $base=array_slice(explode(".",$baseurl),-2);
 $domain=$base[0];
 $shorturl=implode(".",$base);
 
-if(!is_numeric($minimum_password_length) || $minimum_password_length < 8 ) $minimum_password_length=21;
+if(!is_numeric($minimum_password_length)) $minimum_password_length=8;
+if(!is_numeric($password_threshold_length)) $password_threshold_length=20;
 
 /*
  * Cookie names for tracking
@@ -296,7 +297,7 @@ else if($_REQUEST['q']=='create')
               $recaptcha
               </div>
               <div class='right' style='width:25%'>
-              <p><small>We require a password of at least six characters with at least one upper case letter, at least one lower case letter, and at least one digit or special character. You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least $minimum_password_length characters, with no security requirements.</small></p>
+              <p><small>We require a password of at least $minimum_password_length characters with at least one upper case letter, at least one lower case letter, and at least one digit or special character. You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least $minimum_password_length characters, with no security requirements.</small></p>
               </div>
               <br class='clear'/>
 	      <input type='submit' value='Create' id='createUser_submit' disabled='disabled'/>
@@ -332,12 +333,11 @@ else if($_REQUEST['q']=='create')
                   {
                     if($_POST['password']==$_POST['password2'])
                       {
-                        if(preg_match('/(?=^.{6,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',$_POST['password']) || strlen($_POST['password'])>20) // validate email, use in validation to notify user.
+                        if(preg_match('/(?=^.{'.$minimum_password_length.',}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',$_POST['password']) || strlen($_POST['password'])>$password_threshold_length) // validate email, use in validation to notify user.
                           {
                             $res=$user->createUser($_POST['username'],$_POST['password'],array($_POST['fname'],$_POST['lname']),$_POST['dname']);
                             if($res[0]) 
                               {
-                                $cookie_result=$user->createCookieTokens($res);
                                 echo "<h3>".$res[1]."</h3>"; //jumpto1
                                 // email user
                                 $to=$_POST['username'];
@@ -354,7 +354,7 @@ else if($_REQUEST['q']=='create')
                           }
                         else
                           { 
-                            echo "<p class='error'>Your password was not long enough (6 characters) or did not match minimum complexity levels (one upper case letter, one lower case letter, one digit or special character). You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least $minimum_password_length characters. Please go back and try again.</p>";
+                            echo "<p class='error'>Your password was not long enough ($minimum_password_length characters) or did not match minimum complexity levels (one upper case letter, one lower case letter, one digit or special character). You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least $password_threshold_length characters. Please go back and try again.</p>";
                           }
                       }
                     else echo "<p class='error'>Your passwords did not match. Please go back and try again.</p>";
@@ -364,7 +364,7 @@ else if($_REQUEST['q']=='create')
           }
         else echo $createform;
       }
-    else die("Your ReCAPTCHA library hasn't been set up. Please store your public and private keys in CONFIG.php.");
+    else echo "<p class='error'>This site's ReCAPTCHA library hasn't been set up. Please contact the site administrator.</p>";
   }
 else if($_REQUEST['confirm']!=null)
   {
@@ -418,7 +418,7 @@ else if($_REQUEST['confirm']!=null)
 else
   {
     if(!$logged_in) echo $login_preamble . $loginform.$loginform_close;
-    echo echo "Welcome back, ";
+    else echo "<p id='signin_greeting'>Welcome back, $first_name</p><br/><p id='logout_para'><small><a href='?q=logout'>(Logout)</a></small></p>";
   }
 echo "<script type='text/javascript'>
 function loadScript(url, callback) {
@@ -440,7 +440,8 @@ function loadScript(url, callback) {
 var lateJS= function() {
     try {
         console.log('Loading late libraries');
-        passLengthOverride=$minimum_password_length;
+        passLengthOverride=$password_threshold_length;
+        passMinLen=$minimum_password_length;
         $.getScript('js/base64.js');
         $.getScript('js/jquery.cookie.js');
         $.getScript('js/user_common.js');
