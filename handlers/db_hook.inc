@@ -16,10 +16,11 @@ function testDefaults() {
           if(mysqli_query($l,"SELECT * FROM $default_table LIMIT 1")===false)
             {
               if(createTable()) return true;
-              or die("Table $default_table does not exist and could not be created");
+              else die("Table $default_table does not exist and could not be created");
             }
+          else return true;
         }
-      or die("Unable to connect to database");
+      else die("Unable to connect to database");
     }
   catch(Exception $e)
     {
@@ -29,12 +30,17 @@ function testDefaults() {
 
 function createTable() {
   global $db_cols,$default_table;
-  $query="CREATE TABLE $default_table (id int(10) NOT NULL auto_increment";
-  foreach($db_cols as $col=>$type) $query.=", $col $type NOT NULL";
+  $query="CREATE TABLE `$default_table` (id int(10) NOT NULL auto_increment";
+  foreach($db_cols as $col=>$type) $query.=", $col $type";
   $query.=",PRIMARY KEY (id),UNIQUE id (id),KEY id_2 (id))";
 
   $l=openDB();
   $r=mysqli_query($l,$query);
+  if($r!==false)
+    {
+      $query2="INSERT INTO `$default_table` VALUES()";
+      $r2=mysqli_query($l,$query2);
+    }
   return boolstr($r);
 }
 

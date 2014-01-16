@@ -15,7 +15,6 @@
     <article>
       <?php
          require_once('login.php');
-         echo $big_login;
          ?>
     </article>
   </body>

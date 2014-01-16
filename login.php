@@ -35,7 +35,10 @@ require_once('handlers/xml.php');
  * Test the database ...
  */
 
-testDefaults();
+$r=testDefaults();
+
+if($r===true) echo "<p>(Database OK)</p>";
+else echo "<p>(Database Error - ' $r ')</p>";
 
 $xml=new Xml;
 $user=new UserFunctions;
@@ -58,7 +61,7 @@ $loginform = "
 	      <input type='password' name='password' id='password' placeholder='Password' required='required'/>";
 $loginform_close="	      <br/>
 	      <input type='submit' value='Login' id='login_button'/>
-	    </form>$alt_forms<br/><p><small>Don't have an account yet? <a href='login.php?q=create'>Create one</a>!</small></p>";
+	    </form>$alt_forms<br/><p><small>Don't have an account yet? <a href='?q=create'>Create one</a>!</small></p>";
 $big_login=$login_preabmle.$loginform.$loginform_close;
 $small_login=$loginform.$loginform_close;
 if($_REQUEST['q']=='submitlogin')
@@ -335,7 +338,7 @@ else if($_REQUEST['confirm']!=null)
                 $email=sanitize($_REQUEST['email']);
                 $subject='$title account activated';
                 $body="<p>This is a notice from $title to let you know your account has been $status.";
-                if($status=='activated') $body.=" You may now <a href='".$baseurl."/login.php'>log in here</a></p><p>Thanks!</p>";
+                if($status=='activated') $body.=" You may now <a href='".$baseurl."/'>log in here</a></p><p>Thanks!</p>";
                 $headers  = 'MIME-Version: 1.0' . "\r\n";
                 $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
                 $headers .= "From: $title <blackhole@".substr($baseurl,strpos($baseurl,'.')).">";
