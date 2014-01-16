@@ -357,13 +357,20 @@ class UserFunctions {
      *
      * Can be spoofed with inspected code at the same IP
      ***/
-    $result=lookupItem($userid,'dblink');
+    $col='dblink';
+    $result=lookupItem($userid,$col);
     if($result!==false && !is_array($result))
       {
         $authsalt = $this-> getSiteKey();
         $userdata=mysqli_fetch_assoc($result);
+        if(!is_array($userdata))
+          {
+            // empty result
+            if($detail) return array("uid"=>$userid,"col"=>$col,"basis_conf"=>$hash,"have_secret"=>strbool(empty($secret)));
+            return false;
+          }
         $pw_characters=json_decode($userdata['password'],true);
-        $salt=$pw_character['salt'];
+        $salt=$pw_characters['salt'];
 
         if(empty($hash) || empty($secret))
           {
@@ -391,14 +398,14 @@ class UserFunctions {
           }
         else $from_cookie=false;
         
-        $value_create=$secret.$userdata['salt'].$userdata['auth_key'].$_SERVER['REMOTE_ADDR'].$authsalt; 
+        $value_create=$secret.$salt.$userdata['auth_key'].$_SERVER['REMOTE_ADDR'].$authsalt; 
         $conf=sha1($value_create);
-        if($detail) return array("uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"from_cookie"=>strbool($from_cookie));
+        if($detail) return array("uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"from_cookie"=>strbool($from_cookie),'user_pass_info'=>$pw_characters,'userdata'=>$userdata,'raw'=>$userdata_raw);
         return $conf==$hash;
       }
     if($detail)
       {
-        $detail=array("uid"=>$userid,"basis_conf"=>$hash,"have_secret"=>strbool(empty($secret)));
+        $detail=array("uid"=>$userid,'col'=>$col,"basis_conf"=>$hash,"have_secret"=>strbool(empty($secret)));
         if(is_array($result)) $detail['error']=$result['error'];
         return $detail;
       }
@@ -440,7 +447,7 @@ class UserFunctions {
     $otsalt=$hash->createSalt();
     $cookie_secret=$hash->createSalt();
     $pw_characters=json_decode($userdata['password'],true);
-    $salt=$pw_character['salt'];
+    $salt=$pw_characters['salt'];
     //store it
     global $default_table;
     $query="UPDATE `$default_table` SET auth_key='$otsalt' WHERE id='$id'";
@@ -457,15 +464,17 @@ class UserFunctions {
     $cookieauth=$domain."_auth";
     $cookiekey=$domain."_secret";
     $cookiepic=$domain."_pic";
+    $cookielink=$domain."_link";
 
     $user_greet=$userdata['name'];
+    $dblink=$userdata['dblink'];
     
     setcookie($cookieauth,$value,$expire);
     setcookie($cookiekey,$cookie_secret,$expire);
     setcookie($cookieuser,$username,$expire);
     setcookie($cookieperson,$user_greet,$expire);
     $path=$this->getUserPicture($userdata['id']); 
-    setcookie($cookiepic,$path,$expire);
+    setcookie($cookielink,$dblink,$expire);
 
     $js_expires="{expires:$expire_days,path:'/'});\n";
     $jquerycookie="$.cookie('$cookieauth','$value'".$js_expires;
@@ -473,6 +482,7 @@ class UserFunctions {
     $jquerycookie.="$.cookie('$cookieuser','$username'".$js_expires;
     $jquerycookie.="$.cookie('$cookieperson','$user_greet'".$js_expires;
     $jquerycookie.="$.cookie('$cookiepicture','$path'".$js_expires;
+    $jquerycookie.="$.cookie('$cookielink','$dblink'".$js_expires;
     
     return array(
       true,
@@ -482,6 +492,7 @@ class UserFunctions {
       'secret'=>"{'$cookiekey':'$cookie_secret'}",
       'pic'=>"{'$cookiepic':'$path'}",
       'name'=>"{'$cookieperson':'$user_greet'",
+      'name'=>"{'$cookielink':'$dblink'",
       'js'=>$jquerycookie
     );
   }

@@ -31,6 +31,8 @@ $cookieperson=$domain."_name";
 $cookieauth=$domain."_auth";
 $cookiekey=$domain."_secret";
 $cookiepic=$domain."_pic";
+$cookielink=$domain."_link";
+
 
 /*
  * Required inclusions
@@ -99,7 +101,7 @@ if($_REQUEST['q']=='submitlogin')
                 echo "<p>Cookie Result:</p>";
                 echo displayDebug($cookie_result);
                 echo "<p>User Validation:</p>";
-                echo displayDebug($user->validateUser($_POST['username'],null,null,true));
+                echo displayDebug($user->validateUser($userdata['dblink'],null,null,true));
                 echo "<p>Entering cookie handling post call ...</p>";
               }
             if(!$cookie_result['status']) 
@@ -124,9 +126,14 @@ if($_REQUEST['q']=='submitlogin')
                         // Check auth
                         $cookiedebug.='good-user check-auth '.print_r($_COOKIE[$cookieuser],true);
                         $userdata=mysqli_fetch_assoc($result);
-                        $salt=$userdata['salt'];
+                        $pw_characters=json_decode($userdata['password'],true);
+
+                        // pieces:
+                        $salt=$pw_characters['salt'];
                         $otsalt=$userdata['auth_key'];
-                        $value_create=$userdata['salt'].$userdata['auth_key'].$_SERVER['REMOTE_ADDR']; 
+                        $cookie_secret=$_COOKIE[$cookiekey];
+                        
+                        $value_create=$cookie_secret.$salt.$otsalt.$_SERVER['REMOTE_ADDR'].$site_security_token;
                         $value=sha1($value_create);
                         if($value==$_COOKIE[$cookieauth])
                           {
@@ -138,7 +145,7 @@ if($_REQUEST['q']=='submitlogin')
                         else
                           {
                             // bad cookie
-                            $cookiedebug.=' bad-auth ('.print_r($cookie_result,true).") for $cookieuser. \nExpecting ".print_r($auth,true)." \nRaw cookie:".print_r($_COOKIE,true);
+                            $cookiedebug.='\n bad-auth '.print_r($cookie_result,true)." for $cookieuser. \nExpecting: $value \n Got:\n ".$_COOKIE[$cookieauth]." \nRaw cookie:\n".print_r($_COOKIE,true);
                             if(!$debug)
                               {
                                 $cookiedebug.="\n\nWiping ...";
@@ -148,6 +155,7 @@ if($_REQUEST['q']=='submitlogin')
                                 setcookie($cookiekey,false,time()-3600*24*365,null,$domain);
                                 setcookie($cookiepic,false,time()-3600*24*365,null,$domain);
                               }
+                            else $cookiedebug.="\nWould wipe here";
                           }
                       }
                     else
@@ -163,6 +171,7 @@ if($_REQUEST['q']=='submitlogin')
                             setcookie($cookiekey,false,time()-3600*24*365,null,$domain);
                             setcookie($cookiepic,false,time()-3600*24*365,null,$domain);
                           }
+                        else $cookiedebug.="\nWould wipe here";
                       }
                   }
                 else 
