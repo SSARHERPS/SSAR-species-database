@@ -209,7 +209,9 @@ class UserFunctions {
   public function lookupUser($username,$pw,$return=false)
   {
     // check it's a valid email! validation skipped.
+    require_once('handlers/xml.php');
     $xml=new Xml;
+    require_once('handlers/db_hook.inc');
     $result=lookupItem($username,'username',null,null,false);
     $userdata=mysqli_fetch_assoc($result);
     if($result!==false && is_numeric($userdata['id']))
@@ -331,9 +333,9 @@ class UserFunctions {
     return false;
   }
 
-  public function createCookieTokens($username,$password_or_is_data)
+  public function createCookieTokens($username,$password_or_is_data=true)
   {
-    if(is_bool($password_or_is_data)) $userdata=$username;
+    if($password_or_is_data===true) $userdata=$username;
     else
       {
         $r = $this->lookupUser($username,$password_or_is_data,true);

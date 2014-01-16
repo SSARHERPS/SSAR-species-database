@@ -92,7 +92,7 @@ if($_REQUEST['q']=='submitlogin')
             $id=$userdata['id'];
             echo "<h3>Welcome back, ".$xml->getTagContents($userdata['dec_name'],"<fname>")."</h3>"; //Welcome message
 		       
-            $cookie_result=$user->createCookieTokens($userdata,$title);
+            $cookie_result=$user->createCookieTokens($userdata);
             if(!$cookie_result['status']) 
               {
                 echo "<div class='error'>".$cookie_result['error']."</div>";
@@ -294,7 +294,7 @@ else if($_REQUEST['q']=='create')
                             $res=$user->createUser($_POST['username'],$_POST['password'],$_POST['name'],$_POST['dname']);
                             if($res[0]) 
                               {
-                                $cookie_result=$user->createCookieTokens($res,$title);
+                                $cookie_result=$user->createCookieTokens($res);
                                 echo "<h3>".$res[1]."</h3>"; //jumpto1
                                 // email user
                                 $to=$_POST['username'];
