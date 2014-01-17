@@ -3,6 +3,8 @@
 require_once(dirname(__FILE__).'/crypt_functions.php');
 require_once(dirname(__FILE__).'/xml.php');
 
+// do if not exists ....
+
 function curPageURL() {
   $pageURL = 'http';
   if ($_SERVER["HTTPS"] == "on") {$pageURL .= "s";}
@@ -24,25 +26,6 @@ function appendQuery($query) {
   return $url;
 }
 
-function dirListPHP ($directory,$filter=null) 
-{
-  $results = array();
-  $handler = @opendir($directory);
-  if($handler===false) return false;
-  while ($file = readdir($handler)) 
-    {
-      if ($file != '.' && $file != '..' )  
-        {
-          if($filter!=null)
-            {
-              if(strpos(strtolower($file),strtolower($filter))!==false) $results[]=$file;
-            }
-          else $results[] = $file;
-        }
-    }
-  closedir($handler);
-  return $results;
-}
 
 function debugDisplay($string)
 {
@@ -65,7 +48,6 @@ function datestamp()
 {
   return date("Ymd-HisO");
 }
-
 
 
 function array_find($needle, $haystack, $search_keys = false, $strict = false) 

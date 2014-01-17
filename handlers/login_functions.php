@@ -158,7 +158,6 @@ class UserFunctions {
                   {
                     $decname=decryptThis($userdata['name'],$pw,$salt);
                     if(empty($decname))$decname=$userdata['name'];
-                    $userdata['dec_name']=$decname;
                     $returning=array(true,$userdata);
                     return $returning;
                   }
@@ -196,7 +195,6 @@ class UserFunctions {
                   {
                     $decname=decryptThis($userdata['name'],$pw,$salt);
                     if(empty($decname))$decname=$userdata['name'];
-                    $userdata['dec_name']=$decname;
                     $returning=array(true,$userdata);
                     return $returning;
                   }
