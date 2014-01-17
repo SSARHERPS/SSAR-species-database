@@ -3,8 +3,8 @@
  * Core hooks to use for user management
  * Uses MySQLi as the main interface
  ***/
-require_once(dirname(__FILE__).'/CONFIG.php');
-require_once(dirname(__FILE__).'/handlers/functions.inc');
+require_once(dirname(__FILE__).'/../CONFIG.php');
+require_once(dirname(__FILE__).'/functions.inc');
 
 function testDefaults() {
   global $default_table;
