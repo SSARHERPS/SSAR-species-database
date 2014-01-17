@@ -75,7 +75,6 @@ if($logged_in)
 else
   {
     if($captive_login) header("Refresh: 0; url=$baseurl");
-    ob_end_flush();
   }
 
 $alt_forms="<div id='alt_logins'>
@@ -128,7 +127,6 @@ if($_REQUEST['q']=='submitlogin')
                 // Need access -- name (id), email. Give server access?
                 echo "<p>Logging in from another device or browser will end your session here. You will be redirected in 3 seconds...</p>";
                 $logged_in=true;
-                ob_end_flush();
                 if(isset($_COOKIE[$cookieuser]) || $logged_in===true)
                   {
                     $cookiedebug.=" cookie-enter";
@@ -433,6 +431,7 @@ else
     if(!$logged_in) echo $login_preamble . $loginform.$loginform_close;
     else echo "<p id='signin_greeting'>Welcome back, $first_name</p><br/><p id='logout_para'><aside class='ssmall'><a href='?q=logout'>(Logout)</a></aside></p>";
   }
+ob_end_flush();
 echo "<script type='text/javascript'>
 function loadScript(url, callback) {
     // Adding the script tag to the head as suggested before

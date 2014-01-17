@@ -24,7 +24,6 @@ if($_REQUEST['t']=='hash')
     print_r($h->verifyHash($_POST['pw_base'],$a,null,null,null,true));
     echo "</pre>";
   }
-   
 
 ?>
 
@@ -46,6 +45,55 @@ if($_REQUEST['t']=='hash')
           <input type='text' name='pw_base' placeholder='pass'/><br/>
           <input type='submit'/>
         </form>
+      </div>
+      <div>
+        <h3>Test Safe Write</h3>
+        <p>You can check to ensure the proper functioning of the writing to the user database here..</p>
+        <?php
+           $u = new UserFunctions();
+           if($u->validateUser()) {
+             $select="<select name='col'>";
+             foreach($db_cols as $col=>$type)
+               {
+                 if($col!='username' && $col!='password' && $col!='auth_key')
+                   {
+                     $select.="<option value='$col'>$col</option>";
+                   }
+               }
+             $select.="</select>";
+        ?>
+        <form action='?t=write' method='post'>
+          <input type='text' name='data' placeholder='Data to save'/><br/>
+          <?php echo $select; ?><br/>
+          <input type='submit'/>
+        </form>
+        <?php
+           }
+           else echo "Please log in above to test this.";
+if($_REQUEST['t']=='write')
+  {
+    echo displayDebug($u->writeToUser($_POST['data'],$_POST['col']));
+  }
+           ?>
+      </div>
+      <div>
+        <h3>Show User Data</h3>
+        <?php
+           if($u->validateUser()) {
+        ?>
+        <form action='?t=show' method='post'>
+          <p>User: <?php echo $_COOKIE[$cookieuser]; ?></p>
+          <input type='password' name='pw' placeholder='password'/><br/>
+          <input type='submit'/>
+        </form>
+        <?php
+           }
+           else echo "Please log in above to test this.";
+           if($_REQUEST['t']=='show')
+             {
+               echo displayDebug($u->lookupUser($_COOKIE[$cookieuser],$_POST['pw']));
+             }
+           ?>
       </div>
     </article>
   </body>

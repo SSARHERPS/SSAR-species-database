@@ -4,7 +4,7 @@ class UserFunctions {
 
   function __construct()
   {
-    require_once(dirname(__FILE__).'/CONFIG.php');
+    require_once(dirname(__FILE__).'/../CONFIG.php');
     global $user_data_storage,$profile_picture_storage,$site_security_token;
     if(!empty($user_data_storage))
       {
@@ -49,7 +49,7 @@ class UserFunctions {
   public function createUser($username,$pw_in,$name,$dname,$zip=null)
   {
     // Send email for validation
-    require_once(dirname(__FILE__).'/handlers/db_hook.inc');
+    require_once(dirname(__FILE__).'/db_hook.inc');
     $user=sanitize($username); 
     $preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
     /***
@@ -64,10 +64,10 @@ class UserFunctions {
         $data=mysqli_fetch_assoc($result);
         if($data['username']==$username) return array(false,'Your email is already registered. Please try again. Did you forget your password?');
       }
-    require_once(dirname(__FILE__).'/CONFIG.php');
+    require_once(dirname(__FILE__).'/../CONFIG.php');
     global $minimum_password_length,$password_threshold_length;
     if(strlen($pw_in)<$minimum_password_length) return array(false,'Your password is too short. Please try again.');
-    require_once(dirname(__FILE__).'/stronghash/php-stronghash.php');
+    require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
     $hash=new Stronghash;
     $creation=$this->microtime_float();
     $pw1=$hash->hasher($pw_in);
@@ -131,15 +131,15 @@ class UserFunctions {
   public function lookupUser($username,$pw,$return=true)
   {
     // check it's a valid email! validation skipped.
-    require_once(dirname(__FILE__).'/handlers/xml.php');
+    require_once(dirname(__FILE__).'/xml.php');
     $xml=new Xml;
-    require_once(dirname(__FILE__).'/handlers/db_hook.inc');
+    require_once(dirname(__FILE__).'/db_hook.inc');
     $result=lookupItem($username,'username',null,null,false);
     $userdata=mysqli_fetch_assoc($result);
     if($result!==false && is_numeric($userdata['id']))
       {
         // check password
-        require_once(dirname(__FILE__).'/stronghash/php-stronghash.php');
+        require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
         $hash=new Stronghash;
         $data=json_decode($userdata['password'],true);
         if($hash->verifyHash($pw,$data))
@@ -244,7 +244,7 @@ class UserFunctions {
     $baseurl .= "://www.";
     $baseurl.=$_SERVER['HTTP_HOST'];
             
-    require_once(dirname(__FILE__).'/CONFIG.php');
+    require_once(dirname(__FILE__).'/../CONFIG.php');
             
     $base=array_slice(explode(".",$baseurl),-2);
     $domain=$base[0];
@@ -320,7 +320,7 @@ class UserFunctions {
         $baseurl .= "://www.";
         $baseurl.=$_SERVER['HTTP_HOST'];
 
-        require_once(dirname(__FILE__).'/CONFIG.php');
+        require_once(dirname(__FILE__).'/../CONFIG.php');
 
         $base=array_slice(explode(".",$baseurl),-2);
         $domain=$base[0];
@@ -329,8 +329,8 @@ class UserFunctions {
         $expire_days=7;
         $expire=time()+3600*24*$expire_days;
         // Create a one-time key, store serverside
-        require_once(dirname(__FILE__).'/stronghash/php-stronghash.php');
-        require_once(dirname(__FILE__).'/handlers/db_hook.inc');
+        require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
+        require_once(dirname(__FILE__).'/db_hook.inc');
         $hash=new Stronghash;
         $otsalt=$hash->createSalt();
         $cookie_secret=$hash->createSalt();
@@ -432,9 +432,11 @@ class UserFunctions {
         if(!$replace)
           {
             // pull the existing data ...
+            // Look for relevent JSON entries or XML entries and replace them
+            // Otherwise append
           }
         $real_data=sanitize($data);
-        require_once(dirname(__FILE__).'/CONFIG.php');
+        require_once(dirname(__FILE__).'/../CONFIG.php');
         global $default_table;
         $query="UPDATE `$default_table` SET $col=\"".$real_data."\"";
         $l=openDB();
