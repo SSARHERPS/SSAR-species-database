@@ -413,16 +413,22 @@ class UserFunctions {
           {
             // confirm with validateUser();
             $validated=$this->validateUser($validation_data['dblink'],$validation_data['hash'],$validation_data['secret']);
+            $method='Confirmation token';
           }
         else if(array_key_exists('password',$validation_data))
           {
             // confirm with lookupUser();
             $a=$this->lookupUser($validation_data['username'],$validation_data['password']);
             $validated=$a[0];
+            $method='Password'
           }
         else return array('status'=>false,"error"=>"Bad validation data");
       }
-    else $validated=$this->validateUser();
+    else
+      {
+        $validated=$this->validateUser();
+        $method='Cookie';
+      }
     if($validated)
       {
         // write it to the db
@@ -442,9 +448,9 @@ class UserFunctions {
         $r=mysqli_query($l,$query);
         $finish_query= $r ? 'COMMIT':'ROLLBACK';
         $r2=mysqli_query($l,$finish_query);
-        return array('status'=>$r,'data'=>$data,'col'=>$col,'action'=>$finish_query,'result'=>$r2);
+        return array('status'=>$r,'data'=>$data,'col'=>$col,'action'=>$finish_query,'result'=>$r2,'method'=>$method);
       }
-    else return array('status'=>false,'error'=>'Bad validation');
+    else return array('status'=>false,'error'=>'Bad validation','method'=>$method);
   }
   
 }
