@@ -138,11 +138,6 @@ class UserFunctions {
     $userdata=mysqli_fetch_assoc($result);
     if($result!==false && is_numeric($userdata['id']))
       {
-        /*    echo "<pre>Lookup User Function for '$username' ..\n";
-              print_r($userdata);
-              echo "\nResult data:\n";
-              print_r($result);
-              echo "</pre>";*/
         // check password
         require_once(dirname(__FILE__).'/stronghash/php-stronghash.php');
         $hash=new Stronghash;
@@ -419,22 +414,37 @@ class UserFunctions {
         if(array_key_exists('dblink',$validation_data))
           {
             // confirm with validateUser();
+            $validated=$this->validateUser($validation_data['dblink'],$validation_data['hash'],$validation_data['secret']);
           }
         else if(array_key_exists('password',$validation_data))
           {
             // confirm with lookupUser();
+            $a=$this->lookupUser($validation_data['username'],$validation_data['password']);
+            $validated=$a[0];
           }
         else return array('status'=>false,"error"=>"Bad validation data");
       }
-    else
-      {
-        // get data from cookies and user validateUser();
-      }
+    else $validated=$this->validateUser();
     if($validated)
       {
         // write it to the db
         // replace or append based on flag
+        if(!$replace)
+          {
+            // pull the existing data ...
+          }
+        $real_data=sanitize($data);
+        require_once(dirname(__FILE__).'/CONFIG.php');
+        global $default_table;
+        $query="UPDATE `$default_table` SET $col=\"".$real_data."\"";
+        $l=openDB();
+        mysqli_query($l,'BEGIN');
+        $r=mysqli_query($l,$query);
+        $finish_query= $r ? 'COMMIT':'ROLLBACK';
+        $r2=mysqli_query($l,$finish_query);
+        return array('status'=>$r,'data'=>$data,'col'=>$col,'action'=>$finish_query,'result'=>$r2);
       }
+    else return array('status'=>false,'error'=>'Bad validation');
   }
   
 }
