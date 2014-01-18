@@ -128,6 +128,7 @@ if($_REQUEST['q']=='submitlogin')
                 // Need access -- name (id), email. Give server access?
                 echo "<p>Logging in from another device or browser will end your session here. You will be redirected in 3 seconds...</p>";
                 $logged_in=true;
+                $durl=$_SERVER['PHP_SELF'];
                 if(isset($_COOKIE[$cookieuser]) || $logged_in===true)
                   {
                     $cookiedebug.=" cookie-enter";
@@ -167,6 +168,7 @@ if($_REQUEST['q']=='submitlogin')
                                 setcookie($cookieauth,false,time()-3600*24*365);
                                 setcookie($cookiekey,false,time()-3600*24*365);
                                 setcookie($cookiepic,false,time()-3600*24*365);
+                                $durl.="?m=login_error";
                               }
                             else $cookiedebug.="\nWould wipe here";
                           }
@@ -183,6 +185,7 @@ if($_REQUEST['q']=='submitlogin')
                             setcookie($cookieauth,false,time()-3600*24*365);
                             setcookie($cookiekey,false,time()-3600*24*365);
                             setcookie($cookiepic,false,time()-3600*24*365);
+                            $durl.="?m=login_error";
                           }
                         else $cookiedebug.="\nWould wipe here";
                       }
@@ -200,10 +203,10 @@ if($_REQUEST['q']=='submitlogin')
                     displayDebug($cookie_result);
                     echo "<p>Cookie Supervar</p>";
                     displayDebug($_COOKIE);
-                    echo "<p>Would refresh to:".$_SERVER['PHP_SELF']."</p>";
+                    echo "<p>Would refresh to:".$durl."</p>";
                     
                   }
-                else header("Refresh: 0; url=".$_SERVER['PHP_SELF']."?m=login_error"); 
+                else header("Refresh: 0; url=".$durl); 
               }
             ob_end_flush(); // Flush the buffer, start displaying
           }
