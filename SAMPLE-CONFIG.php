@@ -6,10 +6,10 @@
 
 $captive_login=false; // pulls the user back to the main page if not logged in
 
-$default_table='userdata';
-$default_database="";
-$default_user="";
-$default_password=""; // https://www.random.org/passwords/?num=5&len=24&format=plain&rnd=new
+$default_user_table='userdata';
+$default_user_database="";
+$default_sql_user="";
+$default_sql_password=""; // https://www.random.org/passwords/?num=5&len=24&format=plain&rnd=new
 $sql_url = 'localhost';
 
 /***

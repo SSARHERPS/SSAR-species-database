@@ -224,8 +224,8 @@ if($_REQUEST['q']=='submitlogin')
                     $userdata=mysqli_fetch_assoc($result);
                     $id=$userdata['id'];
                   }
-                $query="UPDATE `$default_table` SET dtime=".$user->microtime_float()." WHERE id=$id";
-                $query2="UPDATE `$default_table` SET disabled=true WHERE id=$id";
+                $query="UPDATE `$default_user_table` SET dtime=".$user->microtime_float()." WHERE id=$id";
+                $query2="UPDATE `$default_user_table` SET disabled=true WHERE id=$id";
                 $l=openDB();
                 $result1=mysqli_query($l,$query);
                 if(!$result1) echo "<p class='error'>".mysqli_error($l)."</p>";
@@ -404,7 +404,7 @@ else if($_REQUEST['confirm']!=null)
                 $status='activated';
 			       
               }
-            $query="UPDATE `$default_table` SET flag=$flag WHERE id=$id";
+            $query="UPDATE `$default_user_table` SET flag=$flag WHERE id=$id";
             $l=openDB();
             $result=execAndCloseDB($l,$query);
             if(!$result) echo "<p class='error'>" . mysqli_error($l) . "</p>";

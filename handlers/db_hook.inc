@@ -7,16 +7,16 @@ require_once(dirname(__FILE__).'/../CONFIG.php');
 require_once(dirname(__FILE__).'/functions.inc');
 
 function testDefaults() {
-  global $default_table;
+  global $default_user_table;
   try
     {
       $l=openDB();
       if($l!==false)
         {
-          if(mysqli_query($l,"SELECT * FROM $default_table LIMIT 1")===false)
+          if(mysqli_query($l,"SELECT * FROM `$default_user_table` LIMIT 1")===false)
             {
               if(createTable()) return true;
-              else die("Table $default_table does not exist and could not be created");
+              else die("Table $default_user_table does not exist and could not be created");
             }
           else return true;
         }
@@ -29,8 +29,8 @@ function testDefaults() {
 }
 
 function createTable() {
-  global $db_cols,$default_table;
-  $query="CREATE TABLE `$default_table` (id int(10) NOT NULL auto_increment";
+  global $db_cols,$default_user_table;
+  $query="CREATE TABLE `$default_user_table` (id int(10) NOT NULL auto_increment";
   foreach($db_cols as $col=>$type) $query.=", $col $type";
   $query.=",PRIMARY KEY (id),UNIQUE id (id),KEY id_2 (id))";
 
@@ -38,7 +38,7 @@ function createTable() {
   $r=mysqli_query($l,$query);
   if($r!==false)
     {
-      $query2="INSERT INTO `$default_table` VALUES()";
+      $query2="INSERT INTO `$default_user_table` VALUES()";
       $r2=mysqli_query($l,$query2);
     }
   return boolstr($r);
@@ -46,16 +46,16 @@ function createTable() {
 
 function openDB($test=false,$user=null,$password=null,$database=null)
 {
-  global $default_database,$default_user,$default_password,$sql_url;
+  global $default_user_database,$default_sql_user,$default_sql_password,$sql_url;
   if(!is_bool($test) && $database==null)
     {
       $database=$test;
       $test=false;
     }
   else if (!is_bool($test) && $database!=null) return false; // bad input
-  if ($user==null) $user=$default_user;
-  if ($password==null) $password=$default_password;
-  if ($database==null) $database=$default_database;
+  if ($user==null) $user=$default_sql_user;
+  if ($password==null) $password=$default_sql_password;
+  if ($database==null) $database=$default_user_database;
   if(!$test)
     {
       try
@@ -141,9 +141,9 @@ function sanitize($input)
 
 function is_entry($item,$field_name=null,$table_name=null,$database_name=null,$test=false)
 {
-  global $default_table;
+  global $default_user_table;
   if($field_name==null) $field_name = "id";
-  if($table_name==null) $table_name = $default_table;
+  if($table_name==null) $table_name = $default_user_table;
   $item=sanitize($item);
   $l=openDB($database_name);
   // Clean up the passed variable here
@@ -164,9 +164,9 @@ function is_entry($item,$field_name=null,$table_name=null,$database_name=null,$t
 
 function lookupItem($item,$field_name=null,$table_name=null,$database_name=null,$closedb=false,$skipsan=false)
 {
-  global $default_table;
+  global $default_user_table;
   if(empty($field_name)) $field_name = "id";
-  if(empty($table_name)) $table_name = $default_table;
+  if(empty($table_name)) $table_name = $default_user_table;
   if($skipsan===false) 
     {
       $sitem=sanitize($item);
@@ -190,49 +190,13 @@ function lookupItem($item,$field_name=null,$table_name=null,$database_name=null,
   return array(false,'error'=>"Injectable item code for '$item' vs. '$sitem'");
 }
 
-function decrementItemQuantity($item,$lookup_name=null,$field_name=null,$table_name=null,$database_name=null)
-{
-  /***
-      Note: Only works with numeric item identifiers
-  ***/
-  global $default_table;
-  if($field_name==null) $field_name = "quantity";
-  if($table_name==null) $table_name = $default_table;
-  $result = lookupItem($item,$lookup_name,$table_name,$database_name,false);
-  if($result!==false)
-    {
-      $quant = mysqli_fetch_assoc($result);
-      $quant=intval($quant[$field_name]);
-      $quant--;
-      if($quant<0)
-        {
-          return false;
-        }
-      $l=openDB();
-      $query = "UPDATE $table_name SET $field_name='$quant' WHERE id='$item'";
-      mysqli_query($l,'START TRANSACTION');
-      if(mysqli_query($l,$query))
-        {
-          mysqli_query($l,'COMMIT');
-          return true;
-        }
-      else 
-        {
-          mysqli_query($l,'ROLLBACK');
-          return false;
-        }
-    }
-  else
-    {
-      return false;
-    }
-}
+
 
 function addItem($field_arr,$value_arr,$table_name=null,$database_name=null,$test=false)
 {
   // make this transactional
-  global $default_table;
-  if($table_name==null) $table_name = $default_table;
+  global $default_user_table;
+  if($table_name==null) $table_name = $default_user_table;
   $querystring = "INSERT INTO $table_name VALUES (";
   if(empty($value_arr))
     {
@@ -318,8 +282,8 @@ function addItem($field_arr,$value_arr,$table_name=null,$database_name=null,$tes
 function getLastRowNumber($table_name=null,$database_name=null)
 {
   // Return the highest id of the database. Thus, this includes deleted items.
-  global $default_table, $database_name;
-  if($table_name==null) $table_name = $default_table;
+  global $default_user_table, $database_name;
+  if($table_name==null) $table_name = $default_user_table;
   $l=openDB($database_name);
   $query="SELECT * FROM `$table_name` ORDER BY id DESC LIMIT 1";
   $result=mysqli_query($l,$query);
@@ -329,8 +293,8 @@ function getLastRowNumber($table_name=null,$database_name=null)
 
 function returnTableContents($search_column,$search_criteria,$returned_fields_arr=null,$table_name=null,$database_name=null,$leave_open=true)
 {
-  global $default_table,$database_name;
-  if($table_name==null) $table_name = $default_table;
+  global $default_user_table,$database_name;
+  if($table_name==null) $table_name = $default_user_table;
   $query="SELECT * FROM `$table_name`";
   if($search_criteria!='*') 
     {
@@ -372,7 +336,6 @@ function returnTableContents($search_column,$search_criteria,$returned_fields_ar
                     }
                   else $answer=false;
                 }
-              // used to be here
             }
           if(!$leave_open) mysqli_close($l);
           return $answer;
@@ -385,8 +348,8 @@ function returnTableContents($search_column,$search_criteria,$returned_fields_ar
 
 function updateEntry($field,$value,$unq_id,$table_name=null,$database_name=null,$test=false,$preclean=false,$leaveopen=false,$opened=false,$made_transaction=false)
 {
-  global $default_table;
-  if($table_name==null) $table_name = $default_table;
+  global $default_user_table;
+  if($table_name==null) $table_name = $default_user_table;
   if(!is_array($unq_id)) return array(false,'Bad argument for variable unq_id');
   $column=$unq_id[0];
   $uval=$unq_id[1];  
@@ -450,70 +413,10 @@ function updateEntry($field,$value,$unq_id,$table_name=null,$database_name=null,
 }
 
 
-function getDistance($slat,$slng,$dist,$restrict=null,$unit='km',$lbound=0,$hbound=20,$narrow=false,$table_name=null,$database_name=null,$test=false)
-{
-  // Requires GPS address. Use geocodeZip() in functions.inc
-  // Based on http://goo.gl/XDFhm
-  // Restrictions of form [column,search string,table]
-  global $default_table;
-  if($table_name==null) $table_name = $default_table;
-  if($unit=='mi') $const=3959;
-  else $const=6371;
-  $query="SELECT id, ( $const * acos( cos( radians($slat) ) * cos( radians( lat ) ) * cos( radians( lng ) - radians($slng) ) + sin( radians($slat) ) * sin( radians( lat ) ) ) ) AS distance FROM `$table_name` HAVING distance < $dist ORDER BY distance LIMIT $lbound , $hbound;";
-  if(!empty($restrict))
-    {
-      $column='dblink';
-      $table2=$default_table;
-      if(is_array($restrict))
-        {
-          $column=$restrict[0];
-          $choice=$restrict[1];
-          if(!empty($restrict[2])) $table2=$restrict[2];
-        }
-      else $choice=$restrict;
-      $qmod="SELECT id FROM `$table2` WHERE $column";
-      if(!$narrow)
-        {
-          if(is_array($choice))
-            {
-              $build=$choice;
-              $i=0;
-              foreach($choice as $activity)
-                {
-                  if($i==0) $append='';
-                  else $append="%' OR $column LIKE '%";
-                  $constring.=$append.$activity;
-                  $i++;
-                }
-              $choice=$constring;
-            }
-          $qmod.=" LIKE '%$choice%' ";
-        }
-      else $qmod.="='$choice' ";
-      $pos=strpos($query," ORDER BY");
-      $qbeg=substr($query,0,$pos);
-      $qend=substr($query,$pos);
-      //$query=$qmod." AND id IN (".$qbeg.")".$qend;
-      $query=$qbeg." AND id IN (".$qmod.")".$qend;
-    }
-  if($test) return $query;
-  $l=openDB($database_name);
-  $res=@mysqli_query($l,$query);
-  if (!$res) return array(false,mysqli_error($l));
-  else
-    {
-      $retarr=array();
-      while($row=@mysqli_fetch_assoc($res))
-        {
-          $retarr[]=$row;
-        }
-      return $retarr;
-    }
-  
-}
+
 function deleteRow($column,$criteria,$table=null,$database=null) {
-  global $default_table;
-  if($table==null) $table = $default_table;
+  global $default_user_table;
+  if($table==null) $table = $default_user_table;
   $criteria=sanitize($criteria);
   $column=sanitize($column);
   $l=openDB($database);
@@ -529,6 +432,5 @@ function deleteRow($column,$criteria,$table=null,$database=null) {
       $r=mysqli_query($l,'ROLLBACK');
       return array(false,'rollback_status'=>$r,"error"=>mysqli_error($l),"query"=>$query);
     }
-
 }
 ?>
