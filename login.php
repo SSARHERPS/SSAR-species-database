@@ -109,7 +109,7 @@ if($_REQUEST['q']=='submitlogin')
             // Successful login
             $userdata=$res[1];
             $id=$userdata['id'];
-            echo "<h3 id='welcome_back'>Welcome back, ".$xml->getTagContents($userdata['dec_name'],"<fname>")."</h3>"; //Welcome message
+            $login_output.="<h3 id='welcome_back'>Welcome back, ".$xml->getTagContents($userdata['dec_name'],"<fname>")."</h3>"; //Welcome message
 		       
             $cookie_result=$user->createCookieTokens($userdata);
             if($debug)
@@ -126,7 +126,7 @@ if($_REQUEST['q']=='submitlogin')
             else
               {
                 // Need access -- name (id), email. Give server access?
-                echo "<p>Logging in from another device or browser will end your session here. You will be redirected in 3 seconds...</p>";
+                $login_output.="<p>Logging in from another device or browser will end your session here. You will be redirected in 3 seconds...</p>";
                 $logged_in=true;
                 $durl=$_SERVER['PHP_SELF'];
                 if(isset($_COOKIE[$cookieuser]) || $logged_in===true)
@@ -213,14 +213,14 @@ if($_REQUEST['q']=='submitlogin')
         else
           {
             ob_end_flush();
-            echo $login_preamble;
-            echo "<div class='error'><p>Sorry! <br/>" . $res['message'] . "</p><aside class='ssmall'>Did you mean to <a href=''>create a new account instead?</a></aside></div>";
+            $login_output.=$login_preamble;
+            $login_output.="<div class='error'><p>Sorry! <br/>" . $res['message'] . "</p><aside class='ssmall'>Did you mean to <a href=''>create a new account instead?</a></aside></div>";
             $failcount=intval($_POST['failcount'])+1;
             $loginform_whole = $loginform."
               <input type='hidden' name='failcount' id='failcount' value='$fail'/>".$loginform_close;
 
 
-            if($failcount<10) echo $loginform_whole;
+            if($failcount<10) $login_output.=$loginform_whole;
             else 
               {
                 $result=lookupItem($_POST['username'],'username',null,null,false,true);
@@ -240,7 +240,7 @@ if($_REQUEST['q']=='submitlogin')
                     if(!$result2) echo "<p class='error'>".mysqli_error($l)."</p>";
                     else
                       {
-                        echo "<p>Sorry, you've had ten failed login attempts. Your account has been disabled for 1 hour.</p>";
+                        $login_output.="<p>Sorry, you've had ten failed login attempts. Your account has been disabled for 1 hour.</p>";
                       }
                   }
 			   
@@ -249,8 +249,8 @@ if($_REQUEST['q']=='submitlogin')
       }
     else
       {
-        echo "<h1>Whoops! You forgot something.</h1><h2>Please try again.</h2>";
-        echo $loginform.$loginform_close;
+        $login_output.="<h1>Whoops! You forgot something.</h1><h2>Please try again.</h2>";
+        $login_output.=$loginform.$loginform_close;
       }
   } 
 else if($_REQUEST['q']=='create')
@@ -318,7 +318,7 @@ else if($_REQUEST['q']=='create')
             $email_preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
             if(!empty($_POST['honey'])) 
               {
-                echo "<p class='error'>Whoops! You tripped one of our bot tests. If you are not a bot, please go back and try again. Read your fields carefully!</p>";
+                $login_ouptut.="<p class='error'>Whoops! You tripped one of our bot tests. If you are not a bot, please go back and try again. Read your fields carefully!</p>";
                 $_POST['email']='bob';
               }
             $resp = recaptcha_check_answer ($recaptcha_private_key,
@@ -344,7 +344,7 @@ else if($_REQUEST['q']=='create')
                             $res=$user->createUser($_POST['username'],$_POST['password'],array($_POST['fname'],$_POST['lname']),$_POST['dname']);
                             if($res[0]) 
                               {
-                                echo "<h3>".$res[1]."</h3>"; //jumpto1
+                                $login_output.="<h3>".$res[1]."</h3>"; //jumpto1
                                 // email user
                                 $to=$_POST['username'];
                                 $headers  = 'MIME-Version: 1.0' . "\r\n";
@@ -352,25 +352,25 @@ else if($_REQUEST['q']=='create')
                                 $headers .= "From: Account Registration <blackhole@".$shorturl.">";
                                 $subject='New Account Creation';
                                 $body = "<p>Congratulations! Your new account has been created. Your username is this email address ($to). We do not keep a record of your password we can access, so please be sure to remember it!</p><p>If you do forget your password, you can <a href='mailto:".$service_email."?subject=Reset%20Password'>email support</a> to reset your password for you with a picture of government ID with your registered name and zip code. All secure data will be lost in the reset.</p>";
-                                if(mail($to,$subject,$body,$headers)) echo "<p>A confirmation email has been sent to your inbox at $to .</p>";
+                                if(mail($to,$subject,$body,$headers)) $login_output.="<p>A confirmation email has been sent to your inbox at $to .</p>";
 					   
                               }
-                            else echo "<p class='error'>".$res[1]."</p><p>Use your browser's back button to try again.</p>";
+                            else $login_output.="<p class='error'>".$res[1]."</p><p>Use your browser's back button to try again.</p>";
                             ob_end_flush();
                           }
                         else
                           { 
-                            echo "<p class='error'>Your password was not long enough ($minimum_password_length characters) or did not match minimum complexity levels (one upper case letter, one lower case letter, one digit or special character). You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least $password_threshold_length characters. Please go back and try again.</p>";
+                            $login_output.="<p class='error'>Your password was not long enough ($minimum_password_length characters) or did not match minimum complexity levels (one upper case letter, one lower case letter, one digit or special character). You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least $password_threshold_length characters. Please go back and try again.</p>";
                           }
                       }
-                    else echo "<p class='error'>Your passwords did not match. Please go back and try again.</p>";
+                    else $login_output.="<p class='error'>Your passwords did not match. Please go back and try again.</p>";
                   }
-                else echo "<p class='error'>Error: Your email address was invalid. Please enter a valid email.</p>";
+                else $login_output.="<p class='error'>Error: Your email address was invalid. Please enter a valid email.</p>";
               }
           }
-        else echo $createform;
+        else $login_output.=$createform;
       }
-    else echo "<p class='error'>This site's ReCAPTCHA library hasn't been set up. Please contact the site administrator.</p>";
+    else $login_output.="<p class='error'>This site's ReCAPTCHA library hasn't been set up. Please contact the site administrator.</p>";
   }
 else if($_REQUEST['q']=='logout')
   {
@@ -412,10 +412,10 @@ else if($_REQUEST['confirm']!=null)
             $query="UPDATE `$default_user_table` SET flag=$flag WHERE id=$id";
             $l=openDB();
             $result=execAndCloseDB($l,$query);
-            if(!$result) echo "<p class='error'>" . mysqli_error($l) . "</p>";
+            if(!$result) $login_output.="<p class='error'>" . mysqli_error($l) . "</p>";
             else
               {
-                echo "<p>Success! User $status</p>";
+                $login_output.="<p>Success! User $status</p>";
                 $email=sanitize($_REQUEST['email']);
                 $subject='$title account activated';
                 $body="<p>This is a notice from $title to let you know your account has been $status.";
@@ -424,17 +424,17 @@ else if($_REQUEST['confirm']!=null)
                 $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
                 $headers .= "From: $title <blackhole@".substr($baseurl,strpos($baseurl,'.')).">";
                 if(mail($email,$subject,$body,$headers)) echo "<p>Additionally, an email was sent to '$email' notifying them of their activation.</p>";
-                else echo "<p class='error'>Notice: email notification of activation failed. Please manually notify $email about their activation.</p>";
+                else $login_output.="<p class='error'>Notice: email notification of activation failed. Please manually notify $email about their activation.</p>";
               }
           }
-        else echo "<p class='error'>Invalid user confirmation code.</p>";
+        else $login_output.="<p class='error'>Invalid user confirmation code.</p>";
       }
-    else echo "<p class='error'>Invalid user ID</p>";
+    else $login_output.="<p class='error'>Invalid user ID</p>";
   }
 else
   {
-    if(!$logged_in) echo $login_preamble . $loginform.$loginform_close;
-    else echo "<p id='signin_greeting'>Welcome back, $first_name</p><br/><p id='logout_para'><aside class='ssmall'><a href='?q=logout'>(Logout)</a></aside></p>";
+    if(!$logged_in) $login_output.=$login_preamble . $loginform.$loginform_close;
+    else $login_output.="<p id='signin_greeting'>Welcome back, $first_name</p><br/><p id='logout_para'><aside class='ssmall'><a href='?q=logout'>(Logout)</a></aside></p>";
   }
 ob_end_flush();
 echo "<script type='text/javascript'>

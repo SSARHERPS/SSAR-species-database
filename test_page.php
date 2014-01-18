@@ -36,6 +36,7 @@ if($_REQUEST['t']=='hash')
     <article>
       <?php
          require_once('login.php');
+         echo $login_output;
          ?>
       <div>
         <h3>Test Hash</h3>
