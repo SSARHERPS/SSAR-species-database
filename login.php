@@ -4,6 +4,7 @@
  */
 
 $debug=false;
+$use_javascript_cookies=false;
 
 // Global cookie vars
 /*
@@ -158,6 +159,7 @@ if($_REQUEST['q']=='submitlogin')
                             $cookiedebug.=' good-auth';
                             $logged_in=true;
                             $user=$_COOKIE[$cookieuser];
+                            if($use_javascript_cookies) $deferredJS.="\n".$cookie_result['js'];
                           }
                         else
                           {
@@ -209,7 +211,7 @@ if($_REQUEST['q']=='submitlogin')
                     echo "<p>Would refresh to:".$durl."</p>";
                     
                   }
-                else header("Refresh: 0; url=".$durl); 
+                else header("Refresh: 3; url=".$durl); 
               }
             ob_end_flush(); // Flush the buffer, start displaying
           }
