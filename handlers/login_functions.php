@@ -178,8 +178,8 @@ class UserFunctions {
                     else 
                       {
                         // Clear login disabled flag
-                        global $default_table;
-                        $query1="UPDATE `$default_table` SET disabled=false WHERE id=".$userdata['id'];
+                        global $default_user_table;
+                        $query1="UPDATE `$default_user_table` SET disabled=false WHERE id=".$userdata['id'];
                         $res1=openDB();
                         $result=execAndCloseDB($query1);
                       }
@@ -335,8 +335,8 @@ class UserFunctions {
         $pw_characters=json_decode($userdata['password'],true);
         $salt=$pw_characters['salt'];
         //store it
-        global $default_table;
-        $query="UPDATE `$default_table` SET auth_key='$otsalt' WHERE id='$id'";
+        global $default_user_table;
+        $query="UPDATE `$default_user_table` SET auth_key='$otsalt' WHERE id='$id'";
         $l=openDB();
         mysqli_query($l,'BEGIN');
         $result=mysqli_query($l,$query);
@@ -420,7 +420,7 @@ class UserFunctions {
             // confirm with lookupUser();
             $a=$this->lookupUser($validation_data['username'],$validation_data['password']);
             $validated=$a[0];
-            $method='Password'
+            $method='Password';
           }
         else return array('status'=>false,"error"=>"Bad validation data");
       }
@@ -441,8 +441,8 @@ class UserFunctions {
           }
         $real_data=sanitize($data);
         require_once(dirname(__FILE__).'/../CONFIG.php');
-        global $default_table;
-        $query="UPDATE `$default_table` SET $col=\"".$real_data."\"";
+        global $default_user_table;
+        $query="UPDATE `$default_user_table` SET $col=\"".$real_data."\"";
         $l=openDB();
         mysqli_query($l,'BEGIN');
         $r=mysqli_query($l,$query);
