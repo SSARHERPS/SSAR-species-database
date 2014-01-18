@@ -85,6 +85,8 @@ $login_preamble = "
 if($_REQUEST['m']=='login_error') $login_preamble.="<h3 class='error'>There was a problem setting your login credentials. Please try again.</h3>";
 $loginform = "
 	    <form id='login' method='post' action='?q=submitlogin'>
+            <fieldset>
+              <legend>Login</legend>
 	      <label for='username'>
 		Email:
 	      </label>
@@ -93,7 +95,8 @@ $loginform = "
 	      <label for='password'>
 		Password:
 	      </label>
-	      <input type='password' name='password' id='password' placeholder='Password' required='required'/>";
+	      <input type='password' name='password' id='password' placeholder='Password' required='required'/>
+</fieldset>";
 $loginform_close="	      <br/>
 	      <input type='submit' value='Login' id='login_button'/>
 	    </form>$alt_forms<br/><p><small>Don't have an account yet? <a href='?q=create'>Create one</a>!</small></p>";
