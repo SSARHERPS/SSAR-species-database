@@ -3,7 +3,7 @@
  * This is designed to be included in a page, and doesn't have the page framework on its own.
  */
 
-//$debug=true;
+$debug=false;
 
 // Global cookie vars
 /*
@@ -82,6 +82,7 @@ $alt_forms="<div id='alt_logins'>
 </div>";
 $login_preamble = "
 	    <h2>User Login</h2>";
+if($_REQUEST['m']=='login_error') $login_preamble.="<h3 class='error'>There was a problem setting your login credentials. Please try again.</h3>";
 $loginform = "
 	    <form id='login' method='post' action='?q=submitlogin'>
 	      <label for='username'>
@@ -141,8 +142,8 @@ if($_REQUEST['q']=='submitlogin')
                         $pw_characters=json_decode($userdata['password'],true);
 
                         // pieces:
-                        $salt=$pw_characters['salt'];
-                        $otsalt=$userdata['auth_key'];
+                        $salt=$cookie_result['source']['salt'];
+                        $otsalt=$cookie_result['source']['server_salt'];
                         $cookie_secret=$cookie_result['source']['secret']; // won't grab new data until refresh, use passed
                         
                         $value_create=array($cookie_secret,$salt,$otsalt,$_SERVER['REMOTE_ADDR'],$site_security_token);
@@ -157,15 +158,15 @@ if($_REQUEST['q']=='submitlogin')
                         else
                           {
                             // bad cookie
-                            $cookiedebug.="\n bad-auth ".print_r($cookie_result,true)." for $cookieuser. \nExpecting: $value \n Given:\n ".$_COOKIE[$cookieauth]." \nRaw cookie:\n".print_r($_COOKIE,true);
+                            $cookiedebug.="\n bad-auth ".print_r($cookie_result,true)." for $cookieuser. \nExpecting: $value from ".print_r($value_create,true)."\n Given:\n ".$cookie_result['raw_auth']." from ".print_r($cookie_result['source'],true)." \nRaw cookie:\n".print_r($_COOKIE,true);
                             if(!$debug)
                               {
                                 $cookiedebug.="\n\nWiping ...";
-                                setcookie($cookieuser,false,time()-3600*24*365,null,$domain);
-                                setcookie($cookieperson,false,time()-3600*24*365,null,$domain);
-                                setcookie($cookieauth,false,time()-3600*24*365,null,$domain);
-                                setcookie($cookiekey,false,time()-3600*24*365,null,$domain);
-                                setcookie($cookiepic,false,time()-3600*24*365,null,$domain);
+                                setcookie($cookieuser,false,time()-3600*24*365);
+                                setcookie($cookieperson,false,time()-3600*24*365);
+                                setcookie($cookieauth,false,time()-3600*24*365);
+                                setcookie($cookiekey,false,time()-3600*24*365);
+                                setcookie($cookiepic,false,time()-3600*24*365);
                               }
                             else $cookiedebug.="\nWould wipe here";
                           }
@@ -177,11 +178,11 @@ if($_REQUEST['q']=='submitlogin')
                         if(!$debug)
                           {
                             $cookiedebug.="\n\nWiping ...";
-                            setcookie($cookieuser,false,time()-3600*24*365,null,$domain);
-                            setcookie($cookieperson,false,time()-3600*24*365,null,$domain);
-                            setcookie($cookieauth,false,time()-3600*24*365,null,$domain);
-                            setcookie($cookiekey,false,time()-3600*24*365,null,$domain);
-                            setcookie($cookiepic,false,time()-3600*24*365,null,$domain);
+                            setcookie($cookieuser,false,time()-3600*24*365);
+                            setcookie($cookieperson,false,time()-3600*24*365);
+                            setcookie($cookieauth,false,time()-3600*24*365);
+                            setcookie($cookiekey,false,time()-3600*24*365);
+                            setcookie($cookiepic,false,time()-3600*24*365);
                           }
                         else $cookiedebug.="\nWould wipe here";
                       }
@@ -199,9 +200,10 @@ if($_REQUEST['q']=='submitlogin')
                     displayDebug($cookie_result);
                     echo "<p>Cookie Supervar</p>";
                     displayDebug($_COOKIE);
+                    echo "<p>Would refresh to:".$_SERVER['PHP_SELF']."</p>";
                     
                   }
-                else header("Refresh: 0; url=$baseurl"); 
+                else header("Refresh: 0; url=".$_SERVER['PHP_SELF']."?m=login_error"); 
               }
             ob_end_flush(); // Flush the buffer, start displaying
           }
