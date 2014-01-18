@@ -369,12 +369,12 @@ else if($_REQUEST['q']=='create')
   }
 else if($_REQUEST['q']=='logout')
   {
-    setcookie($cookieuser,false,time()-3600*24*365,null,$domain);
-    setcookie($cookieperson,false,time()-3600*24*365,null,$domain);
-    setcookie($cookieauth,false,time()-3600*24*365,null,$domain);
-    setcookie($cookiekey,false,time()-3600*24*365,null,$domain);
-    setcookie($cookiepic,false,time()-3600*24*365,null,$domain);
-    header("Refresh: 0; url=".$baseurl.$_SERVER['PHP_SELF']);
+    setcookie($cookieuser,false,time()-3600*24*365);
+    setcookie($cookieperson,false,time()-3600*24*365);
+    setcookie($cookieauth,false,time()-3600*24*365);
+    setcookie($cookiekey,false,time()-3600*24*365);
+    setcookie($cookiepic,false,time()-3600*24*365);
+    header("Refresh: 0; url=".$_SERVER['PHP_SELF']);
     ob_end_flush();
   }
 else if($_REQUEST['confirm']!=null)
