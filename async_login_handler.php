@@ -33,4 +33,21 @@ function getLoginState($get)
 }
 
 
+function saveToUser($get)
+{
+  // confirm
+  $conf=$get['hash'];
+  $s=$get['secret'];
+  $id=$get['dblink'];
+  $u=new UserFunctions();
+  if($u->validateUser($id,$conf,$s))
+    {
+      // write the data
+    }
+  else
+    {
+      // invalid user
+    }
+}
+
 ?>
