@@ -386,6 +386,12 @@ else if($_REQUEST['q']=='logout')
     setcookie($cookiekey,false,time()-3600*24*365);
     setcookie($cookiepic,false,time()-3600*24*365);
     header("Refresh: 0; url=".$_SERVER['PHP_SELF']);
+    // do JS cookie wipe too
+    $deferredJS.="\n$.removeCookie('$cookieuser');";
+    $deferredJS.="\n$.removeCookie('$cookieperson');";
+    $deferredJS.="\n$.removeCookie('$cookieauth');";
+    $deferredJS.="\n$.removeCookie('$cookiekey');";
+    $deferredJS.="\n$.removeCookie('$cookiepic');";
     ob_end_flush();
   }
 else if($_REQUEST['confirm']!=null)

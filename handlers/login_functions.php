@@ -377,7 +377,8 @@ class UserFunctions {
         $cookiepic=$domain."_pic";
         $cookielink=$domain."_link";
 
-        $user_greet=$userdata['name'];
+        $xml=new Xml;
+        $user_greet=$xml->getTagContents($userdata['name'],"<fname>"); // for now
         $dblink=$userdata['dblink'];
     
         setcookie($cookieauth,$value,$expire);
