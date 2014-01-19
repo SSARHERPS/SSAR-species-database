@@ -332,7 +332,7 @@ else if($_REQUEST['q']=='create')
             $_POST["recaptcha_challenge_field"],
             $_POST["recaptcha_response_field"]);
 
-            if (!$resp->is_valid) 
+            if (!$resp->is_valid && !$debug) 
               {
                 // What happens when the CAPTCHA was entered incorrectly
                 $login_output.=("The reCAPTCHA wasn't entered correctly. Go back and try it again." .

@@ -145,7 +145,8 @@ if(!function_exists('sanitize'))
           $input=str_replace("_","&#37;",$input); // Fix % potential wildcard
           $input=str_replace("'","&#39;",$input);
           $input=str_replace('"',"&#34;",$input);
-          $l=openDB();
+          global $default_user_database;
+          $l=openDB($default_user_database);
           $output = mysqli_real_escape_string($l,$input);
         }
       return $output;

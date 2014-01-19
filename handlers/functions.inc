@@ -48,7 +48,7 @@ if(!function_exists('debugDisplay'))
       $string=str_replace("&","&amp;",$string);
       $string=str_replace("<","&lt;",$string);
       $string=str_replace(">","&gt;",$string);
-      return "<pre>".$string."</pre>";
+      return "<pre style='background:white;color:black;'>".$string."</pre>";
     }
     function displayDebug($string){ return debugDisplay($string); }
   }

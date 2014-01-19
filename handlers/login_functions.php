@@ -46,10 +46,18 @@ class UserFunctions {
    * Primary functions
    ***/
   
-  public function createUser($username,$pw_in,$name,$dname,$zip=null)
+  public function createUser($username,$pw_in,$name,$dname)
   {
     // Send email for validation
     require_once(dirname(__FILE__).'/db_hook.inc');
+    $ou=$username;
+    require_once(dirname(__FILE__).'/../CONFIG.php');
+    global $default_user_table,$default_user_database;
+    /***
+     * Weaker, but use if you have problems
+     $l=openDB($default_user_database);
+     $user=mysqli_real_escape_string($l,$username);
+    ***/
     $user=sanitize($username); 
     $preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
     /***
@@ -58,15 +66,14 @@ class UserFunctions {
     //if($user!=$username) return array(false,'Your chosen email contained injectable code. Please try again.');
     if(preg_match($preg,$username)!=1) return array(false,'Your email is not a valid email address. Please try again.');
     else $username=$user; // synonymize
-    require_once(dirname(__FILE__).'/../CONFIG.php');
-    global $default_user_table,$default_user_database;
+
     $result=lookupItem($user,'username',$default_user_table,$default_user_database,false,true);
     if($result!==false) 
       {
         $data=mysqli_fetch_assoc($result);
         if($data['username']==$username) return array(false,'Your email is already registered. Please try again. Did you forget your password?');
       }
-    global $minimum_password_length,$password_threshold_length;
+    global $minimum_password_length,$password_threshold_length,$db_cols;
     if(strlen($pw_in)<$minimum_password_length) return array(false,'Your password is too short. Please try again.');
     require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
     $hash=new Stronghash;
@@ -81,13 +88,18 @@ class UserFunctions {
     $sdata_init="<xml><name>".$ne[0]."</name></xml>";
     $names="<xml><name>".implode(" ",$name)."</name><fname>".$name[0]."</fname><lname>".$name[1]."</lname><dname>$dname</dname></xml>";
     $hardlink=sha1($salt.$creation);
-    $fields=array('username','password','pass_meta','creation','status_tracker','name','flag','admin_flag','su_flag','disabled','dtime','auth_key','data','secdata','special_1','special_2','dblink','defaults','public_key','private_key');
+    foreach($db_cols as $key=>$type) $fields[]=$key;
     $store=array($user,$pw_store,'',$creation,'',$names,true,false,false,false,0,'',$data_init,$sdata_init,'','',$hardlink,'','',''); // set flag to FALSE if authentication wanted.
+    /***
+     * // Debugging
+     * echo displayDebug("$user | $username | $ou");
+     * echo displayDebug($store);
+     ***/ 
     $test_res=addItem($fields,$store,$default_user_table,$default_user_database);
     if($test_res)
       {
         // Get ID value
-        $res = $this->lookupUser($username, $pw_in);
+        $res = $this->lookupUser($user, $pw_in);
         $userdata=$res[1];
         $id=$userdata['id'];
         
