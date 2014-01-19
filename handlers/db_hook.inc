@@ -7,10 +7,10 @@ require_once(dirname(__FILE__).'/../CONFIG.php');
 require_once(dirname(__FILE__).'/functions.inc');
 
 function testDefaults() {
-  global $default_user_table;
+  global $default_user_table,$default_user_database;
   try
     {
-      $l=openDB();
+      $l=openDB($default_user_database);
       if($l!==false)
         {
           if(mysqli_query($l,"SELECT * FROM `$default_user_table` LIMIT 1")===false)
@@ -29,12 +29,12 @@ function testDefaults() {
 }
 
 function createTable() {
-  global $db_cols,$default_user_table;
+  global $db_cols,$default_user_table,$default_user_database;
   $query="CREATE TABLE `$default_user_table` (id int(10) NOT NULL auto_increment";
   foreach($db_cols as $col=>$type) $query.=", $col $type";
   $query.=",PRIMARY KEY (id),UNIQUE id (id),KEY id_2 (id))";
 
-  $l=openDB();
+  $l=openDB($default_user_database);
   $r=mysqli_query($l,$query);
   if($r!==false)
     {
@@ -187,6 +187,7 @@ if(!function_exists('lookupItem'))
       global $default_user_table;
       if(empty($field_name)) $field_name = "id";
       if(empty($table_name)) $table_name = $default_user_table;
+      if(empty($database_name)) $database_name = $default_user_database;
       if($skipsan===false) 
         {
           $sitem=sanitize($item);
@@ -216,8 +217,9 @@ if(!function_exists('addItem'))
     function addItem($field_arr,$value_arr,$table_name=null,$database_name=null,$test=false)
     {
       // make this transactional
-      global $default_user_table;
-      if($table_name==null) $table_name = $default_user_table;
+      global $default_user_table,$default_user_database;
+      if(empty($table_name)) $table_name = $default_user_table;
+      if(empty($database_name)) $database_name=$default_user_database;
       $querystring = "INSERT INTO $table_name VALUES (";
       if(empty($value_arr))
         {

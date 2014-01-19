@@ -58,13 +58,14 @@ class UserFunctions {
     //if($user!=$username) return array(false,'Your chosen email contained injectable code. Please try again.');
     if(preg_match($preg,$username)!=1) return array(false,'Your email is not a valid email address. Please try again.');
     else $username=$user; // synonymize
-    $result=lookupItem($user,'username',null,null,false,true);
+    require_once(dirname(__FILE__).'/../CONFIG.php');
+    global $default_user_table,$default_user_database;
+    $result=lookupItem($user,'username',$default_user_table,$default_user_database,false,true);
     if($result!==false) 
       {
         $data=mysqli_fetch_assoc($result);
         if($data['username']==$username) return array(false,'Your email is already registered. Please try again. Did you forget your password?');
       }
-    require_once(dirname(__FILE__).'/../CONFIG.php');
     global $minimum_password_length,$password_threshold_length;
     if(strlen($pw_in)<$minimum_password_length) return array(false,'Your password is too short. Please try again.');
     require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
@@ -82,7 +83,7 @@ class UserFunctions {
     $hardlink=sha1($salt.$creation);
     $fields=array('username','password','pass_meta','creation','status_tracker','name','flag','admin_flag','su_flag','disabled','dtime','auth_key','data','secdata','special_1','special_2','dblink','defaults','public_key','private_key');
     $store=array($user,$pw_store,'',$creation,'',$names,true,false,false,false,0,'',$data_init,$sdata_init,'','',$hardlink,'','',''); // set flag to FALSE if authentication wanted.
-    $test_res=addItem($fields,$store);
+    $test_res=addItem($fields,$store,$default_user_table,$default_user_database);
     if($test_res)
       {
         // Get ID value
@@ -130,7 +131,8 @@ class UserFunctions {
     require_once(dirname(__FILE__).'/xml.php');
     $xml=new Xml;
     require_once(dirname(__FILE__).'/db_hook.inc');
-    $result=lookupItem($username,'username',null,null,false);
+    global $default_user_table,$default_user_database;
+    $result=lookupItem($username,'username',$default_user_table,$default_user_database,false);
     $userdata=mysqli_fetch_assoc($result);
     if($result!==false && is_numeric($userdata['id']))
       {
@@ -174,9 +176,9 @@ class UserFunctions {
                     else 
                       {
                         // Clear login disabled flag
-                        global $default_user_table;
+                        global $default_user_table,$default_user_database;
                         $query1="UPDATE `$default_user_table` SET disabled=false WHERE id=".$userdata['id'];
-                        $res1=openDB();
+                        $res1=openDB($default_user_database);
                         $result=execAndCloseDB($query1);
                       }
                   }
@@ -246,7 +248,8 @@ class UserFunctions {
     
     $col='dblink';
     if(empty($userid)) $userid=$_COOKIE[$cookielink];
-    $result=lookupItem($userid,$col);
+    global $default_user_table,$default_user_database;
+    $result=lookupItem($userid,$col,$default_user_table,$default_user_database);
     if($result!==false && !is_array($result))
       {
         $authsalt = $this-> getSiteKey();
@@ -331,9 +334,9 @@ class UserFunctions {
         $pw_characters=json_decode($userdata['password'],true);
         $salt=$pw_characters['salt'];
         //store it
-        global $default_user_table;
+        global $default_user_table,$default_user_database;
         $query="UPDATE `$default_user_table` SET auth_key='$otsalt' WHERE id='$id'";
-        $l=openDB();
+        $l=openDB($default_user_database);
         mysqli_query($l,'BEGIN');
         $result=mysqli_query($l,$query);
         if(!$result)
@@ -437,9 +440,9 @@ class UserFunctions {
           }
         $real_data=sanitize($data);
         require_once(dirname(__FILE__).'/../CONFIG.php');
-        global $default_user_table;
+        global $default_user_table,$default_user_database;
         $query="UPDATE `$default_user_table` SET $col=\"".$real_data."\"";
-        $l=openDB();
+        $l=openDB($default_user_database);
         mysqli_query($l,'BEGIN');
         $r=mysqli_query($l,$query);
         $finish_query= $r ? 'COMMIT':'ROLLBACK';

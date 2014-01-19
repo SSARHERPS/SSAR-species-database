@@ -335,7 +335,7 @@ else if($_REQUEST['q']=='create')
             if (!$resp->is_valid) 
               {
                 // What happens when the CAPTCHA was entered incorrectly
-                die ("The reCAPTCHA wasn't entered correctly. Go back and try it again." .
+                $login_output.=("The reCAPTCHA wasn't entered correctly. Go back and try it again." .
                 "(reCAPTCHA said: " . $resp->error . ")");
               } 
             else 
