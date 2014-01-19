@@ -59,6 +59,7 @@ if($debug==true)
     if($r===true) echo "<p>(Database OK)</p>";
     else echo "<p>(Database Error - ' $r ')</p>";
     echo "<p>Visiting $baseurl on '$shorturl' with a human domain '$domain'</p>";
+    echo displayDebug($_REQUEST);
     echo "<p>".displayDebug(sanitize('tigerhawk_vok-goes.special@gmail.com'))."</p>";
     $xkcd_check="Robert'); DROP TABLE Students;--"; // https://xkcd.com/327/
     echo "<p>".displayDebug(sanitize($xkcd_check))."</p>"; // This should have escaped code
@@ -344,7 +345,7 @@ else if($_REQUEST['q']=='create')
                   {
                     if($_POST['password']==$_POST['password2'])
                       {
-                        if(preg_match('/(?=^.{'.$minimum_password_length.',}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',$_POST['password']) || strlen($_POST['password'])>$password_threshold_length) // validate email, use in validation to notify user.
+                        if(preg_match('/(?=^.{'.$minimum_password_length.',}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',$_POST['password']) || strlen($_POST['password'])>=$password_threshold_length) // validate email, use in validation to notify user.
                           {
                             $res=$user->createUser($_POST['username'],$_POST['password'],array($_POST['fname'],$_POST['lname']),$_POST['dname']);
                             if($res[0]) 

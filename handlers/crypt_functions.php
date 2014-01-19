@@ -5,6 +5,9 @@
 
 
 
+if(!function_exists('encryptThis'))
+  {
+
 function encryptThis($data,$password,$add_salt=null)
 {
   /* // Do encryptions. Expects 24-bit keys. */
@@ -13,7 +16,7 @@ function encryptThis($data,$password,$add_salt=null)
   /* $crypttext = base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $key, $data, MCRYPT_MODE_CTR, $iv)); */
   /* if($array)  return array($crypttext,$iv); */
   /* else return $iv . $crypttext; */
-  $cryptastic=new cryptastic;
+  $cryptastic=new cryptastic2;
   $key=createKey($password,$add_salt);
   //if(empty($add_salt)) $salt=createSalt();
   //else $salt=$add_salt;
@@ -35,7 +38,7 @@ function decryptThis($data,$password,$salt,$iv=null)
   /* $result=rtrim($result,"\0"); */
   /* return $result; */
   // Requires the password and the random salt from the encryption.
-  $cryptastic=new cryptastic;
+  $cryptastic=new cryptastic2;
   //$key=createKey($password,$salt);
   $result=$cryptastic->decrypt($data,$password,true);
   $result=rtrim($result,"\0");
@@ -43,17 +46,19 @@ function decryptThis($data,$password,$salt,$iv=null)
   return $result;
 }
 
+
 function createKey($password,$salt=null,$add_salts=null)
 {
-  $cryptastic=new cryptastic;
+  $cryptastic=new cryptastic2;
   if(empty($salt)) $salt=createSalt(32,$add_salts);
   $key=$cryptastic->pbkdf2($password,$salt,25000,32);
   // Save this key -- it is unique and can't be regenerated
   return array($key,$salt);
 }
+  }
 
 //--------------------------------
-class cryptastic {
+class cryptastic2 {
 
 	/** Encryption Procedure
 	 *
