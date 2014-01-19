@@ -89,7 +89,7 @@ class UserFunctions {
     $names="<xml><name>".implode(" ",$name)."</name><fname>".$name[0]."</fname><lname>".$name[1]."</lname><dname>$dname</dname></xml>";
     $hardlink=sha1($salt.$creation);
     foreach($db_cols as $key=>$type) $fields[]=$key;
-    $store=array($user,$pw_store,'',$creation,'',$names,true,false,false,false,0,'',$data_init,$sdata_init,'','',$hardlink,'','',''); // set flag to FALSE if authentication wanted.
+    $store=array($user,$pw_store,'',$creation,'',$names,true,false,false,false,0,'','','',$data_init,$sdata_init,'','',$hardlink,'','',''); // set flag to FALSE if authentication wanted.
     /***
      * // Debugging
      * echo displayDebug("$user | $username | $ou");
@@ -216,7 +216,7 @@ class UserFunctions {
           }
         // end good username loop 
       }
-    else return array(false,'meassage'=>'Sorry, your username or password is incorrect.','error'=>'Bad username');
+    else return array(false,'message'=>'Sorry, your username or password is incorrect.','error'=>'Bad username','desc'=>$result['error']);
   }
 
 
@@ -387,7 +387,7 @@ class UserFunctions {
         $path=$this->getUserPicture($userdata['id']); 
         setcookie($cookielink,$dblink,$expire);
 
-        $js_expires="{expires:$expire_days,path:'/'});\n";
+        $js_expires=",{expires:$expire_days,path:'/'});\n";
         $jquerycookie="$.cookie('$cookieauth','$value'".$js_expires;
         $jquerycookie.="$.cookie('$cookiekey','$cookie_secret'".$js_expires;
         $jquerycookie.="$.cookie('$cookieuser','$username'".$js_expires;

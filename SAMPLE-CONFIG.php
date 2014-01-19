@@ -44,6 +44,9 @@ $profile_picture_storage = $user_data_storage.'';
  
 ***/
 
+/***
+ * If you edit this, change the mapping in login_functions.php
+ ***/
 $db_cols=array(
   "username"=>"text",
   "password"=>"text",
