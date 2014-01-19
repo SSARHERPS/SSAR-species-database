@@ -78,7 +78,7 @@ else
   {
     if($captive_login) header("Refresh: 0; url=$baseurl");
   }
-
+$login_output="<div id='login_block'>";
 $alt_forms="<div id='alt_logins'>
 <!-- OpenID, Google, Twitter, Facebook -->
 </div>";
@@ -114,7 +114,7 @@ if($_REQUEST['q']=='submitlogin')
             // Successful login
             $userdata=$res[1];
             $id=$userdata['id'];
-            $login_output.="<h3 id='welcome_back'>Welcome back, ".$xml->getTagContents($userdata['dec_name'],"<fname>")."</h3>"; //Welcome message
+            $login_output.="<h3 id='welcome_back'>Welcome back, ".$xml->getTagContents($userdata['name'],"<fname>")."</h3>"; //Welcome message
 		       
             $cookie_result=$user->createCookieTokens($userdata);
             if($debug)
@@ -442,6 +442,7 @@ else
     if(!$logged_in) $login_output.=$login_preamble . $loginform.$loginform_close;
     else $login_output.="<p id='signin_greeting'>Welcome back, $first_name</p><br/><p id='logout_para'><aside class='ssmall'><a href='?q=logout'>(Logout)</a></aside></p>";
   }
+$login_output.="</div>";
 ob_end_flush();
 echo "<script type='text/javascript'>
 function loadScript(url, callback) {

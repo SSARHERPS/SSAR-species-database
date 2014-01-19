@@ -14,4 +14,23 @@ function returnAjax($data)
   exit();
 }
 
+parse_str($_SERVER['QUERY_STRING'],$_GET);
+$do=isset($_REQUEST['action']) ? strtolower($_REQUEST['action']):null;
+
+switch($do)
+  {
+  default:
+    getLoginState($_REQUEST);
+  }
+
+function getLoginState($get)
+{
+  $conf=$get['hash'];
+  $s=$get['secret'];
+  $id=$get['dblink'];
+  $u=new UserFunctions();
+  returnAjax(array("status"=>$u->validateUser($id,$conf,$s)));
+}
+
+
 ?>
