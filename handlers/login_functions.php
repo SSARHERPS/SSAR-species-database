@@ -80,12 +80,8 @@ class UserFunctions {
     $sdata_init="<xml><name>".$ne[0]."</name></xml>";
     $names="<xml><name>".implode(" ",$name)."</name><fname>".$name[0]."</fname><lname>".$name[1]."</lname><dname>$dname</dname></xml>";
     $hardlink=sha1($salt.$creation);
-    //echo "<pre>Storing:\n";
     $fields=array('username','password','pass_meta','creation','status_tracker','name','flag','admin_flag','su_flag','disabled','dtime','auth_key','data','secdata','special_1','special_2','dblink','defaults','public_key','private_key');
-    //print_r($fields);
-    //echo "\nwith the following information\n";
     $store=array($user,$pw_store,'',$creation,'',$names,true,false,false,false,0,'',$data_init,$sdata_init,'','',$hardlink,'','',''); // set flag to FALSE if authentication wanted.
-    //print_r($store);
     $test_res=addItem($fields,$store);
     if($test_res)
       {
