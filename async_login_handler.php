@@ -84,7 +84,26 @@ function saveToUser($get)
 
 
 function getFromUser($get) {
-
+  $conf=$get['hash'];
+  $s=$get['secret'];
+  $id=$get['dblink'];
+  if(!empty($conf) && !empty($s) && !empty($id) && !empty($get['col']))
+    {
+      $u=new UserFunctions();
+      if($u->validateUser($id,$conf,$s))
+        {
+          require_once(dirname(__FILE__).'/CONFIG.php');
+          global $default_user_database,$default_user_table;
+          $col=decode64($get['col']);
+          $l=openDB($default_user_database);
+          $query="SELECT $col FROM `$default_user_table` WHERE dblink='$id'";
+          $r=mysqli_query($l,$query);
+          $row=mysqli_fetch_row($r);
+          return array('status'=>true,'data'=>deescape($row[0]));
+        }
+      else return array('status'=>false,'error'=>'Invalid user');
+    }
+  return array('status'=>false,'error'=>"One or more required fields were left blank");
 }
 
 ?>

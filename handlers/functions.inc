@@ -257,4 +257,11 @@ if(!function_exists('smart_decode64'))
     }
   }
 
+if(!function_exists('deescape'))
+  {
+    function deescape($input) {
+      return htmlspecialchars_decode(html_entity_decode(urldecode($input)));
+    }
+  }
+
 ?>
