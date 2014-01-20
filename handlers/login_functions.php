@@ -418,6 +418,7 @@ class UserFunctions {
 
   public function writeToUser($data,$col,$validation_data=null,$replace=true)
   {
+    if(empty($data) || empty($col)) return array('status'=>false,'error'=>'Bad request');
     $validated=false;
     if(is_array($validation_data))
       {
@@ -452,6 +453,7 @@ class UserFunctions {
             // Otherwise append
           }
         $real_data=sanitize($data);
+        if(empty($real_data)) return array('status'=>false,'error'=>'Invalid input data');
         require_once(dirname(__FILE__).'/../CONFIG.php');
         global $default_user_table,$default_user_database;
         $query="UPDATE `$default_user_table` SET $col=\"".$real_data."\"";

@@ -39,15 +39,20 @@ function saveToUser($get)
   $conf=$get['hash'];
   $s=$get['secret'];
   $id=$get['dblink'];
-  $u=new UserFunctions();
-  if($u->validateUser($id,$conf,$s))
+  if(!empty($conf) && !empty($s) && !empty($id) && !empty($get['data']) && !empty($get['col']))
     {
-      // write the data
+      $u=new UserFunctions();
+      if($u->validateUser($id,$conf,$s))
+        {
+          // write the data
+          // Yes, it looks up the validation again, but it is a more robust feedback like this
+          // Could pass in get for validation data, but let's be more limited
+          $val=array("dblink"=>$id,"hash"=>$conf,"secret"=>$s);
+          returnAjax($u->writeToUser($get['data'],$get['col'],$val));
+        }
+      else returnAjax(array('status'=>false,'error'=>'Invalid user'));
     }
-  else
-    {
-      // invalid user
-    }
+  returnAjax(array('status'=>false,'error'=>"One or more required fields were left blank"));
 }
 
 ?>
