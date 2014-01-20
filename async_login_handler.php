@@ -41,10 +41,16 @@ function getLoginState($get)
 
 function saveToUser($get)
 {
-  // confirm
+  /***
+   * These are OK to pass with plaintext, they'll change with a different device anyway (non-persistent).
+   * Worst-case scenario it only exposes public function calls. Sensitive things will need explicit revalidation.
+   ***/
   $conf=$get['hash'];
   $s=$get['secret'];
   $id=$get['dblink'];
+  /***
+   * These fields can only be written to from directly inside of a script, rather than an AJAX call.
+   ***/
   $protected_fields = array(
     'username',
     'password',
@@ -60,9 +66,8 @@ function saveToUser($get)
       $u=new UserFunctions();
       if($u->validateUser($id,$conf,$s))
         {
-          // write the data
-          // Yes, it looks up the validation again, but it is a more robust feedback like this
-          // Could pass in get for validation data, but let's be more limited
+          // Yes, writeToUser looks up the validation again, but it is a more robust feedback like this
+          // Could pass in $get for validation data, but let's be more limited
           $val=array("dblink"=>$id,"hash"=>$conf,"secret"=>$s);
           $data=decode64($get['data']);
           $col=decode64($get['col']);
