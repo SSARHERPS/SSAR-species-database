@@ -19,8 +19,14 @@ $do=isset($_REQUEST['action']) ? strtolower($_REQUEST['action']):null;
 
 switch($do)
   {
+  case 'get_login_status':
+    returnAjax(getLoginState($_REQUEST));
+    break;
+  case 'write':
+    returnAjax(saveTouser($_REQUEST));
+    break;
   default:
-    getLoginState($_REQUEST);
+    returnAjax(getLoginState($_REQUEST));
   }
 
 function getLoginState($get)
@@ -29,7 +35,7 @@ function getLoginState($get)
   $s=$get['secret'];
   $id=$get['dblink'];
   $u=new UserFunctions();
-  returnAjax(array("status"=>$u->validateUser($id,$conf,$s)));
+  return array("status"=>$u->validateUser($id,$conf,$s));
 }
 
 
@@ -48,11 +54,14 @@ function saveToUser($get)
           // Yes, it looks up the validation again, but it is a more robust feedback like this
           // Could pass in get for validation data, but let's be more limited
           $val=array("dblink"=>$id,"hash"=>$conf,"secret"=>$s);
-          returnAjax($u->writeToUser($get['data'],$get['col'],$val));
+          $data=decode64($get['data']);
+          $col=decode64($get['col']);
+          if(empty($data) || empty($col)) return array('status'=>false,'error'=>'Invalid data format (required valid base64 data)');
+          return $u->writeToUser($data,$col,$val);
         }
-      else returnAjax(array('status'=>false,'error'=>'Invalid user'));
+      else return array('status'=>false,'error'=>'Invalid user');
     }
-  returnAjax(array('status'=>false,'error'=>"One or more required fields were left blank"));
+  return array('status'=>false,'error'=>"One or more required fields were left blank");
 }
 
 ?>

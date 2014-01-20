@@ -446,6 +446,8 @@ class UserFunctions {
       {
         // write it to the db
         // replace or append based on flag
+        require_once(dirname(__FILE__).'/../CONFIG.php');
+        global $default_user_table,$default_user_database;
         if(!$replace)
           {
             // pull the existing data ...
@@ -453,9 +455,7 @@ class UserFunctions {
             // Otherwise append
           }
         $real_data=sanitize($data);
-        if(empty($real_data)) return array('status'=>false,'error'=>'Invalid input data');
-        require_once(dirname(__FILE__).'/../CONFIG.php');
-        global $default_user_table,$default_user_database;
+        if(empty($real_data)) return array('status'=>false,'error'=>'Invalid input data (sanitization error)');
         $query="UPDATE `$default_user_table` SET $col=\"".$real_data."\"";
         $l=openDB($default_user_database);
         mysqli_query($l,'BEGIN');
