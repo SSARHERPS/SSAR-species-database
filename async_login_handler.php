@@ -23,8 +23,10 @@ switch($do)
     returnAjax(getLoginState($_REQUEST));
     break;
   case 'write':
-    returnAjax(saveTouser($_REQUEST));
+    returnAjax(saveToUser($_REQUEST));
     break;
+  case 'get':
+    returnAjax(getFromUser($_REQUEST));
   default:
     returnAjax(getLoginState($_REQUEST),true);
   }
