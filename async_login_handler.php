@@ -48,6 +48,7 @@ function saveToUser($get)
   $conf=$get['hash'];
   $s=$get['secret'];
   $id=$get['dblink'];
+  $replace = boolstr($get['replace']); 
   /***
    * These fields can only be written to from directly inside of a script, rather than an AJAX call.
    ***/

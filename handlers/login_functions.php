@@ -427,11 +427,15 @@ class UserFunctions {
             // confirm with validateUser();
             $validated=$this->validateUser($validation_data['dblink'],$validation_data['hash'],$validation_data['secret']);
             $method='Confirmation token';
+            $where_col='dblink';
+            $user=$validation_data['dblink'];
           }
         else if(array_key_exists('password',$validation_data))
           {
             // confirm with lookupUser();
             $a=$this->lookupUser($validation_data['username'],$validation_data['password']);
+            $where_col='username';
+            $user=$validation_data['username'];
             $validated=$a[0];
             $method='Password';
           }
@@ -441,6 +445,8 @@ class UserFunctions {
       {
         $validated=$this->validateUser();
         $method='Cookie';
+        $where_col='dblink';
+        $user=$validation_data['dblink'];
       }
     if($validated)
       {
@@ -448,15 +454,47 @@ class UserFunctions {
         // replace or append based on flag
         require_once(dirname(__FILE__).'/../CONFIG.php');
         global $default_user_table,$default_user_database;
+        $real_col=sanitize($col);
         if(!$replace)
           {
             // pull the existing data ...
+            $l=openDB($default_user_database);
+            $prequery="SELECT $real_col FROM `$default_user_table` WHERE $where_col='$user'";
             // Look for relevent JSON entries or XML entries and replace them
-            // Otherwise append
+            $r=mysqli_query($l,$prequery);
+            $row=mysqli_fetch_row($r);
+            $d=$row[0];
+            $jd=json_decode($d,true);
+            if($jd==null)
+              {
+                // XML -- only takes one tag in!!
+                require_once(dirname(__FILE__).'/xml.php');
+                $xml_data=explode("</",$data);
+                $tag=array_pop($xml_data);
+                $tag=sanitize(substr($tag,0,-1));
+                $tag="<".$tag.">";
+                $xml= new Xml;
+                $tag_data=$xml->getTagContents($data,$tag);
+                $clean_tag_data=sanitize($tag_data);
+                $new_data=$xml->updateTag($d,$tag,$tag_data);
+              }
+            else
+              {
+                $jn=json_decode($data,true);
+                foreach($jn as $k=>$v)
+                  {
+                    $ck=sanitize($k);
+                    $cv=sanitize($v);
+                    $jd[$ck]=$cv;
+                  }
+                $new_data=json_encode($jd);
+              }
+            $real_data=$new_data;
           }
-        $real_data=sanitize($data);
+        else $real_data=sanitize($data);
+
         if(empty($real_data)) return array('status'=>false,'error'=>'Invalid input data (sanitization error)');
-        $query="UPDATE `$default_user_table` SET $col=\"".$real_data."\"";
+        $query="UPDATE `$default_user_table` SET $real_col=\"".$real_data."\" WHERE $where_col='$user'";
         $l=openDB($default_user_database);
         mysqli_query($l,'BEGIN');
         $r=mysqli_query($l,$query);
