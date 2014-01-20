@@ -45,6 +45,16 @@ function saveToUser($get)
   $conf=$get['hash'];
   $s=$get['secret'];
   $id=$get['dblink'];
+  $protected_fields = array(
+    'username',
+    'password',
+    'admin_flag',
+    'su_flag',
+    'private_key',
+    'public_key',
+    'creation',
+    'dblink'
+  );
   if(!empty($conf) && !empty($s) && !empty($id) && !empty($get['data']) && !empty($get['col']))
     {
       $u=new UserFunctions();
@@ -57,6 +67,8 @@ function saveToUser($get)
           $data=decode64($get['data']);
           $col=decode64($get['col']);
           if(empty($data) || empty($col)) return array('status'=>false,'error'=>'Invalid data format (required valid base64 data)');
+          // User safety
+          if(in_array($col,$protected_fields,true)) return array('status'=>false,'error'=>'Cannot write to $col : protected field'); 
           return $u->writeToUser($data,$col,$val);
         }
       else return array('status'=>false,'error'=>'Invalid user');
