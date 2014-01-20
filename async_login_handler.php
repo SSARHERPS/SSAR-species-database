@@ -26,16 +26,16 @@ switch($do)
     returnAjax(saveTouser($_REQUEST));
     break;
   default:
-    returnAjax(getLoginState($_REQUEST));
+    returnAjax(getLoginState($_REQUEST),true);
   }
 
-function getLoginState($get)
+function getLoginState($get,$default=false)
 {
   $conf=$get['hash'];
   $s=$get['secret'];
   $id=$get['dblink'];
   $u=new UserFunctions();
-  return array("status"=>$u->validateUser($id,$conf,$s));
+  return array("status"=>$u->validateUser($id,$conf,$s),'defaulted'=>$default);
 }
 
 
@@ -80,6 +80,11 @@ function saveToUser($get)
       else return array('status'=>false,'error'=>'Invalid user');
     }
   return array('status'=>false,'error'=>"One or more required fields were left blank");
+}
+
+
+function getFromUser($get) {
+
 }
 
 ?>

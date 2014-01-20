@@ -489,7 +489,7 @@ class UserFunctions {
                   }
                 $new_data=json_encode($jd);
               }
-            $real_data=$new_data;
+            $real_data=mysqli_real_escape_string($l,$new_data);
           }
         else $real_data=sanitize($data);
 
