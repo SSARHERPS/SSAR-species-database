@@ -111,9 +111,9 @@ class UserFunctions {
         $validlink=$baseurl."/login.php?confirm=$hash&amp;token=$creation&amp;lookup=$id";
         $affix="&amp;email=".htmlentities($email_in);
         $validlink.=$affix;
-        // email jen
-        $email='blackhole@'.substr($baseurl,strpos($baseurl,'.'));
-        $to='admin@'.substr($baseurl,strpos($baseurl,'.'));
+        // email 
+        $email='blackhole@'.$domain;
+        $to='admin@'.$domain;
         $headers  = 'MIME-Version: 1.0' . "\r\n";
         $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
         $headers .= "From: $name (via $domain) <$email>";
@@ -504,6 +504,36 @@ class UserFunctions {
       }
     else return array('status'=>false,'error'=>'Bad validation','method'=>$method);
   }
-  
+
+  public function resetUserPassword()
+  {
+    /***
+     * Set up the password reset functionality
+     ***/
+  }
+
+  public function textUserVerify()
+  {
+    /***
+     * Send a text message to a user's stored phone, and 
+     * save the authentication string provided.
+     ***/
+  }
+
+  public function requireUserAuth()
+  {
+    /***
+     * Set up the flags and verification tokens to disable a user until the authorization flag is passed
+     * The user calling this function themselves needs an admin flag and must be logged in.
+     ***/
+  }
+
+  public function verifyUserAuth()
+  {
+    /***
+     * If a user needs to be authorized before being allowed access,
+     * check the authorization token here and update the flag
+     ***/
+  }
 }
 ?>
