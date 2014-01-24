@@ -128,9 +128,9 @@ class UserFunctions {
         if (is_numeric($id) && !empty($userdata)) 
           {
 
-            $this->createCookieTokens($userdata,true);
+            $cookies=$this->createCookieTokens($userdata,true);
             
-            return array_merge(array(true,'Sucess!'),$userdata);
+            return array_merge(array(true,'Success!'),$userdata,$cookies);
           }
         else return array(false,'Failure: Unable to verify user creation');
       }

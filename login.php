@@ -359,7 +359,15 @@ else if($_REQUEST['q']=='create')
                                 $subject='New Account Creation';
                                 $body = "<p>Congratulations! Your new account has been created. Your username is this email address ($to). We do not keep a record of your password we can access, so please be sure to remember it!</p><p>If you do forget your password, you can <a href='mailto:".$service_email."?subject=Reset%20Password'>email support</a> to reset your password for you with a picture of government ID with your registered name and zip code. All secure data will be lost in the reset.</p>";
                                 if(mail($to,$subject,$body,$headers)) $login_output.="<p>A confirmation email has been sent to your inbox at $to .</p>";
-					   
+                                else
+                                  {
+                                    // no email
+                                  }
+                                /***
+                                 * Post login behavior ...
+                                 ***/
+                                $deferredJS.=$res['js'];
+                                
                               }
                             else $login_output.="<p class='error'>".$res[1]."</p><p>Use your browser's back button to try again.</p>";
                             ob_end_flush();
@@ -393,6 +401,7 @@ else if($_REQUEST['q']=='logout')
     $deferredJS.="\n$.removeCookie('$cookiekey');";
     $deferredJS.="\n$.removeCookie('$cookiepic');";
     ob_end_flush();
+    $login_output.=$loginform.$loginform_close;
   }
 else if($_REQUEST['confirm']!=null)
   {
