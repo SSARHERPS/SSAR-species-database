@@ -535,5 +535,9 @@ class UserFunctions {
      * check the authorization token here and update the flag
      ***/
   }
+
+  public function changeUserPassword()
+  {
+  }
 }
 ?>

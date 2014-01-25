@@ -367,6 +367,9 @@ else if($_REQUEST['q']=='create')
                                  * Post login behavior ...
                                  ***/
                                 $deferredJS.=$res['js'];
+                                // ... redirect to home
+                                $deferredJS.="\nwindow.location=\"$baseurl\"";
+                                header("Refresh: 3; url=".$baseurl);
                                 
                               }
                             else $login_output.="<p class='error'>".$res[1]."</p><p>Use your browser's back button to try again.</p>";
