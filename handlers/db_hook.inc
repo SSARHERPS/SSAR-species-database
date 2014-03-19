@@ -156,22 +156,22 @@ if(!function_exists('sanitize'))
 if(!function_exists('is_entry'))
   {
     
-    function is_entry($item,$field_name=null,$table_name=null,$database_name=null,$test=false)
+    function is_entry($item,$field_name=null,$table_name=null,$database_name=null,$test=false,$preclean=false)
     {
       global $default_user_table;
       if($field_name==null) $field_name = "id";
       if($table_name==null) $table_name = $default_user_table;
-      $item=sanitize($item);
+      if(!$preclean) $item=sanitize($item);
       $l=openDB($database_name);
       // Clean up the passed variable here
       $query="SELECT * FROM `$table_name` WHERE $field_name='$item'";
       try {
         $result=mysqli_query($l,$query);
         if($result===false) return false;
-        $rows=mysqli_num_rows($result);
+        $row=mysqli_fetch_row($result);
         mysqli_close($l);
-        if($test) return $query;
-        if($rows>0) return true;
+        if($test) return array('query'=>$query,'row'=>$row,'database'=>$database_name);
+        if(!empty($row[0])) return true;
         else return false;
       }
       catch(Exception $e) {
@@ -196,8 +196,10 @@ if(!function_exists('lookupItem'))
       else 
         {
           // Only accept for emails -- run through email preg
+          $l=openDB($database_name);
+          $item = mysqli_real_escape_string($l,$item);
           $preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
-          if(preg_match($preg,$item)!=1) return false;
+          if(preg_match($preg,$item)!=1) return array(false,'error'=>"Bad email address $item");
           $sitem=$item;
         }
       if($sitem==$item)
@@ -386,7 +388,7 @@ if(!function_exists('updateEntry'))
       if(!is_array($unq_id)) return array(false,'Bad argument for variable unq_id');
       $column=$unq_id[0];
       $uval=$unq_id[1];  
-      if(!is_entry($uval,$column,$table_name,$database_name)) return array(false,'query'=>is_entry($uval,$column,$table_name,$database_name,true));
+      if(!is_entry($uval,$column,$table_name,$database_name,false,$preclean)) return array(false,'query'=>is_entry($uval,$column,$table_name,$database_name,true));
       if(empty($value))
         {
           $temp=array();

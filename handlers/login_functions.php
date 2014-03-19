@@ -144,7 +144,7 @@ class UserFunctions {
     $xml=new Xml;
     require_once(dirname(__FILE__).'/db_hook.inc');
     global $default_user_table,$default_user_database;
-    $result=lookupItem($username,'username',$default_user_table,$default_user_database,false);
+    $result=lookupItem($username,'username',$default_user_table,$default_user_database,false); // if lookupItem is well done, can skip the san -- still escapes it
     $userdata=mysqli_fetch_assoc($result);
     if($result!==false && is_numeric($userdata['id']))
       {
