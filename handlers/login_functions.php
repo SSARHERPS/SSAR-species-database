@@ -5,7 +5,7 @@ class UserFunctions {
   function __construct()
   {
     require_once(dirname(__FILE__).'/../CONFIG.php');
-    global $user_data_storage,$profile_picture_storage,$site_security_token;
+    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email;
     if(!empty($user_data_storage))
       {
         $user_data_storage .= substr($user_data_storage,-1)=="/" ? '':'/';
@@ -21,6 +21,7 @@ class UserFunctions {
     else $this->picture_path = $this->data_path . "profilepics/";
 
     $this->siteKey = $site_security_token;
+    $this->supportEmail = $service_email;
   }
 
   /***
@@ -59,7 +60,7 @@ class UserFunctions {
      $user=mysqli_real_escape_string($l,$username);
     ***/
     $user=sanitize($username); 
-    $preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
+    $preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
     /***
      * Uncomment the next line if strict username comparison is needed
      ***/
@@ -121,7 +122,7 @@ class UserFunctions {
         $body="<p>$name is requesting access to files for $title. You can click the following link to enable access to the files, and click the link later to disable access.</p>\n<p><a href='$validlink'>$validlink</a><p>\n<p>Thank you. For debugging purposes, the user was hashed with $algo.</p>";
         if(mail($to,$subject,$body,$headers))
         {
-        //mail('support@velociraptorsystems.com',$subject,$body,$headers); // debugging confirmation
+        //mail($this->supportEmail,$subject,$body,$headers); // debugging confirmation
         return array(true,"Success! You will receive confirmation when your account has been activated.");
         }
         */
@@ -508,7 +509,9 @@ class UserFunctions {
   public function resetUserPassword()
   {
     /***
-     * Set up the password reset functionality
+     * Set up the password reset functionality.
+     * Without a flag, just send an email to the address on file with a reset link.
+     * With a flag, validate the new password data and reset authentication, then invoke changeUserPassword().
      ***/
   }
 
@@ -536,8 +539,12 @@ class UserFunctions {
      ***/
   }
 
-  public function changeUserPassword()
+  public function changeUserPassword($isResetPassword = false)
   {
+    /***
+     * If the user is authenticated, replace the password stored.
+     * If there are any encrypted fields, decrypt them and re-encrypt them in the process.
+     ***/
   }
 }
 ?>
