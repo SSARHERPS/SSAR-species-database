@@ -5,7 +5,7 @@ class UserFunctions {
   function __construct()
   {
     require_once(dirname(__FILE__).'/../CONFIG.php');
-    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email;
+    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database;
     if(!empty($user_data_storage))
       {
         $user_data_storage .= substr($user_data_storage,-1)=="/" ? '':'/';
@@ -22,12 +22,39 @@ class UserFunctions {
 
     $this->siteKey = $site_security_token;
     $this->supportEmail = $service_email;
+    $this->minPasswordLength = $minimum_password_length;
+    $this->thresholdLength = $password_threshold_length;
+    $this->columns = $db_cols;
+    $this->table = $default_user_table;
+    $this->db = $default_user_database;
   }
 
   /***
    * Helper functions
    ***/
   private function getSiteKey() { return $this->siteKey; }
+  private function getTable() { return $this->table; }
+  private function getDB() { return $this->db; }
+  private function getMinPasswordLength() { return $this->minPasswordLength; }
+  private function getThresholdLength() { return $this->thresholdLength; }
+  private function getSupportEmail() { return $this->supportEmail; }
+  private function getColumns() { return $this->columns; }
+  private function getUser()
+  {
+    if(empty($this->user)) $this->setUser();
+    return $this->user;
+  }
+  private function setUser($userdata = null)
+  {
+    /***
+     * Set the user for this object.
+     ***/
+    $this->user = $userdata;
+  }
+  private function setColumns()
+  {
+    
+  }
 
   public function microtime_float()
   {
@@ -52,11 +79,9 @@ class UserFunctions {
     // Send email for validation
     require_once(dirname(__FILE__).'/db_hook.inc');
     $ou=$username;
-    require_once(dirname(__FILE__).'/../CONFIG.php');
-    global $default_user_table,$default_user_database;
     /***
      * Weaker, but use if you have problems with the sanitize() function.
-     $l=openDB($default_user_database);
+     $l=openDB($this->getDB());
      $user=mysqli_real_escape_string($l,$username);
     ***/
     $user=sanitize($username); 
@@ -69,14 +94,14 @@ class UserFunctions {
     if(preg_match($preg,$username)!=1) return array(false,'Your email is not a valid email address. Please try again.');
     else $username=$user; // synonymize
 
-    $result=lookupItem($user,'username',$default_user_table,$default_user_database,false,true);
+    $result=lookupItem($user,'username',$this->getTable(),$this->getDB(),false,true);
     if($result!==false) 
       {
         $data=mysqli_fetch_assoc($result);
         if($data['username']==$username) return array(false,'Your email is already registered. Please try again. Did you forget your password?');
       }
-    global $minimum_password_length,$password_threshold_length,$db_cols; // set these up properly with getters and setters in the constructor, rather than here.
-    if(strlen($pw_in)<$minimum_password_length) return array(false,'Your password is too short. Please try again.');
+    if(strlen($pw_in) < $this->getMinPasswordLength()) return array(false,'Your password is too short. Please try again.');
+    // Complexity checks here, if not relegated to JS ...
     require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
     $hash=new Stronghash;
     $creation=$this->microtime_float();
@@ -90,14 +115,57 @@ class UserFunctions {
     $sdata_init="<xml><name>".$ne[0]."</name></xml>";
     $names="<xml><name>".implode(" ",$name)."</name><fname>".$name[0]."</fname><lname>".$name[1]."</lname><dname>$dname</dname></xml>";
     $hardlink=sha1($salt.$creation);
-    foreach($db_cols as $key=>$type) $fields[]=$key;
-    $store=array($user,$pw_store,'',$creation,'',$names,true,false,false,false,0,'','','',$data_init,$sdata_init,'','',$hardlink,'','',''); // set flag to FALSE if authentication wanted.
+    $store = array();
+    foreach($this->getColumns() as $key=>$type)
+      {
+        $fields[]=$key;
+        switch($key)
+          {
+          case "username":
+            $store[]=$user;
+            break;
+          case "password":
+            $store[]=$pw_store;
+            break;
+          case "creation":
+            $store[]=$creation;
+            break;
+          case "name":
+            $store[]=$names;
+            break;
+          case "flag":
+            // Is the user active, or does it need authentication first?
+            // Default "true" means immediately active.
+            $store[]=true;
+            break;
+          case "dtime":
+            $store[]=0;
+            break;
+          case "data":
+            $store[]=$data_init;
+            break;
+          case "secdata":
+            $store[]=$sdata_init;
+            break;
+          case "dblink":
+            $store[]=$hardlink;
+            break;
+          case "admin_flag":
+          case "su_flag":
+          case "disabled":
+            $store[]=false;
+            break;
+          default:
+            $store[]="";
+          }
+      }
+    // $store=array($user,$pw_store,'',$creation,'',$names,true,false,false,false,0,'','','',$data_init,$sdata_init,'','',$hardlink,'','',''); // set flag to FALSE if authentication wanted.
     /***
      * // Debugging
      * echo displayDebug("$user | $username | $ou");
      * echo displayDebug($store);
      ***/ 
-    $test_res=addItem($fields,$store,$default_user_table,$default_user_database);
+    $test_res=addItem($fields,$store,$this->getTable(),$this->getDB());
     if($test_res)
       {
         // Get ID value
@@ -145,8 +213,7 @@ class UserFunctions {
     require_once(dirname(__FILE__).'/xml.php');
     $xml=new Xml;
     require_once(dirname(__FILE__).'/db_hook.inc');
-    global $default_user_table,$default_user_database;
-    $result=lookupItem($username,'username',$default_user_table,$default_user_database,false); // if lookupItem is well done, can skip the san -- still escapes it
+    $result=lookupItem($username,'username',$this->getTable(),$this->getDB(),false); // if lookupItem is well done, can skip the san -- still escapes it
     $userdata=mysqli_fetch_assoc($result);
     if($result!==false && is_numeric($userdata['id']))
       {
@@ -190,9 +257,8 @@ class UserFunctions {
                     else 
                       {
                         // Clear login disabled flag
-                        global $default_user_table,$default_user_database;
-                        $query1="UPDATE `$default_user_table` SET disabled=false WHERE id=".$userdata['id'];
-                        $res1=openDB($default_user_database);
+                        $query1="UPDATE `".$this->getTable()."` SET disabled=false WHERE id=".$userdata['id'];
+                        $res1=openDB($this->getDB());
                         $result=execAndCloseDB($query1);
                       }
                   }
@@ -252,9 +318,7 @@ class UserFunctions {
     $baseurl = 'http';
     if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
     $baseurl .= "://www.";
-    $baseurl.=$_SERVER['HTTP_HOST'];
-            
-    require_once(dirname(__FILE__).'/../CONFIG.php');
+    $baseurl.=$_SERVER['HTTP_HOST'];            
             
     $base=array_slice(explode(".",$baseurl),-2);
     $domain=$base[0];
@@ -262,8 +326,7 @@ class UserFunctions {
     
     $col='dblink';
     if(empty($userid)) $userid=$_COOKIE[$cookielink];
-    global $default_user_table,$default_user_database;
-    $result=lookupItem($userid,$col,$default_user_table,$default_user_database);
+    $result=lookupItem($userid,$col,$this->getTable(),$this->getDB());
     if($result!==false && !is_array($result))
       {
         $authsalt = $this-> getSiteKey();
@@ -348,9 +411,8 @@ class UserFunctions {
         $pw_characters=json_decode($userdata['password'],true);
         $salt=$pw_characters['salt'];
         //store it
-        global $default_user_table,$default_user_database;
-        $query="UPDATE `$default_user_table` SET auth_key='$otsalt' WHERE id='$id'";
-        $l=openDB($default_user_database);
+        $query="UPDATE `".$this->getTable()."` SET auth_key='$otsalt' WHERE id='$id'";
+        $l=openDB($this->getDB());
         mysqli_query($l,'BEGIN');
         $result=mysqli_query($l,$query);
         if(!$result)
@@ -455,13 +517,12 @@ class UserFunctions {
         // write it to the db
         // replace or append based on flag
         require_once(dirname(__FILE__).'/../CONFIG.php');
-        global $default_user_table,$default_user_database;
         $real_col=sanitize($col);
         if(!$replace)
           {
             // pull the existing data ...
-            $l=openDB($default_user_database);
-            $prequery="SELECT $real_col FROM `$default_user_table` WHERE $where_col='$user'";
+            $l=openDB($this->getDB());
+            $prequery="SELECT $real_col FROM `".$this->getTable()."` WHERE $where_col='$user'";
             // Look for relevent JSON entries or XML entries and replace them
             $r=mysqli_query($l,$prequery);
             $row=mysqli_fetch_row($r);
@@ -496,8 +557,8 @@ class UserFunctions {
         else $real_data=sanitize($data);
 
         if(empty($real_data)) return array('status'=>false,'error'=>'Invalid input data (sanitization error)');
-        $query="UPDATE `$default_user_table` SET $real_col=\"".$real_data."\" WHERE $where_col='$user'";
-        $l=openDB($default_user_database);
+        $query="UPDATE `".$this->getTable()."` SET $real_col=\"".$real_data."\" WHERE $where_col='$user'";
+        $l=openDB($this->getDB());
         mysqli_query($l,'BEGIN');
         $r=mysqli_query($l,$query);
         $finish_query= $r ? 'COMMIT':'ROLLBACK';
@@ -513,6 +574,24 @@ class UserFunctions {
      * Set up the password reset functionality.
      * Without a flag, just send an email to the address on file with a reset link.
      * With a flag, validate the new password data and reset authentication, then invoke changeUserPassword().
+     ***/
+  }
+
+  public function doUpdatePassword()
+  {
+    /***
+     * If the user requested to update their password, do a check on their
+     * authentication, then invoke changeUserPassword()
+     ***/
+  }
+
+  private function changeUserPassword($isResetPassword = false)
+  {
+    /***
+     * Replace the password stored.
+     * If there are any encrypted fields, decrypt them and re-encrypt them in the process.
+     * Trash the encrypted fields if we're resetting.
+     * Update the cookies.
      ***/
   }
 
@@ -540,12 +619,5 @@ class UserFunctions {
      ***/
   }
 
-  public function changeUserPassword($isResetPassword = false)
-  {
-    /***
-     * If the user is authenticated, replace the password stored.
-     * If there are any encrypted fields, decrypt them and re-encrypt them in the process.
-     ***/
-  }
 }
 ?>
