@@ -55,14 +55,15 @@ class UserFunctions {
     require_once(dirname(__FILE__).'/../CONFIG.php');
     global $default_user_table,$default_user_database;
     /***
-     * Weaker, but use if you have problems
+     * Weaker, but use if you have problems with the sanitize() function.
      $l=openDB($default_user_database);
      $user=mysqli_real_escape_string($l,$username);
     ***/
     $user=sanitize($username); 
     $preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
     /***
-     * Uncomment the next line if strict username comparison is needed
+     * Uncomment the next line if strict username comparison is needed.
+     * Sometimes special characters may be escaped and be OK, so this is left commented out by default.
      ***/
     //if($user!=$username) return array(false,'Your chosen email contained injectable code. Please try again.');
     if(preg_match($preg,$username)!=1) return array(false,'Your email is not a valid email address. Please try again.');
@@ -74,7 +75,7 @@ class UserFunctions {
         $data=mysqli_fetch_assoc($result);
         if($data['username']==$username) return array(false,'Your email is already registered. Please try again. Did you forget your password?');
       }
-    global $minimum_password_length,$password_threshold_length,$db_cols;
+    global $minimum_password_length,$password_threshold_length,$db_cols; // set these up properly with getters and setters in the constructor, rather than here.
     if(strlen($pw_in)<$minimum_password_length) return array(false,'Your password is too short. Please try again.');
     require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
     $hash=new Stronghash;
