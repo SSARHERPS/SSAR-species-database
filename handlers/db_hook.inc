@@ -198,7 +198,7 @@ if(!function_exists('lookupItem'))
           // Only accept for emails -- run through email preg
           $l=openDB($database_name);
           $item = mysqli_real_escape_string($l,$item);
-          $preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
+          $preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
           if(preg_match($preg,$item)!=1) return array(false,'error'=>"Bad email address $item");
           $sitem=$item;
         }
