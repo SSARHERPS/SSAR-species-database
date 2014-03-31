@@ -227,8 +227,8 @@ class UserFunctions {
         */
         if (is_numeric($id) && !empty($userdata)) 
           {
-
-            $cookies=$this->createCookieTokens($userdata,true);
+            $this->setUser($userdata);
+            $cookies=$this->createCookieTokens();
             
             return array_merge(array(true,'Success!'),$userdata,$cookies);
           }
@@ -237,7 +237,7 @@ class UserFunctions {
     else return array(false,'Failure: unknown database error. Your user was unable to be saved.');
   }
 
-  public function lookupUser($username,$pw,$return=true)
+  public function lookupUser($username,$pw,$return=true) // maybe rename to lookupUserCredentials
   {
     // check it's a valid email! validation skipped.
     require_once(dirname(__FILE__).'/xml.php');
@@ -396,11 +396,16 @@ class UserFunctions {
     return false;
   }
 
-  public function createCookieTokens($username,$password_or_is_data=true)
+  public function createCookieTokens($username = null,$password_or_is_data=true)
   {
     try
       {
-        if($password_or_is_data===true)
+        if(empty($username))
+          {
+            $userdata = $this->getUser();
+            $username = $userdata["username"];
+          }
+        else if($password_or_is_data===true)
           {
             $userdata=$username;
             $username=$userdata['username'];
@@ -522,9 +527,8 @@ class UserFunctions {
           {
             // confirm with lookupUser();
             $a=$this->lookupUser($validation_data['username'],$validation_data['password']);
-            $where_col='username';
-            $user=$validation_data['username'];
             $validated=$a[0];
+            if($validated) $this->setUser(array("username"=>$validation_data['username']))
             $method='Password';
           }
         else return array('status'=>false,"error"=>"Bad validation data");
@@ -533,11 +537,13 @@ class UserFunctions {
       {
         $validated=$this->validateUser();
         $method='Cookie';
-        $where_col='dblink';
-        $user=$validation_data['dblink'];
       }
     if($validated)
       {
+        $userdata = $this->getUser();
+        $where_col = "dblink";
+        $user = $userdata[$where_col];
+        if(empty($user)) return array("status"=>false,"error"=>"Problem assigning user");
         // write it to the db
         // replace or append based on flag
         require_once(dirname(__FILE__).'/../CONFIG.php');
