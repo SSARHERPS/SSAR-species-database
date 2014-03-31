@@ -39,7 +39,7 @@ class UserFunctions {
   private function getThresholdLength() { return $this->thresholdLength; }
   private function getSupportEmail() { return $this->supportEmail; }
   private function getColumns() { return $this->columns; }
-  private function getUser()
+  public function getUser()
   {
     if(empty($this->user)) $this->setUser();
     return $this->user;
@@ -49,7 +49,37 @@ class UserFunctions {
     /***
      * Set the user for this object.
      ***/
-    $this->user = $userdata;
+    $userid = null;
+    $this->user = null; // Reset the user
+    
+    if(!empty($userdata) && is_array($userdata))
+      {
+        $col = key($userdata);
+        $userid = current($userdata);
+      }
+    else
+      {
+        $baseurl = 'http';
+        if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
+        $baseurl .= "://www.";
+        $baseurl.=$_SERVER['HTTP_HOST'];                        
+        $base=array_slice(explode(".",$baseurl),-2);
+        $domain=$base[0];
+        $cookielink=$domain."_link";
+        $userid=$_COOKIE[$cookielink];
+        $col = "dblink";
+      }
+    if(empty($userid)) return $this->user;
+    $result=lookupItem($userid,$col,$this->getTable(),$this->getDB());
+    if($result!==false && !is_array($result))
+      {
+        $userdata=mysqli_fetch_assoc($result);
+        if(is_array($userdata))
+          {
+            $this->user = $userdata;
+          }
+      }
+    return $this->user;
   }
   private function setColumns()
   {
@@ -315,33 +345,21 @@ class UserFunctions {
      *
      * Can be spoofed with inspected code at the same IP
      ***/
-    $baseurl = 'http';
-    if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
-    $baseurl .= "://www.";
-    $baseurl.=$_SERVER['HTTP_HOST'];            
-            
-    $base=array_slice(explode(".",$baseurl),-2);
-    $domain=$base[0];
-    $cookielink=$domain."_link";
-    
-    $col='dblink';
-    if(empty($userid)) $userid=$_COOKIE[$cookielink];
-    $result=lookupItem($userid,$col,$this->getTable(),$this->getDB());
-    if($result!==false && !is_array($result))
+    $userdata = $this->getUser();
+    if(is_array($userdata))
       {
-        $authsalt = $this-> getSiteKey();
-        $userdata=mysqli_fetch_assoc($result);
-        if(!is_array($userdata))
-          {
-            // empty result
-            if($detail) return array("uid"=>$userid,"col"=>$col,"basis_conf"=>$hash,"have_secret"=>strbool(empty($secret)));
-            return false;
-          }
+        $authsalt = $this-> getSiteKey();        
         $pw_characters=json_decode($userdata['password'],true);
         $salt=$pw_characters['salt'];
 
         if(empty($hash) || empty($secret))
           {
+            $baseurl = 'http';
+            if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
+            $baseurl .= "://www.";
+            $baseurl.=$_SERVER['HTTP_HOST'];                        
+            $base=array_slice(explode(".",$baseurl),-2);
+            $domain=$base[0];
             
             $cookiekey=$domain."_secret";
             $cookieauth=$domain."_auth";
@@ -362,6 +380,12 @@ class UserFunctions {
         $state= $conf==$hash ? true:false;
         if($detail) return array('state'=>strbool($state),"uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"from_cookie"=>strbool($from_cookie),'got_user_pass_info'=>is_array($pw_characters),'got_userdata'=>is_array($userdata),'source'=>$value_create);
         return $state;
+      }
+    else
+      {
+        // empty result
+        if($detail) return array("uid"=>$userid,"col"=>$col,"basis_conf"=>$hash,"have_secret"=>strbool(empty($secret)));
+        return false;
       }
     if($detail)
       {
