@@ -1,3 +1,5 @@
+var basepwgood = false;
+var passmatch = false;
 var goodbg = '#cae682';
 var badbg = '#e5786d';
 // Need global variable to build minimum password length
