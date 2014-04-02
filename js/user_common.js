@@ -2,6 +2,7 @@ var basepwgood = false;
 var passmatch = false;
 var goodbg = '#cae682';
 var badbg = '#e5786d';
+if (isNull(passLengthOverride)) passLengthOverride = 21;
 // Need global variable to build minimum password length
 
 function checkPasswordLive() {
@@ -14,10 +15,11 @@ function checkPasswordLive() {
         $('#password').css('background', goodbg);
         basepwgood = true;
     } else {
-        console.log('bad', badbg);
+        //console.log('bad', badbg);
         $('#password').css('background', badbg);
         basepwgood = false;
     }
+    evalRequirements();
     if (!isNull($('#password2').val())) checkMatchPassword();
     toggleNewUserSubmit();
     return false;
@@ -42,6 +44,32 @@ function toggleNewUserSubmit() {
     } catch (e) {
         passmatch = false;
         basepwgood = false;
+    }
+}
+
+function evalRequirements() {
+    /*
+     * Evaluate the requirements of the password, check off boxes
+     */
+    if (!$("#strength-meter").exists()) {
+        // create the strength meter
+        var html = "<div id='strength-meter'><div id='strength-requirements'><div id='strength-alpha'><p class='label'>a</p><div class='strength-eval'></div></div><div id='strength-alphacap'><p class='label'>A</p><div class='strength-eval'></div></div><div id='strength-numspecial'><p class='label'>1/!</p><div class='strength-eval'></div></div></div><div id='strength-bar'></div></div>";
+        $("#login .right").append(html);
+    }
+    $(".strength-eval").css("background", badbg);
+    var pass = $('#password').val();
+    if (pass.length >= passLengthOverride) {
+        $(".strength-eval").css("background", goodbg);
+    } else {
+        if (pass.match(/^(?:((?=.*\d)|(?=.*\W+)).*$)$/)) {
+            $("#strength-numspecial .strength-eval").css("background", goodbg);
+        }
+        if (pass.match(/^(?=.*[a-z]).*$/)) {
+            $("#strength-alpha .strength-eval").css("background", goodbg);
+        }
+        if (pass.match(/^(?=.*[A-Z]).*$/)) {
+            $("#strength-alphacap .strength-eval").css("background", goodbg);
+        }
     }
 }
 
