@@ -107,7 +107,7 @@ $small_login=$loginform.$loginform_close;
 if($_REQUEST['q']=='submitlogin')
   {
     if(!empty($_POST['username']) && !empty($_POST['password']))
-      { 
+      {
         $res = $user->lookupUser($_POST['username'], $_POST['password'],true);
         if($res[0] !==false)
           {
@@ -115,7 +115,7 @@ if($_REQUEST['q']=='submitlogin')
             $userdata=$res[1];
             $id=$userdata['id'];
             $login_output.="<h3 id='welcome_back'>Welcome back, ".$xml->getTagContents($userdata['name'],"<fname>")."</h3>"; //Welcome message
-		       
+
             $cookie_result=$user->createCookieTokens($userdata);
             if($debug)
               {
@@ -123,7 +123,7 @@ if($_REQUEST['q']=='submitlogin')
                 echo displayDebug($cookie_result);
                 echo "<p>Entering cookie handling post call ...</p>";
               }
-            if(!$cookie_result['status']) 
+            if(!$cookie_result['status'])
               {
                 echo "<div class='error'>".$cookie_result['error']."</div>";
                 if($debug) echo "<p>Got a cookie error, see above cookie result</p>";
@@ -151,7 +151,7 @@ if($_REQUEST['q']=='submitlogin')
                         $salt=$cookie_result['source']['salt'];
                         $otsalt=$cookie_result['source']['server_salt'];
                         $cookie_secret=$cookie_result['source']['secret']; // won't grab new data until refresh, use passed
-                        
+
                         $value_create=array($cookie_secret,$salt,$otsalt,$_SERVER['REMOTE_ADDR'],$site_security_token);
                         $value=sha1(implode('',$value_create));
                         if($value==$cookie_result['raw_auth'])
@@ -196,7 +196,7 @@ if($_REQUEST['q']=='submitlogin')
                         else $cookiedebug.="\nWould wipe here";
                       }
                   }
-                else 
+                else
                   {
                     $logged_in=false;
                     $cookiedebug.='cookies not set for '.$domain;
@@ -210,9 +210,9 @@ if($_REQUEST['q']=='submitlogin')
                     echo "<p>Cookie Supervar</p>";
                     displayDebug($_COOKIE);
                     echo "<p>Would refresh to:".$durl."</p>";
-                    
+
                   }
-                else header("Refresh: 3; url=".$durl); 
+                else header("Refresh: 3; url=".$durl);
               }
             ob_end_flush(); // Flush the buffer, start displaying
           }
@@ -227,7 +227,7 @@ if($_REQUEST['q']=='submitlogin')
 
 
             if($failcount<10) $login_output.=$loginform_whole;
-            else 
+            else
               {
                 $result=lookupItem($_POST['username'],'username',null,null,false,true);
                 if($result!==false)
@@ -240,7 +240,7 @@ if($_REQUEST['q']=='submitlogin')
                 $l=openDB();
                 $result1=mysqli_query($l,$query);
                 if(!$result1) echo "<p class='error'>".mysqli_error($l)."</p>";
-                else 
+                else
                   {
                     $result2=execAndCloseDB($l,$query2);
                     if(!$result2) echo "<p class='error'>".mysqli_error($l)."</p>";
@@ -249,7 +249,7 @@ if($_REQUEST['q']=='submitlogin')
                         $login_output.="<p>Sorry, you've had ten failed login attempts. Your account has been disabled for 1 hour.</p>";
                       }
                   }
-			   
+
               }
           }
       }
@@ -258,7 +258,7 @@ if($_REQUEST['q']=='submitlogin')
         $login_output.="<h1>Whoops! You forgot something.</h1><h2>Please try again.</h2>";
         $login_output.=$loginform.$loginform_close;
       }
-  } 
+  }
 else if($_REQUEST['q']=='create')
   {
     // Create a new user
@@ -298,7 +298,7 @@ else if($_REQUEST['q']=='create')
 	      <input type='text' name='lname' id='lname' placeholder='Smith' required='required'/>
 	      <br/>
               <label for='dname'>
-                Display Name: 
+                Display Name:
               </label>
 	      <input type='text' name='dname' id='dname' placeholder='ThatUserY2K' required='required'/>
 	      <br/>
@@ -318,11 +318,11 @@ else if($_REQUEST['q']=='create')
         $createform.=$secnotice; // comment out if SSL is used.
         $deferredJS.="$('#password').keypress(function(){checkPasswordLive()});\n$('#password').change(function(){checkPasswordLive()});\n$('#password').keyup(function(){checkPasswordLive()});";
         $deferredJS.="$('#password2').keypress(function(){checkMatchPassword()});\n$('#password2').change(function(){checkMatchPassword()});\n$('#password2').keyup(function(){checkMatchPassword()});";
-        
+
         if($_REQUEST['s']=='next')
           {
             $email_preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
-            if(!empty($_POST['honey'])) 
+            if(!empty($_POST['honey']))
               {
                 $login_ouptut.="<p class='error'>Whoops! You tripped one of our bot tests. If you are not a bot, please go back and try again. Read your fields carefully!</p>";
                 $_POST['email']='bob';
@@ -332,13 +332,13 @@ else if($_REQUEST['q']=='create')
             $_POST["recaptcha_challenge_field"],
             $_POST["recaptcha_response_field"]);
 
-            if (!$resp->is_valid && !$debug) 
+            if (!$resp->is_valid && !$debug)
               {
                 // What happens when the CAPTCHA was entered incorrectly
                 $login_output.=("The reCAPTCHA wasn't entered correctly. Go back and try it again." .
                 "(reCAPTCHA said: " . $resp->error . ")");
-              } 
-            else 
+              }
+            else
               {
                 // Successful verification
                 if(preg_match($email_preg,$_POST['username']))
@@ -348,7 +348,7 @@ else if($_REQUEST['q']=='create')
                         if(preg_match('/(?=^.{'.$minimum_password_length.',}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',$_POST['password']) || strlen($_POST['password'])>=$password_threshold_length) // validate email, use in validation to notify user.
                           {
                             $res=$user->createUser($_POST['username'],$_POST['password'],array($_POST['fname'],$_POST['lname']),$_POST['dname']);
-                            if($res[0]) 
+                            if($res[0])
                               {
                                 $login_output.="<h3>".$res[1]."</h3>"; //jumpto1
                                 // email user
@@ -370,13 +370,13 @@ else if($_REQUEST['q']=='create')
                                 // ... redirect to home
                                 $deferredJS.="\nwindow.location=\"$baseurl\"";
                                 header("Refresh: 3; url=".$baseurl);
-                                
+
                               }
                             else $login_output.="<p class='error'>".$res[1]."</p><p>Use your browser's back button to try again.</p>";
                             ob_end_flush();
                           }
                         else
-                          { 
+                          {
                             $login_output.="<p class='error'>Your password was not long enough ($minimum_password_length characters) or did not match minimum complexity levels (one upper case letter, one lower case letter, one digit or special character). You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least $password_threshold_length characters. Please go back and try again.</p>";
                           }
                       }
@@ -422,16 +422,16 @@ else if($_REQUEST['confirm']!=null)
         $hash=sha1($user.$ne.$salt);
         if($_REQUEST['token']==$creation && $_REQUEST['confirm']==$hash)
           {
-            if($userdata['flag']) 
+            if($userdata['flag'])
               {
                 $flag=0;
                 $status='deactivated';
               }
-            else 
+            else
               {
                 $flag=1;
                 $status='activated';
-			       
+
               }
             $query="UPDATE `$default_user_table` SET flag=$flag WHERE id=$id";
             $l=openDB();
@@ -487,6 +487,7 @@ var lateJS= function() {
         $.getScript('js/base64.js');
         $.getScript('js/jquery.cookie.js');
         $.getScript('js/user_common.js');
+        $.getScript('js/zxcvbn/zxcvbn-async.js');
         $(document).ready(function(){
             $deferredJS
         });
