@@ -53,8 +53,8 @@ function evalRequirements() {
      */
     if (!$("#strength-meter").exists()) {
         // create the strength meter
-        var html = "<div id='strength-meter'><div id='strength-requirements'><div id='strength-alpha'><p class='label'>a</p><div class='strength-eval'></div></div><div id='strength-alphacap'><p class='label'>A</p><div class='strength-eval'></div></div><div id='strength-numspecial'><p class='label'>1/!</p><div class='strength-eval'></div></div></div><div id='strength-bar'><progress id='password-strength' max='4'></progress></div></div>";
-        $("#login .right").append(html);
+        var html = "<div id='strength-meter'><div id='strength-requirements'><div id='strength-alpha'><p class='label'>a</p><div class='strength-eval'></div></div><div id='strength-alphacap'><p class='label'>A</p><div class='strength-eval'></div></div><div id='strength-numspecial'><p class='label'>1/!</p><div class='strength-eval'></div></div></div><div id='strength-bar'><label for='password-strength'>Strength: </label><progress id='password-strength' max='5'></progress></div></div>";
+        $("#login").append(html);
     }
     var pass = $('#password').val();
     var pstrength = zxcvbn(pass);
@@ -72,7 +72,7 @@ function evalRequirements() {
             $("#strength-alphacap .strength-eval").css("background", goodbg);
         }
     }
-    $("#password-strength").attr("value",pstrength.score);
+    $("#password-strength").attr("value",pstrength.score + 1);
 }
 
 if (typeof isNumber !== "function") {
