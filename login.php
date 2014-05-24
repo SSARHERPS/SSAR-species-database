@@ -269,13 +269,17 @@ else if($_REQUEST['q']=='create')
       {
 
         $recaptcha=recaptcha_get_html($recaptcha_public_key);
+        $prefill_email = $_POST['username'];
+        $prefill_display = $_POST['dname'];
+        $prefill_lname = $_POST['lname'];
+        $prefill_fname = $_POST['fname'];
         $createform = "<style type='text/css'>.hide { display:none !important; }</style>
 	    <form id='login' method='post' action='?q=create&amp;s=next'>
               <div class='left'>
 	      <label for='username'>
 		Email:
 	      </label>
-	      <input type='email' name='username' id='username' autofocus='autofocus' placeholder='user@domain.com' required='required'/>
+	      <input type='email' name='username' id='username' value='$prefill_email' autofocus='autofocus' placeholder='user@domain.com' required='required'/>
 	      <br/>
 	      <label for='password'>
 		Password:
@@ -290,12 +294,12 @@ else if($_REQUEST['q']=='create')
               <label for='fname'>
                 First Name:
               </label>
-	      <input type='text' name='fname' id='fname' placeholder='Leslie' required='required'/>
+	      <input type='text' name='fname' id='fname' value='$prefill_fname' placeholder='Leslie' required='required'/>
 	      <br/>
               <label for='lname'>
                 Last Name:
               </label>
-	      <input type='text' name='lname' id='lname' placeholder='Smith' required='required'/>
+	      <input type='text' name='lname' id='lname' value='$prefill_lname' placeholder='Smith' required='required'/>
 	      <br/>
               <label for='dname'>
                 Display Name:
@@ -316,8 +320,6 @@ else if($_REQUEST['q']=='create')
 	    </form><br class='clear'/>";
         $secnotice="<p><small>Remember your security best practices! Do not use the same password you use for other sites. While your information is <a href='http://en.wikipedia.org/wiki/Cryptographic_hash_function' $newwindow>hashed</a> with a multiple-round hash function, <a href='http://arstechnica.com/security/2013/05/how-crackers-make-minced-meat-out-of-your-passwords/' $newwindow>passwords are easy to crack!</a></small></p>";
         $createform.=$secnotice; // comment out if SSL is used.
-        $deferredJS.="$('#password').keypress(function(){checkPasswordLive()});\n$('#password').change(function(){checkPasswordLive()});\n$('#password').keyup(function(){checkPasswordLive()});";
-        $deferredJS.="$('#password2').keypress(function(){checkMatchPassword()});\n$('#password2').change(function(){checkMatchPassword()});\n$('#password2').keyup(function(){checkMatchPassword()});";
 
         if($_REQUEST['s']=='next')
           {
@@ -484,9 +486,9 @@ var lateJS= function() {
         console.log('Loading late libraries');
         passLengthOverride=$password_threshold_length;
         passMinLen=$minimum_password_length;
-        $.getScript('js/base64.js');
-        $.getScript('js/jquery.cookie.js');
-        $.getScript('js/user_common.js');
+        $.getScript('js/base64.min.js');
+        $.getScript('js/jquery.cookie.min.js');
+        $.getScript('js/c.min.js');
         $.getScript('js/zxcvbn/zxcvbn-async.js');
         $(document).ready(function(){
             $deferredJS
