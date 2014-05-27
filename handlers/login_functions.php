@@ -38,7 +38,10 @@ class UserFunctions {
   private function getMinPasswordLength() { return $this->minPasswordLength; }
   private function getThresholdLength() { return $this->thresholdLength; }
   private function getSupportEmail() { return $this->supportEmail; }
-  private function getColumns() { return $this->columns; }
+  private function getColumns() {
+    if(empty($this->user)) $this->setUser();
+    return $this->columns;
+  }
   public function getUser()
   {
     if(empty($this->user)) $this->setUser();
@@ -51,7 +54,7 @@ class UserFunctions {
      ***/
     $userid = null;
     $this->user = null; // Reset the user
-    
+
     if(!empty($userdata) && is_array($userdata))
       {
         $col = key($userdata);
@@ -62,7 +65,7 @@ class UserFunctions {
         $baseurl = 'http';
         if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
         $baseurl .= "://www.";
-        $baseurl.=$_SERVER['HTTP_HOST'];                        
+        $baseurl.=$_SERVER['HTTP_HOST'];
         $base=array_slice(explode(".",$baseurl),-2);
         $domain=$base[0];
         $cookielink=$domain."_link";
@@ -83,7 +86,11 @@ class UserFunctions {
   }
   private function setColumns()
   {
-    
+    # Describe your columns here, if not in config.php!
+    # Otherwise use this to describe an alternate column set.
+    $this->columns = array(
+      
+    );
   }
 
   public function microtime_float()
@@ -103,7 +110,7 @@ class UserFunctions {
   /***
    * Primary functions
    ***/
-  
+
   public function createUser($username,$pw_in,$name,$dname)
   {
     // Send email for validation
@@ -114,7 +121,7 @@ class UserFunctions {
      $l=openDB($this->getDB());
      $user=mysqli_real_escape_string($l,$username);
     ***/
-    $user=sanitize($username); 
+    $user=sanitize($username);
     $preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
     /***
      * Uncomment the next line if strict username comparison is needed.
@@ -125,7 +132,7 @@ class UserFunctions {
     else $username=$user; // synonymize
 
     $result=lookupItem($user,'username',$this->getTable(),$this->getDB(),false,true);
-    if($result!==false) 
+    if($result!==false)
       {
         $data=mysqli_fetch_assoc($result);
         if($data['username']==$username) return array(false,'Your email is already registered. Please try again. Did you forget your password?');
@@ -143,7 +150,7 @@ class UserFunctions {
     $data_init="<xml><algo>$algo</algo>$rounds</xml>";
     $ne=encryptThis($name,$pw_in,$salt); // only encrypt if requested, then put in secdata
     $sdata_init="<xml><name>".$ne[0]."</name></xml>";
-    $names="<xml><name>".implode(" ",$name)."</name><fname>".$name[0]."</fname><lname>".$name[1]."</lname><dname>$dname</dname></xml>";
+    $names="<xml><name>".sanitize(implode(" ",$name))."</name><fname>".sanitize($name[0])."</fname><lname>".$name[1]."</lname><dname>".sanitize($dname)."</dname></xml>";
     $hardlink=sha1($salt.$creation);
     $store = array();
     foreach($this->getColumns() as $key=>$type)
@@ -194,7 +201,7 @@ class UserFunctions {
      * // Debugging
      * echo displayDebug("$user | $username | $ou");
      * echo displayDebug($store);
-     ***/ 
+     ***/
     $test_res=addItem($fields,$store,$this->getTable(),$this->getDB());
     if($test_res)
       {
@@ -202,7 +209,7 @@ class UserFunctions {
         $res = $this->lookupUser($user, $pw_in);
         $userdata=$res[1];
         $id=$userdata['id'];
-        
+
         /* Uncomment if authentication has been requested */
         /*
         // Create hash - user + encrypted name + salt
@@ -211,7 +218,7 @@ class UserFunctions {
         $validlink=$baseurl."/login.php?confirm=$hash&amp;token=$creation&amp;lookup=$id";
         $affix="&amp;email=".htmlentities($email_in);
         $validlink.=$affix;
-        // email 
+        // email
         $email='blackhole@'.$domain;
         $to='admin@'.$domain;
         $headers  = 'MIME-Version: 1.0' . "\r\n";
@@ -225,11 +232,11 @@ class UserFunctions {
         return array(true,"Success! You will receive confirmation when your account has been activated.");
         }
         */
-        if (is_numeric($id) && !empty($userdata)) 
+        if (is_numeric($id) && !empty($userdata))
           {
             $this->setUser($userdata);
             $cookies=$this->createCookieTokens();
-            
+
             return array_merge(array(true,'Success!'),$userdata,$cookies);
           }
         else return array(false,'Failure: Unable to verify user creation');
@@ -244,8 +251,10 @@ class UserFunctions {
     $xml=new Xml;
     require_once(dirname(__FILE__).'/db_hook.inc');
     $result=lookupItem($username,'username',$this->getTable(),$this->getDB(),false); // if lookupItem is well done, can skip the san -- still escapes it
+    if($result!==false)
+      {
     $userdata=mysqli_fetch_assoc($result);
-    if($result!==false && is_numeric($userdata['id']))
+    if(is_numeric($userdata['id']))
       {
         // check password
         require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
@@ -253,17 +262,17 @@ class UserFunctions {
         $data=json_decode($userdata['password'],true);
         if($hash->verifyHash($pw,$data))
           {
-            if($userdata['flag'] && !$userdata['disabled']) 
+            if($userdata['flag'] && !$userdata['disabled'])
               {
                 //This user is OK and not disabled, nor pending validation
-                if(!$return) 
+                if(!$return)
                   {
                     //Return decrypted userdata, if applicable
                     $decname=decryptThis($userdata['name'],$pw,$salt);
                     if(empty($decname))$decname=$userdata['name'];
                     return array(true,$decname);
                   }
-                else 
+                else
                   {
                     $decname=decryptThis($userdata['name'],$pw,$salt);
                     if(empty($decname))$decname=$userdata['name'];
@@ -271,20 +280,20 @@ class UserFunctions {
                     return $returning;
                   }
               }
-            else 
+            else
               {
-                if(!$userdata['flag'])return array(false,'Your login information is correct, but your account is still being validated, or has been disabled. Please try again later.');
+                if(!$userdata['flag'])return array(false,"message"=>'Your login information is correct, but your account is still being validated, or has been disabled. Please try again later.');
                 if($userdata['disabled'])
                   {
                     // do a time check
-                    if($userdata['dtime']+3600>$this->microtime_float()) 
+                    if($userdata['dtime']+3600>$this->microtime_float())
                       {
                         $rem=intval($userdata['dtime'])-intval($this->microtime_float())+3600;
                         $min=$rem%60;
                         $sec=$rem-60*$min;
                         return array(false,'message'=>'Your account has been disabled for too many failed login attempts. Please try again in '.$min.' minutes and '.$sec.' seconds.');
                       }
-                    else 
+                    else
                       {
                         // Clear login disabled flag
                         $query1="UPDATE `".$this->getTable()."` SET disabled=false WHERE id=".$userdata['id'];
@@ -293,13 +302,13 @@ class UserFunctions {
                       }
                   }
                 // All checks passed.
-                if(!$return) 
+                if(!$return)
                   {
                     $decname=decryptThis($userdata['name'],$pw,$salt);
                     if(empty($decname))$decname=$userdata['name'];
                     return array(true,$decname);
                   }
-                else 
+                else
                   {
                     $decname=decryptThis($userdata['name'],$pw,$salt);
                     if(empty($decname))$decname=$userdata['name'];
@@ -312,7 +321,9 @@ class UserFunctions {
           {
             return array(false,'message'=>'Sorry, your username or password is incorrect.','error'=>'Bad Password');
           }
-        // end good username loop 
+        // end good username loop
+      }
+    else return array(false,'message'=>'Sorry, your username or password is incorrect.','error'=>'Bad username','desc'=>"No numeric id");
       }
     else return array(false,'message'=>'Sorry, your username or password is incorrect.','error'=>'Bad username','desc'=>$result['error']);
   }
@@ -348,7 +359,7 @@ class UserFunctions {
     $userdata = $this->getUser();
     if(is_array($userdata))
       {
-        $authsalt = $this-> getSiteKey();        
+        $authsalt = $this-> getSiteKey();
         $pw_characters=json_decode($userdata['password'],true);
         $salt=$pw_characters['salt'];
 
@@ -357,10 +368,10 @@ class UserFunctions {
             $baseurl = 'http';
             if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
             $baseurl .= "://www.";
-            $baseurl.=$_SERVER['HTTP_HOST'];                        
+            $baseurl.=$_SERVER['HTTP_HOST'];
             $base=array_slice(explode(".",$baseurl),-2);
             $domain=$base[0];
-            
+
             $cookiekey=$domain."_secret";
             $cookieauth=$domain."_auth";
 
@@ -374,8 +385,8 @@ class UserFunctions {
               }
           }
         else $from_cookie=false;
-        
-        $value_create=array($secret,$salt,$userdata['auth_key'],$_SERVER['REMOTE_ADDR'],$authsalt); 
+
+        $value_create=array($secret,$salt,$userdata['auth_key'],$_SERVER['REMOTE_ADDR'],$authsalt);
         $conf=sha1(implode('',$value_create));
         $state= $conf==$hash ? true:false;
         if($detail) return array('state'=>strbool($state),"uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"from_cookie"=>strbool($from_cookie),'got_user_pass_info'=>is_array($pw_characters),'got_userdata'=>is_array($userdata),'source'=>$value_create);
@@ -444,23 +455,23 @@ class UserFunctions {
         $l=openDB($this->getDB());
         mysqli_query($l,'BEGIN');
         $result=mysqli_query($l,$query);
-        if(!$result)
+        if($result===false)
           {
             $r=mysqli_query($l,'ROLLBACK');
             return array(false,'status'=>false,'error'=>"<p>".mysqli_error($l)."<br/><br/>ERROR: Could not update login state.</p>");
           }
         else $r=mysqli_query($l,'COMMIT');
-        
+
         $value_create=array(
           'secret'=>$cookie_secret,
           'salt'=>$salt,
           'server_salt'=>$otsalt,
           'ip'=>$_SERVER['REMOTE_ADDR'],
           'server_key'=>$this->getSiteKey()
-        ); 
+        );
 
         // authenticated since last login. Nontransposable outside network.
-    
+
         $value=sha1(implode('',$value_create));
 
         $cookieuser=$domain."_user";
@@ -473,12 +484,13 @@ class UserFunctions {
         $xml=new Xml;
         $user_greet=$xml->getTagContents($userdata['name'],"<fname>"); // for now
         $dblink=$userdata['dblink'];
-    
+
         setcookie($cookieauth,$value,$expire);
         setcookie($cookiekey,$cookie_secret,$expire);
         setcookie($cookieuser,$username,$expire);
         setcookie($cookieperson,$user_greet,$expire);
-        $path=$this->getUserPicture($userdata['id']); 
+        $path=$this->getUserPicture($userdata['id']);
+        setcookie($cookiepic,$path,$expire);
         setcookie($cookielink,$dblink,$expire);
 
         $js_expires=",{expires:$expire_days,path:'/'});\n";
@@ -486,17 +498,17 @@ class UserFunctions {
         $jquerycookie.="$.cookie('$cookiekey','$cookie_secret'".$js_expires;
         $jquerycookie.="$.cookie('$cookieuser','$username'".$js_expires;
         $jquerycookie.="$.cookie('$cookieperson','$user_greet'".$js_expires;
-        $jquerycookie.="$.cookie('$cookiepicture','$path'".$js_expires;
+        $jquerycookie.="$.cookie('$cookiepic','$path'".$js_expires;
         $jquerycookie.="$.cookie('$cookielink','$dblink'".$js_expires;
-    
+
         return array(
           'status'=>true,
           'user'=>"{ '$cookieuser':'$username'}",
           'auth'=>"{'$cookieauth':'$value'}",
           'secret'=>"{'$cookiekey':'$cookie_secret'}",
           'pic'=>"{'$cookiepic':'$path'}",
-          'name'=>"{'$cookieperson':'$user_greet'",
-          'name'=>"{'$cookielink':'$dblink'",
+          'name'=>"{'$cookieperson':'$user_greet'}",
+          'name'=>"{'$cookielink':'$dblink'}",
           'js'=>$jquerycookie,
           'source'=>$value_create,
           'raw_auth'=>$value
@@ -528,7 +540,7 @@ class UserFunctions {
             // confirm with lookupUser();
             $a=$this->lookupUser($validation_data['username'],$validation_data['password']);
             $validated=$a[0];
-            if($validated) $this->setUser(array("username"=>$validation_data['username']))
+            if($validated) $this->setUser(array("username"=>$validation_data['username']));
             $method='Password';
           }
         else return array('status'=>false,"error"=>"Bad validation data");
@@ -628,7 +640,7 @@ class UserFunctions {
   public function textUserVerify()
   {
     /***
-     * Send a text message to a user's stored phone, and 
+     * Send a text message to a user's stored phone, and
      * save the authentication string provided.
      ***/
   }

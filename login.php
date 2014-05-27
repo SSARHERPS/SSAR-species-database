@@ -206,9 +206,9 @@ if($_REQUEST['q']=='submitlogin')
                     echo "<pre>CookieDebug:\n";
                     echo $cookiedebug;
                     echo "\nCookie Result:\n</pre>";
-                    displayDebug($cookie_result);
+                    echo displayDebug($cookie_result);
                     echo "<p>Cookie Supervar</p>";
-                    displayDebug($_COOKIE);
+                    echo displayDebug($_COOKIE);
                     echo "<p>Would refresh to:".$durl."</p>";
 
                   }
