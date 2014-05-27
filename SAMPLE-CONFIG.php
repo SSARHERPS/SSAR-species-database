@@ -73,9 +73,20 @@ $db_cols=array(
   "secret"=>"varchar(255)",
 );
 
+/***
+ * Specify column mappings
+ ***/
+
 $user_column = "username";
 $password_column = "password";
 $cookie_ver_column = "auth_key";
+$totp_column = "secret";
+$temporary_storage = "special_1";
 
+/***
+ * Specify TOTP 30-second "steps" allowed to be off by
+ ***/
+
+$totp_steps = 1;
 
 ?>

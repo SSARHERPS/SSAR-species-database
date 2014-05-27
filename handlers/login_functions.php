@@ -2,10 +2,10 @@
 
 class UserFunctions {
 
-  function __construct()
+  function __construct($username = null, $lookup_column = null)
   {
     require_once(dirname(__FILE__).'/../CONFIG.php');
-    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps;
+    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage;
     if(!empty($user_data_storage))
       {
         $user_data_storage .= substr($user_data_storage,-1)=="/" ? '':'/';
@@ -30,8 +30,16 @@ class UserFunctions {
     $this->pwcol = $password_column;
     $this->cookiecol = $cookie_ver_column;
     $this->usercol = $user_column;
+    $this->tmpcol = $temporary_storage;
     $this->totpcol = $totp_column;
     $this->totpsteps = $totp_steps;
+
+    if(!empty($username))
+      {
+        # We're initiating a user
+        $key = empty($lookup_column) ? $this->usercol:$lookup_column;
+        $this->setUser(array($key=>$username));
+      }
   }
 
   /***
@@ -54,6 +62,7 @@ class UserFunctions {
   public function getUser()
   {
     if(empty($this->user)) $this->setUser();
+    $this->username = $this->user[$this->usercol];
     return $this->user;
   }
   private function setUser($userdata = null)
@@ -68,6 +77,11 @@ class UserFunctions {
       {
         $col = key($userdata);
         $userid = current($userdata);
+      }
+    else if(!empty($userdata) && !is_array($userdata))
+      {
+        $col = $this->usercol;
+        $userid=$userdata;
       }
     else
       {
@@ -124,12 +138,13 @@ class UserFunctions {
      * @param int $provided Provided OTP passcode
      * @return bool
      */
+    require_once(dirname(__FILE__).'/../base32/src/Base32/Base32.php');
     require_once(dirname(__FILE__).'/../totp/libs/OTPHP/TOTP.php');
     $secret = $this->getSecret();
-    if(empty($secret)) return false;
-    $totp = new OTPHP\TOTP($secret);
+    if($secret === false) return false;
     try
       {
+        $totp = new OTPHP\TOTP($secret);
         if($totp->verify($provided)) return true;
         if(!is_numeric($this->totpsteps)) throw(new Exception("Bad TOTP step count"));
         $i = 0;
@@ -151,6 +166,63 @@ class UserFunctions {
   /***
    * Primary functions
    ***/
+
+  public function makeTOTP($provider = null)
+  {
+    /***
+     * Assign a user a multifactor authentication code
+     *
+     * @param string $provider The provider giving 2FA.
+     * @return array with the status in the key "status", errors in "error" and "human_error", 
+     * username in "username", and provisioning data in "uri"
+     ***/
+    if(empty($this->username))
+      {
+        $this->getUser();
+        # We MUST have this properly assigned
+        if(empty($this->username))
+          {
+            return array("status"=>false,"error"=>"Unable to get user.");
+          }
+      }
+    if($this->getSecret() !== false)
+      {
+        return array("status"=>false,"error"=>"2FA has already been enabled for this user.","human_error"=>"You've already enabled 2-factor authentication.","username"=>$this->username);
+      }
+    try
+      {
+        require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
+        $s = new Stronghash;
+        $salt = $s->createSalt();
+        require_once(dirname(__FILE__).'/../base32/src/Base32/Base32.php');
+        use Base32\Base32;
+        $secret = Base32::encode($salt);
+        ## The resulting provisioning URI should now be sent to the user
+        ## Flag should be set server-side indicating the change id pending
+        $l=openDB($this->getDB());
+        $query = "UPDATE ".$this->getTable()." SET `".$this->tmpcol."`='$secret' WHERE `"$this->usercol"`='".$this->username."'";
+        $r = mysqli_query($l,$query);
+        if($r === false)
+          {
+            return array("status"=>false,"human_error"=>"Database error","error"=>mysqli_error($l));
+          }
+        # The data was saved correctly
+        # Let's create the provisioning stuff!
+        $uri = $totp->provisioningURI($this->username,$provider);
+      }
+    catch(Exception $e)
+      {
+        return array("status"=>false,"human_error"=>"Unexpected error in makeTOTP","error"=>$e,"username"=>$this->username);
+      }
+  }
+
+  public function saveTOTP()
+  {
+    /***
+     * Read the tentative secret and make it real
+     ***/
+
+  }
 
   public function createUser($username,$pw_in,$name,$dname)
   {
@@ -303,12 +375,13 @@ class UserFunctions {
         $data=json_decode($userdata[$this->pwcol],true);
         if($hash->verifyHash($pw,$data))
           {
+            $this->setUser($userdata[$this->usercol]);
             if($userdata['flag'] && !$userdata['disabled'])
               {
-                //This user is OK and not disabled, nor pending validation
+                # This user is OK and not disabled, nor pending validation
                 if(!$return)
                   {
-                    //Return decrypted userdata, if applicable
+                    # Return decrypted userdata, if applicable
                     $decname=decryptThis($userdata['name'],$pw,$salt);
                     if(empty($decname))$decname=$userdata['name'];
                     return array(true,$decname);
@@ -430,6 +503,7 @@ class UserFunctions {
         $value_create=array($secret,$salt,$userdata[$this->cookiecol],$_SERVER['REMOTE_ADDR'],$authsalt);
         $conf=sha1(implode('',$value_create));
         $state= $conf==$hash ? true:false;
+        if($state) $this->setUser($userdata[$this->usercol]);
         if($detail) return array('state'=>strbool($state),"uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"from_cookie"=>strbool($from_cookie),'got_user_pass_info'=>is_array($pw_characters),'got_userdata'=>is_array($userdata),'source'=>$value_create);
         return $state;
       }
@@ -455,12 +529,12 @@ class UserFunctions {
         if(empty($username))
           {
             $userdata = $this->getUser();
-            $username = $userdata[$this->usercol];
+            $username = $this->username;
           }
         else if($password_or_is_data===true)
           {
             $userdata=$username;
-            $username=$userdata[$this->usercol];
+            $username=$this->username;
           }
         else
           {
