@@ -8,6 +8,23 @@ This is a repo meant to deal with the vast majority of handling cases for user w
 - Forgotten passwords
 - Etc
 
+## Libraries
+
+Libraries that may need minor tweaking to "play nice" have been included as subtrees, and those that should be used verbatim have been included as submodules.
+
+Considering replacing the "current" [reCAPTCHA](https://developers.google.com/recaptcha/docs/php) API v1.11 [provided by Google in 2010](https://code.google.com/p/recaptcha/downloads/list?q=label:phplib-Latest) with the [php5 version on GitHub](https://github.com/AlekseyKorzun/reCaptcha-PHP-5).
+
+### Subtrees
+
+- [otphp](https://github.com/Spomky-Labs/otphp) is a subtree in the `totp/` directory. The relevant files are in `totp/lib/OTPHP`. The command to update this is `git subtree pull --prefix totp otphp master --squash`
+
+### Submodules
+
+Submodules have their own dependencies -- see the submodule pages for their included modules. These are updated by calling `git pull origin master` in their directories.
+
+- [php-stronghash](https://github.com/tigerhawkvok/php-stronghash) in the `stronghash/` directory.
+- [php-multioauth](https://github.com/tigerhawkvok/php-multioauth) in the `oauth/` directory. **This is a work in progress and is not yet fully integrated**.
+
 
 ## Server configuration
 
@@ -38,10 +55,6 @@ public_key
 private_key
 ```
 
-## Libraries
-Submodules have their own dependencies -- see the submodule pages for their included modules.
-
-Considering replacing the "current" [reCAPTCHA](https://developers.google.com/recaptcha/docs/php) API v1.11 [provided by Google in 2010](https://code.google.com/p/recaptcha/downloads/list?q=label:phplib-Latest) with the [php5 version o GitHub](https://github.com/AlekseyKorzun/reCaptcha-PHP-5).
 
 ## To Do
 Refactor to play nice with a default user made when instantiating class.
