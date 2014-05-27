@@ -72,4 +72,9 @@ $db_cols=array(
   "private_key"=>"text"
 );
 
+$user_column = "username";
+$password_column = "password";
+$cookie_ver_column = "auth_key";
+
+
 ?>

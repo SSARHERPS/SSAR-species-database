@@ -5,7 +5,7 @@ class UserFunctions {
   function __construct()
   {
     require_once(dirname(__FILE__).'/../CONFIG.php');
-    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database;
+    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column;
     if(!empty($user_data_storage))
       {
         $user_data_storage .= substr($user_data_storage,-1)=="/" ? '':'/';
@@ -27,6 +27,9 @@ class UserFunctions {
     $this->columns = $db_cols;
     $this->table = $default_user_table;
     $this->db = $default_user_database;
+    $this->pwcol = $password_column;
+    $this->cookiecol = $cookie_ver_column;
+    $this->usercol = $user_column;
   }
 
   /***
@@ -131,11 +134,11 @@ class UserFunctions {
     if(preg_match($preg,$username)!=1) return array(false,'Your email is not a valid email address. Please try again.');
     else $username=$user; // synonymize
 
-    $result=lookupItem($user,'username',$this->getTable(),$this->getDB(),false,true);
+    $result=lookupItem($user,$this->usercol,$this->getTable(),$this->getDB(),false,true);
     if($result!==false)
       {
         $data=mysqli_fetch_assoc($result);
-        if($data['username']==$username) return array(false,'Your email is already registered. Please try again. Did you forget your password?');
+        if($data[$this->usercol]==$username) return array(false,'Your email is already registered. Please try again. Did you forget your password?');
       }
     if(strlen($pw_in) < $this->getMinPasswordLength()) return array(false,'Your password is too short. Please try again.');
     // Complexity checks here, if not relegated to JS ...
@@ -158,10 +161,10 @@ class UserFunctions {
         $fields[]=$key;
         switch($key)
           {
-          case "username":
+          case $this->usercol:
             $store[]=$user;
             break;
-          case "password":
+          case $this->pwcol:
             $store[]=$pw_store;
             break;
           case "creation":
@@ -250,7 +253,7 @@ class UserFunctions {
     require_once(dirname(__FILE__).'/xml.php');
     $xml=new Xml;
     require_once(dirname(__FILE__).'/db_hook.inc');
-    $result=lookupItem($username,'username',$this->getTable(),$this->getDB(),false); // if lookupItem is well done, can skip the san -- still escapes it
+    $result=lookupItem($username,$this->usercol,$this->getTable(),$this->getDB(),false); // if lookupItem is well done, can skip the san -- still escapes it
     if($result!==false)
       {
     $userdata=mysqli_fetch_assoc($result);
@@ -259,7 +262,7 @@ class UserFunctions {
         // check password
         require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
         $hash=new Stronghash;
-        $data=json_decode($userdata['password'],true);
+        $data=json_decode($userdata[$this->pwcol],true);
         if($hash->verifyHash($pw,$data))
           {
             if($userdata['flag'] && !$userdata['disabled'])
@@ -360,7 +363,7 @@ class UserFunctions {
     if(is_array($userdata))
       {
         $authsalt = $this-> getSiteKey();
-        $pw_characters=json_decode($userdata['password'],true);
+        $pw_characters=json_decode($userdata[$this->pwcol],true);
         $salt=$pw_characters['salt'];
 
         if(empty($hash) || empty($secret))
@@ -386,7 +389,7 @@ class UserFunctions {
           }
         else $from_cookie=false;
 
-        $value_create=array($secret,$salt,$userdata['auth_key'],$_SERVER['REMOTE_ADDR'],$authsalt);
+        $value_create=array($secret,$salt,$userdata[$this->cookiecol],$_SERVER['REMOTE_ADDR'],$authsalt);
         $conf=sha1(implode('',$value_create));
         $state= $conf==$hash ? true:false;
         if($detail) return array('state'=>strbool($state),"uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"from_cookie"=>strbool($from_cookie),'got_user_pass_info'=>is_array($pw_characters),'got_userdata'=>is_array($userdata),'source'=>$value_create);
@@ -414,12 +417,12 @@ class UserFunctions {
         if(empty($username))
           {
             $userdata = $this->getUser();
-            $username = $userdata["username"];
+            $username = $userdata[$this->usercol];
           }
         else if($password_or_is_data===true)
           {
             $userdata=$username;
-            $username=$userdata['username'];
+            $username=$userdata[$this->usercol];
           }
         else
           {
@@ -448,10 +451,10 @@ class UserFunctions {
         $hash=new Stronghash;
         $otsalt=$hash->createSalt();
         $cookie_secret=$hash->createSalt();
-        $pw_characters=json_decode($userdata['password'],true);
+        $pw_characters=json_decode($userdata[$this->pwcol],true);
         $salt=$pw_characters['salt'];
         //store it
-        $query="UPDATE `".$this->getTable()."` SET auth_key='$otsalt' WHERE id='$id'";
+        $query="UPDATE `".$this->getTable()."` SET `".$this->cookiecol."`='$otsalt' WHERE id='$id'";
         $l=openDB($this->getDB());
         mysqli_query($l,'BEGIN');
         $result=mysqli_query($l,$query);
