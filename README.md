@@ -17,6 +17,7 @@ Considering replacing the "current" [reCAPTCHA](https://developers.google.com/re
 ### Subtrees
 
 - [otphp](https://github.com/Spomky-Labs/otphp) is a subtree in the `totp/` directory. The relevant files are in `totp/lib/OTPHP`. The command to update this is `git subtree pull --prefix totp otphp master --squash`
+- [base32](https://github.com/ChristianRiesen/base32) is a subtree in the `base32/` directory. The relevant files are in `base32/src/Base32/Base32.php`. The command to update this is `git subtree pull --prefix base32 base32 master --squash`
 
 ### Submodules
 
@@ -53,6 +54,7 @@ dblink
 defaults
 public_key
 private_key
+secret
 ```
 
 

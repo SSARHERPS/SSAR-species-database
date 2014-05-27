@@ -13,7 +13,7 @@ $default_sql_password=""; // https://www.random.org/passwords/?num=5&len=24&form
 $sql_url = 'localhost';
 
 /***
- * Required, but free to generate. Generate here: 
+ * Required, but free to generate. Generate here:
  * https://www.google.com/recaptcha/admin/create
  ***/
 $recaptcha_public_key="";
@@ -41,7 +41,7 @@ $profile_picture_storage = $user_data_storage.'';
 /***
 
  $baseurl=""; // define if other than the hosted URL
- 
+
 ***/
 
 /***
@@ -69,7 +69,8 @@ $db_cols=array(
   "dblink"=>"varchar(255)",
   "defaults"=>"text",
   "public_key"=>"text",
-  "private_key"=>"text"
+  "private_key"=>"text",
+  "secret"=>"varchar(255)",
 );
 
 $user_column = "username";

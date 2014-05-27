@@ -5,7 +5,7 @@ class UserFunctions {
   function __construct()
   {
     require_once(dirname(__FILE__).'/../CONFIG.php');
-    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column;
+    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps;
     if(!empty($user_data_storage))
       {
         $user_data_storage .= substr($user_data_storage,-1)=="/" ? '':'/';
@@ -30,6 +30,8 @@ class UserFunctions {
     $this->pwcol = $password_column;
     $this->cookiecol = $cookie_ver_column;
     $this->usercol = $user_column;
+    $this->totpcol = $totp_column;
+    $this->totpsteps = $totp_steps;
   }
 
   /***
@@ -44,6 +46,10 @@ class UserFunctions {
   private function getColumns() {
     if(empty($this->user)) $this->setUser();
     return $this->columns;
+  }
+  private function getSecret() {
+    $userdata = $this->getUser();
+    return empty($userdata[$this->totpcol]) ? false:$userdata[$this->totpcol];
   }
   public function getUser()
   {
@@ -92,7 +98,7 @@ class UserFunctions {
     # Describe your columns here, if not in config.php!
     # Otherwise use this to describe an alternate column set.
     $this->columns = array(
-      
+
     );
   }
 
@@ -108,6 +114,38 @@ class UserFunctions {
     if(is_string($bool)) $bool=boolstr($bool); // if a string is passed, convert it to a bool
     if(is_bool($bool)) return $bool ? 'true' : 'false';
     else return 'non_bool';
+  }
+
+  private function verifyOTP($provided)
+  {
+    /*
+     * Check the TOTP code provided by the user
+     *
+     * @param int $provided Provided OTP passcode
+     * @return bool
+     */
+    require_once(dirname(__FILE__).'/../totp/libs/OTPHP/TOTP.php');
+    $secret = $this->getSecret();
+    if(empty($secret)) return false;
+    $totp = new OTPHP\TOTP($secret);
+    try
+      {
+        if($totp->verify($provided)) return true;
+        if(!is_numeric($this->totpsteps)) throw(new Exception("Bad TOTP step count"));
+        $i = 0;
+        while($i < $this->totpsteps)
+          {
+            $test = array();
+            $test[] = $totp->at(time()+30*$i);
+            $test[] = $totp->at(time()-30*$i);
+            if(in_array($provided,$test,true)) return true;
+          }
+        return false;
+      }
+    catch(Exception $e)
+      {
+        throw(new Exception("Bad parameters provided to verifyOTP :: $e"));
+      }
   }
 
   /***
