@@ -27,6 +27,13 @@ switch($do)
     break;
   case 'get':
     returnAjax(getFromUser($_REQUEST));
+    break;
+  case "maketotp":
+    break;
+  case "veriftytotp":
+    break;
+  case "savetotp":
+    break;
   default:
     returnAjax(getLoginState($_REQUEST),true);
   }

@@ -218,17 +218,10 @@ class UserFunctions {
         # The data was saved correctly
         # Let's create the provisioning stuff!
         $uri = $totp->provisioningURI($this->username,$provider);
-        require_once(dirname(__FILE__)."/../qr/qrlib.php");
-        $PNG_TEMP_DIR = dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR;
-        $PNG_WEB_DIR = 'temp/';
-        if (!file_exists($PNG_TEMP_DIR)) mkdir($PNG_TEMP_DIR);
-        $filename = $PNG_TEMP_DIR . sha1($s->createSalt()) . ".png";
-        $svg = QRcode::svg($uri,false,QR_ECLEVEL_H,10,1);
-        QRcode::png($uri,$filename,QR_ECLEVEL_H,10,1);
-        $raw = base64_encode(file_get_contents($PNG_WEB_DIR.basename($filename)));
-        $raw = "data:image/png;base64,".$raw;
-        unlink($filename);
-        return array("status"=>true,"uri"=>$uri,"svg"=>$svg,"raw"=>$raw,"secret"=>$secret);
+        $retarr = $this->generateQR($uri,null,false);
+        $retarr["secret"] = $secret;
+        $retarr["username"] => $this->username;
+        return $retarr;
       }
     catch(Exception $e)
       {
@@ -242,19 +235,80 @@ class UserFunctions {
      * Read the tentative secret and make it real
      *
      * @params int $code Provided TOTP code at prompt
-     * @returns
+     * @return array
      ***/
 
     if($this->verifyTOTP($code,true))
       {
         # If it's good, make the secret "real" in the $this->totpcol
+        $userdata = $this->getUser();
+        $secret = $userdata[$this->tmpcol];
+        $query = "UPDATE `".$this->getTable()."` SET `".$this->totpcol."`='$secret', `".$this->tmpcol."`=''  WHERE `".$this->usercol."`='".$this->username."'";
+        $l = openDB($this->getDB());
+        mysqli_query($l,"BEGIN");
+        $r = mysqli_query($l,$query);
+        if($r === false)
+          {
+            $e = mysqli_error($l);
+            mysqli_query($l,"ROLLBACK");
+            return array("status"=>false,"error"=>$e,"human_error"=>"Could not save secret","username"=>$this->username);
+          }
+        mysqli_query($l,"COMMIT");
         # Let the user know
+        return array("status"=>true,"username"=>$this->username);        
       }
     else
       {
         # The code is wrong, feed back to the user
+        return array("status"=>false,"error"=>"0","human_error"=>"Invalid code.");
       }
 
+  }
+
+  public function generateQR($uri = null,$identifier = null,$persistent = true)
+  {
+    /*
+     * Generate a QR code from a string
+     *
+     * @param string $uri
+     * @param string identifier A unique identifier for persistent paths
+     * @param bool $persistent Whether or not the image is persistent
+     * @returns array with the main results in "svg" and "raw" keys, with a Google fallback in the "url" key
+     */
+    try
+      {
+        if(empty($uri)) $uri = $this->username;
+        require_once(dirname(__FILE__)."/../qr/qrlib.php");
+        if(!$persistent)
+          {
+            $tmp_dir = dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR;
+            if (!file_exists($tmp_dir)) mkdir($tmp_dir);
+            $web_dir = 'temp/';
+            require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
+            $s = new Stronghash;
+            $filename = $tmp_dir . sha1($s->createSalt()) . ".png";
+            $filepath = $web_dir.basename($filename)
+              }
+        else
+          {
+            $this->getUser();
+            $filename = $this->data_path.$identifier."/".sha1($this->username).".png";
+            $filepath = $filename;
+          }
+        $svg = QRcode::svg($uri,false,QR_ECLEVEL_H,10,1);
+        QRcode::png($uri,$filename,QR_ECLEVEL_H,10,1);
+        $raw = base64_encode(file_get_contents($filepath));
+        $raw = "data:image/png;base64,".$raw;
+        if(!$persistent) unlink($filename);
+        # As a final option, get a URL fallback
+        # https://developers.google.com/chart/infographics/docs/qr_codes?csw=1
+        $url = "https://chart.googleapis.com/chart?cht=qr&chs=500x500&chld=H&chl=".$uri;
+        return array("status"=>true,"uri"=>$uri,"svg"=>$svg,"raw"=>$raw,"url"=>$url);
+      }
+    catch(Exception $e)
+      {
+        return array("status"=>false,"human_error"=>"Unable to generate QR code","error"=>$e,"uri"=>$uri,"identifier"=>$identifier,"persistent"=>$persistent);
+      }
   }
 
   public function createUser($username,$pw_in,$name,$dname)
