@@ -21,16 +21,20 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
  */
-    
+include "qrlib.php";    
+if(isset($_REQUEST['svg']))
+  {
+    echo QRcode::svg("stuff",false,QR_ECLEVEL_H,10,1);
+    die();
+  }
     echo "<h1>PHP QR Code</h1><hr/>";
     
     //set it to writable location, a place for temp generated PNG files
-    $PNG_TEMP_DIR = dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR;
+$PNG_TEMP_DIR = dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR;
     
     //html PNG location prefix
     $PNG_WEB_DIR = 'temp/';
 
-    include "qrlib.php";    
     
     //ofcourse we need rights to create temp dir
     if (!file_exists($PNG_TEMP_DIR))
@@ -64,13 +68,14 @@
     
         //default data
         echo 'You can provide data in GET parameter: <a href="?data=like_that">like that</a><hr/>';    
-        QRcode::png('PHP QR Code :)', $filename, $errorCorrectionLevel, $matrixPointSize, 2);    
+        QRcode::png('PHP QR Code :)', $filename, $errorCorrectionLevel, $matrixPointSize, 2);
         
     }    
         
     //display generated file
-    echo '<img src="'.$PNG_WEB_DIR.basename($filename).'" /><hr/>';  
-    
+echo '<img src="data:image/png;base64,'.base64_encode(file_get_contents($PNG_WEB_DIR.basename($filename))).'" /><hr/>';  
+echo "<pre>";
+echo "</pre>";
     //config form
     echo '<form action="index.php" method="post">
         Data:&nbsp;<input name="data" value="'.(isset($_REQUEST['data'])?htmlspecialchars($_REQUEST['data']):'PHP QR Code :)').'" />&nbsp;

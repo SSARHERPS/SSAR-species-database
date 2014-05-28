@@ -209,6 +209,17 @@ class UserFunctions {
         # The data was saved correctly
         # Let's create the provisioning stuff!
         $uri = $totp->provisioningURI($this->username,$provider);
+        require_once(dirname(__FILE__)."/../qr/qrlib.php");
+        $PNG_TEMP_DIR = dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR;
+        $PNG_WEB_DIR = 'temp/';
+        if (!file_exists($PNG_TEMP_DIR)) mkdir($PNG_TEMP_DIR);
+        $filename = $PNG_TEMP_DIR . sha1($s->createSalt()) . ".png";
+        $svg = QRcode::svg($uri,false,QR_ECLEVEL_H,10,1);
+        QRcode::png($uri,$filename,QR_ECLEVEL_H,10,1);
+        $raw = base64_encode(file_get_contents($PNG_WEB_DIR.basename($filename)));
+        $raw = "data:image/png;base64,".$raw;
+        unlink($filename);
+        return array("status"=>true,"uri"=>$uri,"svg"=>$svg,"raw"=>$raw,"secret"=>$secret);
       }
     catch(Exception $e)
       {
