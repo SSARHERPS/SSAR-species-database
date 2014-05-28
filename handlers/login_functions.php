@@ -55,9 +55,17 @@ class UserFunctions {
     if(empty($this->user)) $this->setUser();
     return $this->columns;
   }
-  private function getSecret() {
+  private function getSecret($is_test = false) {
     $userdata = $this->getUser();
+    if($is_test)
+      {
+        return empty($userdata[$this->tmpcol]) ? false:$userdata[$this->tmpcol];
+      }
     return empty($userdata[$this->totpcol]) ? false:$userdata[$this->totpcol];
+  }
+  private function has2FA() {
+    $userdata = $this->getUser();
+    return !empty($userdata[$this->totpcol]);
   }
   public function getUser()
   {
@@ -130,17 +138,18 @@ class UserFunctions {
     else return 'non_bool';
   }
 
-  private function verifyOTP($provided)
+  private function verifyTOTP($provided,$is_test = false)
   {
     /*
      * Check the TOTP code provided by the user
      *
      * @param int $provided Provided OTP passcode
+     * @param bool $is_test if it's a test run, check the temporary rather than real column.
      * @return bool
      */
     require_once(dirname(__FILE__).'/../base32/src/Base32/Base32.php');
     require_once(dirname(__FILE__).'/../totp/libs/OTPHP/TOTP.php');
-    $secret = $this->getSecret();
+    $secret = $this->getSecret($is_test);
     if($secret === false) return false;
     try
       {
@@ -227,11 +236,24 @@ class UserFunctions {
       }
   }
 
-  public function saveTOTP()
+  public function saveTOTP($code)
   {
     /***
      * Read the tentative secret and make it real
+     *
+     * @params int $code Provided TOTP code at prompt
+     * @returns
      ***/
+
+    if($this->verifyTOTP($code,true))
+      {
+        # If it's good, make the secret "real" in the $this->totpcol
+        # Let the user know
+      }
+    else
+      {
+        # The code is wrong, feed back to the user
+      }
 
   }
 
