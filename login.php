@@ -108,8 +108,16 @@ if($_REQUEST['q']=='submitlogin')
   {
     if(!empty($_POST['username']) && !empty($_POST['password']))
       {
-        $res = $user->lookupUser($_POST['username'], $_POST['password'],true);
-        if($res[0] !==false)
+        $res = $user->lookupUser($_POST['username'], $_POST['password'],true,$_POST["totp"]);
+        if($res[0] === false && $res["totp"] === true)
+          {
+            # User has two factor authentication. Prompt!
+            $totpclass = $res["error"]===false ? "good":"error";
+            # TODO Create the form ....
+            $totp_buffer = "<p class='$totp_class'>".$res["human_error"]."</p>";
+            $login_output .= $totp_buffer;
+          }
+        else if($res[0] !==false)
           {
             // Successful login
             $userdata=$res[1];
