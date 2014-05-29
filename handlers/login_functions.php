@@ -5,7 +5,7 @@ class UserFunctions {
   function __construct($username = null, $lookup_column = null)
   {
     require_once(dirname(__FILE__).'/../CONFIG.php');
-    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage;
+    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication;
     if(!empty($user_data_storage))
       {
         $user_data_storage .= substr($user_data_storage,-1)=="/" ? '':'/';
@@ -33,6 +33,7 @@ class UserFunctions {
     $this->tmpcol = $temporary_storage;
     $this->totpcol = $totp_column;
     $this->totpsteps = $totp_steps;
+    $this->needsAuth = $needs_manual_authentication;
 
     if(!empty($username))
       {
@@ -51,6 +52,7 @@ class UserFunctions {
   private function getMinPasswordLength() { return $this->minPasswordLength; }
   private function getThresholdLength() { return $this->thresholdLength; }
   private function getSupportEmail() { return $this->supportEmail; }
+  private function needsManualAuth() { return $this->needsAuth === true;}
   private function getColumns() {
     if(empty($this->user)) $this->setUser();
     return $this->columns;
@@ -321,6 +323,15 @@ class UserFunctions {
   
   public function createUser($username,$pw_in,$name,$dname)
   {
+    /***
+     * Create a new user
+     *
+     * @param string $username A valid email address
+     * @param string pw_in The input password. This function will hash it.
+     * @param array $name An array of form array(firstName,lastName)
+     * @param string $dname The display name of the user.
+     * @return array
+     ***/
     // Send email for validation
     require_once(dirname(__FILE__).'/db_hook.inc');
     $ou=$username;
@@ -381,7 +392,7 @@ class UserFunctions {
           case "flag":
             // Is the user active, or does it need authentication first?
             // Default "true" means immediately active.
-            $store[]=true;
+            $store[]=$this->needsManualAuth();
             break;
           case "dtime":
             $store[]=0;
@@ -404,12 +415,7 @@ class UserFunctions {
             $store[]="";
           }
       }
-    // $store=array($user,$pw_store,'',$creation,'',$names,true,false,false,false,0,'','','',$data_init,$sdata_init,'','',$hardlink,'','',''); // set flag to FALSE if authentication wanted.
-    /***
-     * // Debugging
-     * echo displayDebug("$user | $username | $ou");
-     * echo displayDebug($store);
-     ***/
+
     $test_res=addItem($fields,$store,$this->getTable(),$this->getDB());
     if($test_res)
       {
@@ -418,28 +424,8 @@ class UserFunctions {
         $userdata=$res[1];
         $id=$userdata['id'];
 
-        /* Uncomment if authentication has been requested */
-        /*
-        // Create hash - user + encrypted name + salt
-        $ne=$ne[0];
-        $hash=sha1($user.$ne.$salt);
-        $validlink=$baseurl."/login.php?confirm=$hash&amp;token=$creation&amp;lookup=$id";
-        $affix="&amp;email=".htmlentities($email_in);
-        $validlink.=$affix;
-        // email
-        $email='blackhole@'.$domain;
-        $to='admin@'.$domain;
-        $headers  = 'MIME-Version: 1.0' . "\r\n";
-        $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-        $headers .= "From: $name (via $domain) <$email>";
-        $subject="[User Signup] New User - $name";
-        $body="<p>$name is requesting access to files for $title. You can click the following link to enable access to the files, and click the link later to disable access.</p>\n<p><a href='$validlink'>$validlink</a><p>\n<p>Thank you. For debugging purposes, the user was hashed with $algo.</p>";
-        if(mail($to,$subject,$body,$headers))
-        {
-        //mail($this->supportEmail,$subject,$body,$headers); // debugging confirmation
-        return array(true,"Success! You will receive confirmation when your account has been activated.");
-        }
-        */
+        if($this->needsManualAuth()) requireUserAuth();
+
         if (is_numeric($id) && !empty($userdata))
           {
             $this->setUser($userdata);
@@ -910,6 +896,29 @@ class UserFunctions {
      * Set up the flags and verification tokens to disable a user until the authorization flag is passed
      * The user calling this function themselves needs an admin flag and must be logged in.
      ***/
+    // $store=array($user,$pw_store,'',$creation,'',$names,true,false,false,false,0,'','','',$data_init,$sdata_init,'','',$hardlink,'','',''); // set flag to FALSE if authentication wanted.
+    /* Uncomment if authentication has been requested */
+    /*
+    // Create hash - user + encrypted name + salt
+    $ne=$ne[0];
+    $hash=sha1($user.$ne.$salt);
+    $validlink=$baseurl."/login.php?confirm=$hash&amp;token=$creation&amp;lookup=$id";
+    $affix="&amp;email=".htmlentities($email_in);
+    $validlink.=$affix;
+    // email
+    $email='blackhole@'.$domain;
+    $to='admin@'.$domain;
+    $headers  = 'MIME-Version: 1.0' . "\r\n";
+    $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+    $headers .= "From: $name (via $domain) <$email>";
+    $subject="[User Signup] New User - $name";
+    $body="<p>$name is requesting access to files for $title. You can click the following link to enable access to the files, and click the link later to disable access.</p>\n<p><a href='$validlink'>$validlink</a><p>\n<p>Thank you. For debugging purposes, the user was hashed with $algo.</p>";
+    if(mail($to,$subject,$body,$headers))
+    {
+    //mail($this->supportEmail,$subject,$body,$headers); // debugging confirmation
+    return array(true,"Success! You will receive confirmation when your account has been activated.");
+    }
+    */
   }
 
   public function verifyUserAuth()

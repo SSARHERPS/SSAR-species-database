@@ -38,6 +38,13 @@ $password_threshold_length='';
 $user_data_storage='';
 $profile_picture_storage = $user_data_storage.'';
 
+
+/***
+ * Does the user need to be manually authenticated?
+ ***/
+
+$needs_manual_authentication = false;
+
 /***
 
  $baseurl=""; // define if other than the hosted URL

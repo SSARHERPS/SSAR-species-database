@@ -114,7 +114,16 @@ if($_REQUEST['q']=='submitlogin')
             # User has two factor authentication. Prompt!
             $totpclass = $res["error"]===false ? "good":"error";
             # TODO Create the form ....
-            $totp_buffer = "<p class='$totp_class'>".$res["human_error"]."</p>";
+            $totp_buffer = "<section id='totp_prompt'>  
+  <p class='$totp_class'>".$res["human_error"]."</p>
+  <form id='totp_submit' onsubmit='doTOTPSubmit()'>
+    <fieldset>
+      <legend>Two-Factor Authentication</legend>
+      <input type='number' placeholder='Code' size='6' maxlength='6'/>
+      <input type='button' onclick='doTOTPSubmit()'>
+    </fieldset>
+  </form>
+</section>";
             $login_output .= $totp_buffer;
           }
         else if($res[0] !==false)
