@@ -108,18 +108,26 @@ if($_REQUEST['q']=='submitlogin')
   {
     if(!empty($_POST['username']) && !empty($_POST['password']))
       {
-        $res = $user->lookupUser($_POST['username'], $_POST['password'],true,$_POST["totp"]);
+        $totp = empty($_POST["totp"]) ? false:$_POST["totp"];
+        $res = $user->lookupUser($_POST['username'], $_POST['password'],true,$totp);
         if($res[0] === false && $res["totp"] === true)
           {
             # User has two factor authentication. Prompt!
             $totpclass = $res["error"]===false ? "good":"error";
-            # TODO Create the form ....
-            $totp_buffer = "<section id='totp_prompt'>  
-  <p class='$totp_class'>".$res["human_error"]."</p>
+            $is_encrypted = empty($res["encrypted_hash"]) || empty($res["encrypted_secret"]);
+            $hash =  $is_encrypted ? $_COOKIE[$cookieauth]:$res["encrypted_hash"];
+            $secret =  $is_encrypted ? $_COOKIE[$cookiekey]:$res["encrypted_secret"];
+            $totp_buffer = "<section id='totp_prompt'>
+  <p class='$totp_class' id='totp_message'>".$res["human_error"]."</p>
   <form id='totp_submit' onsubmit='doTOTPSubmit()'>
     <fieldset>
       <legend>Two-Factor Authentication</legend>
-      <input type='number' placeholder='Code' size='6' maxlength='6'/>
+      <input type='number' id='totp_code' name='totp_code' placeholder='Code' size='6' maxlength='6'/>
+      <input type='number' id='username' name='username' value='".$_POST['username']."'/>
+      <input type='number' id='password' name='password' value='".$res["encrypted_password"]."'/>
+      <input type='number' id='secret' name='secret' value='".$secret."'/>
+      <input type='number' id='hash' name='hash' value='".$hash."'/>
+      <input type='number' id='encrypted' name='encrypted' value='".$user->strbool($is_encrypted)."'/>
       <input type='button' onclick='doTOTPSubmit()'>
     </fieldset>
   </form>

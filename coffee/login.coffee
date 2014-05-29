@@ -55,6 +55,45 @@ evalRequirements = ->
 doEmailCheck = ->
   # Perform a GET request to see if the chosen email is already taken
 
+doTOTPSubmit = () ->
+  # Get the code from #totp_code and push it through
+  # to async_login_handler.php , get the results and behave appropriately
+  event.preventDefault()
+  animateLoad()
+  code = $("#totp_code").val()
+  user = $("#username").val()
+  url = $.url()
+  ajaxLanding = "async_login_handler.php"
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + ajaxLanding
+  args = "action=verifytotp&code=#{code}&user=#{user}"
+  totp = $.post(urlString + ajaxLanding,args,'json')
+  totp.done (result) ->
+    # Check the result
+    if result.status is true
+      # If it's good, set the cookies
+      $("#totp_message")
+      .text("Correct!")
+      .removeClass("error")
+      .addClass("good")
+      expires = result.expires
+      i = 0
+      $.each result.raw_cookie (key,val) ->
+        $.cookie(key,val,expires)
+        i++
+        if i is Object.size(result.raw_cookie)
+          # Take us home
+          home = url.attr('protocol') + '://' + url.attr('host') + '/'
+          stopLoad()
+          window.location home
+    else
+      $("#totp_message").text(result.human_error)
+      $("#totp_code").val("") # Clear it
+      $("#totp_code").focus()
+      stopLoadError()
+  totp.fail (result,status) ->
+    # Be smart about the failure
+    stopLoadError()
+
 $ ->
   $("#password")
   .keypress ->

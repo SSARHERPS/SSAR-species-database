@@ -31,12 +31,24 @@ switch($do)
   case "maketotp":
     break;
   case "veriftytotp":
+    returnAjax(verifyTOTP($_REQUEST));
     break;
   case "savetotp":
+    break;
+  case "sendtext":
     break;
   default:
     returnAjax(getLoginState($_REQUEST),true);
   }
+
+function boolstr($string)
+{
+  // returns the boolean of a string 'true' or 'false'
+  if(is_bool($string)) return $string;
+  if(is_string($string)) return strtolower($string)==='true' ? true:false;
+  if(preg_match("/[0-1]/",$string)) return $string=='1' ? true:false;
+  return false;
+}
 
 function getLoginState($get,$default=false)
 {
@@ -45,6 +57,31 @@ function getLoginState($get,$default=false)
   $id=$get['dblink'];
   $u=new UserFunctions();
   return array("status"=>$u->validateUser($id,$conf,$s),'defaulted'=>$default);
+}
+
+
+function verifyTOTP($get)
+{
+  $code = $get['code'];
+  $user = $get['username'];
+  $password = $get['password'];
+  $secret = $get['secret'];
+  $hash = $get['hash'];
+  $is_encrypted = boolstr($get['encrypted']);
+  # If it's a good code, pass the cookies back
+  $u = new UserFunctions($user);
+  $r = $u->lookupUser($user,$password,false,$code);
+  if($r[0] === false)
+    {
+      $r["status"] = false;
+      return $r;
+    }
+  ## The user and code is valid!
+  $return = array("status"=>true);
+  $userdata = $r[1];
+  $cookie_result = $u->createCookieTokens();
+  $return["cookies"]=>$cookie_result;
+  return $return;
 }
 
 
