@@ -3,10 +3,10 @@ function cascadeJQLoad(i) { // Use alternate CDNs where appropriate to load jQue
     if (typeof(i) != "number") i = 0;
     // the actual paths to your jQuery CDNs. You should also have a local version here.
     var jq_paths = [
-        "ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js",
-        "ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.0.min.js",
-        "https://code.jquery.com/jquery-2.1.0.min.js",
-        "cdnjs.cloudflare.com/ajax/libs/jquery/2.1.0/jquery.min.js"
+        "ajax.googleapis.com/ajax/libs/jquery/2.1.2/jquery.min.js",
+        "ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.2.min.js",
+        "https://code.jquery.com/jquery-2.1.2.min.js",
+        "cdnjs.cloudflare.com/ajax/libs/jquery/2.1.2/jquery.min.js"
     ];
     // Paths to your libraries that require jQuery, relative to this file
     var dependent_libraries = [
@@ -14,16 +14,17 @@ function cascadeJQLoad(i) { // Use alternate CDNs where appropriate to load jQue
         "purl.min.js",
         "base64.min.js",
         "picturefill.min.js",
-        "zxcvbn.js",
+        "zxcvbn/zxcvbn.js",
         "c.min.js"
     ];
-    if (window.jQuery === undefined && i < jq_paths.length) {
+    if (i < jq_paths.length) {
         i++;
         loadJQ(jq_paths[i], i, dependent_libraries);
     }
     if (window.jQuery === undefined && i == jq_paths.length) {
         // jQuery failed to load
         // Insert your handler here
+        console.error("Could not load JQuery");
     }
 }
 

@@ -152,13 +152,13 @@ class UserFunctions {
 
   private function verifyTOTP($provided,$is_test = false)
   {
-    /*
+    /***
      * Check the TOTP code provided by the user
      *
      * @param int $provided Provided OTP passcode
      * @param bool $is_test if it's a test run, check the temporary rather than real column.
      * @return bool
-     */
+     ***/
     require_once(dirname(__FILE__).'/../base32/src/Base32/Base32.php');
 
     require_once(dirname(__FILE__).'/../totp/lib/OTPHP/OTPInterface.php');

@@ -1,6 +1,6 @@
 # Login functions
 
-passwords = new Object()
+if typeof passwords isnt 'object' then passwords = new Object()
 passwords.goodbg = "#cae682"
 passwords.badbg = "#e5786d"
 passwords.minLength ?= 8
@@ -204,7 +204,6 @@ noSubmit = ->
   event.returnValue = false
 
 $ ->
-  loadScript('js/zxcvbn.js')
   $("#password")
   .keyup ->
     checkPasswordLive()

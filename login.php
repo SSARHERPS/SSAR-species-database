@@ -540,6 +540,9 @@ else
 $login_output.="</div>";
 ob_end_flush();
 echo "<script type='text/javascript'>
+        if(typeof passwords != 'object') passwords = new Object();
+        passwords.overrideLength=$password_threshold_length;
+        passwords.minLen=$minimum_password_length;
 function loadScript(url, callback) {
     // Adding the script tag to the head as suggested before
     var head = document.getElementsByTagName('head')[0];
@@ -559,13 +562,11 @@ function loadScript(url, callback) {
 var lateJS= function() {
     try {
         console.log('Loading late libraries');
-        passLengthOverride=$password_threshold_length;
-        passMinLen=$minimum_password_length;
-        $.getScript('js/base64.min.js');
-        $.getScript('js/jquery.cookie.js');
-        $.getScript('js/purl.js');
-        $.getScript('js/c.min.js');
         $.getScript('js/zxcvbn/zxcvbn.js');
+        $.getScript('js/base64.min.js');
+        $.getScript('js/jquery.cookie.min.js');
+        $.getScript('js/purl.min.js');
+        $.getScript('js/c.min.js');
         $(document).ready(function(){
             $deferredJS
         });

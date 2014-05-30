@@ -299,7 +299,9 @@
     return mapNewWindows();
   });
 
-  passwords = new Object();
+  if (typeof passwords !== 'object') {
+    passwords = new Object();
+  }
 
   passwords.goodbg = "#cae682";
 
@@ -528,7 +530,6 @@
   };
 
   $(function() {
-    loadScript('js/zxcvbn.js');
     $("#password").keyup(function() {
       return checkPasswordLive();
     }).change(function() {
