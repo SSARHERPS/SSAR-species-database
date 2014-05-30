@@ -124,7 +124,7 @@ makeTOTP = ->
       # Name these in variables to avoid user conflicts
       show_secret_id = "show_secret"
       show_alt = "showAltBarcode"
-      barcode_div = "secretBarcode"
+      barcodeDiv = "secretBarcode"
       html = "<form id='totp_verify'>
   <p>To continue, scan this barcode with your smartphone application.</p>
   <p>If you're unable to do so, <a href='#' id='#{show_secret_id}'>click here</a></p>
@@ -151,7 +151,8 @@ makeTOTP = ->
         saveTOTP(key,hash)
       $("#totp_verify").submit ->
         noSubmit()
-        saveTOTP(key,hash)        
+        saveTOTP(key,hash)
+      stopLoad()        
     else
       console.error("Couldn't generate TOTP code",urlString  + "?" + args)
       $("#totp_message").text("There was an error generating your code. Please try again.")
@@ -170,20 +171,27 @@ saveTOTP = (key,hash) ->
   url = $.url()
   ajaxLanding = "async_login_handler.php"
   urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding
-  args = "action=maketotp&secret=#{key}&user=#{user}&hash=#{hash}&code=#{code}"
+  args = "action=savetotp&secret=#{key}&user=#{user}&hash=#{hash}&code=#{code}"
+  console.log("Checking",urlString  + "?" + args)
   totp = $.post(urlString ,args,'json')
   totp.done (result) ->
     # We're done!
     if result.status is true
       html = "<h1>Done!</h1><h2>Write down and save this backup code. Without it, you cannot disable two-factor authentication if you lose your device.</h2><pre>#{result.backup}</pre>"
       $("#totp_add").html(html)
+      console.log("Success!")
+      stopLoad()
     else
-      html = "<p class='error'>#{result.human_error}</p>"
-      $("#verify_totp_button").after(html)
+      html = "<p class='error' id='temp_error'>#{result.human_error}</p>"
+      unless $("#temp_error").exists()
+        $("#verify_totp_button").after(html)
+      else
+        $("#temp_error").html(html)
       console.error(result.error)
+      stopLoadError()
   totp.fail (result,status) ->
     $("#totp_message").text("Failed to contact server. Please try again.")
-    console.error("AJAX failure",urlString  + "?" + args,result,status)
+    console.error("AJAX failure",result,status)
     stopLoadError()
 
 popupSecret = (secret) ->

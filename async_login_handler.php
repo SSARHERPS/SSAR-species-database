@@ -86,7 +86,7 @@ function saveTOTP($get)
   $secret = $get['secret'];
   $hash = $get['hash'];
   $code = $get['code'];
-  $u = new Userfunctions($user);
+  $u = new UserFunctions($user);
   $r = $u->validateUser($user,$hash,$secret);
   if ($r === false)
     {

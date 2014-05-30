@@ -442,13 +442,13 @@
     args = "action=maketotp&password=" + password + "&user=" + user;
     totp = $.post(urlString, args, 'json');
     totp.done(function(result) {
-      var barcode_div, html, raw, show_alt, show_secret_id, svg;
+      var barcodeDiv, html, raw, show_alt, show_secret_id, svg;
       if (result.status === true) {
         svg = result.svg;
         raw = result.raw;
         show_secret_id = "show_secret";
         show_alt = "showAltBarcode";
-        barcode_div = "secretBarcode";
+        barcodeDiv = "secretBarcode";
         html = "<form id='totp_verify'> <p>To continue, scan this barcode with your smartphone application.</p> <p>If you're unable to do so, <a href='#' id='" + show_secret_id + "'>click here</a></p> <div id='" + barcodeDiv + "'> " + result.svg + " <p>Don't see the barcode? <a href='#' id='" + show_alt + "'>Click here</a></p> </div> <p>Once you've done so, enter your code below to verify your setup.</p> <fieldset> <legend>Confirmation</legend> <input type='number' size='6' maxlength='6' id='code' name='code' placeholder='Code'/> <input type='hidden' id='username' name='username' value='" + user + "'/> <button id='verify_totp_button' class='totpbutton'>Verify</button> </fieldset> </form>";
         $("#totp_add").html(html);
         $("#" + show_secret_id).click(function() {
@@ -463,10 +463,11 @@
           noSubmit();
           return saveTOTP(key, hash);
         });
-        return $("#totp_verify").submit(function() {
+        $("#totp_verify").submit(function() {
           noSubmit();
           return saveTOTP(key, hash);
         });
+        return stopLoad();
       } else {
         console.error("Couldn't generate TOTP code", urlString + "?" + args);
         $("#totp_message").text("There was an error generating your code. Please try again.");
@@ -489,22 +490,30 @@
     url = $.url();
     ajaxLanding = "async_login_handler.php";
     urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding;
-    args = "action=maketotp&secret=" + key + "&user=" + user + "&hash=" + hash + "&code=" + code;
+    args = "action=savetotp&secret=" + key + "&user=" + user + "&hash=" + hash + "&code=" + code;
+    console.log("Checking", urlString + "?" + args);
     totp = $.post(urlString, args, 'json');
     totp.done(function(result) {
       var html;
       if (result.status === true) {
         html = "<h1>Done!</h1><h2>Write down and save this backup code. Without it, you cannot disable two-factor authentication if you lose your device.</h2><pre>" + result.backup + "</pre>";
-        return $("#totp_add").html(html);
+        $("#totp_add").html(html);
+        console.log("Success!");
+        return stopLoad();
       } else {
-        html = "<p class='error'>" + result.human_error + "</p>";
-        $("#verify_totp_button").after(html);
-        return console.error(result.error);
+        html = "<p class='error' id='temp_error'>" + result.human_error + "</p>";
+        if (!$("#temp_error").exists()) {
+          $("#verify_totp_button").after(html);
+        } else {
+          $("#temp_error").html(html);
+        }
+        console.error(result.error);
+        return stopLoadError();
       }
     });
     return totp.fail(function(result, status) {
       $("#totp_message").text("Failed to contact server. Please try again.");
-      console.error("AJAX failure", urlString + "?" + args, result, status);
+      console.error("AJAX failure", result, status);
       return stopLoadError();
     });
   };

@@ -142,7 +142,7 @@ if($_REQUEST['q']=='submitlogin')
             // Successful login
             $userdata=$res[1];
             $id=$userdata['id'];
-            $login_output.="<h3 id='welcome_back'>Welcome back, ".$xml->getTagContents($userdata['name'],"<fname>")."</h3>"; //Welcome message
+            $login_output.="<h3 id='welcome_back'>Welcome back, ".$first_name,"<fname>")."</h3>"; //Welcome message
 
             $cookie_result=$user->createCookieTokens($userdata);
             if($debug)

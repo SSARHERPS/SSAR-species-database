@@ -3,7 +3,7 @@
 use Base32\Base32;
 
 class UserFunctions {
-  
+
   function __construct($username = null, $lookup_column = null)
   {
     require_once(dirname(__FILE__).'/../CONFIG.php');
@@ -21,7 +21,7 @@ class UserFunctions {
         $this->picture_path = $this->data_path . $profile_picture_storage;
       }
     else $this->picture_path = $this->data_path . "profilepics/";
-    
+
     $this->siteKey = $site_security_token;
     $this->supportEmail = $service_email;
     $this->minPasswordLength = $minimum_password_length;
@@ -45,6 +45,7 @@ class UserFunctions {
         $this->setUser(array($key=>$username));
       }
   }
+
 
   /***
    * Helper functions
@@ -159,7 +160,12 @@ class UserFunctions {
      * @return bool
      */
     require_once(dirname(__FILE__).'/../base32/src/Base32/Base32.php');
+
+    require_once(dirname(__FILE__).'/../totp/lib/OTPHP/OTPInterface.php');
+    require_once(dirname(__FILE__).'/../totp/lib/OTPHP/OTP.php');
+    require_once(dirname(__FILE__).'/../totp/lib/OTPHP/TOTPInterface.php');
     require_once(dirname(__FILE__).'/../totp/lib/OTPHP/TOTP.php');
+
     $secret = $this->getSecret($is_test);
     if($secret === false) return false;
     try
@@ -167,20 +173,22 @@ class UserFunctions {
         $totp = new OTPHP\TOTP($secret);
         if($totp->verify($provided)) return true;
         if(!is_numeric($this->totpsteps)) throw(new Exception("Bad TOTP step count"));
-        $i = 0;
-        while($i < $this->totpsteps)
+        $i = 1;
+        while($i <= $this->totpsteps)
           {
             $test = array();
+            $test[] = $totp->now();
             $test[] = $totp->at(time()+30*$i);
             $test[] = $totp->at(time()-30*$i);
+            $i++;
             # Check on every iteration. It'll usually be faster.
-            if(in_array($provided,$test,true)) return true;
+            if(in_array($provided,$test)) return true;
           }
         return false;
       }
     catch(Exception $e)
       {
-        throw(new Exception("Bad parameters provided to verifyOTP :: $e"));
+            throw(new Exception("Bad parameters provided to verifyOTP :: ".$e->getMessage()));
       }
   }
 
@@ -216,7 +224,7 @@ class UserFunctions {
         ## The resulting provisioning URI should now be sent to the user
         ## Flag should be set server-side indicating the change id pending
         $l=openDB($this->getDB());
-        $query = "UPDATE ".$this->getTable()." SET `".$this->tmpcol."`='$secret' WHERE `".$this->usercol."`='".$this->username."'";
+        $query = "UPDATE `".$this->getTable()."` SET `".$this->tmpcol."`='$secret' WHERE `".$this->usercol."`='".$this->username."'";
         $r = mysqli_query($l,$query);
         if($r === false)
           {
@@ -224,9 +232,16 @@ class UserFunctions {
           }
         # The data was saved correctly
         # Let's create the provisioning stuff!
+
+        require_once(dirname(__FILE__).'/../totp/lib/OTPHP/OTPInterface.php');
+        require_once(dirname(__FILE__).'/../totp/lib/OTPHP/OTP.php');
+        require_once(dirname(__FILE__).'/../totp/lib/OTPHP/TOTPInterface.php');
         require_once(dirname(__FILE__).'/../totp/lib/OTPHP/TOTP.php');
+
         $totp = new OTPHP\TOTP($secret);
-        $uri = $totp->provisioningURI($this->username,$provider);
+        $totp->setLabel($this->username);
+        $totp->setIssuer($provider);
+        $uri = $totp->provisioningURI($label,$provider);
         $retarr = $this->generateQR($uri,null,false);
         $retarr["secret"] = $secret;
         $retarr["username"] = $this->username;
@@ -234,7 +249,7 @@ class UserFunctions {
       }
     catch(Exception $e)
       {
-        return array("status"=>false,"human_error"=>"Unexpected error in makeTOTP","error"=>$e,"username"=>$this->username);
+            return array("status"=>false,"human_error"=>"Unexpected error in makeTOTP","error"=>$e->getMessage(),"username"=>$this->username,"provider"=>$provider,"label"=>$totp->getLabel(),"uri"=>$uri,"secret"=>$secret);
       }
   }
 
@@ -254,7 +269,8 @@ class UserFunctions {
         $secret = $userdata[$this->tmpcol];
         $query = "UPDATE `".$this->getTable()."` SET `".$this->totpcol."`='$secret', `".$this->tmpcol."`=''  WHERE `".$this->usercol."`='".$this->username."'";
         require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
-        $backup = Stronghash::createSalt();
+        $s = new Stronghash();
+        $backup = $s->createSalt();
         $backup_store = hash("sha512",$backup);
         $query2 = "UPDATE `".$this->getTable()."` SET `".$this->totpbackup."`='$backup_store' WHERE `".$this->usercol."`='".$this->username."'";
         $l = openDB($this->getDB());
@@ -284,7 +300,7 @@ class UserFunctions {
       }
 
   }
-  
+
   public function removeTOTP($username,$password,$code)
   {
             /***
@@ -383,19 +399,17 @@ class UserFunctions {
             require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
             $s = new Stronghash;
             $filename = $tmp_dir . sha1($s->createSalt()) . ".png";
-            $filepath = $web_dir.basename($filename);
           }
         else
           {
             $this->getUser();
             $filename = $this->data_path.$identifier."/".sha1($this->username).".png";
-            $filepath = $filename;
           }
         $svg = QRcode::svg($uri,false,QR_ECLEVEL_H,10,1);
         QRcode::png($uri,$filename,QR_ECLEVEL_H,10,1);
-        $raw = base64_encode(file_get_contents($filepath));
+        $raw = base64_encode(file_get_contents($filename));
         $raw = "data:image/png;base64,".$raw;
-        if(!$persistent) unlink($filename);
+        //if(!$persistent) unlink($filename);
         # As a final option, get a URL fallback
         # https://developers.google.com/chart/infographics/docs/qr_codes?csw=1
         $url = "https://chart.googleapis.com/chart?cht=qr&chs=500x500&chld=H&chl=".$uri;
@@ -403,7 +417,7 @@ class UserFunctions {
       }
     catch(Exception $e)
       {
-        return array("status"=>false,"human_error"=>"Unable to generate QR code","error"=>$e,"uri"=>$uri,"identifier"=>$identifier,"persistent"=>$persistent);
+            return array("status"=>false,"human_error"=>"Unable to generate QR code","error"=>$e->getMessage(),"uri"=>$uri,"identifier"=>$identifier,"persistent"=>$persistent);
       }
   }
 
@@ -665,7 +679,7 @@ class UserFunctions {
           }
         catch(Exception $e)
           {
-            return array(false,"message"=>"System error. Please try again. If the problem persists, please report it.","error"=>$e);
+            return array(false,"message"=>"System error. Please try again. If the problem persists, please report it.","error"=>$e->getMessage());
           }
       }
     else return array(false,'message'=>'Sorry, your username or password is incorrect.','error'=>'Bad username','desc'=>$result['error']);
@@ -879,7 +893,7 @@ class UserFunctions {
       }
     catch(Exception $e)
       {
-        return array('status'=>false,'error'=>"Unexpected exception: $e");
+        return array('status'=>false,'error'=>"Unexpected exception: ".$e->getMessage());
       }
   }
 
