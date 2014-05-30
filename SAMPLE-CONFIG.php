@@ -78,6 +78,7 @@ $db_cols=array(
   "public_key"=>"text",
   "private_key"=>"text",
   "secret"=>"varchar(255)",
+  "emergency_code"=>"varchar(255)",
 );
 
 /***
@@ -88,6 +89,7 @@ $user_column = "username";
 $password_column = "password";
 $cookie_ver_column = "auth_key";
 $totp_column = "secret";
+$totp_rescue = "emergency_code";
 $temporary_storage = "special_1";
 
 /***

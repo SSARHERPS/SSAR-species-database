@@ -123,12 +123,12 @@ if($_REQUEST['q']=='submitlogin')
     <fieldset>
       <legend>Two-Factor Authentication</legend>
       <input type='number' id='totp_code' name='totp_code' placeholder='Code' size='6' maxlength='6'/>
-      <input type='number' id='username' name='username' value='".$_POST['username']."'/>
-      <input type='number' id='password' name='password' value='".$res["encrypted_password"]."'/>
-      <input type='number' id='secret' name='secret' value='".$secret."'/>
-      <input type='number' id='hash' name='hash' value='".$hash."'/>
-      <input type='number' id='encrypted' name='encrypted' value='".$user->strbool($is_encrypted)."'/>
-      <input type='button' onclick='doTOTPSubmit()'>
+      <input type='hidden' id='username' name='username' value='".$_POST['username']."'/>
+      <input type='hidden' id='password' name='password' value='".$res["encrypted_password"]."'/>
+      <input type='hidden' id='secret' name='secret' value='".$secret."'/>
+      <input type='hidden' id='hash' name='hash' value='".$hash."'/>
+      <input type='hidden' id='encrypted' name='encrypted' value='".$user->strbool($is_encrypted)."'/>
+      <button id='verify_totp_button' class='totpbutton' onclick='doTOTPSubmit()'>Verify</button>
     </fieldset>
   </form>
 </section>";
@@ -433,7 +433,7 @@ else if($_REQUEST['q']=='logout')
     ob_end_flush();
     $login_output.=$loginform.$loginform_close;
   }
-else if($_REQUEST['confirm']!=null)
+else if(isset($_REQUEST['confirm'])
   {
     // toggle user flag
     $id=$_REQUEST['lookup'];
@@ -481,6 +481,34 @@ else if($_REQUEST['confirm']!=null)
         else $login_output.="<p class='error'>Invalid user confirmation code.</p>";
       }
     else $login_output.="<p class='error'>Invalid user ID</p>";
+  }
+else if(isset($_REQUEST['2fa']))
+  {
+    if($logged_in && !$user->has2FA())
+      {
+        # Give user 2FA
+      }
+    else if ($user->has2FA())
+      {
+        # Remove 2FA from the user
+        $totp_remove_form = "<section id='totp_remove'>
+  <p class='error'>Are you sure you want to disable two-factor authentication?</p>
+  <form id='totp_submit' onsubmit='doTOTPRemove()'>
+    <fieldset>
+      <legend>Remove Two-Factor Authentication</legend>
+      <input type='email' value='".$username."' readonly='readonly' id='username' name='username'/>
+      <input type='password' id='password' name='password'/>
+      <input type='number' id='code' name='code' placeholder='Authenticator Code or Backup Code' size='32' maxlength='32'/>
+      <button id='remove_totp_button' class='totpbutton'  onclick='doTOTPRemove()'>Remove Two-Factor Authentication</button>
+    </fieldset>
+  </form>
+</section>";
+        $login_output .= $totp_remove_form;
+      }
+    else
+      {
+        $login_output .= "<p class='error'>You have to be logged in to set up two factor authentication.<br/><a href='?q=login'>Click here to log in</a></p>";
+      }
   }
 else
   {

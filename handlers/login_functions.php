@@ -1,11 +1,11 @@
 <?php
 
 class UserFunctions {
-
+  
   function __construct($username = null, $lookup_column = null)
   {
     require_once(dirname(__FILE__).'/../CONFIG.php');
-    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication;
+    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue;
     if(!empty($user_data_storage))
       {
         $user_data_storage .= substr($user_data_storage,-1)=="/" ? '':'/';
@@ -19,7 +19,7 @@ class UserFunctions {
         $this->picture_path = $this->data_path . $profile_picture_storage;
       }
     else $this->picture_path = $this->data_path . "profilepics/";
-
+    
     $this->siteKey = $site_security_token;
     $this->supportEmail = $service_email;
     $this->minPasswordLength = $minimum_password_length;
@@ -32,6 +32,7 @@ class UserFunctions {
     $this->usercol = $user_column;
     $this->tmpcol = $temporary_storage;
     $this->totpcol = $totp_column;
+    $this->totpbackup = $totp_rescue;
     $this->totpsteps = $totp_steps;
     $this->needsAuth = $needs_manual_authentication;
 
@@ -52,7 +53,7 @@ class UserFunctions {
   private function getMinPasswordLength() { return $this->minPasswordLength; }
   private function getThresholdLength() { return $this->thresholdLength; }
   private function getSupportEmail() { return $this->supportEmail; }
-  private function needsManualAuth() { return $this->needsAuth === true;}
+  private function needsManualAuth() { return $this->needsAuth === true; }
   private function getColumns() {
     if(empty($this->user)) $this->setUser();
     return $this->columns;
@@ -138,14 +139,14 @@ class UserFunctions {
     if(is_string($bool)) $bool=boolstr($bool); // if a string is passed, convert it to a bool
     if(is_bool($bool)) return $bool ? 'true' : 'false';
     else return 'non_bool';
-      }
+  }
 
 
   public function checkTOTP($provided)
   {
     return $this->verifyTOTP($provided);
   }
-  
+
   private function verifyTOTP($provided,$is_test = false)
   {
     /*
@@ -187,7 +188,7 @@ class UserFunctions {
      * Assign a user a multifactor authentication code
      *
      * @param string $provider The provider giving 2FA.
-     * @return array with the status in the key "status", errors in "error" and "human_error", 
+     * @return array with the status in the key "status", errors in "error" and "human_error",
      * username in "username", and provisioning data in "uri"
      ***/
     if(empty($this->username))
@@ -249,6 +250,10 @@ class UserFunctions {
         $userdata = $this->getUser();
         $secret = $userdata[$this->tmpcol];
         $query = "UPDATE `".$this->getTable()."` SET `".$this->totpcol."`='$secret', `".$this->tmpcol."`=''  WHERE `".$this->usercol."`='".$this->username."'";
+        require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
+        $backup = Stronghash::createSalt();
+        $backup_store = hash("sha512",$backup);
+        $query2 = "UPDATE `".$this->getTable()."` SET `".$this->totpbackup."`='$backup_store' WHERE `".$this->usercol."`='".$this->username."'";
         $l = openDB($this->getDB());
         mysqli_query($l,"BEGIN");
         $r = mysqli_query($l,$query);
@@ -258,9 +263,16 @@ class UserFunctions {
             mysqli_query($l,"ROLLBACK");
             return array("status"=>false,"error"=>$e,"human_error"=>"Could not save secret","username"=>$this->username);
           }
+        $r = mysqli_query($l,$query2);
+        if($r === false)
+          {
+            $e = mysqli_error($l);
+            mysqli_query($l,"ROLLBACK");
+            return array("status"=>false,"error"=>$e,"human_error"=>"Could not create backup code","username"=>$this->username);
+          }
         mysqli_query($l,"COMMIT");
         # Let the user know
-        return array("status"=>true,"username"=>$this->username);        
+        return array("status"=>true,"username"=>$this->username,"backup"=>$backup);
       }
     else
       {
@@ -269,6 +281,72 @@ class UserFunctions {
       }
 
   }
+  
+  public function removeTOTP($username,$password,$code)
+  {
+            /***
+             * Remove two factor authentication
+             *
+             * @param string $username
+             * @param string $password
+             * @param string $code Either the Authenticator code, or previously generated backup code.
+             * @return True if success, array if failure
+             ***/
+            $l = openDB($this->getDB());
+            $verify = $this->lookupUser($username,$password);
+            # Verify will always be false; but let's see if "error" is also false.
+            if($verify['totp']!==true)
+              {
+            # Either the user doesn't have it, or the credentials are bad
+            if($verify[0]===true)
+              {
+            # Credentials are fine
+            return array("status"=>false,"error"=>"Invalid operation","human_error"=>"You don't have two-factor authentication turned on");
+          }
+            else
+              {
+            return array("status"=>false,"error"=>"Bad credentials","result"=>$verify,"human_error"=>"Sorry, bad username or password.");
+          }
+          }
+            # Check code for length, if it's long it's the backup
+            if(strlen($code)>6)
+              {
+            # Check against $this->totpbackup
+            $query = "SELECT `".$this->totpbackup."` FROM `".$this->getTable()."` WHERE `".$this->usercol."`='".$this->username."'";
+            $r = mysqli_query($l,$query);
+            if($r === false)
+              {
+            return array("status"=>false,"error"=>mysqli_error($l),"human_error"=>"Database error");
+          }
+            $row = mysqli_fetch_row($r);
+            $hash = hash("sha512",$code);
+            if($hash !== $row[0])
+              {
+            return array("status"=>false,"error"=>"Bad backup code","human_error"=>"The backup code you entered was invalid. Please try again.");
+          }
+          }
+            else
+              {
+            # Verify the code
+            if(!$this->verifyTOTP($code))
+              {
+            return array("status"=>false,"error"=>"Bad TOTP code","human_error"=>"The code you entered was invalid. Please try again.");
+          }
+          }
+            # Unset backup and totpcol
+            $query = "UPDATE `".$this->getTable()."` SET `".$this->totpcol."`='', `".$this->tmpcol."`='', `".$this->totpbackup."`='' WHERE `".$this->usercol."`='".$this->username."'";
+            mysqli_query($l,"BEGIN");
+            $r = mysqli_query($l,$query);
+            if($r === false)
+              {
+            $e = mysqli_error($l);
+            mysqli_query($l,"ROLLBACK");
+            return array("status"=>false,"error"=>$e,"human_error"=>"Could not unset two-factor authentication","username"=>$this->username);
+          }
+            mysqli_query($l,"COMMIT");
+            return true;
+          }
+
 
   public function sendTOTPText($number)
   {
@@ -336,7 +414,7 @@ class UserFunctions {
 
 
 
-  
+
   public function createUser($username,$pw_in,$name,$dname)
   {
     /***
@@ -496,7 +574,7 @@ class UserFunctions {
 
                             # Encrypt the keys to validate the user asynchronously
                             # Of course, this this was called asynchronously, the keys will be empty ...
-                            
+
                             $baseurl = 'http';
                             if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
                             $baseurl .= "://www.";
@@ -506,7 +584,7 @@ class UserFunctions {
 
                             $cookiekey=$domain."_secret";
                             $cookieauth=$domain."_auth";
-                            
+
                             $encrypted_secret = $this->encryptThis($key,$_COOKIE[$cookiekey]);
                             $encrypted_hash = $this->encryptThis($key,$_COOKIE[$cookieauth]);
                             return array(false,"totp"=>true,"error"=>false,"human_error"=>"Please enter the code generated by the authenticator application on your device.","encrypted_password"=>$encrypted_pw,"encrypted_secret"=>$encrypted_secret,"encrypted_hash"=>$encrypted_hash);
@@ -520,7 +598,7 @@ class UserFunctions {
                         $query = "UPDATE `".$this->getTable()."` SET `".$this->tmpcol."`='' WHERE `".$this->usercol."`='".$this->username."'";
                         mysqli_query($l,$query);
                       }
-                    
+
                     if($userdata['flag'] && !$userdata['disabled'])
                       {
                         # This user is OK and not disabled, nor pending validation
@@ -616,7 +694,7 @@ class UserFunctions {
      * 3) Pinged server has correct config file
      * 4) Has database value
      *
-     * Can be spoofed with inspected code at the same IP. 
+     * Can be spoofed with inspected code at the same IP.
      * Similarly, gets around 2FA at the same IP.
      *
      * @param string $userid User email
@@ -926,6 +1004,13 @@ class UserFunctions {
      ***/
   }
 
+  public function confirmUser()
+  {
+    /***
+     * Confirm the user and toggle the flog
+     ***/
+  }
+
   public function requireUserAuth()
   {
     /***
@@ -972,7 +1057,7 @@ class UserFunctions {
      * @param string $string
      * @return string An encrypted, base64-encoded result
      */
-    
+
     $encrypted = base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_256, md5($key), $string, MCRYPT_MODE_CBC, md5(md5($key))));
     return $encrypted;
   }
@@ -983,7 +1068,7 @@ class UserFunctions {
      * @param string $encrypted A base 64 encoded string
      * @return string The decrypted string
      */
-    
+
     $decrypted = rtrim(mcrypt_decrypt(MCRYPT_RIJNDAEL_256, md5($key), base64_decode($encrypted), MCRYPT_MODE_CBC, md5(md5($key))), "\0");
     return $decrypted;
   }

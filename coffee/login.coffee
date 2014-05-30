@@ -92,7 +92,16 @@ doTOTPSubmit = () ->
       stopLoadError()
   totp.fail (result,status) ->
     # Be smart about the failure
+    $("#totp_message").text("Failed to contact server. Please try again.")
     stopLoadError()
+
+doTOTPRemove = ->
+  # Remove 2FA
+  event.preventDefault()
+
+makeTOTP = ->
+  # Create 2FA for the user
+  event.preventDefault()
 
 $ ->
   $("#password")

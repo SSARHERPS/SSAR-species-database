@@ -56,6 +56,7 @@ defaults
 public_key
 private_key
 secret
+emergency_code
 ```
 
 
