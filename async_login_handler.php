@@ -29,26 +29,19 @@ switch($do)
     returnAjax(getFromUser($_REQUEST));
     break;
   case "maketotp":
+    returnAjax(generateTOTPForm($_REQUEST));
     break;
   case "veriftytotp":
     returnAjax(verifyTOTP($_REQUEST));
     break;
   case "savetotp":
+    returnAjax(saveTOTP($_REQUEST));
     break;
   case "sendtext":
     break;
   default:
     returnAjax(getLoginState($_REQUEST),true);
   }
-
-function boolstr($string)
-{
-  // returns the boolean of a string 'true' or 'false'
-  if(is_bool($string)) return $string;
-  if(is_string($string)) return strtolower($string)==='true' ? true:false;
-  if(preg_match("/[0-1]/",$string)) return $string=='1' ? true:false;
-  return false;
-}
 
 function getLoginState($get,$default=false)
 {
@@ -59,11 +52,55 @@ function getLoginState($get,$default=false)
   return array("status"=>$u->validateUser($id,$conf,$s),'defaulted'=>$default);
 }
 
+function generateTOTPForm($get)
+{
+  $user = $get['user'];
+  $password = $get['password'];
+  $u = new Userfunctions($user);
+  $r = $u->lookupUser($user,$password);
+  if($r[0] === false)
+    {
+      $r["status"] = false;
+      return $r;
+    }
+  # User is valid
+
+  # Get a provider
+  $baseurl = 'http';
+  if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
+  $baseurl .= "://www.";
+  $baseurl.=$_SERVER['HTTP_HOST'];
+  $base=array_slice(explode(".",$baseurl),-2);
+  $domain=$base[0];
+  
+  $r = $u->makeTOTP($domain);
+
+  # Whether or not it fails, return $r 
+
+  return $r;
+}
+
+function saveTOTP($get)
+{
+  $user = $get['user'];
+  $secret = $get['secret'];
+  $hash = $get['hash'];
+  $code = $get['code'];
+  $u = new Userfunctions($user);
+  $r = $u->validateUser($user,$hash,$secret);
+  if ($r === false)
+    {
+      return array("status"=>false,"error"=>"Couldn't validate cookie information","human_error"=>"Application error");
+    }
+  
+  return $u->saveTOTP($code);
+}
+
 
 function verifyTOTP($get)
 {
   $code = $get['code'];
-  $user = $get['username'];
+  $user = $get['user'];
   $password = $get['password'];
   $secret = $get['secret'];
   $hash = $get['hash'];
@@ -80,7 +117,7 @@ function verifyTOTP($get)
   $return = array("status"=>true);
   $userdata = $r[1];
   $cookie_result = $u->createCookieTokens();
-  $return["cookies"]=>$cookie_result;
+  $return["cookies"] = $cookie_result;
   return $return;
 }
 

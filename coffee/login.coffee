@@ -16,8 +16,9 @@ checkPasswordLive = ->
     $("#password").css("background",passwords.badbg)
     passwords.basepwgood = false
   evalRequirements()
-  if not isNull($("#password2").val()) then checkMatchPassword()
-  toggleNewUserSubmit()
+  if not isNull($("#password2").val())
+    checkMatchPassword()
+    toggleNewUserSubmit()
   return false
 
 checkMatchPassword = ->
@@ -58,15 +59,15 @@ doEmailCheck = ->
 doTOTPSubmit = () ->
   # Get the code from #totp_code and push it through
   # to async_login_handler.php , get the results and behave appropriately
-  event.preventDefault()
+  noSubmit()
   animateLoad()
   code = $("#totp_code").val()
   user = $("#username").val()
   url = $.url()
   ajaxLanding = "async_login_handler.php"
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + ajaxLanding
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding
   args = "action=verifytotp&code=#{code}&user=#{user}"
-  totp = $.post(urlString + ajaxLanding,args,'json')
+  totp = $.post(urlString ,args,'json')
   totp.done (result) ->
     # Check the result
     if result.status is true
@@ -90,31 +91,129 @@ doTOTPSubmit = () ->
       $("#totp_code").val("") # Clear it
       $("#totp_code").focus()
       stopLoadError()
+      console.error(result.error,result);
   totp.fail (result,status) ->
     # Be smart about the failure
     $("#totp_message").text("Failed to contact server. Please try again.")
+    console.error("AJAX failure",urlString  + "?" + args,result,status)
     stopLoadError()
 
 doTOTPRemove = ->
   # Remove 2FA
-  event.preventDefault()
+  noSubmit()
 
 makeTOTP = ->
   # Create 2FA for the user
+  noSubmit()
+  animateLoad()
+  # Call up the function, and replace #totp_add with a new form to verify
+  user = $("#username").val()
+  password = $("#password").val()
+  hash = $("#hash").val()
+  key = $("#secret").val()
+  url = $.url()
+  ajaxLanding = "async_login_handler.php"
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding
+  args = "action=maketotp&password=#{password}&user=#{user}"
+  totp = $.post(urlString,args,'json')
+  totp.done (result) ->
+    # Yay! Replace the form ....
+    if result.status is true
+      svg = result.svg
+      raw = result.raw
+      # Name these in variables to avoid user conflicts
+      show_secret_id = "show_secret"
+      show_alt = "showAltBarcode"
+      barcode_div = "secretBarcode"
+      html = "<form id='totp_verify'>
+  <p>To continue, scan this barcode with your smartphone application.</p>
+  <p>If you're unable to do so, <a href='#' id='#{show_secret_id}'>click here</a></p>
+  <div id='#{barcodeDiv}'>
+    #{result.svg}
+    <p>Don't see the barcode? <a href='#' id='#{show_alt}'>Click here</a></p>
+  </div>
+  <p>Once you've done so, enter your code below to verify your setup.</p>
+  <fieldset>
+    <legend>Confirmation</legend>
+    <input type='number' size='6' maxlength='6' id='code' name='code' placeholder='Code'/>
+    <input type='hidden' id='username' name='username' value='#{user}'/>
+    <button id='verify_totp_button' class='totpbutton'>Verify</button>
+  </fieldset>
+</form>"
+      $("#totp_add").html(html)
+      $("##{show_secret_id}").click ->
+        popupSecret(result.secret)
+      $("##{show_alt}").click ->
+        altImg = "<img src='#{result.raw}' alt='TOTP barcode'/>"
+        $("#{barcode_div}").html(altImg)
+      $("#verify_totp_button").click ->
+        noSubmit()
+        saveTOTP(key,hash)
+      $("#totp_verify").submit ->
+        noSubmit()
+        saveTOTP(key,hash)        
+    else
+      console.error("Couldn't generate TOTP code",urlString  + "?" + args)
+      $("#totp_message").text("There was an error generating your code. Please try again.")
+      stopLoadError()
+  totp.fail (result,status) ->
+    $("#totp_message").text("Failed to contact server. Please try again.")
+    console.error("AJAX failure",urlString  + "?" + args,result,status)
+    stopLoadError()
+  return false
+
+saveTOTP = (key,hash) ->
+  # Ave TOTP
+  noSubmit()
+  code = $("#code").val()
+  user = $("#username").val()
+  url = $.url()
+  ajaxLanding = "async_login_handler.php"
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding
+  args = "action=maketotp&secret=#{key}&user=#{user}&hash=#{hash}&code=#{code}"
+  totp = $.post(urlString ,args,'json')
+  totp.done (result) ->
+    # We're done!
+    if result.status is true
+      html = "<h1>Done!</h1><h2>Write down and save this backup code. Without it, you cannot disable two-factor authentication if you lose your device.</h2><pre>#{result.backup}</pre>"
+      $("#totp_add").html(html)
+    else
+      html = "<p class='error'>#{result.human_error}</p>"
+      $("#verify_totp_button").after(html)
+      console.error(result.error)
+  totp.fail (result,status) ->
+    $("#totp_message").text("Failed to contact server. Please try again.")
+    console.error("AJAX failure",urlString  + "?" + args,result,status)
+    stopLoadError()
+
+popupSecret = (secret) ->
+  # Overlay a pane showing the secret
+
+noSubmit = ->
   event.preventDefault()
+  event.returnValue = false
 
 $ ->
+  loadScript('js/zxcvbn.js')
   $("#password")
-  .keypress ->
+  .keyup ->
     checkPasswordLive()
   .change ->
-    checkPasswordLive()
-  .keyup ->
     checkPasswordLive()
   $("#password2")
-  .keypress ->
-    checkMatchPassword()
   .change ->
     checkMatchPassword()
   .keyup ->
     checkMatchPassword()
+  $("#totp_submit").submit ->
+    doTOTPSubmit()
+  $("#verify_totp_button").click ->
+    doTOTPSubmit()
+  $("#totp_start").submit ->
+    makeTOTP()
+  $("#add_totp_button").click ->
+    makeTOTP()
+  $("#totp_remove").submit ->
+    doTOTPRemove()
+  $("#remove_totp_button").click ->
+    doTOTPRemove()

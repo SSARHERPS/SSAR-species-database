@@ -54,6 +54,8 @@ $r=testDefaults();
 $xml=new Xml;
 $user=new UserFunctions;
 
+$debug = true;
+
 if($debug==true)
   {
     if($r===true) echo "<p>(Database OK)</p>";
@@ -68,6 +70,7 @@ if($debug==true)
   }
 
 $logged_in=$user->validateUser($_COOKIE[$cookielink]);
+
 if($logged_in)
   {
     $full_name=$xml->getTagContents($_COOKIE[$cookieperson],"<name>");
@@ -119,7 +122,7 @@ if($_REQUEST['q']=='submitlogin')
             $secret =  $is_encrypted ? $_COOKIE[$cookiekey]:$res["encrypted_secret"];
             $totp_buffer = "<section id='totp_prompt'>
   <p class='$totp_class' id='totp_message'>".$res["human_error"]."</p>
-  <form id='totp_submit' onsubmit='doTOTPSubmit()'>
+  <form id='totp_submit' onsubmit='event.preventDefault();>
     <fieldset>
       <legend>Two-Factor Authentication</legend>
       <input type='number' id='totp_code' name='totp_code' placeholder='Code' size='6' maxlength='6'/>
@@ -128,7 +131,7 @@ if($_REQUEST['q']=='submitlogin')
       <input type='hidden' id='secret' name='secret' value='".$secret."'/>
       <input type='hidden' id='hash' name='hash' value='".$hash."'/>
       <input type='hidden' id='encrypted' name='encrypted' value='".$user->strbool($is_encrypted)."'/>
-      <button id='verify_totp_button' class='totpbutton' onclick='doTOTPSubmit()'>Verify</button>
+      <button id='verify_totp_button' class='totpbutton'>Verify</button>
     </fieldset>
   </form>
 </section>";
@@ -487,27 +490,46 @@ else if(isset($_REQUEST['2fa']))
     if($logged_in && !$user->has2FA())
       {
         # Give user 2FA
+        $totp_add_form = "<section id='totp_add'>
+  <p id='totp_message'>Two factor authentication is very secure, but when you enable it, you'll be unable to log in without your mobile device.</p>
+  <form id='totp_start'>
+    <fieldset>
+      <legend>Login to continue</legend>
+      <input type='email' value='".$user->username."' readonly='readonly' id='username' name='username'/>
+      <input type='password' id='password' name='password'/>
+      <input type='hidden' id='secret' name='secret' value='".$_COOKIE[$cookiekey]."'/>
+      <input type='hidden' id='hash' name='hash' value='".$_COOKIE[$cookieauth]."'/>
+      <button id='add_totp_button' class='totpbutton'>Add Two-Factor Authentication</button>
+    </fieldset>
+  </form>
+</section>";
+        $login_output .= $totp_add_form;
       }
-    else if ($user->has2FA())
+    else if ($logged_in && $user->has2FA())
       {
         # Remove 2FA from the user
         $totp_remove_form = "<section id='totp_remove'>
   <p class='error'>Are you sure you want to disable two-factor authentication?</p>
-  <form id='totp_submit' onsubmit='doTOTPRemove()'>
+  <form id='totp_remove' onsubmit='event.preventDefault();'>
     <fieldset>
       <legend>Remove Two-Factor Authentication</legend>
       <input type='email' value='".$username."' readonly='readonly' id='username' name='username'/>
       <input type='password' id='password' name='password'/>
       <input type='number' id='code' name='code' placeholder='Authenticator Code or Backup Code' size='32' maxlength='32'/>
-      <button id='remove_totp_button' class='totpbutton'  onclick='doTOTPRemove()'>Remove Two-Factor Authentication</button>
+      <button id='remove_totp_button' class='totpbutton'>Remove Two-Factor Authentication</button>
     </fieldset>
   </form>
 </section>";
         $login_output .= $totp_remove_form;
       }
-    else
+    else if (!$logged_in)
       {
         $login_output .= "<p class='error'>You have to be logged in to set up two factor authentication.<br/><a href='?q=login'>Click here to log in</a></p>";
+      }
+    else
+      {
+        # Should never trigger
+        throw(new Exception("Unexpected condition setting up two-factor authentication"));
       }
   }
 else
@@ -540,9 +562,10 @@ var lateJS= function() {
         passLengthOverride=$password_threshold_length;
         passMinLen=$minimum_password_length;
         $.getScript('js/base64.min.js');
-        $.getScript('js/jquery.cookie.min.js');
+        $.getScript('js/jquery.cookie.js');
+        $.getScript('js/purl.js');
         $.getScript('js/c.min.js');
-        $.getScript('js/zxcvbn/zxcvbn-async.js');
+        $.getScript('js/zxcvbn/zxcvbn.js');
         $(document).ready(function(){
             $deferredJS
         });
@@ -556,7 +579,7 @@ var lateJS= function() {
 
 window.onload = function() {
     if (!window.jQuery) {
-        loadScript('//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js',lateJS);
+        loadScript('//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js',lateJS);
     }
     else lateJS;
 }

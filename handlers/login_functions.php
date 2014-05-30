@@ -68,7 +68,7 @@ class UserFunctions {
       }
     return empty($userdata[$this->totpcol]) ? false:$userdata[$this->totpcol];
   }
-  private function has2FA() {
+  public function has2FA() {
     $userdata = $this->getUser();
     return !empty($userdata[$this->totpcol]);
   }
@@ -159,7 +159,7 @@ class UserFunctions {
      * @return bool
      */
     require_once(dirname(__FILE__).'/../base32/src/Base32/Base32.php');
-    require_once(dirname(__FILE__).'/../totp/libs/OTPHP/TOTP.php');
+    require_once(dirname(__FILE__).'/../totp/lib/OTPHP/TOTP.php');
     $secret = $this->getSecret($is_test);
     if($secret === false) return false;
     try
@@ -224,6 +224,8 @@ class UserFunctions {
           }
         # The data was saved correctly
         # Let's create the provisioning stuff!
+        require_once(dirname(__FILE__).'/../totp/lib/OTPHP/TOTP.php');
+        $totp = new OTPHP\TOTP($secret);
         $uri = $totp->provisioningURI($this->username,$provider);
         $retarr = $this->generateQR($uri,null,false);
         $retarr["secret"] = $secret;
@@ -462,7 +464,7 @@ class UserFunctions {
     $salt=$pw1['salt'];
     if(!empty($pw1['rounds'])) $rounds="<rounds>".$pw1['rounds']."</rounds>";
     $data_init="<xml><algo>$algo</algo>$rounds</xml>";
-    $ne=$this->encryptThis($salt.$pw,$name); // only encrypt if requested, then put in secdata
+    $ne=$this->encryptThis($salt.$pw,implode(" ",$name)); // only encrypt if requested, then put in secdata
     $sdata_init="<xml><name>".$ne[0]."</name></xml>";
     $names="<xml><name>".sanitize(implode(" ",$name))."</name><fname>".sanitize($name[0])."</fname><lname>".$name[1]."</lname><dname>".sanitize($dname)."</dname></xml>";
     $hardlink=sha1($salt.$creation);
@@ -487,7 +489,7 @@ class UserFunctions {
           case "flag":
             // Is the user active, or does it need authentication first?
             // Default "true" means immediately active.
-            $store[]=$this->needsManualAuth();
+            $store[]= !$this->needsManualAuth();
             break;
           case "dtime":
             $store[]=0;
@@ -528,7 +530,7 @@ class UserFunctions {
 
             return array_merge(array(true,'Success!'),$userdata,$cookies);
           }
-        else return array(false,'Failure: Unable to verify user creation');
+        else return array(false,'Failure: Unable to verify user creation',"add"=>$test_res,"userdata"=>$userdata);
       }
     else return array(false,'Failure: unknown database error. Your user was unable to be saved.');
   }
@@ -699,11 +701,12 @@ class UserFunctions {
      * Similarly, gets around 2FA at the same IP.
      *
      * @param string $userid User email
-     * @param string $hash Provide the server secret to work with
+     * @param string $hash Provide the final computed string to work with
      * @param string $secret Provide the cookie secret to work with
      * @param bool $detail Provide detailed returns
      * @return bool if $detail is false, array if $detail is true
      ***/
+    if(strpos($userid,"@")===false && !empty($userid)) $userid = array("dblink"=>$userid);
     $userdata = $this->getUser($userid);
     if(is_array($userdata))
       {
@@ -728,7 +731,7 @@ class UserFunctions {
             $from_cookie=true;
             if(empty($hash) || empty($secret))
               {
-                if($detail) return array("uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"have_secret"=>strbool(empty($secret)),"from_cookie"=>strbool($from_cookie));
+                if($detail) return array("error"=>"Empty verification tokens","uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"have_secret"=>strbool(empty($secret)),"from_cookie"=>strbool($from_cookie));
                 return false;
               }
           }
@@ -744,7 +747,7 @@ class UserFunctions {
     else
       {
         // empty result
-        if($detail) return array("uid"=>$userid,"col"=>$col,"basis_conf"=>$hash,"have_secret"=>strbool(empty($secret)));
+        if($detail) return array("error"=>"Invalid userid lookup","uid"=>$userid,"col"=>$col,"basis_conf"=>$hash,"have_cookie_secret"=>strbool(empty($secret)));
         return false;
       }
     if($detail)
