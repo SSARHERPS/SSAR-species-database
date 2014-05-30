@@ -1,5 +1,7 @@
 <?php
 
+use Base32\Base32;
+
 class UserFunctions {
   
   function __construct($username = null, $lookup_column = null)
@@ -210,12 +212,11 @@ class UserFunctions {
         $s = new Stronghash;
         $salt = $s->createSalt();
         require_once(dirname(__FILE__).'/../base32/src/Base32/Base32.php');
-        use Base32\Base32;
         $secret = Base32::encode($salt);
         ## The resulting provisioning URI should now be sent to the user
         ## Flag should be set server-side indicating the change id pending
         $l=openDB($this->getDB());
-        $query = "UPDATE ".$this->getTable()." SET `".$this->tmpcol."`='$secret' WHERE `"$this->usercol"`='".$this->username."'";
+        $query = "UPDATE ".$this->getTable()." SET `".$this->tmpcol."`='$secret' WHERE `".$this->usercol."`='".$this->username."'";
         $r = mysqli_query($l,$query);
         if($r === false)
           {
@@ -226,7 +227,7 @@ class UserFunctions {
         $uri = $totp->provisioningURI($this->username,$provider);
         $retarr = $this->generateQR($uri,null,false);
         $retarr["secret"] = $secret;
-        $retarr["username"] => $this->username;
+        $retarr["username"] = $this->username;
         return $retarr;
       }
     catch(Exception $e)
@@ -380,8 +381,8 @@ class UserFunctions {
             require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
             $s = new Stronghash;
             $filename = $tmp_dir . sha1($s->createSalt()) . ".png";
-            $filepath = $web_dir.basename($filename)
-              }
+            $filepath = $web_dir.basename($filename);
+          }
         else
           {
             $this->getUser();
@@ -1082,7 +1083,7 @@ class UserFunctions {
     if(!empty($this->usercol))
       {
         $l = openDB($this->getDB());
-        $query = "SELECT `".$this->tmpcol."` FROM `"$this->getTable()."` WHERE `".$this->usercol."`='".$this->username."'";
+        $query = "SELECT `".$this->tmpcol."` FROM `".$this->getTable()."` WHERE `".$this->usercol."`='".$this->username."'";
         $r = mysqli_query($l,$query);
         $row = mysql_fetch_row($r);
         $key = $row[0];

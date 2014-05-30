@@ -433,7 +433,7 @@ else if($_REQUEST['q']=='logout')
     ob_end_flush();
     $login_output.=$loginform.$loginform_close;
   }
-else if(isset($_REQUEST['confirm'])
+else if(isset($_REQUEST['confirm']))
   {
     // toggle user flag
     $id=$_REQUEST['lookup'];
