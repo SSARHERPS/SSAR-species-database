@@ -10,8 +10,8 @@ function cascadeJQLoad(i) { // Use alternate CDNs where appropriate to load jQue
     ];
     // Paths to your libraries that require jQuery, relative to this file
     var dependent_libraries = [
-        "jquery.cookie.js",
-        "purl.js",
+        "jquery.cookie.min.js",
+        "purl.min.js",
         "base64.min.js",
         "picturefill.min.js",
         "zxcvbn.js",
