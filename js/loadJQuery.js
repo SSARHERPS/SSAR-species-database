@@ -15,7 +15,7 @@ function cascadeJQLoad(i) { // Use alternate CDNs where appropriate to load jQue
         "base64.min.js",
         "picturefill.min.js",
         "zxcvbn.js",
-        "c.js"
+        "c.min.js"
     ];
     if (window.jQuery === undefined && i < jq_paths.length) {
         i++;

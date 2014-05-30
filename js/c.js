@@ -383,16 +383,18 @@
   doEmailCheck = function() {};
 
   doTOTPSubmit = function() {
-    var ajaxLanding, args, code, totp, url, urlString, user;
+    var ajaxLanding, args, code, pass, totp, url, urlString, user;
     noSubmit();
     animateLoad();
     code = $("#totp_code").val();
     user = $("#username").val();
+    pass = $("#password").val();
     url = $.url();
     ajaxLanding = "async_login_handler.php";
     urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding;
-    args = "action=verifytotp&code=" + code + "&user=" + user;
+    args = "action=verifytotp&code=" + code + "&user=" + user + "&password=" + pass;
     totp = $.post(urlString, args, 'json');
+    console.log("CHecking", urlString + "?" + args);
     totp.done(function(result) {
       var expires, i;
       if (result.status === true) {
@@ -406,7 +408,7 @@
           if (i === Object.size(result.raw_cookie)) {
             home = url.attr('protocol') + '://' + url.attr('host') + '/';
             stopLoad();
-            return window.location(home);
+            return window.location.href = home;
           }
         }));
       } else {
@@ -414,7 +416,7 @@
         $("#totp_code").val("");
         $("#totp_code").focus();
         stopLoadError();
-        return console.error(result.error, result);
+        return console.error("Invalid code error", result.error, result);
       }
     });
     return totp.fail(function(result, status) {

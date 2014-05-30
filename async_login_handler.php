@@ -31,7 +31,7 @@ switch($do)
   case "maketotp":
     returnAjax(generateTOTPForm($_REQUEST));
     break;
-  case "veriftytotp":
+  case "verifytotp":
     returnAjax(verifyTOTP($_REQUEST));
     break;
   case "savetotp":
@@ -101,16 +101,25 @@ function verifyTOTP($get)
 {
   $code = $get['code'];
   $user = $get['user'];
-  $password = $get['password'];
+  $password = urldecode($get['password']);
+  $password = str_replace(' ','+',$password);
   $secret = $get['secret'];
   $hash = $get['hash'];
   $is_encrypted = boolstr($get['encrypted']);
   # If it's a good code, pass the cookies back
   $u = new UserFunctions($user);
+
+  /* print_r("bob"."\n\n");
+  $e=$u->encryptThis("sally","bob");
+  print_r($e."\n\n");
+  print_r($u->decryptThis("sally",$e)."\n\n");*/
+  
   $r = $u->lookupUser($user,$password,false,$code);
+
   if($r[0] === false)
     {
       $r["status"] = false;
+      $r["human_error"] = $r["message"];
       return $r;
     }
   ## The user and code is valid!

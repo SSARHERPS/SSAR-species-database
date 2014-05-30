@@ -583,11 +583,11 @@ class UserFunctions {
                         if(empty($totp_code))
                           {
                             # The user has 2FA turned on, prompt it
-                            $key = Stronghash::createSalt();
+                            $key = $hash->createSalt();
                             $query = "UPDATE `".$this->getTable()."` SET `".$this->tmpcol."`='$key' WHERE `".$this->usercol."`='".$this->username."'";
                             $r = mysqli_query($l,$query);
                             if($r === false) throw(new Exception("Unable to encrypt password"));
-                            $encrypted_pw = $this->encryptThis($key,$pw);
+                            $encrypted_pw = urlencode($this->encryptThis($key,$pw));
 
                             # Encrypt the keys to validate the user asynchronously
                             # Of course, this this was called asynchronously, the keys will be empty ...
@@ -614,6 +614,20 @@ class UserFunctions {
                         # Remove the encryption key
                         $query = "UPDATE `".$this->getTable()."` SET `".$this->tmpcol."`='' WHERE `".$this->usercol."`='".$this->username."'";
                         mysqli_query($l,$query);
+                        if(!$return)
+                          {
+                            # Return decrypted userdata, if applicable
+                            $decname=$this->decryptThis($salt.$pw,$userdata['name']);
+                            if(empty($decname))$decname=$userdata['name'];
+                            return array(true,$decname);
+                          }
+                        else
+                          {
+                            $decname=$this->decryptThis($salt.$pw,$userdata['name']);
+                            if(empty($decname))$decname=$userdata['name'];
+                            $returning=array(true,$userdata);
+                            return $returning;
+                          }
                       }
 
                     if($userdata['flag'] && !$userdata['disabled'])
@@ -1102,7 +1116,11 @@ class UserFunctions {
         $l = openDB($this->getDB());
         $query = "SELECT `".$this->tmpcol."` FROM `".$this->getTable()."` WHERE `".$this->usercol."`='".$this->username."'";
         $r = mysqli_query($l,$query);
-        $row = mysql_fetch_row($r);
+        if($r === false)
+          {
+            throw(new Exception("Could not get decryption key -- ".mysqli_error($l)));
+          }
+        $row = mysqli_fetch_row($r);
         $key = $row[0];
         $string = $this->decryptThis($key,$encrypted);
         return $string;

@@ -63,11 +63,13 @@ doTOTPSubmit = () ->
   animateLoad()
   code = $("#totp_code").val()
   user = $("#username").val()
+  pass = $("#password").val()
   url = $.url()
   ajaxLanding = "async_login_handler.php"
   urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding
-  args = "action=verifytotp&code=#{code}&user=#{user}"
+  args = "action=verifytotp&code=#{code}&user=#{user}&password=#{pass}"
   totp = $.post(urlString ,args,'json')
+  console.log("CHecking",urlString + "?" + args)
   totp.done (result) ->
     # Check the result
     if result.status is true
@@ -85,13 +87,13 @@ doTOTPSubmit = () ->
           # Take us home
           home = url.attr('protocol') + '://' + url.attr('host') + '/'
           stopLoad()
-          window.location home
+          window.location.href = home
     else
       $("#totp_message").text(result.human_error)
       $("#totp_code").val("") # Clear it
       $("#totp_code").focus()
       stopLoadError()
-      console.error(result.error,result);
+      console.error("Invalid code error",result.error,result);
   totp.fail (result,status) ->
     # Be smart about the failure
     $("#totp_message").text("Failed to contact server. Please try again.")
