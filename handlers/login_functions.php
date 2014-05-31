@@ -7,22 +7,66 @@ require_once(dirname(__FILE__)."/DBHelper.php");
 class UserFunctions extends DBHelper
 {
 
-  public function __construct($username = null, $lookup_column = null)
+  public function __construct($username = null, $lookup_column = null, $db_params = null)
   {
     /***
      * @param string $username the user to be instanced with
      * @param string $lookup_column the column to look them up in. Ignored if $username is null.
+     * @param array $db_params Optional override database parameters. 
+     *                         The required keys are: 
+     *                         (string)"user" for SQL username,
+     *                         (string)"database" as the SQL database, 
+     *                         and (string)"password" for SQL password, 
+     *                         with optional keys
+     *                         (string)"url" (defaults to "localhost")
+     *                         and (array)"cols" of type "column_name"=>"type".
      ***/
     # Set up the parameters in CONFIG.php
     require_once(dirname(__FILE__).'/../CONFIG.php');
     global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue,$ip_record,$default_user_database,$default_sql_user,$default_sql_password,$sql_url;
 
+    if(!empty($db_params))
+      {
+        if(!is_array($db_params))
+          {
+            throw(new Exception("Invalid argument type for \$db_params"));
+          }
+        if(sizeof($db_params) != 4 || sizeof($db_params) != 3)
+          {
+            throw(new Exception("Bad database initialization parameters."));
+          }
+        $must_have = array("user","database","password");
+        if(array_key_exists("url",$db_params)) $sql_url = $db_params["url"];
+        if(array_key_exists("cols",$db_params)) $db_cols = $db_params["cols"];
+        foreach($must_have as $key)
+          {
+            if(!array_key_exists($key,$db_params))
+              {
+                throw(new Exception("Bad database initialization parameters."));
+              }
+            switch($key)
+              {
+              case "user":
+                $default_sql_user = $db_params[$key];
+                break;
+              case "database":
+                $default_user_database = $db_params[$key];
+                break;
+              case "password":
+                $default_sql_password = $db_params[$key];
+                break;
+              default:
+                throw(new Exception("Unknown key '$key' in database initialization parameters."));
+              }
+          }
+      }
     # Configure the database
     $this->setUser($default_sql_user);
     $this->setDB($default_user_database);
     $this->setPW($default_sql_password);
     $this->setSQLURL($sql_url);
-    
+    $this->setCols($db_cols);
+
     if(!empty($user_data_storage))
       {
         $user_data_storage .= substr($user_data_storage,-1)=="/" ? '':'/';
@@ -41,9 +85,6 @@ class UserFunctions extends DBHelper
     $this->supportEmail = $service_email;
     $this->minPasswordLength = $minimum_password_length;
     $this->thresholdLength = $password_threshold_length;
-    $this->columns = $db_cols;
-    $this->table = $default_user_table;
-    $this->db = $default_user_database;
     $this->pwcol = $password_column;
     $this->cookiecol = $cookie_ver_column;
     $this->usercol = $user_column;
@@ -62,12 +103,22 @@ class UserFunctions extends DBHelper
     $domain=$base[0];
 
     $this->domain = $domain;
-    
-    if(!empty($username))
+
+    # Let's be nice and try to set up a user
+    try
       {
-        # We're initiating a user
-        $key = empty($lookup_column) ? $this->usercol:$lookup_column;
-        $this->getUser(array($key=>$username));
+        if(!empty($username))
+          {
+            # We're initiating a specified user
+            $key = empty($lookup_column) ? $this->usercol:$lookup_column;
+            $this->getUser(array($key=>$username));
+          }
+        else $this->getUser();
+      }
+    catch(Exception $e)
+      {
+        # If we tried on our own, let's do nothing; if it was user specified, re-throw it
+        if(!empty($username)) throw(new Exception($e->getMessage()));
       }
   }
 
@@ -75,19 +126,12 @@ class UserFunctions extends DBHelper
   /***
    * Helper functions
    ***/
-        
+
   private function getSiteKey() { return $this->siteKey; }
-  private function getTable() { return $this->table; }
-  private function getDB() { return $this->db; }
   private function getMinPasswordLength() { return $this->minPasswordLength; }
   private function getThresholdLength() { return $this->thresholdLength; }
   private function getSupportEmail() { return $this->supportEmail; }
   private function needsManualAuth() { return $this->needsAuth === true; }
-  private function getColumns($user_id = null) {
-    if(empty($this->user)) $this->getUser($user_id);
-    if(empty($this->columns)) throw(new Exception("No columns have been described."));
-    return $this->columns;
-  }
   private function getSecret($is_test = false) {
     $userdata = $this->getUser();
     if($is_test)
@@ -108,7 +152,7 @@ class UserFunctions extends DBHelper
      * @param string|array $user_id Either a column/value pair or an ID for the default column
      * @return array of the user result column
      ***/
-    
+
     if(empty($this->user) || !empty($user_id)) $this->setUser($user_id);
     $userdata = $this->user;
     if(!array($userdata))
@@ -131,7 +175,7 @@ class UserFunctions extends DBHelper
     $this->username = $userdata[$this->usercol];
     return $userdata;
   }
-  
+
   private function setUser($user_id = null)
   {
     /***
@@ -167,8 +211,7 @@ class UserFunctions extends DBHelper
       }
 
     # Inputs are sanitized in lookupItem
-    require_once(dirname(__FILE__).'/db_hook.inc');
-    $result=lookupItem($user_id,$col,$this->getTable(),$this->getDB());
+    $result=$this->lookupItem($user_id,$col);
     if($result!==false && !is_array($result))
       {
         $userdata=mysqli_fetch_assoc($result);
@@ -183,7 +226,7 @@ class UserFunctions extends DBHelper
         $this->user = null;
       }
   }
-    
+
   private function getDigest()
   {
     $allowed_digest = array(
@@ -219,7 +262,7 @@ class UserFunctions extends DBHelper
     require_once(dirname(__FILE__).'/../totp/lib/OTPHP/TOTP.php');
   }
 
-  
+
   public function checkTOTP($provided)
   {
     return $this->verifyTOTP($provided);
@@ -235,7 +278,7 @@ class UserFunctions extends DBHelper
      * @return bool
      ***/
     require_once(dirname(__FILE__).'/../base32/src/Base32/Base32.php');
-    
+
     self::doLoadTOP();
     $secret = $this->getSecret($is_test);
     if($secret === false) return false;
@@ -294,7 +337,7 @@ class UserFunctions extends DBHelper
         $secret = Base32::encode($salt);
         ## The resulting provisioning URI should now be sent to the user
         ## Flag should be set server-side indicating the change id pending
-        $l=openDB($this->getDB());
+        $l=$this->openDB();
         $query = "UPDATE `".$this->getTable()."` SET `".$this->tmpcol."`='$secret' WHERE `".$this->usercol."`='".$this->username."'";
         $r = mysqli_query($l,$query);
         if($r === false)
@@ -303,7 +346,7 @@ class UserFunctions extends DBHelper
           }
         # The data was saved correctly
         # Let's create the provisioning stuff!
-        
+
         self::doLoadOTP();
         $totp = new OTPHP\TOTP($secret);
         $totp->setDigest($this->getDigest());
@@ -340,7 +383,7 @@ class UserFunctions extends DBHelper
         $backup = Stronghash::createSalt();
         $backup_store = hash("sha512",$backup);
         $query2 = "UPDATE `".$this->getTable()."` SET `".$this->totpbackup."`='$backup_store' WHERE `".$this->usercol."`='".$this->username."'";
-        $l = openDB($this->getDB());
+        $l = $this->openDB();
         mysqli_query($l,"BEGIN");
         $r = mysqli_query($l,$query);
         if($r === false)
@@ -378,7 +421,7 @@ class UserFunctions extends DBHelper
      * @param string $code Either the Authenticator code, or previously generated backup code.
      * @return bool|array true if success, array if failure
      ***/
-    $l = openDB($this->getDB());
+    $l = $this->openDB();
     $verify = $this->lookupUser($username,$password);
     # Verify will always be false; but let's see if "error" is also false.
     if($verify['totp']!==true)
@@ -529,11 +572,10 @@ class UserFunctions extends DBHelper
      * @return array
      ***/
     // Send email for validation
-    require_once(dirname(__FILE__).'/db_hook.inc');
     $ou=$username;
     /***
      * Weaker, but use if you have problems with the sanitize() function.
-     $l=openDB($this->getDB());
+     $l=$this->openDB();
      $user=mysqli_real_escape_string($l,$username);
     ***/
     $user=sanitize($username);
@@ -546,7 +588,7 @@ class UserFunctions extends DBHelper
     if(preg_match($preg,$username)!=1) return array(false,'Your email is not a valid email address. Please try again.');
     else $username=$user; // synonymize
 
-    $result=lookupItem($user,$this->usercol,$this->getTable(),$this->getDB(),false,true);
+    $result=$this->lookupItem($user,$this->usercol); #fase,true
     if($result!==false)
       {
         $data=mysqli_fetch_assoc($result);
@@ -568,7 +610,7 @@ class UserFunctions extends DBHelper
     $names="<xml><name>".sanitize(implode(" ",$name))."</name><fname>".sanitize($name[0])."</fname><lname>".$name[1]."</lname><dname>".sanitize($dname)."</dname></xml>";
     $hardlink=sha1($salt.$creation);
     $store = array();
-    foreach($this->getColumns() as $key=>$type)
+    foreach($this->getCols() as $key=>$type)
       {
         $fields[]=$key;
         switch($key)
@@ -612,7 +654,7 @@ class UserFunctions extends DBHelper
           }
       }
 
-    $test_res=addItem($fields,$store,$this->getTable(),$this->getDB());
+    $test_res=$this->addItem($store,$fields);
     if($test_res)
       {
         // Get ID value
@@ -639,8 +681,7 @@ class UserFunctions extends DBHelper
     // check it's a valid email! validation skipped.
     require_once(dirname(__FILE__).'/xml.php');
     $xml=new Xml;
-    require_once(dirname(__FILE__).'/db_hook.inc');
-    $result=lookupItem($username,$this->usercol,$this->getTable(),$this->getDB(),false); // if lookupItem is well done, can skip the san -- still escapes it
+    $result=$this->lookupItem($username,$this->usercol)
     if($result!==false)
       {
         try
@@ -664,7 +705,7 @@ class UserFunctions extends DBHelper
                     ## Does the user have 2-factor authentication?
                     if($this->has2FA())
                       {
-                        $l = openDB($this->getDB());
+                        $l = $this->openDB();
                         if(empty($totp_code))
                           {
                             # The user has 2FA turned on, prompt it
@@ -677,15 +718,8 @@ class UserFunctions extends DBHelper
                             # Encrypt the keys to validate the user asynchronously
                             # Of course, this this was called asynchronously, the keys will be empty ...
 
-                            $baseurl = 'http';
-                            if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
-                            $baseurl .= "://www.";
-                            $baseurl.=$_SERVER['HTTP_HOST'];
-                            $base=array_slice(explode(".",$baseurl),-2);
-                            $domain=$base[0];
-
-                            $cookiekey=$domain."_secret";
-                            $cookieauth=$domain."_auth";
+                            $cookiekey=$this->domain."_secret";
+                            $cookieauth=$this->domain."_auth";
 
                             $encrypted_secret = self::encryptThis($key,$_COOKIE[$cookiekey]);
                             $encrypted_hash = self::encryptThis($key,$_COOKIE[$cookieauth]);
@@ -750,7 +784,7 @@ class UserFunctions extends DBHelper
                               {
                                 // Clear login disabled flag
                                 $query1="UPDATE `".$this->getTable()."` SET disabled=false WHERE id=".$userdata['id'];
-                                $l=openDB($this->getDB());
+                                $l=$this->openDB();
                                 $result=mysqli_query($l,$query1);
                               }
                           }
@@ -829,15 +863,9 @@ class UserFunctions extends DBHelper
 
         if(empty($hash) || empty($secret))
           {
-            $baseurl = 'http';
-            if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
-            $baseurl .= "://www.";
-            $baseurl.=$_SERVER['HTTP_HOST'];
-            $base=array_slice(explode(".",$baseurl),-2);
-            $domain=$base[0];
 
-            $cookiekey=$domain."_secret";
-            $cookieauth=$domain."_auth";
+            $cookiekey=$this->domain."_secret";
+            $cookieauth=$this->domain."_auth";
 
             $secret=$_COOKIE[$cookiekey];
             $hash=$_COOKIE[$cookieauth];
@@ -858,7 +886,7 @@ class UserFunctions extends DBHelper
             if($detail) return array("state"=>false,"status"=>false,"error"=>"Different IP address on login","uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"have_secret"=>self::strbool(empty($secret)),"from_cookie"=>self::strbool($from_cookie),"stored_ip"=>$userdata[$this->ipcol],"current_ip"=>$current_ip);
             return false;
           }
-        
+
         $value_create=array($secret,$salt,$userdata[$this->cookiecol],$userdata[$this->ipcol],$authsalt);
         $conf=sha1(implode('',$value_create));
         $state= $conf==$hash ? true:false;
@@ -902,23 +930,12 @@ class UserFunctions extends DBHelper
             $userdata=$r[1];
           }
         $id=$userdata['id'];
-        //Set a cookie
-        $baseurl = 'http';
-        if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
-        $baseurl .= "://www.";
-        $baseurl.=$_SERVER['HTTP_HOST'];
 
-        require_once(dirname(__FILE__).'/../CONFIG.php');
-
-        $base=array_slice(explode(".",$baseurl),-2);
-        $domain=$base[0];
-        $shorturl=implode(".",$base);
-
+        # Nom, cookies!
         $expire_days=7;
         $expire=time()+3600*24*$expire_days;
         // Create a one-time key, store serverside
         require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
-        require_once(dirname(__FILE__).'/db_hook.inc');
         $otsalt=Stronghash::createSalt();
         $cookie_secret=Stronghash::createSalt();
         $pw_characters=json_decode($userdata[$this->pwcol],true);
@@ -926,7 +943,7 @@ class UserFunctions extends DBHelper
         $current_ip = $_SERVER['REMOTE_ADDR'];
         //store it
         $query="UPDATE `".$this->getTable()."` SET `".$this->cookiecol."`='$otsalt', `".$this->ipcol."`='$current_ip' WHERE id='$id'";
-        $l=openDB($this->getDB());
+        $l=$this->openDB();
         mysqli_query($l,'BEGIN');
         $result=mysqli_query($l,$query);
         if($result===false)
@@ -948,12 +965,12 @@ class UserFunctions extends DBHelper
 
         $value=sha1(implode('',$value_create));
 
-        $cookieuser=$domain."_user";
-        $cookieperson=$domain."_name";
-        $cookieauth=$domain."_auth";
-        $cookiekey=$domain."_secret";
-        $cookiepic=$domain."_pic";
-        $cookielink=$domain."_link";
+        $cookieuser=$this->domain."_user";
+        $cookieperson=$this->domain."_name";
+        $cookieauth=$this->domain."_auth";
+        $cookiekey=$this->domain."_secret";
+        $cookiepic=$this->domain."_pic";
+        $cookielink=$this->domain."_link";
 
         $xml=new Xml;
         $user_greet=$xml->getTagContents($userdata['name'],"<fname>"); // for now
@@ -1048,7 +1065,7 @@ class UserFunctions extends DBHelper
         if(!$replace)
           {
             // pull the existing data ...
-            $l=openDB($this->getDB());
+            $l=$this->openDB();
             $prequery="SELECT $real_col FROM `".$this->getTable()."` WHERE $where_col='$user'";
             // Look for relevent JSON entries or XML entries and replace them
             $r=mysqli_query($l,$prequery);
@@ -1085,7 +1102,7 @@ class UserFunctions extends DBHelper
 
         if(empty($real_data)) return array('status'=>false,'error'=>'Invalid input data (sanitization error)');
         $query="UPDATE `".$this->getTable()."` SET $real_col=\"".$real_data."\" WHERE $where_col='$user'";
-        $l=openDB($this->getDB());
+        $l=$this->openDB();
         mysqli_query($l,'BEGIN');
         $r=mysqli_query($l,$query);
         $finish_query= $r ? 'COMMIT':'ROLLBACK';
@@ -1153,11 +1170,11 @@ class UserFunctions extends DBHelper
     $affix="&amp;email=".htmlentities($email_in);
     $validlink.=$affix;
     // email
-    $email='blackhole@'.$domain;
-    $to='admin@'.$domain;
+    $email='blackhole@'.$this->domain;
+    $to='admin@'.$this->domain;
     $headers  = 'MIME-Version: 1.0' . "\r\n";
     $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
-    $headers .= "From: $name (via $domain) <$email>";
+    $headers .= "From: $name (via $this->domain) <$email>";
     $subject="[User Signup] New User - $name";
     $body="<p>$name is requesting access to files for $title. You can click the following link to enable access to the files, and click the link later to disable access.</p>\n<p><a href='$validlink'>$validlink</a><p>\n<p>Thank you. For debugging purposes, the user was hashed with $algo.</p>";
     if(mail($to,$subject,$body,$headers))
@@ -1207,7 +1224,7 @@ class UserFunctions extends DBHelper
     $this->getUser();
     if(!empty($this->usercol))
       {
-        $l = openDB($this->getDB());
+        $l = $this->openDB();
         $query = "SELECT `".$this->tmpcol."` FROM `".$this->getTable()."` WHERE `".$this->usercol."`='".$this->username."'";
         $r = mysqli_query($l,$query);
         if($r === false)
