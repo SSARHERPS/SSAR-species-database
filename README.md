@@ -4,10 +4,11 @@
 [![Code Coverage](https://scrutinizer-ci.com/g/Spomky-Labs/otphp/badges/coverage.png?s=d1bd1b26b56e581d6a4d1deb87eaadc51a05f31d)](https://scrutinizer-ci.com/g/Spomky-Labs/otphp/)
 
 [![Build Status](https://travis-ci.org/Spomky-Labs/otphp.png?branch=master)](https://travis-ci.org/Spomky-Labs/otphp)
+[![HHVM Status](http://hhvm.h4cc.de/badge/Spomky-Labs/otphp.png)](http://hhvm.h4cc.de/package/Spomky-Labs/otphp)
 
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/49e5925d-0dd8-4b89-a215-5eb33b4d96d9/big.png)](https://insight.sensiolabs.com/projects/49e5925d-0dd8-4b89-a215-5eb33b4d96d9)
 
-[![Dependency Status](https://www.versioneye.com/user/projects/530b3bc9ec13750905000014/badge.png)](https://www.versioneye.com/user/projects/530b3bc9ec13750905000014)
+[![Dependency Status](https://www.versioneye.com/user/projects/5388939114c158fa84000005/badge.svg)](https://www.versioneye.com/user/projects/5388939114c158fa84000005)
 
 [![Latest Stable Version](https://poser.pugx.org/spomky-labs/otphp/v/stable.png)](https://packagist.org/packages/spomky-labs/otphp) [![Total Downloads](https://poser.pugx.org/spomky-labs/otphp/downloads.png)](https://packagist.org/packages/spomky-labs/otphp) [![Latest Unstable Version](https://poser.pugx.org/spomky-labs/otphp/v/unstable.png)](https://packagist.org/packages/spomky-labs/otphp) [![License](https://poser.pugx.org/spomky-labs/otphp/license.png)](https://packagist.org/packages/spomky-labs/otphp)
 
