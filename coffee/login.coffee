@@ -6,6 +6,10 @@ passwords.badbg = "#e5786d"
 passwords.minLength ?= 8
 passwords.overrideLength ?= 21
 
+totpParams = new Object()
+totpParams.stylesheetPath = "css/otp_panels.css"
+totpParams.popClass = "danger"
+
 checkPasswordLive = ->
   pass = $("#password").val()
   # The 8 should be passwords.minLength
@@ -129,7 +133,7 @@ makeTOTP = ->
       barcodeDiv = "secretBarcode"
       html = "<form id='totp_verify'>
   <p>To continue, scan this barcode with your smartphone application.</p>
-  <p>If you're unable to do so, <a href='#' id='#{show_secret_id}'>click here</a></p>
+  <p style='font-weight:bold'>If you're unable to do so, <a href='#' id='#{show_secret_id}'>click here to manually input your key.</a></p>
   <div id='#{barcodeDiv}'>
     #{result.svg}
     <p>Don't see the barcode? <a href='#' id='#{show_alt}'>Click here</a></p>
@@ -198,6 +202,17 @@ saveTOTP = (key,hash) ->
 
 popupSecret = (secret) ->
   # Overlay a pane showing the secret
+  # Format it!
+  $("<link/>",{
+    rel:"stylesheet"
+    type:"text/css"
+    media:"screen"
+    href:totpParams.stylesheetPath
+    }).appendTo("head")
+  html="<div id='secret_id_panel' class='#{totpParams.popClass}'><p class='close_hover'>X</p><h2>#{secret}</h2></div>"
+  $("#totp_add").html(html)
+  $(".close_hover").click ->
+    $("#secret_id_panel").remove()
 
 noSubmit = ->
   event.preventDefault()

@@ -50,6 +50,7 @@ class UserFunctions {
   /***
    * Helper functions
    ***/
+        
   private function getSiteKey() { return $this->siteKey; }
   private function getTable() { return $this->table; }
   private function getDB() { return $this->db; }
@@ -145,6 +146,15 @@ class UserFunctions {
   }
 
 
+  public static function doLoadOTP()
+  {
+    require_once(dirname(__FILE__).'/../totp/lib/OTPHP/OTPInterface.php');
+    require_once(dirname(__FILE__).'/../totp/lib/OTPHP/OTP.php');
+    require_once(dirname(__FILE__).'/../totp/lib/OTPHP/TOTPInterface.php');
+    require_once(dirname(__FILE__).'/../totp/lib/OTPHP/TOTP.php');
+  }
+
+  
   public function checkTOTP($provided)
   {
     return $this->verifyTOTP($provided);
@@ -160,12 +170,8 @@ class UserFunctions {
      * @return bool
      ***/
     require_once(dirname(__FILE__).'/../base32/src/Base32/Base32.php');
-
-    require_once(dirname(__FILE__).'/../totp/lib/OTPHP/OTPInterface.php');
-    require_once(dirname(__FILE__).'/../totp/lib/OTPHP/OTP.php');
-    require_once(dirname(__FILE__).'/../totp/lib/OTPHP/TOTPInterface.php');
-    require_once(dirname(__FILE__).'/../totp/lib/OTPHP/TOTP.php');
-
+    
+    self::doLoadTOP();
     $secret = $this->getSecret($is_test);
     if($secret === false) return false;
     try
@@ -188,7 +194,7 @@ class UserFunctions {
       }
     catch(Exception $e)
       {
-            throw(new Exception("Bad parameters provided to verifyOTP :: ".$e->getMessage()));
+        throw(new Exception("Bad parameters provided to verifyOTP :: ".$e->getMessage()));
       }
   }
 
@@ -231,12 +237,8 @@ class UserFunctions {
           }
         # The data was saved correctly
         # Let's create the provisioning stuff!
-
-        require_once(dirname(__FILE__).'/../totp/lib/OTPHP/OTPInterface.php');
-        require_once(dirname(__FILE__).'/../totp/lib/OTPHP/OTP.php');
-        require_once(dirname(__FILE__).'/../totp/lib/OTPHP/TOTPInterface.php');
-        require_once(dirname(__FILE__).'/../totp/lib/OTPHP/TOTP.php');
-
+        
+        self::doLoadOTP();
         $totp = new OTPHP\TOTP($secret);
         $totp->setLabel($this->username);
         $totp->setIssuer($provider);
@@ -248,7 +250,7 @@ class UserFunctions {
       }
     catch(Exception $e)
       {
-            return array("status"=>false,"human_error"=>"Unexpected error in makeTOTP","error"=>$e->getMessage(),"username"=>$this->username,"provider"=>$provider,"label"=>$totp->getLabel(),"uri"=>$uri,"secret"=>$secret);
+        return array("status"=>false,"human_error"=>"Unexpected error in makeTOTP","error"=>$e->getMessage(),"username"=>$this->username,"provider"=>$provider,"label"=>$totp->getLabel(),"uri"=>$uri,"secret"=>$secret);
       }
   }
 
@@ -301,68 +303,68 @@ class UserFunctions {
 
   public function removeTOTP($username,$password,$code)
   {
-            /***
-             * Remove two factor authentication
-             *
-             * @param string $username
-             * @param string $password
-             * @param string $code Either the Authenticator code, or previously generated backup code.
-             * @return True if success, array if failure
-             ***/
-            $l = openDB($this->getDB());
-            $verify = $this->lookupUser($username,$password);
-            # Verify will always be false; but let's see if "error" is also false.
-            if($verify['totp']!==true)
-              {
-            # Either the user doesn't have it, or the credentials are bad
-            if($verify[0]===true)
-              {
+    /***
+     * Remove two factor authentication
+     *
+     * @param string $username
+     * @param string $password
+     * @param string $code Either the Authenticator code, or previously generated backup code.
+     * @return True if success, array if failure
+     ***/
+    $l = openDB($this->getDB());
+    $verify = $this->lookupUser($username,$password);
+    # Verify will always be false; but let's see if "error" is also false.
+    if($verify['totp']!==true)
+      {
+        # Either the user doesn't have it, or the credentials are bad
+        if($verify[0]===true)
+          {
             # Credentials are fine
             return array("status"=>false,"error"=>"Invalid operation","human_error"=>"You don't have two-factor authentication turned on");
           }
-            else
-              {
+        else
+          {
             return array("status"=>false,"error"=>"Bad credentials","result"=>$verify,"human_error"=>"Sorry, bad username or password.");
           }
-          }
-            # Check code for length, if it's long it's the backup
-            if(strlen($code)>6)
-              {
-            # Check against $this->totpbackup
-            $query = "SELECT `".$this->totpbackup."` FROM `".$this->getTable()."` WHERE `".$this->usercol."`='".$this->username."'";
-            $r = mysqli_query($l,$query);
-            if($r === false)
-              {
+      }
+    # Check code for length, if it's long it's the backup
+    if(strlen($code)>6)
+      {
+        # Check against $this->totpbackup
+        $query = "SELECT `".$this->totpbackup."` FROM `".$this->getTable()."` WHERE `".$this->usercol."`='".$this->username."'";
+        $r = mysqli_query($l,$query);
+        if($r === false)
+          {
             return array("status"=>false,"error"=>mysqli_error($l),"human_error"=>"Database error");
           }
-            $row = mysqli_fetch_row($r);
-            $hash = hash("sha512",$code);
-            if($hash !== $row[0])
-              {
+        $row = mysqli_fetch_row($r);
+        $hash = hash("sha512",$code);
+        if($hash !== $row[0])
+          {
             return array("status"=>false,"error"=>"Bad backup code","human_error"=>"The backup code you entered was invalid. Please try again.");
           }
-          }
-            else
-              {
-            # Verify the code
-            if(!$this->verifyTOTP($code))
-              {
+      }
+    else
+      {
+        # Verify the code
+        if(!$this->verifyTOTP($code))
+          {
             return array("status"=>false,"error"=>"Bad TOTP code","human_error"=>"The code you entered was invalid. Please try again.");
           }
-          }
-            # Unset backup and totpcol
-            $query = "UPDATE `".$this->getTable()."` SET `".$this->totpcol."`='', `".$this->tmpcol."`='', `".$this->totpbackup."`='' WHERE `".$this->usercol."`='".$this->username."'";
-            mysqli_query($l,"BEGIN");
-            $r = mysqli_query($l,$query);
-            if($r === false)
-              {
-            $e = mysqli_error($l);
-            mysqli_query($l,"ROLLBACK");
-            return array("status"=>false,"error"=>$e,"human_error"=>"Could not unset two-factor authentication","username"=>$this->username);
-          }
-            mysqli_query($l,"COMMIT");
-            return true;
-          }
+      }
+    # Unset backup and totpcol
+    $query = "UPDATE `".$this->getTable()."` SET `".$this->totpcol."`='', `".$this->tmpcol."`='', `".$this->totpbackup."`='' WHERE `".$this->usercol."`='".$this->username."'";
+    mysqli_query($l,"BEGIN");
+    $r = mysqli_query($l,$query);
+    if($r === false)
+      {
+        $e = mysqli_error($l);
+        mysqli_query($l,"ROLLBACK");
+        return array("status"=>false,"error"=>$e,"human_error"=>"Could not unset two-factor authentication","username"=>$this->username);
+      }
+    mysqli_query($l,"COMMIT");
+    return true;
+  }
 
 
   public function sendTOTPText($number)
@@ -414,7 +416,7 @@ class UserFunctions {
       }
     catch(Exception $e)
       {
-            return array("status"=>false,"human_error"=>"Unable to generate QR code","error"=>$e->getMessage(),"uri"=>$uri,"identifier"=>$identifier,"persistent"=>$persistent);
+        return array("status"=>false,"human_error"=>"Unable to generate QR code","error"=>$e->getMessage(),"uri"=>$uri,"identifier"=>$identifier,"persistent"=>$persistent);
       }
   }
 
@@ -518,7 +520,7 @@ class UserFunctions {
           case "su_flag":
           case "disabled":
             $store[]=false;
-            break;
+          break;
           default:
             $store[]="";
           }

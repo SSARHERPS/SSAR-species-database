@@ -1,0 +1,32 @@
+.close_hover {
+    position: absolute;
+    top: -30px;
+    right: -10px;
+    cursor: pointer;
+    padding: 6px;
+    width: 1em;
+    height: 1em;
+    text-align: center;
+    background: rgba(29, 76, 190, .9);
+    border-radius: 50px;
+    border: 2px solid white;
+    box-shadow: 3px 3px 5px rgba(0, 0, 0, .8);
+    transition: all .2s linear;
+    -webkit-transition: all .2s linear;
+    -moz-transition: all .2s linear;
+    -o-transition: all .2s linear;
+}
+.close-popup:hover, .danger {
+    background: rgba(215, 0, 20, .75)
+}
+#secret_id_panel {
+    display: none;
+    position: absolute;
+    width: 50%;
+    left: 25%;
+    min-height: 300px;
+    z-index: 10000;
+    background: rgba(29, 76, 190, .9);
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, .7);
+    padding: 1em;
+}
