@@ -2,9 +2,12 @@
 
 use Base32\Base32;
 
-class UserFunctions {
+require_once(dirname(__FILE__)."/DBHelper.php");
 
-  function __construct($username = null, $lookup_column = null)
+class UserFunctions extends DBHelper
+{
+
+  public function __construct($username = null, $lookup_column = null)
   {
     /***
      * @param string $username the user to be instanced with
@@ -12,7 +15,14 @@ class UserFunctions {
      ***/
     # Set up the parameters in CONFIG.php
     require_once(dirname(__FILE__).'/../CONFIG.php');
-    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue,$ip_record;
+    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue,$ip_record,$default_user_database,$default_sql_user,$default_sql_password,$sql_url;
+
+    # Configure the database
+    $this->setUser($default_sql_user);
+    $this->setDB($default_user_database);
+    $this->setPW($default_sql_password);
+    $this->setSQLURL($sql_url);
+    
     if(!empty($user_data_storage))
       {
         $user_data_storage .= substr($user_data_storage,-1)=="/" ? '':'/';
@@ -173,16 +183,7 @@ class UserFunctions {
         $this->user = null;
       }
   }
-  
-  private function setColumns()
-  {
-    # Describe your columns here, if not in config.php!
-    # Otherwise use this to describe an alternate column set.
-    $this->columns = array(
-
-    );
-  }
-  
+    
   private function getDigest()
   {
     $allowed_digest = array(
@@ -749,8 +750,8 @@ class UserFunctions {
                               {
                                 // Clear login disabled flag
                                 $query1="UPDATE `".$this->getTable()."` SET disabled=false WHERE id=".$userdata['id'];
-                                $res1=openDB($this->getDB());
-                                $result=execAndCloseDB($query1);
+                                $l=openDB($this->getDB());
+                                $result=mysqli_query($l,$query1);
                               }
                           }
                         // All checks passed.
