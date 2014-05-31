@@ -6,6 +6,7 @@ This is a repo meant to deal with the vast majority of handling cases for user w
 - Login
 - Authentication after-the-fact
 - Forgotten passwords
+- One-Time Passwords
 - Etc
 
 ## Libraries
@@ -58,7 +59,3 @@ private_key
 secret
 emergency_code
 ```
-
-
-## To Do
-Refactor to play nice with a default user made when instantiating class.

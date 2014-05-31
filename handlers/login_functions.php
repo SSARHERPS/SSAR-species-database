@@ -6,6 +6,11 @@ class UserFunctions {
 
   function __construct($username = null, $lookup_column = null)
   {
+    /***
+     * @param string $username the user to be instanced with
+     * @param string $lookup_column the column to look them up in. Ignored if $username is null.
+     ***/
+    # Set up the parameters in CONFIG.php
     require_once(dirname(__FILE__).'/../CONFIG.php');
     global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue,$ip_record;
     if(!empty($user_data_storage))
@@ -39,11 +44,20 @@ class UserFunctions {
     $this->needsAuth = $needs_manual_authentication;
     $this->ipcol = $ip_record;
 
+    $baseurl = 'http';
+    if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
+    $baseurl .= "://www.";
+    $baseurl.=$_SERVER['HTTP_HOST'];
+    $base=array_slice(explode(".",$baseurl),-2);
+    $domain=$base[0];
+
+    $this->domain = $domain;
+    
     if(!empty($username))
       {
         # We're initiating a user
         $key = empty($lookup_column) ? $this->usercol:$lookup_column;
-        $this->setUser(array($key=>$username));
+        $this->getUser(array($key=>$username));
       }
   }
 
@@ -59,8 +73,9 @@ class UserFunctions {
   private function getThresholdLength() { return $this->thresholdLength; }
   private function getSupportEmail() { return $this->supportEmail; }
   private function needsManualAuth() { return $this->needsAuth === true; }
-  private function getColumns() {
-    if(empty($this->user)) $this->setUser();
+  private function getColumns($user_id = null) {
+    if(empty($this->user)) $this->getUser($user_id);
+    if(empty($this->columns)) throw(new Exception("No columns have been described."));
     return $this->columns;
   }
   private function getSecret($is_test = false) {
@@ -75,9 +90,16 @@ class UserFunctions {
     $userdata = $this->getUser();
     return !empty($userdata[$this->totpcol]);
   }
-  public function getUser($userdata = null)
+  public function getUser($user_id = null)
   {
-    if(empty($this->user)) $this->setUser($userdata);
+    /***
+     * Get the user, and assign one if it hasn't been assigned already
+     *
+     * @param string|array $user_id Either a column/value pair or an ID for the default column
+     * @return array of the user result column
+     ***/
+    
+    if(empty($this->user) || !empty($user_id)) $this->setUser($user_id);
     $userdata = $this->user;
     if(!array($userdata))
       {
@@ -99,38 +121,44 @@ class UserFunctions {
     $this->username = $userdata[$this->usercol];
     return $userdata;
   }
-  private function setUser($userdata = null)
+  
+  private function setUser($user_id = null)
   {
     /***
-     * Set the user for this object.
+     * Set the user for this object. Always overwrites current user.
+     * Only intended to be called by getUser()
+     *
+     * @param string|array $user_id Either a column/value pair or an ID for the default column
      ***/
-    $userid = null;
-    $this->user = null; // Reset the user
 
-    if(!empty($userdata) && is_array($userdata))
+    if(!empty($user_id) && is_array($user_id) && sizeof($user_id) == 1)
       {
-        $col = key($userdata);
-        $userid = current($userdata);
+        # Specified as a column/value pair
+        $col = key($user_id);
+        $user_id = current($user_id);
       }
-    else if(!empty($userdata) && !is_array($userdata))
+    else if(!empty($user_id) && !is_array($user_id))
       {
+        # Just a id with the default column
         $col = $this->usercol;
-        $userid=$userdata;
       }
-    else
+    else if(!empty($_COOKIE[$this->domain."_link"]))
       {
-        $baseurl = 'http';
-        if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
-        $baseurl .= "://www.";
-        $baseurl.=$_SERVER['HTTP_HOST'];
-        $base=array_slice(explode(".",$baseurl),-2);
-        $domain=$base[0];
-        $cookielink=$domain."_link";
-        $userid=$_COOKIE[$cookielink];
+        # See if we can get this from the cookies
+        $user_id=$_COOKIE[$this->domain."_link"];
         $col = "dblink";
       }
-    if(empty($userid)) return $this->user;
-    $result=lookupItem($userid,$col,$this->getTable(),$this->getDB());
+
+    # Do we have an ID to work with?
+    if(empty($user_id) || empty($col))
+      {
+        # We couldn't get it from direct assignment or cookies
+        throw(new Exception("Unable to set user for ".$col."=>".$user_id."."));
+      }
+
+    # Inputs are sanitized in lookupItem
+    require_once(dirname(__FILE__).'/db_hook.inc');
+    $result=lookupItem($user_id,$col,$this->getTable(),$this->getDB());
     if($result!==false && !is_array($result))
       {
         $userdata=mysqli_fetch_assoc($result);
@@ -139,8 +167,13 @@ class UserFunctions {
             $this->user = $userdata;
           }
       }
-    return $this->user;
+    if(!is_array($this->user))
+      {
+        # Bad query - let getUser() handle it
+        $this->user = null;
+      }
   }
+  
   private function setColumns()
   {
     # Describe your columns here, if not in config.php!
@@ -149,6 +182,7 @@ class UserFunctions {
 
     );
   }
+  
   private function getDigest()
   {
     $allowed_digest = array(
@@ -275,7 +309,7 @@ class UserFunctions {
         $totp->setLabel($this->username);
         $totp->setIssuer($provider);
         $uri = $totp->provisioningURI($label,$provider);
-        $retarr = $this->generateQR($uri,null,false);
+        $retarr = self::generateQR($uri);
         $retarr["secret"] = $secret;
         $retarr["username"] = $this->username;
         return $retarr;
@@ -341,7 +375,7 @@ class UserFunctions {
      * @param string $username
      * @param string $password
      * @param string $code Either the Authenticator code, or previously generated backup code.
-     * @return True if success, array if failure
+     * @return bool|array true if success, array if failure
      ***/
     $l = openDB($this->getDB());
     $verify = $this->lookupUser($username,$password);
@@ -409,38 +443,57 @@ class UserFunctions {
     # Return the status and updated message
   }
 
-  public function generateQR($uri = null,$identifier = null,$persistent = true)
+  public static function generateQR($uri,$data_path = null,$identifier_path = null)
   {
     /*
      * Generate a QR code from a string
      *
      * @param string $uri
-     * @param string identifier A unique identifier for persistent paths
-     * @param bool $persistent Whether or not the image is persistent
+     * @param string $data_path The path to the write directory
+     * @param string $identifier_path An optional subdirectory for paths; makes loops easier
      * @returns array with the main results in "svg" and "raw" keys, with a Google fallback in the "url" key
      */
     try
       {
-        if(empty($uri)) $uri = $this->username;
         require_once(dirname(__FILE__)."/../qr/qrlib.php");
+        $salt = Stronghash::createSalt();
+        $persistent = !empty($data_path);
         if(!$persistent)
           {
             $tmp_dir = dirname(__FILE__).DIRECTORY_SEPARATOR.'temp'.DIRECTORY_SEPARATOR;
-            if (!file_exists($tmp_dir)) mkdir($tmp_dir);
+            if (!file_exists($tmp_dir))
+              {
+                if(!mkdir($tmp_dir))
+                  {
+                    # Could not write to temporary path
+                    throw(new Exception("Could not write to '$tmp_dir'"));
+                  }
+              }
             $web_dir = 'temp/';
             require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
-            $filename = $tmp_dir . sha1(Stronghash::createSalt()) . ".png";
+            $filename = $tmp_dir . sha1($salt) . ".png";
           }
         else
           {
-            $this->getUser();
-            $filename = $this->data_path.$identifier."/".sha1($this->username).".png";
+            # Persistent file
+            $file = $sha1($salt . $uri);
+            if(substr($data_path,-1) != "/") $data_path .= DIRECTORY_SEPARATOR;
+            $full_path = empty($identifier_path) ? $data_path:$data_path . $identifier_path . DIRECTORY_SEPARATOR;
+            if(!file_exists($full_path))
+              {
+                if(!mkdir($full_path))
+                  {
+                    # Could not write to the storage path
+                    throw(new Exception("Could not write to '$full_path'"));
+                  }
+              }
+            $filename = $full_path.$file.".png";
           }
-        $svg = QRcode::svg($uri,false,QR_ECLEVEL_H,10,1);
-        QRcode::png($uri,$filename,QR_ECLEVEL_H,10,1);
+        $svg = QRcode::svg($uri,false,QR_ECLEVEL_H,8,1);
+        QRcode::png($uri,$filename,QR_ECLEVEL_H,8,1);
         $raw = base64_encode(file_get_contents($filename));
         $raw = "data:image/png;base64,".$raw;
-        //if(!$persistent) unlink($filename);
+        if(!$persistent) unlink($filename);
         # As a final option, get a URL fallback
         # https://developers.google.com/chart/infographics/docs/qr_codes?csw=1
         $url = "https://chart.googleapis.com/chart?cht=qr&chs=500x500&chld=H&chl=".$uri;
@@ -570,7 +623,7 @@ class UserFunctions {
 
         if (is_numeric($id) && !empty($userdata))
           {
-            $this->setUser($userdata);
+            $this->getUser($userdata);
             $cookies=$this->createCookieTokens();
 
             return array_merge(array(true,'Success!'),$userdata,$cookies);
@@ -605,7 +658,7 @@ class UserFunctions {
                   }
                 if($hash->verifyHash($pw,$data))
                   {
-                    $this->setUser($userdata[$this->usercol]);
+                    $this->getUser($userdata[$this->usercol]);
 
                     ## Does the user have 2-factor authentication?
                     if($this->has2FA())
@@ -763,7 +816,7 @@ class UserFunctions {
      * @param string $hash Provide the final computed string to work with
      * @param string $secret Provide the cookie secret to work with
      * @param bool $detail Provide detailed returns
-     * @return bool if $detail is false, array if $detail is true
+     * @return bool|array bool if $detail is false, array if $detail is true
      ***/
     if(strpos($userid,"@")===false && !empty($userid)) $userid = array("dblink"=>$userid);
     $userdata = $this->getUser($userid);
@@ -808,7 +861,7 @@ class UserFunctions {
         $value_create=array($secret,$salt,$userdata[$this->cookiecol],$userdata[$this->ipcol],$authsalt);
         $conf=sha1(implode('',$value_create));
         $state= $conf==$hash ? true:false;
-        if($state) $this->setUser($userdata[$this->usercol]);
+        if($state) $this->getUser($userdata[$this->usercol]);
         if($detail) return array('state'=>self::strbool($state),"status"=>true,"uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"from_cookie"=>self::strbool($from_cookie),'got_user_pass_info'=>is_array($pw_characters),'got_userdata'=>is_array($userdata),'source'=>$value_create);
         return $state;
       }
@@ -971,7 +1024,7 @@ class UserFunctions {
             // confirm with lookupUser();
             $a=$this->lookupUser($validation_data['username'],$validation_data['password']);
             $validated=$a[0];
-            if($validated) $this->setUser(array("username"=>$validation_data['username']));
+            if($validated) $this->getUser(array("username"=>$validation_data['username']));
             $method='Password';
           }
         else return array('status'=>false,"error"=>"Bad validation data");
@@ -1148,7 +1201,7 @@ class UserFunctions {
   {
     /***
      * @param string $encrypted A base 64 encoded string
-     * @return string or false
+     * @return string|bool decrypted string or false
      ***/
     $this->getUser();
     if(!empty($this->usercol))
