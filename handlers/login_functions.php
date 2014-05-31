@@ -7,7 +7,7 @@ class UserFunctions {
   function __construct($username = null, $lookup_column = null)
   {
     require_once(dirname(__FILE__).'/../CONFIG.php');
-    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue;
+    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue,$ip_record;
     if(!empty($user_data_storage))
       {
         $user_data_storage .= substr($user_data_storage,-1)=="/" ? '':'/';
@@ -37,6 +37,7 @@ class UserFunctions {
     $this->totpbackup = $totp_rescue;
     $this->totpsteps = $totp_steps;
     $this->needsAuth = $needs_manual_authentication;
+    $this->ipcol = $ip_record;
 
     if(!empty($username))
       {
@@ -77,8 +78,26 @@ class UserFunctions {
   public function getUser($userdata = null)
   {
     if(empty($this->user)) $this->setUser($userdata);
-    $this->username = $this->user[$this->usercol];
-    return $this->user;
+    $userdata = $this->user;
+    if(!array($userdata))
+      {
+        if(empty($userdata))
+          {
+            # Couldn't get the user in any automated way
+            $error = "Unable to retrieve user";
+          }
+        else
+          {
+            # The user was bad
+            $error = "Bad user provided - ";
+            if(is_string($userdata)) $error .= $userdata;
+            else if(is_array($userdata)) $error .= current($userdata)." of type ".key($userdata);
+            else $error .= "unrecognized type";
+          }
+        throw(new Exception($error));
+      }
+    $this->username = $userdata[$this->usercol];
+    return $userdata;
   }
   private function setUser($userdata = null)
   {
@@ -130,6 +149,17 @@ class UserFunctions {
 
     );
   }
+  private function getDigest()
+  {
+    $allowed_digest = array(
+      "md5",
+      "sha1",
+      "sha256",
+      "sha512"
+    );
+    if(!in_array($this->totpdigest,$allowed_digest)) return "sha1";
+    return $this->totpdigest;
+  }
 
   public static function microtime_float()
   {
@@ -177,6 +207,7 @@ class UserFunctions {
     try
       {
         $totp = new OTPHP\TOTP($secret);
+        $totp->setDigest($this->getDigest());
         if($totp->verify($provided)) return true;
         if(!is_numeric($this->totpsteps)) throw(new Exception("Bad TOTP step count"));
         $i = 1;
@@ -240,6 +271,7 @@ class UserFunctions {
         
         self::doLoadOTP();
         $totp = new OTPHP\TOTP($secret);
+        $totp->setDigest($this->getDigest());
         $totp->setLabel($this->username);
         $totp->setIssuer($provider);
         $uri = $totp->provisioningURI($label,$provider);
@@ -758,23 +790,32 @@ class UserFunctions {
             $from_cookie=true;
             if(empty($hash) || empty($secret))
               {
-                if($detail) return array("error"=>"Empty verification tokens","uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"have_secret"=>self::strbool(empty($secret)),"from_cookie"=>self::strbool($from_cookie));
+                if($detail) return array("state"=>false,"status"=>false,"error"=>"Empty verification tokens","uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"have_secret"=>self::strbool(empty($secret)),"from_cookie"=>self::strbool($from_cookie));
                 return false;
               }
           }
         else $from_cookie=false;
 
-        $value_create=array($secret,$salt,$userdata[$this->cookiecol],$_SERVER['REMOTE_ADDR'],$authsalt);
+        $current_ip = $_SERVER['REMOTE_ADDR'];
+
+        # Are they logging in from the same IP?
+        if($userdata[$this->ipcol] != $current_ip)
+          {
+            if($detail) return array("state"=>false,"status"=>false,"error"=>"Different IP address on login","uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"have_secret"=>self::strbool(empty($secret)),"from_cookie"=>self::strbool($from_cookie),"stored_ip"=>$userdata[$this->ipcol],"current_ip"=>$current_ip);
+            return false;
+          }
+        
+        $value_create=array($secret,$salt,$userdata[$this->cookiecol],$userdata[$this->ipcol],$authsalt);
         $conf=sha1(implode('',$value_create));
         $state= $conf==$hash ? true:false;
         if($state) $this->setUser($userdata[$this->usercol]);
-        if($detail) return array('state'=>self::strbool($state),"uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"from_cookie"=>self::strbool($from_cookie),'got_user_pass_info'=>is_array($pw_characters),'got_userdata'=>is_array($userdata),'source'=>$value_create);
+        if($detail) return array('state'=>self::strbool($state),"status"=>true,"uid"=>$userid,"salt"=>$salt,"calc_conf"=>$conf,"basis_conf"=>$hash,"from_cookie"=>self::strbool($from_cookie),'got_user_pass_info'=>is_array($pw_characters),'got_userdata'=>is_array($userdata),'source'=>$value_create);
         return $state;
       }
     else
       {
         // empty result
-        if($detail) return array("error"=>"Invalid userid lookup","uid"=>$userid,"col"=>$col,"basis_conf"=>$hash,"have_cookie_secret"=>self::strbool(empty($secret)));
+        if($detail) return array("state"=>false,"status"=>false,"error"=>"Invalid userid lookup","uid"=>$userid,"col"=>$col,"basis_conf"=>$hash,"have_cookie_secret"=>self::strbool(empty($secret)));
         return false;
       }
     if($detail)
@@ -828,8 +869,9 @@ class UserFunctions {
         $cookie_secret=Stronghash::createSalt();
         $pw_characters=json_decode($userdata[$this->pwcol],true);
         $salt=$pw_characters['salt'];
+        $current_ip = $_SERVER['REMOTE_ADDR'];
         //store it
-        $query="UPDATE `".$this->getTable()."` SET `".$this->cookiecol."`='$otsalt' WHERE id='$id'";
+        $query="UPDATE `".$this->getTable()."` SET `".$this->cookiecol."`='$otsalt', `".$this->ipcol."`='$current_ip' WHERE id='$id'";
         $l=openDB($this->getDB());
         mysqli_query($l,'BEGIN');
         $result=mysqli_query($l,$query);
@@ -844,7 +886,7 @@ class UserFunctions {
           'secret'=>$cookie_secret,
           'salt'=>$salt,
           'server_salt'=>$otsalt,
-          'ip'=>$_SERVER['REMOTE_ADDR'],
+          'ip'=>$curent_ip,
           'server_key'=>$this->getSiteKey()
         );
 

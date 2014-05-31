@@ -88,9 +88,16 @@ $db_cols=array(
 $user_column = "username";
 $password_column = "password";
 $cookie_ver_column = "auth_key";
+
 $totp_column = "secret";
 $totp_rescue = "emergency_code";
+# See https://github.com/tigerhawkvok/php-userhandler/blob/master/totp/doc/Use.md#digest-algorithm
+# Leave as sha1 for compatibility with Google Authenticator
+$totp_digest = "sha1";
+
 $temporary_storage = "special_1";
+$ip_record = "last_ip";
+
 
 /***
  * Specify TOTP 30-second "steps" allowed to be off by
