@@ -390,143 +390,148 @@ class DBHelper {
     else return false;
   }
 
-######### Left off here -- need to update arg orders for delete and updateentry, clean updateentry
-  function updateEntry($value,$field_name,$unq_id,$precleaned=false)
+function updateEntry($value,$unq_id,$field_name = null,$precleaned=false)
   {
     /***
      *
-     * @param string $value new value to fill $field_name
-     * @param string $field_name column to be updated
+     * @param string|array $value new value to fill $field_name, or column=>value pairs
      * @param array $unq_id a 1-element array of col=>val to designate the matching criteria
+     * @param string|array $field_name column(s) to be updated
      * @param bool $precleaned if the input elements have been presanitized
      ***/
     if(!is_array($unq_id))
       {
         throw(new Exception("Invalid argument for unq_id"));
       }
-    $column=key($unq_id);
+    $column=key($unq_id);b
     $uval=current($unq_id);
-    if(!is_entry($uval,$column,$precleaned)) return array(false,'query'=>is_entry($uval,$column,$table_name,$database_name,true));
-    if(empty($value))
+    
+    if(!$this->is_entry($uval,$column,$precleaned))
       {
-        $temp=array();
-        foreach($field_name as $k=>$v)
+        throw(new Exception("No item '$uval' exists for column '$column'"));
+      }
+    $l = $this->openDB();
+    if(!empty($field_name))
+      {
+        $values = array();
+        if(is_array($field_name))
           {
-            // should these be swapped?
-            $value[]=$v;
-            $temp[]=$k;
+        foreach($field_name as $key)
+          {
+            # Map each field name onto the value of the current value item
+            $item = current($value);
+            $key = $precleaned ? mysqli_real_escape_string($l,$key) : sanitize($key);
+            $values[$key] = $precleaned ? mysqli_real_escape_string($l,$item) : sanitize($item);
+            next($value);
           }
-        $field_name=$temp;
-      }
-    if(is_array($field_name) && is_array($value))
-      {
-        if(sizeof($field_name)==sizeof($value))
-          {
-            $i=0;
-            foreach($field_name as $col)
-              {
-                $l=openDB($database_name);
-                $d= $preclean ? mysqli_real_escape_string($l,$value[$i]):sanitize($value[$i]);
-                $col= $preclean ? mysqli_real_escape_string($l,$col):sanitize($col);
-                if($i>0) $setstate.=",";
-                $setstate.="`$col`=\"$d\"";
-                $i++;
-              }
-          }
-        else return false;
-      }
-    else if ((is_array($field_name) && !is_array($value)) || (is_array($value) && !is_array($field_name))) return false;
-    else
-      {
-        $l=openDB($database_name);
-        $value=$preclean ? mysqli_real_escape_string($l,$value):sanitize($value);
-        $setstate="`$field_name`=\"$value\"";
-      }
-    $lr = !is_bool($opened) ? $opened:openDB($database_name);
-    $query="UPDATE `$table_name` SET $setstate WHERE $column='$uval'";
-    if(!$test)
-      {
-        if(!$made_transaction) mysqli_query($lr,'START TRANSACTION');
-        $result=mysqli_query($lr,$query);
-        if($result)
-          {
-            mysqli_query($lr,'COMMIT');
-            if(!$leaveopen) mysqli_close($lr);
-            return true;
           }
         else
           {
-            $error=mysqli_error($lr)." for query \"$query\"";
-            mysqli_query($lr,'ROLLBACK');
-            if(!$leaveopen) mysqli_close($lr);
-            return $error;
+            # $field_name isn't an array. Let's make sure $value isn't either
+            if(!is_array($value))
+              {
+                $key = $precleaned ? mysqli_real_escape_string($l,$field_name) : sanitize($field_name);
+                $values[$key] = $precleaned ? mysqli_real_escape_string($l,$value) : sanitize($value);
+              }
+            else
+              {
+                # Mismatched types
+                throw(new Exception("Mismatched types for \$value and \$field_name"));
+              }
           }
       }
-    else return $query;
+    else if(empty($field_name))
+      {
+        # Make sure that $value is an array
+        if(is_array($value) && is_string(key($value)))
+          {
+            $values = $value;
+          }
+        else
+          {
+            throw(new Exception("No column found for \$value"));
+          }
+      }
+
+    $sets = array();
+    foreach($values as $col=>$val)
+      {
+        $sets[] = "`$col`=\"$val\"";
+      }
+    $set_string = implode(",",$sets);
+    $query = "UPDATE `".$this->getTable()."` SET $set_string WHERE `$column`='$uval'";
+    mysqli_query($l,"BEGIN");
+    $r = mysqli_query($l,$query);
+    if($r !== false)
+      {
+        mysqli_query($l,"COMMIT");
+        return true;
+      }
+    else
+      {
+        mysqli_query($l,"ROLLBACK");
+        return mysqli_error($l);
+      }
   }
 
-if(!function_exists('addItem'))
-  {
 
-  }
+/* if(!function_exists('returnTableContents')) */
+/*   { */
+/*     function returnTableContents($search_column,$search_criteria,$returned_fields_arr=null,$table_name=null,$database_name=null,$leave_open=true) */
+/*     { */
+/*       global $default_user_table,$default_user_database; */
+/*       if(empty($database_name)) $database_name=$default_user_database; */
+/*       if(empty($table_name)) $table_name = $default_user_table; */
+/*       $query="SELECT * FROM `$table_name`"; */
+/*       if($search_criteria!='*') */
+/*         { */
+/*           $search_criteria=trim(sanitize($search_criteria)); */
+/*           $query .=" WHERE cast($search_column as char) like '%$search_criteria%'"; */
+/*         } */
+/*       $l=openDB($database_name); */
+/*       $result= mysqli_query($l,$query); */
+/*       if($result!==false) */
+/*         { */
+/*           $count = mysqli_num_rows($result); */
+/*           if($returned_fields_arr==null) */
+/*             { */
+/*               if(!$leave_open) mysqli_close($l); */
+/*               return $result; */
+/*             } */
+/*           else */
+/*             { */
+/*               if(is_array($returned_fields_arr)) $answer = array(); */
+/*               while($results_arr=mysqli_fetch_assoc($result)) */
+/*                 { */
+/*                   if(is_array($returned_fields_arr)) */
+/*                     { */
+/*                       foreach($returned_fields_arr as $key) */
+/*                         { */
+/*                           if(array_key_exists($key,$results_arr)) */
+/*                             { */
+/*                               $answer[]=$results_arr[$key]; // return as a long array with item types repeating every N elements */
+/*                             } */
+/*                           else $answer[] = false; */
+/*                         } */
+/*                     } */
+/*                   else */
+/*                     { */
+/*                       if(array_key_exists($returned_fields_arr,$results_arr)) */
+/*                         { */
+/*                           $answer = $results_arr[$returned_fields_arr]; */
+/*                           return $answer; */
+/*                         } */
+/*                       else $answer=false; */
+/*                     } */
+/*                 } */
+/*               if(!$leave_open) mysqli_close($l); */
+/*               return $answer; */
 
-if(!function_exists('returnTableContents'))
-  {
-    function returnTableContents($search_column,$search_criteria,$returned_fields_arr=null,$table_name=null,$database_name=null,$leave_open=true)
-    {
-      global $default_user_table,$default_user_database;
-      if(empty($database_name)) $database_name=$default_user_database;
-      if(empty($table_name)) $table_name = $default_user_table;
-      $query="SELECT * FROM `$table_name`";
-      if($search_criteria!='*')
-        {
-          $search_criteria=trim(sanitize($search_criteria));
-          $query .=" WHERE cast($search_column as char) like '%$search_criteria%'";
-        }
-      $l=openDB($database_name);
-      $result= mysqli_query($l,$query);
-      if($result!==false)
-        {
-          $count = mysqli_num_rows($result);
-          if($returned_fields_arr==null)
-            {
-              if(!$leave_open) mysqli_close($l);
-              return $result;
-            }
-          else
-            {
-              if(is_array($returned_fields_arr)) $answer = array();
-              while($results_arr=mysqli_fetch_assoc($result))
-                {
-                  if(is_array($returned_fields_arr))
-                    {
-                      foreach($returned_fields_arr as $key)
-                        {
-                          if(array_key_exists($key,$results_arr))
-                            {
-                              $answer[]=$results_arr[$key]; // return as a long array with item types repeating every N elements
-                            }
-                          else $answer[] = false;
-                        }
-                    }
-                  else
-                    {
-                      if(array_key_exists($returned_fields_arr,$results_arr))
-                        {
-                          $answer = $results_arr[$returned_fields_arr];
-                          return $answer;
-                        }
-                      else $answer=false;
-                    }
-                }
-              if(!$leave_open) mysqli_close($l);
-              return $answer;
-
-            }
-        }
-      else return false;
-    }
-  }
+/*             } */
+/*         } */
+/*       else return false; */
+/*     } */
+/*   } */
 
 }
 
