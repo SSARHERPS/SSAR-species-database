@@ -24,7 +24,7 @@ if($_REQUEST['t']=='hash')
     print_r($h->verifyHash($_POST['pw_base'],$a,null,null,null,true));
     echo "</pre>";
   }
-
+$debug = true;
 ?>
 
 <!DOCTYPE html>

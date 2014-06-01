@@ -12,18 +12,18 @@ class UserFunctions extends DBHelper
     /***
      * @param string $username the user to be instanced with
      * @param string $lookup_column the column to look them up in. Ignored if $username is null.
-     * @param array $db_params Optional override database parameters. 
-     *                         The required keys are: 
+     * @param array $db_params Optional override database parameters.
+     *                         The required keys are:
      *                         (string)"user" for SQL username,
-     *                         (string)"database" as the SQL database, 
-     *                         and (string)"password" for SQL password, 
+     *                         (string)"database" as the SQL database,
+     *                         and (string)"password" for SQL password,
      *                         with optional keys
      *                         (string)"url" (defaults to "localhost")
      *                         and (array)"cols" of type "column_name"=>"type".
      ***/
     # Set up the parameters in CONFIG.php
     require_once(dirname(__FILE__).'/../CONFIG.php');
-    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue,$ip_record,$default_user_database,$default_sql_user,$default_sql_password,$sql_url;
+    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue,$ip_record,$default_user_database,$default_sql_user,$default_sql_password,$sql_url,$default_user_table;
 
     if(!empty($db_params))
       {
@@ -61,11 +61,12 @@ class UserFunctions extends DBHelper
           }
       }
     # Configure the database
-    $this->setUser($default_sql_user);
+    $this->setSQLUser($default_sql_user);
     $this->setDB($default_user_database);
-    $this->setPW($default_sql_password);
+    $this->setSQLPW($default_sql_password);
     $this->setSQLURL($sql_url);
     $this->setCols($db_cols);
+    $this->setTable($default_user_table);
 
     if(!empty($user_data_storage))
       {
@@ -172,7 +173,8 @@ class UserFunctions extends DBHelper
           }
         throw(new Exception($error));
       }
-    $this->username = $userdata[$this->usercol];
+
+    if(array_key_exists($this->usercol,$userdata)) $this->username = $userdata[$this->usercol];
     return $userdata;
   }
 
@@ -279,7 +281,7 @@ class UserFunctions extends DBHelper
      ***/
     require_once(dirname(__FILE__).'/../base32/src/Base32/Base32.php');
 
-    self::doLoadTOP();
+    self::doLoadOTP();
     $secret = $this->getSecret($is_test);
     if($secret === false) return false;
     try
@@ -681,7 +683,7 @@ class UserFunctions extends DBHelper
     // check it's a valid email! validation skipped.
     require_once(dirname(__FILE__).'/xml.php');
     $xml=new Xml;
-    $result=$this->lookupItem($username,$this->usercol)
+    $result=$this->lookupItem($username,$this->usercol);
     if($result!==false)
       {
         try
@@ -857,7 +859,6 @@ class UserFunctions extends DBHelper
     $userdata = $this->getUser($userid);
     if(is_array($userdata))
       {
-        $authsalt = $this-> getSiteKey();
         $pw_characters=json_decode($userdata[$this->pwcol],true);
         $salt=$pw_characters['salt'];
 
@@ -887,7 +888,8 @@ class UserFunctions extends DBHelper
             return false;
           }
 
-        $value_create=array($secret,$salt,$userdata[$this->cookiecol],$userdata[$this->ipcol],$authsalt);
+        $value_create=array($secret,$salt,$userdata[$this->cookiecol],$userdata[$this->ipcol],$this->getSiteKey());
+
         $conf=sha1(implode('',$value_create));
         $state= $conf==$hash ? true:false;
         if($state) $this->getUser($userdata[$this->usercol]);
@@ -909,7 +911,7 @@ class UserFunctions extends DBHelper
     return false;
   }
 
-  public function createCookieTokens($username = null,$password_or_is_data=true)
+  public function createCookieTokens($username = null,$password_or_is_data=true, $remote = null)
   {
     try
       {
@@ -940,7 +942,8 @@ class UserFunctions extends DBHelper
         $cookie_secret=Stronghash::createSalt();
         $pw_characters=json_decode($userdata[$this->pwcol],true);
         $salt=$pw_characters['salt'];
-        $current_ip = $_SERVER['REMOTE_ADDR'];
+        $current_ip = empty($current_ip) ? $_SERVER['REMOTE_ADDR']:$remote;
+
         //store it
         $query="UPDATE `".$this->getTable()."` SET `".$this->cookiecol."`='$otsalt', `".$this->ipcol."`='$current_ip' WHERE id='$id'";
         $l=$this->openDB();
@@ -953,13 +956,7 @@ class UserFunctions extends DBHelper
           }
         else $r=mysqli_query($l,'COMMIT');
 
-        $value_create=array(
-          'secret'=>$cookie_secret,
-          'salt'=>$salt,
-          'server_salt'=>$otsalt,
-          'ip'=>$curent_ip,
-          'server_key'=>$this->getSiteKey()
-        );
+        $value_create=array($cookie_secret,$salt,$otsalt,$current_ip,$this->getSiteKey());
 
         // authenticated since last login. Nontransposable outside network.
 
@@ -1010,9 +1007,11 @@ class UserFunctions extends DBHelper
           'name'=>"{'$cookieperson':'$user_greet'}",
           'link'=>"{'$cookielink':'$dblink'}",
           'js'=>$jquerycookie,
-          'source'=>$value_create,
+        'source'=>$value_create,
+        'ip_given'=>$remote,
           'raw_auth'=>$value,
           'raw_cookie'=>$raw_data,
+          'basis'=>$value_create,
           'expires'=>"{expires:$expire_days,path:'/'}"
         );
       }

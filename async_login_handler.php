@@ -10,7 +10,7 @@ function returnAjax($data)
   header('Cache-Control: no-cache, must-revalidate');
   header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
   header('Content-type: application/json');
-  print json_encode($data); //,JSON_FORCE_OBJECT); // PHP 5.3+ - http://www.php.net/json_encode
+  print json_encode($data,JSON_FORCE_OBJECT); // PHP 5.3+ - http://www.php.net/json_encode
   exit();
 }
 
@@ -72,10 +72,10 @@ function generateTOTPForm($get)
   $baseurl.=$_SERVER['HTTP_HOST'];
   $base=array_slice(explode(".",$baseurl),-2);
   $domain=$base[0];
-  
+
   $r = $u->makeTOTP($domain);
 
-  # Whether or not it fails, return $r 
+  # Whether or not it fails, return $r
 
   return $r;
 }
@@ -92,7 +92,7 @@ function saveTOTP($get)
     {
       return array("status"=>false,"error"=>"Couldn't validate cookie information","human_error"=>"Application error");
     }
-  
+
   return $u->saveTOTP($code);
 }
 
@@ -105,6 +105,7 @@ function verifyTOTP($get)
   $password = str_replace(' ','+',$password);
   $secret = $get['secret'];
   $hash = $get['hash'];
+  $remote = $get['remote'];
   $is_encrypted = boolstr($get['encrypted']);
   # If it's a good code, pass the cookies back
   $u = new UserFunctions($user);
@@ -113,7 +114,7 @@ function verifyTOTP($get)
   $e=$u->encryptThis("sally","bob");
   print_r($e."\n\n");
   print_r($u->decryptThis("sally",$e)."\n\n");*/
-  
+
   $r = $u->lookupUser($user,$password,false,$code);
 
   if($r[0] === false)
@@ -125,8 +126,9 @@ function verifyTOTP($get)
   ## The user and code is valid!
   $return = array("status"=>true);
   $userdata = $r[1];
-  $cookie_result = $u->createCookieTokens();
+  $cookie_result = $u->createCookieTokens(null,true,$remote);
   $return["cookies"] = $cookie_result;
+  $return["string"] = json_encode($cookie_result["raw_cookie"]);
   return $return;
 }
 
@@ -140,7 +142,7 @@ function saveToUser($get)
   $conf=$get['hash'];
   $s=$get['secret'];
   $id=$get['dblink'];
-  $replace = boolstr($get['replace']); 
+  $replace = boolstr($get['replace']);
   /***
    * These fields can only be written to from directly inside of a script, rather than an AJAX call.
    ***/
@@ -166,7 +168,7 @@ function saveToUser($get)
           $col=decode64($get['col']);
           if(empty($data) || empty($col)) return array('status'=>false,'error'=>'Invalid data format (required valid base64 data)');
           // User safety
-          if(in_array($col,$protected_fields,true)) return array('status'=>false,'error'=>'Cannot write to $col : protected field'); 
+          if(in_array($col,$protected_fields,true)) return array('status'=>false,'error'=>'Cannot write to $col : protected field');
           return $u->writeToUser($data,$col,$val);
         }
       else return array('status'=>false,'error'=>'Invalid user');

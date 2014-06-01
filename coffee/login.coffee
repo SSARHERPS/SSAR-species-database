@@ -9,6 +9,7 @@ passwords.overrideLength ?= 21
 totpParams = new Object()
 totpParams.stylesheetPath = "css/otp_panels.css"
 totpParams.popClass = "danger"
+totpParams.home = "http://velociraptorsystems.com/samples/userhandler/test_page.php";
 
 checkPasswordLive = ->
   pass = $("#password").val()
@@ -60,7 +61,7 @@ evalRequirements = ->
 doEmailCheck = ->
   # Perform a GET request to see if the chosen email is already taken
 
-doTOTPSubmit = () ->
+doTOTPSubmit = (home = totpParams.home) ->
   # Get the code from #totp_code and push it through
   # to async_login_handler.php , get the results and behave appropriately
   noSubmit()
@@ -68,30 +69,38 @@ doTOTPSubmit = () ->
   code = $("#totp_code").val()
   user = $("#username").val()
   pass = $("#password").val()
+  ip = $("#remote").val()
   url = $.url()
   ajaxLanding = "async_login_handler.php"
   urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding
-  args = "action=verifytotp&code=#{code}&user=#{user}&password=#{pass}"
+  args = "action=verifytotp&code=#{code}&user=#{user}&password=#{pass}&remote=#{ip}"
   totp = $.post(urlString ,args,'json')
   console.log("CHecking",urlString + "?" + args)
   totp.done (result) ->
     # Check the result
     if result.status is true
       # If it's good, set the cookies
-      $("#totp_message")
-      .text("Correct!")
-      .removeClass("error")
-      .addClass("good")
-      expires = result.expires
-      i = 0
-      $.each result.raw_cookie (key,val) ->
-        $.cookie(key,val,expires)
-        i++
-        if i is Object.size(result.raw_cookie)
-          # Take us home
-          home = url.attr('protocol') + '://' + url.attr('host') + '/'
-          stopLoad()
-          window.location.href = home
+      try
+        $("#totp_message")
+        .text("Correct!")
+        .removeClass("error")
+        .addClass("good")
+        i = 0
+        $.each result["cookies"].raw_cookie, (key,val) ->
+          try
+            $.cookie(key,val,result["cookies"].expires)
+          catch e
+            console.error("Couldn't set cookies",result["cookies"].raw_cookie)
+          i++
+          if i is Object.size(result["cookies"].raw_cookie)
+            # Take us home
+            home ?= url.attr('protocol') + '://' + url.attr('host') + '/'
+            stopLoad()
+            console.log(result["cookies"])
+            delay 30000000, ->
+              window.location.href = home
+      catch e
+        console.error("Unexpected error while validating",e.message);
     else
       $("#totp_message").text(result.human_error)
       $("#totp_code").val("") # Clear it
@@ -158,7 +167,7 @@ makeTOTP = ->
       $("#totp_verify").submit ->
         noSubmit()
         saveTOTP(key,hash)
-      stopLoad()        
+      stopLoad()
     else
       console.error("Couldn't generate TOTP code",urlString  + "?" + args)
       $("#totp_message").text("There was an error generating your code. Please try again.")

@@ -4,8 +4,9 @@
  * Uses MySQLi as the main interface
  ***/
 
+require_once(dirname(__FILE__).'/functions.inc');
+
 class DBHelper {
-  require_once(dirname(__FILE__).'/functions.inc');
 
   public function __construct($database,$user,$pw,$url = "localhost",$table = null)
   {
@@ -49,21 +50,21 @@ class DBHelper {
     $this->table = sanitize($table);
   }
 
-  private function getUser()
+  private function getSQLUser()
   {
-    if(empty($this->user))
+    if(empty($this->SQLuser))
       {
         throw(new Exception("No user has been defined for this object."));
       }
-    return $this->user;
+    return $this->SQLuser;
   }
 
-  protected function setUser($user)
+  protected function setSQLUser($user)
   {
-    $this->user = $user;
+    $this->SQLuser = $user;
   }
 
-  private function getPW()
+  private function getSQLPW()
   {
     if(empty($this->pw))
       {
@@ -72,7 +73,7 @@ class DBHelper {
     return $this->pw;
   }
 
-  protected function setPW($pw)
+  protected function setSQLPW($pw)
   {
     $this->pw = $pw;
   }
@@ -194,7 +195,7 @@ class DBHelper {
     /***
      * @return mysqli_resource
      ***/
-    if($l=mysqli_connect($this->getSQLURL(),$this->getUser(),$this->getPW()))
+    if($l=mysqli_connect($this->getSQLURL(),$this->getSQLUser(),$this->getSQLPW()))
       {
         if(mysqli_select_db($l,$this->getDB())) return $l;
       }
@@ -403,7 +404,7 @@ function updateEntry($value,$unq_id,$field_name = null,$precleaned=false)
       {
         throw(new Exception("Invalid argument for unq_id"));
       }
-    $column=key($unq_id);b
+    $column=key($unq_id);
     $uval=current($unq_id);
     
     if(!$this->is_entry($uval,$column,$precleaned))

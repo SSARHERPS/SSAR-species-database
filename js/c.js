@@ -321,6 +321,8 @@
 
   totpParams.popClass = "danger";
 
+  totpParams.home = "http://velociraptorsystems.com/samples/userhandler/test_page.php";
+
   checkPasswordLive = function() {
     var pass;
     pass = $("#password").val();
@@ -390,35 +392,53 @@
 
   doEmailCheck = function() {};
 
-  doTOTPSubmit = function() {
-    var ajaxLanding, args, code, pass, totp, url, urlString, user;
+  doTOTPSubmit = function(home) {
+    var ajaxLanding, args, code, ip, pass, totp, url, urlString, user;
+    if (home == null) {
+      home = totpParams.home;
+    }
     noSubmit();
     animateLoad();
     code = $("#totp_code").val();
     user = $("#username").val();
     pass = $("#password").val();
+    ip = $("#remote").val();
     url = $.url();
     ajaxLanding = "async_login_handler.php";
     urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding;
-    args = "action=verifytotp&code=" + code + "&user=" + user + "&password=" + pass;
+    args = "action=verifytotp&code=" + code + "&user=" + user + "&password=" + pass + "&remote=" + ip;
     totp = $.post(urlString, args, 'json');
     console.log("CHecking", urlString + "?" + args);
     totp.done(function(result) {
-      var expires, i;
+      var e, i;
       if (result.status === true) {
-        $("#totp_message").text("Correct!").removeClass("error").addClass("good");
-        expires = result.expires;
-        i = 0;
-        return $.each(result.raw_cookie(function(key, val) {
-          var home;
-          $.cookie(key, val, expires);
-          i++;
-          if (i === Object.size(result.raw_cookie)) {
-            home = url.attr('protocol') + '://' + url.attr('host') + '/';
-            stopLoad();
-            return window.location.href = home;
-          }
-        }));
+        try {
+          $("#totp_message").text("Correct!").removeClass("error").addClass("good");
+          i = 0;
+          return $.each(result["cookies"].raw_cookie, function(key, val) {
+            var e;
+            try {
+              $.cookie(key, val, result["cookies"].expires);
+            } catch (_error) {
+              e = _error;
+              console.error("Couldn't set cookies", result["cookies"].raw_cookie);
+            }
+            i++;
+            if (i === Object.size(result["cookies"].raw_cookie)) {
+              if (home == null) {
+                home = url.attr('protocol') + '://' + url.attr('host') + '/';
+              }
+              stopLoad();
+              console.log(result["cookies"]);
+              return delay(30000000, function() {
+                return window.location.href = home;
+              });
+            }
+          });
+        } catch (_error) {
+          e = _error;
+          return console.error("Unexpected error while validating", e.message);
+        }
       } else {
         $("#totp_message").text(result.human_error);
         $("#totp_code").val("");

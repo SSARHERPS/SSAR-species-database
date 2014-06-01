@@ -76,6 +76,7 @@ if($logged_in)
     $full_name=$xml->getTagContents($_COOKIE[$cookieperson],"<name>");
     $first_name=$xml->getTagContents($_COOKIE[$cookieperson],"<fname>");
     $display_name=$xml->getTagContents($_COOKIE[$cookieperson],"<dname>");
+    if(empty($first_name)) $first_name = $_COOKIE[$cookieperson];
   }
 else
   {
@@ -130,6 +131,7 @@ if($_REQUEST['q']=='submitlogin')
       <input type='hidden' id='password' name='password' value='".$res["encrypted_password"]."'/>
       <input type='hidden' id='secret' name='secret' value='".$secret."'/>
       <input type='hidden' id='hash' name='hash' value='".$hash."'/>
+      <input type='hidden' id='remote' name='remote' value='".$_SERVER['REMOTE_ADDR']."'/>
       <input type='hidden' id='encrypted' name='encrypted' value='".$user->strbool($is_encrypted)."'/>
       <button id='verify_totp_button' class='totpbutton'>Verify</button>
     </fieldset>
