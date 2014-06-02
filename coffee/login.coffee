@@ -7,7 +7,8 @@ passwords.minLength ?= 8
 passwords.overrideLength ?= 21
 
 totpParams = new Object()
-totpParams.stylesheetPath = "css/otp_panels.css"
+totpParams.mainStylesheetPath = "css/otp_styles.css"
+totpParams.popStylesheetPath = "css/otp_panels.css"
 totpParams.popClass = "pop-panel"
 totpParams.home = "http://velociraptorsystems.com/samples/userhandler/test_page.php";
 
@@ -215,7 +216,7 @@ popupSecret = (secret) ->
     rel:"stylesheet"
     type:"text/css"
     media:"screen"
-    href:totpParams.stylesheetPath
+    href:totpParams.popStylesheetPath
     }).appendTo("head")
   html="<div id='secret_id_panel' class='#{totpParams.popClass}'><p class='close-popup'>X</p><h2>#{secret}</h2></div>"
   $("#totp_add").after(html)
@@ -249,3 +250,9 @@ $ ->
     doTOTPRemove()
   $("#remove_totp_button").click ->
     doTOTPRemove()
+  $("<link/>",{
+    rel:"stylesheet"
+    type:"text/css"
+    media:"screen"
+    href:totpParams.mainStylesheetPath
+    }).appendTo("head")  
