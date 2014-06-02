@@ -68,6 +68,13 @@ class UserFunctions extends DBHelper
     $this->setCols($db_cols);
     $this->setTable($default_user_table);
 
+    # Check it
+    if(!$this->testSettings())
+      {
+        # There's a database problem
+        throw(new Exception("Database configuration problem"));
+      }
+
     if(!empty($user_data_storage))
       {
         $user_data_storage .= substr($user_data_storage,-1)=="/" ? '':'/';
@@ -334,7 +341,7 @@ class UserFunctions extends DBHelper
     try
       {
         require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
-        $salt = Stronghash::createSalt();
+        $salt = Stronghash::createSalt(12);
         require_once(dirname(__FILE__).'/../base32/src/Base32/Base32.php');
         $secret = Base32::encode($salt);
         ## The resulting provisioning URI should now be sent to the user
@@ -354,9 +361,29 @@ class UserFunctions extends DBHelper
         $totp->setDigest($this->getDigest());
         $totp->setLabel($this->username);
         $totp->setIssuer($provider);
-        $uri = $totp->provisioningURI($label,$provider);
+        $uri = $totp->getProvisioningURI($label,$provider);
+        $unsafe_uri = urldecode($uri);
+        $secret_part = explode("secret=",$unsafe_uri);
+        $iphone32 = str_replace("=","",$secret_part[1]);
+        $iphone_uri = $secret_part[0]."secret=".$iphone32; #still no good
         $retarr = self::generateQR($uri);
+
+        # Let's get a human-readable secret
+        $human_secret0 = str_replace("=","",$secret);
+        $i=0;
+        $human_secret = "";
+        foreach(str_split($human_secret0) as $char)
+          {
+            $human_secret .= $char;
+            $i++;
+            if($i == 4)
+              {
+            $human_secret .= " ";
+            $i=0;
+          }
+          }
         $retarr["secret"] = $secret;
+        $retarr["human_secret"] = $human_secret;
         $retarr["username"] = $this->username;
         return $retarr;
       }

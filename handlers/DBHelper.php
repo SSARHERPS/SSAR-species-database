@@ -324,7 +324,7 @@ class DBHelper {
       {
         $i=0;
         $valstring="";
-        $item=$this->lookupItem('1',null,$table_name,$database_name);
+        $item=$this->lookupItem('1');
         if($item!==false)
           {
             $source=mysqli_fetch_assoc($item);
@@ -348,7 +348,7 @@ class DBHelper {
                 return array(false,"rollback_status"=>$r,"error"=>mysqli_error($l),"query"=>$querystring);
               }
           }
-        $querystring = "UPDATE `$table_name` SET ";
+        $querystring = "UPDATE `".$this->getTable()."` SET ";
         $i=0;
         $equatestring="";
         foreach($field_arr as $field)

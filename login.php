@@ -45,11 +45,10 @@ require_once(dirname(__FILE__).'/handlers/functions.inc');
 require_once(dirname(__FILE__).'/handlers/db_hook.inc');
 require_once(dirname(__FILE__).'/handlers/xml.php');
 
-/*
- * Test the database ...
- */
 
-$r=testDefaults();
+
+$settings_blob = "<section id='account_settings'><h2>Settings</h2><p><a href='?2fa=t'>Add 2-factor authentication</a></p></section>";
+
 
 $xml=new Xml;
 $user=new UserFunctions;
@@ -144,6 +143,13 @@ if($_REQUEST['q']=='submitlogin')
             // Successful login
             $userdata=$res[1];
             $id=$userdata['id'];
+            $name_block = $userdata['name'];
+            # Be sure we get the name from the actual userdata
+            $full_name=$xml->getTagContents($name_block,"<name>");
+            $first_name=$xml->getTagContents($name_block,"<fname>");
+            $display_name=$xml->getTagContents($name_block,"<dname>");
+            # Account for possible differnt modes of saving
+            if(empty($first_name)) $first_name = $name_block;
             $login_output.="<h3 id='welcome_back'>Welcome back, ".$first_name."</h3>"; //Welcome message
 
             $cookie_result=$user->createCookieTokens($userdata);
@@ -250,7 +256,7 @@ if($_REQUEST['q']=='submitlogin')
           {
             ob_end_flush();
             $login_output.=$login_preamble;
-            $login_output.="<div class='error'><p>Sorry! <br/>" . $res['message'] . "</p><aside class='ssmall'>Did you mean to <a href=''>create a new account instead?</a></aside></div>";
+            $login_output.="<div class='error'><p>Sorry! <br/>" . $res['message'] . "</p><aside class='ssmall'>Did you mean to <a href='?q=create'>create a new account instead?</a></aside></div>";
             $failcount=intval($_POST['failcount'])+1;
             $loginform_whole = $loginform."
               <input type='hidden' name='failcount' id='failcount' value='$fail'/>".$loginform_close;
@@ -404,7 +410,11 @@ else if($_REQUEST['q']=='create')
                                 header("Refresh: 3; url=".$baseurl);
 
                               }
-                            else $login_output.="<p class='error'>".$res[1]."</p><p>Use your browser's back button to try again.</p>";
+                            else
+                              {
+                                if($debug) $login_output.=displayDebug($res);
+                                $login_output.="<p class='error'>".$res[1]."</p><p>Use your browser's back button to try again.</p>";
+                              }
                             ob_end_flush();
                           }
                         else
@@ -537,7 +547,7 @@ else if(isset($_REQUEST['2fa']))
 else
   {
     if(!$logged_in) $login_output.=$login_preamble . $loginform.$loginform_close;
-    else $login_output.="<p id='signin_greeting'>Welcome back, $first_name</p><br/><p id='logout_para'><aside class='ssmall'><a href='?q=logout'>(Logout)</a></aside></p>";
+    else $login_output.="<p id='signin_greeting'>Welcome back, $first_name</p><br/><p id='logout_para'><aside class='ssmall'><a href='?q=logout'>(Logout)</a></aside></p>".$settings_blob;
   }
 $login_output.="</div>";
 ob_end_flush();

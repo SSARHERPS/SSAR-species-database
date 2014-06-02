@@ -8,7 +8,7 @@ passwords.overrideLength ?= 21
 
 totpParams = new Object()
 totpParams.stylesheetPath = "css/otp_panels.css"
-totpParams.popClass = "danger"
+totpParams.popClass = "pop-panel"
 totpParams.home = "http://velociraptorsystems.com/samples/userhandler/test_page.php";
 
 checkPasswordLive = ->
@@ -97,7 +97,7 @@ doTOTPSubmit = (home = totpParams.home) ->
             home ?= url.attr('protocol') + '://' + url.attr('host') + '/'
             stopLoad()
             console.log(result["cookies"])
-            delay 30000000, ->
+            delay 500, ->
               window.location.href = home
       catch e
         console.error("Unexpected error while validating",e.message);
@@ -157,7 +157,7 @@ makeTOTP = ->
 </form>"
       $("#totp_add").html(html)
       $("##{show_secret_id}").click ->
-        popupSecret(result.secret)
+        popupSecret(result.human_secret)
       $("##{show_alt}").click ->
         altImg = "<img src='#{result.raw}' alt='TOTP barcode'/>"
         $("#{barcode_div}").html(altImg)
@@ -179,7 +179,6 @@ makeTOTP = ->
   return false
 
 saveTOTP = (key,hash) ->
-  # Ave TOTP
   noSubmit()
   code = $("#code").val()
   user = $("#username").val()
@@ -218,9 +217,9 @@ popupSecret = (secret) ->
     media:"screen"
     href:totpParams.stylesheetPath
     }).appendTo("head")
-  html="<div id='secret_id_panel' class='#{totpParams.popClass}'><p class='close_hover'>X</p><h2>#{secret}</h2></div>"
-  $("#totp_add").html(html)
-  $(".close_hover").click ->
+  html="<div id='secret_id_panel' class='#{totpParams.popClass}'><p class='close-popup'>X</p><h2>#{secret}</h2></div>"
+  $("#totp_add").after(html)
+  $(".close-popup").click ->
     $("#secret_id_panel").remove()
 
 noSubmit = ->

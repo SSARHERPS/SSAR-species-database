@@ -319,7 +319,7 @@
 
   totpParams.stylesheetPath = "css/otp_panels.css";
 
-  totpParams.popClass = "danger";
+  totpParams.popClass = "pop-panel";
 
   totpParams.home = "http://velociraptorsystems.com/samples/userhandler/test_page.php";
 
@@ -430,7 +430,7 @@
               }
               stopLoad();
               console.log(result["cookies"]);
-              return delay(30000000, function() {
+              return delay(500, function() {
                 return window.location.href = home;
               });
             }
@@ -482,7 +482,7 @@
         html = "<form id='totp_verify'> <p>To continue, scan this barcode with your smartphone application.</p> <p style='font-weight:bold'>If you're unable to do so, <a href='#' id='" + show_secret_id + "'>click here to manually input your key.</a></p> <div id='" + barcodeDiv + "'> " + result.svg + " <p>Don't see the barcode? <a href='#' id='" + show_alt + "'>Click here</a></p> </div> <p>Once you've done so, enter your code below to verify your setup.</p> <fieldset> <legend>Confirmation</legend> <input type='number' size='6' maxlength='6' id='code' name='code' placeholder='Code'/> <input type='hidden' id='username' name='username' value='" + user + "'/> <button id='verify_totp_button' class='totpbutton'>Verify</button> </fieldset> </form>";
         $("#totp_add").html(html);
         $("#" + show_secret_id).click(function() {
-          return popupSecret(result.secret);
+          return popupSecret(result.human_secret);
         });
         $("#" + show_alt).click(function() {
           var altImg;
@@ -556,9 +556,9 @@
       media: "screen",
       href: totpParams.stylesheetPath
     }).appendTo("head");
-    html = "<div id='secret_id_panel' class='" + totpParams.popClass + "'><p class='close_hover'>X</p><h2>" + secret + "</h2></div>";
-    $("#totp_add").html(html);
-    return $(".close_hover").click(function() {
+    html = "<div id='secret_id_panel' class='" + totpParams.popClass + "'><p class='close-popup'>X</p><h2>" + secret + "</h2></div>";
+    $("#totp_add").after(html);
+    return $(".close-popup").click(function() {
       return $("#secret_id_panel").remove();
     });
   };

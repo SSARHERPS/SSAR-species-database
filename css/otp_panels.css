@@ -1,4 +1,4 @@
-.close_hover {
+.close-popup {
     position: absolute;
     top: -30px;
     right: -10px;
@@ -20,13 +20,14 @@
     background: rgba(215, 0, 20, .75)
 }
 #secret_id_panel {
-    display: none;
     position: absolute;
-    width: 50%;
-    left: 25%;
-    min-height: 300px;
+    width: 80%;
+    left: 10%;
+    top:10%;
+    min-height: 2em;
     z-index: 10000;
-    background: rgba(29, 76, 190, .9);
+    background: rgba(190, 190, 190, .9);
     box-shadow: 5px 5px 10px rgba(0, 0, 0, .7);
     padding: 1em;
+    display:block;
 }
