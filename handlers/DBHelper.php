@@ -47,7 +47,7 @@ class DBHelper {
 
   public function setTable($table)
   {
-    $this->table = sanitize($table);
+    $this->table = $this->sanitize($table);
   }
 
   private function getSQLUser()
@@ -169,7 +169,7 @@ class DBHelper {
       {
         foreach($input as $var=>$val)
           {
-            $output[$var] = sanitize($val);
+            $output[$var] = $this->sanitize($val);
           }
       }
     else
@@ -421,8 +421,8 @@ function updateEntry($value,$unq_id,$field_name = null,$precleaned=false)
           {
             # Map each field name onto the value of the current value item
             $item = current($value);
-            $key = $precleaned ? mysqli_real_escape_string($l,$key) : sanitize($key);
-            $values[$key] = $precleaned ? mysqli_real_escape_string($l,$item) : sanitize($item);
+            $key = $precleaned ? mysqli_real_escape_string($l,$key) : $this->sanitize($key);
+            $values[$key] = $precleaned ? mysqli_real_escape_string($l,$item) : $this->sanitize($item);
             next($value);
           }
           }
@@ -431,8 +431,8 @@ function updateEntry($value,$unq_id,$field_name = null,$precleaned=false)
             # $field_name isn't an array. Let's make sure $value isn't either
             if(!is_array($value))
               {
-                $key = $precleaned ? mysqli_real_escape_string($l,$field_name) : sanitize($field_name);
-                $values[$key] = $precleaned ? mysqli_real_escape_string($l,$value) : sanitize($value);
+                $key = $precleaned ? mysqli_real_escape_string($l,$field_name) : $this->sanitize($field_name);
+                $values[$key] = $precleaned ? mysqli_real_escape_string($l,$value) : $this->sanitize($value);
               }
             else
               {
@@ -486,7 +486,7 @@ function updateEntry($value,$unq_id,$field_name = null,$precleaned=false)
 /*       $query="SELECT * FROM `$table_name`"; */
 /*       if($search_criteria!='*') */
 /*         { */
-/*           $search_criteria=trim(sanitize($search_criteria)); */
+/*           $search_criteria=trim($this->sanitize($search_criteria)); */
 /*           $query .=" WHERE cast($search_column as char) like '%$search_criteria%'"; */
 /*         } */
 /*       $l=openDB($database_name); */

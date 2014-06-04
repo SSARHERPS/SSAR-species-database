@@ -355,7 +355,11 @@ else if($_REQUEST['q']=='create')
 	      <input type='submit' value='Create' id='createUser_submit' disabled='disabled'/>
 	    </form><br class='clear'/>";
         $secnotice="<p><small>Remember your security best practices! Do not use the same password you use for other sites. While your information is <a href='http://en.wikipedia.org/wiki/Cryptographic_hash_function' $newwindow>hashed</a> with a multiple-round hash function, <a href='http://arstechnica.com/security/2013/05/how-crackers-make-minced-meat-out-of-your-passwords/' $newwindow>passwords are easy to crack!</a></small></p>";
-        $createform.=$secnotice; // comment out if SSL is used.
+        $createform.=$secnotice; # Password security notice
+        if($_SERVER["HTTPS"] != "on")
+          {
+            $createform.="<div class='error danger'><p>Warning: This form is insecure</p></div>";
+          }
 
         if($_REQUEST['s']=='next')
           {
@@ -419,7 +423,7 @@ else if($_REQUEST['q']=='create')
                           }
                         else
                           {
-                            $login_output.="<p class='error'>Your password was not long enough ($minimum_password_length characters) or did not match minimum complexity levels (one upper case letter, one lower case letter, one digit or special character). You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least $password_threshold_length characters. Please go back and try again.</p>";
+                            $login_output.="<p class='error'>Your password was not long enough ($minimum_password_length characters) or did not match minimum complexity levels (one upper case letter, one lower case letter, one digit or special character). You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png' id='any_long_pass'>any long password</a> of at least $password_threshold_length characters. Please go back and try again.</p>";
                           }
                       }
                     else $login_output.="<p class='error'>Your passwords did not match. Please go back and try again.</p>";

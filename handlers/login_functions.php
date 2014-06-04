@@ -607,7 +607,7 @@ class UserFunctions extends DBHelper
      $l=$this->openDB();
      $user=mysqli_real_escape_string($l,$username);
     ***/
-    $user=sanitize($username);
+    $user=$this->sanitize($username);
     $preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
     /***
      * Uncomment the next line if strict username comparison is needed.
@@ -636,7 +636,7 @@ class UserFunctions extends DBHelper
     $data_init="<xml><algo>$algo</algo>$rounds</xml>";
     $ne=self::encryptThis($salt.$pw,implode(" ",$name)); // only encrypt if requested, then put in secdata
     $sdata_init="<xml><name>".$ne[0]."</name></xml>";
-    $names="<xml><name>".sanitize(implode(" ",$name))."</name><fname>".sanitize($name[0])."</fname><lname>".$name[1]."</lname><dname>".sanitize($dname)."</dname></xml>";
+    $names="<xml><name>".$this->sanitize(implode(" ",$name))."</name><fname>".$this->sanitize($name[0])."</fname><lname>".$name[1]."</lname><dname>".$this->sanitize($dname)."</dname></xml>";
     $hardlink=sha1($salt.$creation);
     $store = array();
     foreach($this->getCols() as $key=>$type)
@@ -1087,7 +1087,7 @@ class UserFunctions extends DBHelper
         // write it to the db
         // replace or append based on flag
         require_once(dirname(__FILE__).'/../CONFIG.php');
-        $real_col=sanitize($col);
+        $real_col=$this->sanitize($col);
         if(!$replace)
           {
             // pull the existing data ...
@@ -1104,11 +1104,11 @@ class UserFunctions extends DBHelper
                 require_once(dirname(__FILE__).'/xml.php');
                 $xml_data=explode("</",$data);
                 $tag=array_pop($xml_data);
-                $tag=sanitize(substr($tag,0,-1));
+                $tag=$this->sanitize(substr($tag,0,-1));
                 $tag="<".$tag.">";
                 $xml= new Xml;
                 $tag_data=$xml->getTagContents($data,$tag);
-                $clean_tag_data=sanitize($tag_data);
+                $clean_tag_data=$this->sanitize($tag_data);
                 $new_data=$xml->updateTag($d,$tag,$tag_data);
               }
             else
@@ -1116,15 +1116,15 @@ class UserFunctions extends DBHelper
                 $jn=json_decode($data,true);
                 foreach($jn as $k=>$v)
                   {
-                    $ck=sanitize($k);
-                    $cv=sanitize($v);
+                    $ck=$this->sanitize($k);
+                    $cv=$this->sanitize($v);
                     $jd[$ck]=$cv;
                   }
                 $new_data=json_encode($jd);
               }
             $real_data=mysqli_real_escape_string($l,$new_data);
           }
-        else $real_data=sanitize($data);
+        else $real_data=$this->sanitize($data);
 
         if(empty($real_data)) return array('status'=>false,'error'=>'Invalid input data (sanitization error)');
         $query="UPDATE `".$this->getTable()."` SET $real_col=\"".$real_data."\" WHERE $where_col='$user'";
