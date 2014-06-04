@@ -23,7 +23,7 @@ class UserFunctions extends DBHelper
      ***/
     # Set up the parameters in CONFIG.php
     require_once(dirname(__FILE__).'/../CONFIG.php');
-    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue,$ip_record,$default_user_database,$default_sql_user,$default_sql_password,$sql_url,$default_user_table;
+    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue,$ip_record,$default_user_database,$default_sql_user,$default_sql_password,$sql_url,$default_user_table,$baseurl;
 
     if(!empty($db_params))
       {
@@ -103,10 +103,13 @@ class UserFunctions extends DBHelper
     $this->needsAuth = $needs_manual_authentication;
     $this->ipcol = $ip_record;
 
-    $baseurl = 'http';
-    if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
-    $baseurl .= "://www.";
-    $baseurl.=$_SERVER['HTTP_HOST'];
+    if(empty($baseurl))
+      {
+        $baseurl = 'http';
+        if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
+        $baseurl .= "://www.";
+        $baseurl.=$_SERVER['HTTP_HOST'];
+      }
     $base=array_slice(explode(".",$baseurl),-2);
     $domain=$base[0];
 
@@ -378,9 +381,9 @@ class UserFunctions extends DBHelper
             $i++;
             if($i == 4)
               {
-            $human_secret .= " ";
-            $i=0;
-          }
+                $human_secret .= " ";
+                $i=0;
+              }
           }
         $retarr["secret"] = $secret;
         $retarr["human_secret"] = $human_secret;
@@ -1034,8 +1037,8 @@ class UserFunctions extends DBHelper
           'name'=>"{'$cookieperson':'$user_greet'}",
           'link'=>"{'$cookielink':'$dblink'}",
           'js'=>$jquerycookie,
-        'source'=>$value_create,
-        'ip_given'=>$remote,
+          'source'=>$value_create,
+          'ip_given'=>$remote,
           'raw_auth'=>$value,
           'raw_cookie'=>$raw_data,
           'basis'=>$value_create,

@@ -202,7 +202,7 @@ class DBHelper {
     throw(new Exception("Could not connect to database."));
   }
 
-  public function getFirstRow($query)
+  protected function getFirstRow($query)
   {
     $l = $this->openDB();
     try
@@ -391,7 +391,7 @@ class DBHelper {
     else return false;
   }
 
-function updateEntry($value,$unq_id,$field_name = null,$precleaned=false)
+  function updateEntry($value,$unq_id,$field_name = null,$precleaned=false)
   {
     /***
      *
@@ -417,14 +417,14 @@ function updateEntry($value,$unq_id,$field_name = null,$precleaned=false)
         $values = array();
         if(is_array($field_name))
           {
-        foreach($field_name as $key)
-          {
-            # Map each field name onto the value of the current value item
-            $item = current($value);
-            $key = $precleaned ? mysqli_real_escape_string($l,$key) : $this->sanitize($key);
-            $values[$key] = $precleaned ? mysqli_real_escape_string($l,$item) : $this->sanitize($item);
-            next($value);
-          }
+            foreach($field_name as $key)
+              {
+                # Map each field name onto the value of the current value item
+                $item = current($value);
+                $key = $precleaned ? mysqli_real_escape_string($l,$key) : $this->sanitize($key);
+                $values[$key] = $precleaned ? mysqli_real_escape_string($l,$item) : $this->sanitize($item);
+                next($value);
+              }
           }
         else
           {
