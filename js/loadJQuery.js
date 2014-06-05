@@ -14,9 +14,12 @@ function cascadeJQLoad(i) { // Use alternate CDNs where appropriate to load jQue
         "purl.min.js",
         "base64.min.js",
         "picturefill.min.js",
-        "zxcvbn/zxcvbn.js",
+        "zxcvbn/zxcvbn-async.js",
         "c.min.js"
     ];
+    if (window.jQuery !== undefined) {
+        i = jq_paths.length -1;
+    }
     if (i < jq_paths.length) {
         i++;
         loadJQ(jq_paths[i], i, dependent_libraries);
