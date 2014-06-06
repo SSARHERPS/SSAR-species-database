@@ -410,7 +410,7 @@
     urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding;
     args = "action=verifytotp&code=" + code + "&user=" + user + "&password=" + pass + "&remote=" + ip;
     totp = $.post(urlString, args, 'json');
-    console.log("CHecking", urlString + "?" + args);
+    console.log("Checking", urlString + "?" + args);
     totp.done(function(result) {
       var e, i;
       if (result.status === true) {

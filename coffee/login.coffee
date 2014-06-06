@@ -76,7 +76,7 @@ doTOTPSubmit = (home = totpParams.home) ->
   urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding
   args = "action=verifytotp&code=#{code}&user=#{user}&password=#{pass}&remote=#{ip}"
   totp = $.post(urlString ,args,'json')
-  console.log("CHecking",urlString + "?" + args)
+  console.log("Checking",urlString + "?" + args)
   totp.done (result) ->
     # Check the result
     if result.status is true
