@@ -6,3 +6,23 @@ input[type=number]::-webkit-outer-spin-button {
 input[type='number'] {
     -moz-appearance:textfield;
 }
+#strength-meter {
+
+}
+.label {
+    text-align:center;
+}
+.strength-eval {
+    border:1px solid black;
+    width:.75em;
+    height:.75em;
+    margin: 0 auto;
+}
+#strength-requirements > div {
+    display:inline-block;
+    margin:.25em;
+    width: 2em;
+}
+progress,progress::-webkit-progress-value,progress::progress-value,progress::-moz-progress-bar {
+    background:orange;
+}
