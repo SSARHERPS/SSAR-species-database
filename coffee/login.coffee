@@ -225,6 +225,33 @@ popupSecret = (secret) ->
 
 giveAltVerificationOptions = ->
   # Put up an overlay, and ask if the user wants to remove 2FA or get a text
+  url = $.url()
+  ajaxLanding = "async_login_handler.php"
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding
+  user = $("#username").val()
+  args = "user=#{user}"
+  remove_id = "remove_totp_link"
+  sms_id = "send_totp_sms"
+  messages = new Object()
+  messages.remove = "<a href='#' id='#{remove_id}'>Remove two-factor authentication</a>"
+  # First see if the user can SMS at all before populating the message options
+  sms = $.get(urlString,args,'json')
+  sms.done (result) ->
+    if result[0] is true
+      messages.sms = "<a href='#' id='#{sms_id}'>Send SMS</a>"
+  sms.fail (result,status) ->
+    # Just don't populate the thing
+    console.error("Could not check SMS-ability",result,status)
+  pop_content = ""
+  $.each messages,(k,v) ->
+    pop_content += v
+  html = "<div id='alt_auth_pane'><p>#{pop_content}</p></div>"
+  # Attach it to DOM
+  # Attach event handlers
+  $("##{remove_id}").click ->
+    # Stuff
+  $("##{sms_id}").click ->
+    # Things
 
 noSubmit = ->
   event.preventDefault()

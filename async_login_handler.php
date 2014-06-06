@@ -10,7 +10,7 @@ function returnAjax($data)
   header('Cache-Control: no-cache, must-revalidate');
   header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
   header('Content-type: application/json');
-  print json_encode($data,JSON_FORCE_OBJECT); // PHP 5.3+ - http://www.php.net/json_encode
+  print json_encode($data,JSON_FORCE_OBJECT);
   exit();
 }
 
@@ -38,6 +38,13 @@ switch($do)
     returnAjax(saveTOTP($_REQUEST));
     break;
   case "sendtext":
+    returnAjax(sendTOTPText($_REQUEST));
+    break;
+  case "totpstatus":
+    returnAjax(hasTOTP($_REQUEST));
+    break;
+  case "cansms":
+    returnAjax(canSMS($_REQUEST));
     break;
   default:
     returnAjax(getLoginState($_REQUEST),true);
@@ -50,6 +57,34 @@ function getLoginState($get,$default=false)
   $id=$get['dblink'];
   $u=new UserFunctions();
   return array("status"=>$u->validateUser($id,$conf,$s),'defaulted'=>$default);
+}
+
+function hasTOTP($get)
+{
+  $user = $get["user"];
+  $u = new UserFunctions($user);
+  try
+    {
+      return $u->has2FA();
+    }
+  catch(Exception $e)
+    {
+      return false;
+    }
+}
+
+function canSMS($get)
+{
+  $user = $get["user"];
+  $u = new UserFunctions($user);
+  try
+    {
+      return $u->canSMS();
+    }
+  catch(Exception $e)
+    {
+      return false;
+    }
 }
 
 function generateTOTPForm($get)
@@ -132,6 +167,32 @@ function verifyTOTP($get)
   return $return;
 }
 
+function sendTOTPText($get)
+{
+  $user = $get['user'];
+  # We don't need to verify the user here
+  $u = new UserFunctions($user);
+  # Ensure the user has SMS-ability and 2FA
+  try
+    {
+      # Return status
+      if(!$u->has2FA())
+        {
+          return array("status"=>false,"human_error"=>"Two-Factor authentication is not enabled for this account","error"=>"Two-Factor authentication is not enabled for this account","username"=>$user);
+        }
+      if(!$u->canSMS())
+        {
+          return array("status"=>false,"human_error"=>"Your phone setup isn't complete","error"=>"User failed SMS check","username"=>$user);
+        }
+      $result = $u->sendTOTPText();
+      return array("status"=>$result,"message"=>"Message sent");
+    }
+  catch (Exception $e)
+    {
+      return array("status"=>false,"human_error"=>"There was a problem sending your text.","error"=>$e->getMessage());
+    }
+}
+
 
 function saveToUser($get)
 {
@@ -154,7 +215,9 @@ function saveToUser($get)
     'private_key',
     'public_key',
     'creation',
-    'dblink'
+    'dblink',
+    'secret',
+    'emergency_code'
   );
   if(!empty($conf) && !empty($s) && !empty($id) && !empty($get['data']) && !empty($get['col']))
     {

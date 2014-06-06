@@ -6,7 +6,7 @@
 
 $captive_login=false; // pulls the user back to the main page if not logged in
 
-$sitee_name = "";
+$site_name = "";
 
 $default_user_table='userdata';
 $default_user_database="";
@@ -82,6 +82,7 @@ $db_cols=array(
   "secret"=>"varchar(255)",
   "emergency_code"=>"varchar(255)",
   "phone"=>"int(10)",
+  "phone_verified"=>"bool",
 );
 
 /***
