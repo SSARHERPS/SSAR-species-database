@@ -64,7 +64,18 @@ if($debug==true)
     echo displayDebug($user->validateUser($_COOKIE[$cookielink],null,null,true));
   }
 
-$logged_in=$user->validateUser($_COOKIE[$cookielink]);
+try
+{
+  $logged_in=$user->validateUser($_COOKIE[$cookielink]);
+  # This should only show when there isn't two factor enabled ...
+  $twofactor = $user->has2FA() ? "":"<p><a href='?2fa=t'>Add 2-factor authentication</a></p>";
+}
+catch (Exception $e)
+  {
+    # There have been no cookies set.
+    $logged_in = false;
+    $twofactor = "";
+  }
 
 if($logged_in)
   {
@@ -79,8 +90,7 @@ else
   }
 
 
-# This should only show when there isn't two factor enabled ...
-$twofactor = $user->has2FA() ? "":"<p><a href='?2fa=t'>Add 2-factor authentication</a></p>";
+
 $settings_blob = "<section id='account_settings'><h2>Settings</h2>".$twofactor."</section>";
 
 

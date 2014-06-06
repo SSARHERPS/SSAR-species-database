@@ -51,6 +51,8 @@ $debug = true;
         <h3>Test Safe Write</h3>
         <p>You can check to ensure the proper functioning of the writing to the user database here..</p>
         <?php
+           try
+         {
            $u = new UserFunctions();
            if($u->validateUser()) {
              $select="<select name='col'>";
@@ -71,6 +73,9 @@ $debug = true;
         <?php
            }
            else echo "Please log in above to test this.";
+         } catch(Exception $e) {
+    echo "You've not logged in. Please log in above to test this.";
+  }
 if($_REQUEST['t']=='write')
   {
     echo displayDebug($u->writeToUser($_POST['data'],$_POST['col']));
@@ -79,7 +84,8 @@ if($_REQUEST['t']=='write')
       </div>
       <div>
         <h3>Show User Data</h3>
-        <?php
+<?php
+try {
            if($u->validateUser()) {
         ?>
         <form action='?t=show' method='post'>
@@ -90,6 +96,9 @@ if($_REQUEST['t']=='write')
         <?php
            }
            else echo "Please log in above to test this.";
+} catch(Exception $e) {
+  echo "You've not logged in. Please log in above to test this.";
+}
            if($_REQUEST['t']=='show')
              {
                echo displayDebug($u->lookupUser($_COOKIE[$cookieuser],$_POST['pw']));
