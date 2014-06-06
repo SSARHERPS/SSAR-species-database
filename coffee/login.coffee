@@ -223,6 +223,9 @@ popupSecret = (secret) ->
   $(".close-popup").click ->
     $("#secret_id_panel").remove()
 
+giveAltVerificationOptions = ->
+  # Put up an overlay, and ask if the user wants to remove 2FA or get a text
+
 noSubmit = ->
   event.preventDefault()
   event.returnValue = false
@@ -250,6 +253,8 @@ $ ->
     doTOTPRemove()
   $("#remove_totp_button").click ->
     doTOTPRemove()
+  $("#alternate_verification_prompt").click ->
+    giveAltVerificationOptions();
   $("<link/>",{
     rel:"stylesheet"
     type:"text/css"

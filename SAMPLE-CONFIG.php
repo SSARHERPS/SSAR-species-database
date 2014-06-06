@@ -6,6 +6,8 @@
 
 $captive_login=false; // pulls the user back to the main page if not logged in
 
+$sitee_name = "";
+
 $default_user_table='userdata';
 $default_user_database="";
 $default_sql_user="";
@@ -79,6 +81,7 @@ $db_cols=array(
   "private_key"=>"text",
   "secret"=>"varchar(255)",
   "emergency_code"=>"varchar(255)",
+  "phone"=>"int(10)",
 );
 
 /***
@@ -104,5 +107,15 @@ $ip_record = "last_ip";
  ***/
 
 $totp_steps = 1;
+
+/***
+ * SMS Configuration -- Twilio
+ * Get your API key here: www.twilio.com/user/account
+ *
+ ***/
+
+$twilio_sid = "";
+$twilio_token = "";
+$twilio_number = "";
 
 ?>

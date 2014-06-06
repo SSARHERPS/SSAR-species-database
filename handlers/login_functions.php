@@ -23,7 +23,7 @@ class UserFunctions extends DBHelper
      ***/
     # Set up the parameters in CONFIG.php
     require_once(dirname(__FILE__).'/../CONFIG.php');
-    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue,$ip_record,$default_user_database,$default_sql_user,$default_sql_password,$sql_url,$default_user_table,$baseurl;
+    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue,$ip_record,$default_user_database,$default_sql_user,$default_sql_password,$sql_url,$default_user_table,$baseurl,$twilio_sid,$twilio_token,$twilio_number,$site_name;
 
     if(!empty($db_params))
       {
@@ -102,6 +102,10 @@ class UserFunctions extends DBHelper
     $this->totpsteps = $totp_steps;
     $this->needsAuth = $needs_manual_authentication;
     $this->ipcol = $ip_record;
+    $this->twilio_sid = $twilio_sid;
+    $this->twilio_token = $twilio_token;
+    $this->twilio_number = $twilio_number;
+    $this->site = $site_name;
 
     if(empty($baseurl))
       {
@@ -139,6 +143,7 @@ class UserFunctions extends DBHelper
    ***/
 
   private function getSiteKey() { return $this->siteKey; }
+  public function getSiteName() { return $this->site; }
   private function getMinPasswordLength() { return $this->minPasswordLength; }
   private function getThresholdLength() { return $this->thresholdLength; }
   private function getSupportEmail() { return $this->supportEmail; }
@@ -219,7 +224,7 @@ class UserFunctions extends DBHelper
     if(empty($user_id) || empty($col))
       {
         # We couldn't get it from direct assignment or cookies
-        throw(new Exception("Unable to set user for ".$col."=>".$user_id."."));
+        throw(new Exception("Unable to set user for '".$col."' => '".$user_id."', and unable to read cookies."));
       }
 
     # Inputs are sanitized in lookupItem
@@ -249,6 +254,71 @@ class UserFunctions extends DBHelper
     );
     if(!in_array($this->totpdigest,$allowed_digest)) return "sha1";
     return $this->totpdigest;
+  }
+
+  public function setTwilioSID($sid)
+  {
+    $this->twilio_sid = $sid;
+  }
+  public function getTwilioSID()
+  {
+    return $this->twilio_sid;
+  }
+
+  public function setTwilioToken($token)
+  {
+    $this->$twilio_token = $token;
+  }
+  public function getTwilioToken()
+  {
+    return $this->twilio_token;
+  }
+
+  public function setTwilioNumber($number)
+  {
+    # Validate it
+    if(!self::isValidPhone($number))
+      {
+        throw(new Exception("Invalid phone number"));
+      }
+  }
+  public function getTwilioNumber()
+  {
+    return $this->twilio_number;
+  }
+
+  public function canSMS()
+  {
+    $twilio_status = !empty($this->getTwilioSID()) && !empty($this->getTwilioToken());
+    if(!$twilio_status)
+      {
+        throw(new Exception("Twilio has not been configured. Be sure that \$twilio_sid, \$twilio_token, and \$twilio_number are specified in config.php, or call setTwilioSID(), setTwilioToken(), and setTwilioNumber() first."));
+      }
+    $userdata = $this->getUser();
+    return self::isValidPhone($userdata["phone"]);
+  }
+
+
+  private static function cleanPhone($number)
+  {
+    /***
+     * @param string $number
+     * @return int $number
+     ***/
+    # Common things that may show up in a phone number
+    $number = preg_replace("/[^0-9]/","",$number);
+    # Remove the country code for the US
+    if(substr($number,0,1) == "1")
+      {
+        $number = substr($number,1);
+      }
+    return $number;
+  }
+
+  private static function isValidPhone($number)
+  {
+    $number = self::cleanPhone($number);
+    return is_integer($number) && strlen($number) === 10;
   }
 
   public static function microtime_float()
@@ -509,7 +579,7 @@ class UserFunctions extends DBHelper
   }
 
 
-  public function sendTOTPText($number)
+  public function sendTOTPText()
   {
     /***
      * Send a text message to the destination number with the TOTP code
@@ -517,6 +587,26 @@ class UserFunctions extends DBHelper
     # Get the current TOTP value for the user
     # Send the text through Twilio
     # Return the status and updated message
+    if($this->has2FA())
+      {
+        try
+          {
+            self::doLoadOTP();
+            $totp = new OTPHP\TOTP($this->getSecret());
+            $totp->setDigest($this->getDigest());
+            $message = "Your authentication code for ".$this->getSiteName()." is: ".$totp->now()." . It is valid for 30 seconds.";
+            $this->textUser($message);
+            return true;
+          }
+        catch(Exception $e)
+          {
+            return false;
+          }
+      }
+    else
+      {
+        throw(new Exception("User does not have TOTP enabled to send a text!"));
+      }
   }
 
   public static function generateQR($uri,$data_path = null,$identifier_path = null)
@@ -689,7 +779,8 @@ class UserFunctions extends DBHelper
     $test_res=$this->addItem($store,$fields);
     if($test_res)
       {
-        // Get ID value
+        # Get ID value
+        # The TOTP column has never been set up, so no worries
         $res = $this->lookupUser($user, $pw_in);
         $userdata=$res[1];
         $id=$userdata['id'];
@@ -1068,7 +1159,8 @@ class UserFunctions extends DBHelper
           }
         else if(array_key_exists('password',$validation_data))
           {
-            // confirm with lookupUser();
+            # confirm with lookupUser();
+            # If TOTP is enabled, this lookup will always fail ...
             $a=$this->lookupUser($validation_data['username'],$validation_data['password']);
             $validated=$a[0];
             if($validated) $this->getUser(array("username"=>$validation_data['username']));
@@ -1168,7 +1260,37 @@ class UserFunctions extends DBHelper
      ***/
   }
 
-  public function textUserVerify()
+  public function textUser($message)
+  {
+    /***
+     * Send a message to a user
+     *
+     * @param string $message
+     * @return twilio message object
+     * @throws exception when user can't SMS
+     ***/
+    if($this->canSMS())
+      {
+        require_once("twilio/Services/Twilio.php");
+        $client = new Services_Twilio($this->getTwilioSID(),$this->getTwilioToken());
+        try
+          {
+            $userdata = $this->getUser();
+            $phone = $userdata["phone"];
+            return $client->account->messages->sendMessage($this->getTwilioNumber(),$phone,$message);
+          }
+        catch(Exception $e)
+          {
+            throw(new Exception("Could not SMS - ".$e->getMessage()));
+          }
+      }
+    else
+      {
+        throw(new Exception("This user has no phone number"));
+      }
+  }
+
+  protected function textUserVerify()
   {
     /***
      * Send a text message to a user's stored phone, and

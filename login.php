@@ -68,13 +68,13 @@ try
 {
   $logged_in=$user->validateUser($_COOKIE[$cookielink]);
   # This should only show when there isn't two factor enabled ...
-  $twofactor = $user->has2FA() ? "":"<p><a href='?2fa=t'>Add 2-factor authentication</a></p>";
+  $twofactor = $user->has2FA() ? "Remove two-factor authentication":"Add two-factor authentication";
 }
 catch (Exception $e)
   {
     # There have been no cookies set.
     $logged_in = false;
-    $twofactor = "";
+    $twofactor = "Please log in.";
   }
 
 if($logged_in)
@@ -91,7 +91,7 @@ else
 
 
 
-$settings_blob = "<section id='account_settings'><h2>Settings</h2>".$twofactor."</section>";
+$settings_blob = "<section id='account_settings'><h2>Settings</h2><p><a href='?2fa=t'>".$twofactor."</a></p></section>";
 
 
 $login_output="<div id='login_block'>";
@@ -147,6 +147,7 @@ if($_REQUEST['q']=='submitlogin')
       <input type='hidden' id='encrypted' name='encrypted' value='".$user->strbool($is_encrypted)."'/>
       <button id='verify_totp_button' class='totpbutton'>Verify</button>
     </fieldset>
+    <p><small><a href='#'  id='alternate_verification_prompt'>I can't use my app</a></small></p>
   </form>
 </section>";
             $login_output .= $totp_buffer;
@@ -524,8 +525,8 @@ else if(isset($_REQUEST['2fa']))
   <form id='totp_start'>
     <fieldset>
       <legend>Login to continue</legend>
-      <input type='email' value='".$user->username."' readonly='readonly' id='username' name='username'/>
-      <input type='password' id='password' name='password'/>
+      <input type='email' value='".$user->username."' readonly='readonly' id='username' name='username'/><br/>
+      <input type='password' id='password' name='password'/><br/>
       <input type='hidden' id='secret' name='secret' value='".$_COOKIE[$cookiekey]."'/>
       <input type='hidden' id='hash' name='hash' value='".$_COOKIE[$cookieauth]."'/>
       <button id='add_totp_button' class='totpbutton'>Add Two-Factor Authentication</button>
@@ -542,8 +543,8 @@ else if(isset($_REQUEST['2fa']))
   <form id='totp_remove' onsubmit='event.preventDefault();'>
     <fieldset>
       <legend>Remove Two-Factor Authentication</legend>
-      <input type='email' value='".$username."' readonly='readonly' id='username' name='username'/>
-      <input type='password' id='password' name='password'/>
+      <input type='email' value='".$username."' readonly='readonly' id='username' name='username'/><br/>
+      <input type='password' id='password' name='password'/><br/>
       <input type='number' id='code' name='code' placeholder='Authenticator Code or Backup Code' size='32' maxlength='32'/>
       <button id='remove_totp_button' class='totpbutton'>Remove Two-Factor Authentication</button>
     </fieldset>
