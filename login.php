@@ -46,10 +46,6 @@ require_once(dirname(__FILE__).'/handlers/db_hook.inc');
 require_once(dirname(__FILE__).'/handlers/xml.php');
 
 
-
-$settings_blob = "<section id='account_settings'><h2>Settings</h2><p><a href='?2fa=t'>Add 2-factor authentication</a></p></section>";
-
-
 $xml=new Xml;
 $user=new UserFunctions;
 
@@ -81,6 +77,13 @@ else
   {
     if($captive_login) header("Refresh: 0; url=$baseurl");
   }
+
+
+# This should only show when there isn't two factor enabled ...
+$twofactor = $user->has2FA() ? "":"<p><a href='?2fa=t'>Add 2-factor authentication</a></p>";
+$settings_blob = "<section id='account_settings'><h2>Settings</h2>".$twofactor."</section>";
+
+
 $login_output="<div id='login_block'>";
 $alt_forms="<div id='alt_logins'>
 <!-- OpenID, Google, Twitter, Facebook -->
