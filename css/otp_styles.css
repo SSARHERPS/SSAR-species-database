@@ -26,3 +26,18 @@ input[type='number'] {
 progress,progress::-webkit-progress-value,progress::progress-value,progress::-moz-progress-bar {
     background:orange;
 }
+
+#totp_message {
+    font-weight:bold;
+}
+.error,.danger {
+    color:#ff0000;
+}
+.good {
+    color:#00a050;
+}
+#secret_id_panel {
+    text-align:center;
+    text-transform:uppercase;
+    font-family:"droid sans mono",consolas,monospace;
+}
