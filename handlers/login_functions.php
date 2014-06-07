@@ -296,7 +296,7 @@ class UserFunctions extends DBHelper
       }
     else if(!$twilio_status) return false;
     $userdata = $this->getUser();
-    return self::isValidPhone($userdata["phone"]);
+    return self::isValidPhone($userdata["phone"]) && boolstr($userdata["phone_verified"]) === true;
   }
 
 
@@ -683,7 +683,7 @@ class UserFunctions extends DBHelper
 
 
 
-  public function createUser($username,$pw_in,$name,$dname)
+  public function createUser($username,$pw_in,$name,$dname,$phone = null)
   {
     /***
      * Create a new user
@@ -767,6 +767,10 @@ class UserFunctions extends DBHelper
           case "dblink":
             $store[]=$hardlink;
             break;
+          case "phone":
+            $store[] = self::isValidPhone($phone) ? self::cleanPhone($phone):null;
+            break;
+          case "phone_verified":
           case "admin_flag":
           case "su_flag":
           case "disabled":

@@ -273,6 +273,12 @@ giveAltVerificationOptions = ->
       console.error("AJAX failure trying to send TOTP text",urlString + "?" + args)
       console.error("Returns:",result,status)
 
+verifyPhone = ->
+  # Verify phone auth status
+  # If not true, get the server to SMS a secret code
+  # Create verification field
+  # Validate field against server and update status
+
 noSubmit = ->
   event.preventDefault()
   event.returnValue = false

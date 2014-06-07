@@ -354,7 +354,12 @@ else if($_REQUEST['q']=='create')
               <label for='dname'>
                 Display Name:
               </label>
-	      <input type='text' name='dname' id='dname' placeholder='ThatUserY2K' required='required'/>
+	      <input type='text' name='dname' id='dname' placeholder='ThatUser1337' required='required'/>
+	      <br/>
+              <label for='phone'>
+                Phone:
+              </label>
+	      <input type='tel' name='phone' id='phone' placeholder='555 123-4567'/>
 	      <br/>
               <label for='honey' class='hide' >
                 Do not fill this field
@@ -403,7 +408,7 @@ else if($_REQUEST['q']=='create')
                       {
                         if(preg_match('/(?=^.{'.$minimum_password_length.',}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',$_POST['password']) || strlen($_POST['password'])>=$password_threshold_length) // validate email, use in validation to notify user.
                           {
-                            $res=$user->createUser($_POST['username'],$_POST['password'],array($_POST['fname'],$_POST['lname']),$_POST['dname']);
+                            $res=$user->createUser($_POST['username'],$_POST['password'],array($_POST['fname'],$_POST['lname']),$_POST['dname'],$_POST['phone']);
                             if($res[0])
                               {
                                 $login_output.="<h3>".$res[1]."</h3>"; //jumpto1
