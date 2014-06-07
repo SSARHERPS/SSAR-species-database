@@ -229,9 +229,11 @@ giveAltVerificationOptions = ->
   ajaxLanding = "async_login_handler.php"
   urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding
   user = $("#username").val()
-  args = "user=#{user}"
+  args = "action=cansms&user=#{user}"
   remove_id = "remove_totp_link"
   sms_id = "send_totp_sms"
+  pane_id = "alt_auth_pane"
+  pane_messages = "alt_auth_messages"
   messages = new Object()
   messages.remove = "<a href='#' id='#{remove_id}'>Remove two-factor authentication</a>"
   # First see if the user can SMS at all before populating the message options
@@ -245,13 +247,31 @@ giveAltVerificationOptions = ->
   pop_content = ""
   $.each messages,(k,v) ->
     pop_content += v
-  html = "<div id='alt_auth_pane'><p>#{pop_content}</p></div>"
+  html = "<div id='#{pane_id}'><p>#{pop_content}</p><p id='#{pane_messages}'></p></div>"
   # Attach it to DOM
   # Attach event handlers
   $("##{remove_id}").click ->
-    # Stuff
+    # Take them to the page where they can remove the TOTP
+    totpParams.home ?=  url.attr('protocol') + '://' + url.attr('host') + '/login.php'
+    window.location.href = totpParams.home + "?2fa=t"
   $("##{sms_id}").click ->
-    # Things
+    # Attempt to send the TOTP
+    args = "action=sendtotptext&user=#{user}"
+    sms_totp = $.get(urlString,args,'json')
+    sms_totp.done (result) ->
+      if result.status is true
+        # Remove the pane and replace totp_message
+        $("##{pane_id}").remove()
+        $("#totp_message").text(result.message)
+      else
+        #Place a notice in pane_messages
+        $("##{pane_messages}")
+        .addClass("error")
+        .text(result.human_error)
+        console.error(result.error)
+    sms_totp.fail (result,status) ->
+      console.error("AJAX failure trying to send TOTP text",urlString + "?" + args)
+      console.error("Returns:",result,status)
 
 noSubmit = ->
   event.preventDefault()

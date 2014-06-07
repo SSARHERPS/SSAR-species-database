@@ -287,13 +287,14 @@ class UserFunctions extends DBHelper
     return $this->twilio_number;
   }
 
-  public function canSMS()
+  public function canSMS($strict = true)
   {
     $twilio_status = !empty($this->getTwilioSID()) && !empty($this->getTwilioToken());
-    if(!$twilio_status)
+    if(!$twilio_status && $strict === true)
       {
         throw(new Exception("Twilio has not been configured. Be sure that \$twilio_sid, \$twilio_token, and \$twilio_number are specified in config.php, or call setTwilioSID(), setTwilioToken(), and setTwilioNumber() first."));
       }
+    else if(!$twilio_status) return false;
     $userdata = $this->getUser();
     return self::isValidPhone($userdata["phone"]);
   }

@@ -37,7 +37,7 @@ switch($do)
   case "savetotp":
     returnAjax(saveTOTP($_REQUEST));
     break;
-  case "sendtext":
+  case "sendtotptext":
     returnAjax(sendTOTPText($_REQUEST));
     break;
   case "totpstatus":
@@ -79,7 +79,8 @@ function canSMS($get)
   $u = new UserFunctions($user);
   try
     {
-      return $u->canSMS();
+      # This should be non-strict
+      return $u->canSMS(false);
     }
   catch(Exception $e)
     {

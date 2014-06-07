@@ -147,7 +147,7 @@ if($_REQUEST['q']=='submitlogin')
       <input type='hidden' id='encrypted' name='encrypted' value='".$user->strbool($is_encrypted)."'/>
       <button id='verify_totp_button' class='totpbutton'>Verify</button>
     </fieldset>
-    <p><small><a href='#'  id='alternate_verification_prompt'>I can't use my app</a></small></p>
+    <p><small><a href='#' id='alternate_verification_prompt'>I can't use my app</a></small></p>
   </form>
 </section>";
             $login_output .= $totp_buffer;

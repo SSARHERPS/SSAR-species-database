@@ -565,7 +565,58 @@
     });
   };
 
-  giveAltVerificationOptions = function() {};
+  giveAltVerificationOptions = function() {
+    var ajaxLanding, args, html, messages, pane_id, pane_messages, pop_content, remove_id, sms, sms_id, url, urlString, user;
+    url = $.url();
+    ajaxLanding = "async_login_handler.php";
+    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding;
+    user = $("#username").val();
+    args = "action=cansms&user=" + user;
+    remove_id = "remove_totp_link";
+    sms_id = "send_totp_sms";
+    pane_id = "alt_auth_pane";
+    pane_messages = "alt_auth_messages";
+    messages = new Object();
+    messages.remove = "<a href='#' id='" + remove_id + "'>Remove two-factor authentication</a>";
+    sms = $.get(urlString, args, 'json');
+    sms.done(function(result) {
+      if (result[0] === true) {
+        return messages.sms = "<a href='#' id='" + sms_id + "'>Send SMS</a>";
+      }
+    });
+    sms.fail(function(result, status) {
+      return console.error("Could not check SMS-ability", result, status);
+    });
+    pop_content = "";
+    $.each(messages, function(k, v) {
+      return pop_content += v;
+    });
+    html = "<div id='" + pane_id + "'><p>" + pop_content + "</p><p id='" + pane_messages + "'></p></div>";
+    $("#" + remove_id).click(function() {
+      if (totpParams.home == null) {
+        totpParams.home = url.attr('protocol') + '://' + url.attr('host') + '/login.php';
+      }
+      return window.location.href = totpParams.home + "?2fa=t";
+    });
+    return $("#" + sms_id).click(function() {
+      var sms_totp;
+      args = "action=sendtotptext&user=" + user;
+      sms_totp = $.get(urlString, args, 'json');
+      sms_totp.done(function(result) {
+        if (result.status === true) {
+          $("#" + pane_id).remove();
+          return $("#totp_message").text(result.message);
+        } else {
+          $("#" + pane_messages).addClass("error").text(result.human_error);
+          return console.error(result.error);
+        }
+      });
+      return sms_totp.fail(function(result, status) {
+        console.error("AJAX failure trying to send TOTP text", urlString + "?" + args);
+        return console.error("Returns:", result, status);
+      });
+    });
+  };
 
   noSubmit = function() {
     event.preventDefault();
