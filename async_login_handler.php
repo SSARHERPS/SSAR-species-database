@@ -46,6 +46,8 @@ switch($do)
   case "cansms":
     returnAjax(canSMS($_REQUEST));
     break;
+  case "verifyphone"
+    returnAjax(verifyPhone($_REQUEST));
   default:
     returnAjax(getLoginState($_REQUEST),true);
   }
@@ -92,7 +94,7 @@ function generateTOTPForm($get)
 {
   $user = $get['user'];
   $password = $get['password'];
-  $u = new Userfunctions($user);
+  $u = new UserFunctions($user);
   $r = $u->lookupUser($user,$password);
   if($r[0] === false)
     {
@@ -191,6 +193,23 @@ function sendTOTPText($get)
   catch (Exception $e)
     {
       return array("status"=>false,"human_error"=>"There was a problem sending your text.","error"=>$e->getMessage());
+    }
+}
+
+function verifyPhone($get)
+{
+  /***
+   * Verify a phone number.
+   * An empty or bad verification code generates a new one to be saved in the temp column
+   ***/
+  $u = new UserFunctions($get['username']);
+  try
+    {
+      return $u->verifyPhone($get['auth']);
+    }
+  catch(Exception $e)
+    {
+      return array("status"=>false,"error"=>$e->getMessage(),"human_error"=>"Failed to send verification text.");
     }
 }
 

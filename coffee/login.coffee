@@ -3,14 +3,19 @@
 if typeof passwords isnt 'object' then passwords = new Object()
 passwords.goodbg = "#cae682"
 passwords.badbg = "#e5786d"
+# Password lengths can be overriden in CONFIG.php,
+# which then defines the values for these before the script loads.
 passwords.minLength ?= 8
 passwords.overrideLength ?= 21
 
-totpParams = new Object()
+if typeof totpParams isnt 'object' then totpParams = new Object()
 totpParams.mainStylesheetPath = "css/otp_styles.css"
 totpParams.popStylesheetPath = "css/otp_panels.css"
 totpParams.popClass = "pop-panel"
-totpParams.home = "http://velociraptorsystems.com/samples/userhandler/test_page.php";
+# The value $redirect_url in CONFIG.php overrides this value
+if not totpParams.home?
+  url = $.url()
+  totpParams.home =  url.attr('protocol') + '://' + url.attr('host') + '/'
 
 checkPasswordLive = ->
   pass = $("#password").val()
@@ -274,6 +279,7 @@ giveAltVerificationOptions = ->
       console.error("Returns:",result,status)
 
 verifyPhone = ->
+  noSubmit()
   # Verify phone auth status
   # If not true, get the server to SMS a secret code
   # Create verification field
@@ -308,6 +314,12 @@ $ ->
     doTOTPRemove()
   $("#alternate_verification_prompt").click ->
     giveAltVerificationOptions();
+  $("#verify_phone").click ->
+    verifyPhone()
+  $("#verify_phone_button").click ->
+    verifyPhone();
+  $("#verify_later").click ->
+    window.location.href = totpParams.home
   $("<link/>",{
     rel:"stylesheet"
     type:"text/css"

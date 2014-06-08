@@ -1,17 +1,18 @@
 <?php
 
 /***
- * Update the variables in here and re-save as config.php for use.
+ * Update the variables in here and re-save as CONFIG.php for use.
  ***/
 
-$captive_login=false; // pulls the user back to the main page if not logged in
+# pulls the user back to the main page if not logged in
+$captive_login=false; 
 
 $site_name = "";
 
 $default_user_table='userdata';
 $default_user_database="";
 $default_sql_user="";
-$default_sql_password=""; // https://www.random.org/passwords/?num=5&len=24&format=plain&rnd=new
+$default_sql_password=""; # https://www.random.org/passwords/?num=1&len=24&format=plain&rnd=new
 $sql_url = 'localhost';
 
 /***
@@ -23,9 +24,10 @@ $recaptcha_private_key="";
 
 
 /***
- * Very important! I suggest taking all three results and concatenating them
+ * Very important! I suggest taking all three results and concatenating them:
+ * https://www.random.org/passwords/?num=3&len=24&format=plain&rnd=new
  ***/
-$site_security_token=""; // https://www.random.org/passwords/?num=3&len=24&format=plain&rnd=new
+$site_security_token=""; 
 
 /***
  * If not set, minimum password length defaults to 8, with a threshold of 20.
@@ -47,11 +49,10 @@ $profile_picture_storage = $user_data_storage.'';
 
 $needs_manual_authentication = false;
 
-/***
 
- $baseurl=""; // define if other than the hosted URL
+$baseurl = ""; # define if other than the hosted URL
+$redirect_url = ""; # define if other than the hosted URL
 
-***/
 
 /***
  * If you edit this, change the mapping in login_functions.php
@@ -112,6 +113,7 @@ $totp_steps = 1;
 /***
  * SMS Configuration -- Twilio
  * Get your API key here: www.twilio.com/user/account
+ * Strict SMS checks will throw exceptions if not set up.
  *
  ***/
 

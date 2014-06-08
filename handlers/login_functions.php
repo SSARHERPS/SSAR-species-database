@@ -11,7 +11,8 @@ class UserFunctions extends DBHelper
   {
     /***
      * @param string $username the user to be instanced with
-     * @param string $lookup_column the column to look them up in. Ignored if $username is null.
+     * @param string $lookup_column the column to look them up in. 
+     *                              Ignored if $username is null, defaults to $user_column
      * @param array $db_params Optional override database parameters.
      *                         The required keys are:
      *                         (string)"user" for SQL username,
@@ -244,6 +245,17 @@ class UserFunctions extends DBHelper
       }
   }
 
+  public function getUsername()
+  {
+    return $this->username;
+  }
+
+  public function getPhone()
+  {
+    $userdata = $this->getUser();
+    return self::cleanPhone($userdata["phone"]);
+  }
+
   private function getDigest()
   {
     $allowed_digest = array(
@@ -289,6 +301,13 @@ class UserFunctions extends DBHelper
 
   public function canSMS($strict = true)
   {
+    /***
+     * Return if the user can get an SMS
+     * @param bool $strict if true, throw an exception for bad setup,
+     *                     and false if unverified; otherwise, false for
+     *                     bad setup, and true if the number is OK (regardless of verification)
+     * @return bool
+     ***/
     $twilio_status = !empty($this->getTwilioSID()) && !empty($this->getTwilioToken());
     if(!$twilio_status && $strict === true)
       {
@@ -296,7 +315,8 @@ class UserFunctions extends DBHelper
       }
     else if(!$twilio_status) return false;
     $userdata = $this->getUser();
-    return self::isValidPhone($userdata["phone"]) && boolstr($userdata["phone_verified"]) === true;
+    $verified = $strict ? self::isValidPhone($this->getPhone()) && boolstr($userdata["phone_verified"]) === true : self::isValidPhone($this->getPhone());
+    return $verified;
   }
 
 
@@ -708,16 +728,16 @@ class UserFunctions extends DBHelper
      * Sometimes special characters may be escaped and be OK, so this is left commented out by default.
      ***/
     //if($user!=$username) return array(false,'Your chosen email contained injectable code. Please try again.');
-    if(preg_match($preg,$username)!=1) return array(false,'Your email is not a valid email address. Please try again.');
+    if(preg_match($preg,$username)!=1) return array("status"=>false,"error"=>'Your email is not a valid email address. Please try again.');
     else $username=$user; // synonymize
 
     $result=$this->lookupItem($user,$this->usercol); #fase,true
     if($result!==false)
       {
         $data=mysqli_fetch_assoc($result);
-        if($data[$this->usercol]==$username) return array(false,'Your email is already registered. Please try again. Did you forget your password?');
+        if($data[$this->usercol]==$username) return array("status"=>false,"error"=>'Your email is already registered. Please try again. Did you forget your password?');
       }
-    if(strlen($pw_in) < $this->getMinPasswordLength()) return array(false,'Your password is too short. Please try again.');
+    if(strlen($pw_in) < $this->getMinPasswordLength()) return array("status"=>false,"error"=>'Your password is too short. Please try again.');
     // Complexity checks here, if not relegated to JS ...
     require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
     $hash=new Stronghash;
@@ -797,11 +817,11 @@ class UserFunctions extends DBHelper
             $this->getUser($userdata);
             $cookies=$this->createCookieTokens();
 
-            return array_merge(array(true,'Success!'),$userdata,$cookies);
+            return array_merge(array("status"=>true,"message"=>'Success!'),$userdata,$cookies);
           }
-        else return array(false,'Failure: Unable to verify user creation',"add"=>$test_res,"userdata"=>$userdata);
+        else return array("status"=>false,"error"=>'Failure: Unable to verify user creation',"add"=>$test_res,"userdata"=>$userdata);
       }
-    else return array(false,'Failure: unknown database error. Your user was unable to be saved.');
+    else return array("status"=>false,"error"=>'Failure: unknown database error. Your user was unable to be saved.');
   }
 
   public function lookupUser($username,$pw,$return=true,$totp_code=false)
@@ -1265,7 +1285,7 @@ class UserFunctions extends DBHelper
      ***/
   }
 
-  public function textUser($message)
+  public function textUser($message,$strict = true)
   {
     /***
      * Send a message to a user
@@ -1274,15 +1294,13 @@ class UserFunctions extends DBHelper
      * @return twilio message object
      * @throws exception when user can't SMS
      ***/
-    if($this->canSMS())
+    if($this->canSMS($strict))
       {
         require_once("twilio/Services/Twilio.php");
-        $client = new Services_Twilio($this->getTwilioSID(),$this->getTwilioToken());
         try
           {
-            $userdata = $this->getUser();
-            $phone = $userdata["phone"];
-            return $client->account->messages->sendMessage($this->getTwilioNumber(),$phone,$message);
+            $client = new Services_Twilio($this->getTwilioSID(),$this->getTwilioToken());
+            return $client->account->messages->sendMessage($this->getTwilioNumber(),$this->getPhone(),$message);
           }
         catch(Exception $e)
           {
@@ -1295,12 +1313,85 @@ class UserFunctions extends DBHelper
       }
   }
 
-  protected function textUserVerify()
+  public function verifyPhone($auth_code = null)
+  {
+    if(!$this->canSMS(false))
+      {
+        # Twilio is not configured, or there's an illegal phone number
+        if(self::isValidPhone($this->getPhone()))
+          {
+            throw(new Exception("SMS is not properly configured. Check your CONFIG."));            
+          }
+        else
+          {
+            return array("status"=>false,"error"=>"Bad phone","human_error"=>"We don't have a valid phone number to text a message to!");
+          }
+      }
+    $u = $this->getUser();
+    if($u["phone_verified"] === true)
+      {
+        return array("status"=>false,"error"=>"Number already authorized","human_error"=>"You've already verified this phone number");
+      }
+    if(empty($auth_code))
+      {
+        # The setup is complete, send it
+        return $this->textUserVerify();
+      }
+    else
+      {
+        # Check it
+        $l = $this->openDB();
+        $query = "SELECT `".$this->tmpcol."` FROM `".$this->getTable()."` WHERE `".$this->usercol."`='".$this->getUsername()."'";
+        $r = mysqli_query($l,$query);
+        if($r === false)
+          {
+            throw(new Exception("Error reading from database: ".mysqli_error($l)));
+          }
+        $row = mysqli_fetch_row($r);
+        $db_code = $row[0];
+        if($db_code == $auth_code)
+          {
+            # Set verified to true, and empty the special
+            $query = "UPDATE `".$this->getTable()."` SET `".$this->tmpcol."`='', `phone_verified`=true WHERE `".$this->usercol."`='".$this->getUsername()."'";
+            mysqli_begin_transaction($l);
+            $r = mysqli_query($l,$query);
+            if($r === false)
+              {
+                $error = mysqli_error($l);
+                mysqli_rollback($l);
+                throw(new Exception("Error updating databse: $error"));
+              }
+            mysqli_commit($l);
+            return array("status"=>true);
+          }
+        else
+          {
+            # Do it again
+            return array("status"=>false,"text_status"=>$this->textUserVerify());
+          }
+      }
+    
+  }
+
+  private function textUserVerify()
   {
     /***
      * Send a text message to a user's stored phone, and
      * save the authentication string provided.
      ***/
+    $auth = Stronghash::createSalt(8);
+    # Write auth to tmpcol
+    $query = "UPDATE `".$this->getTable()."` SET `".$this->tmpcol."`='$auth' WHERE `".$this->usercol"`='".$this->getUsername()."'";
+    $l = $this->openDB();
+    $r = mysqli_query($l,$query);
+    if($r === false)
+      {
+        throw(new Exception("Could not prepare authorization code - ".mysqli_error($l)));
+      }
+    $auth_string = "Thanks for verifying! Enter the following into your current page:\n$auth";
+    # Text it to the user; set the strict flag to false
+    $obj = $this->textUser($auth_string,false);
+    return array("status"=>true,"message"=>"Check your phone for your authorization code.","twilio"=>$obj);
   }
 
   public function confirmUser()

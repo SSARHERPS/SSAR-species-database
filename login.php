@@ -6,16 +6,15 @@
 $debug=false;
 $use_javascript_cookies=false;
 
-// Global cookie vars
-/*
- * Baseurl is overwritten if specified in config
- */
-$baseurl = 'http';
-if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
-$baseurl .= "://www.";
-$baseurl.=$_SERVER['HTTP_HOST'];
-
 require_once(dirname(__FILE__).'/CONFIG.php');
+
+if(empty($baseurl))
+  {
+    $baseurl = 'http';
+    if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
+    $baseurl .= "://www.";
+    $baseurl.=$_SERVER['HTTP_HOST'];
+  }
 
 $base=array_slice(explode(".",$baseurl),-2);
 $domain=$base[0];
@@ -409,9 +408,9 @@ else if($_REQUEST['q']=='create')
                         if(preg_match('/(?=^.{'.$minimum_password_length.',}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',$_POST['password']) || strlen($_POST['password'])>=$password_threshold_length) // validate email, use in validation to notify user.
                           {
                             $res=$user->createUser($_POST['username'],$_POST['password'],array($_POST['fname'],$_POST['lname']),$_POST['dname'],$_POST['phone']);
-                            if($res[0])
+                            if($res["status"])
                               {
-                                $login_output.="<h3>".$res[1]."</h3>"; //jumpto1
+                                $login_output.="<h3>".$res["message"]."</h3>"; //jumpto1
                                 // email user
                                 $to=$_POST['username'];
                                 $headers  = 'MIME-Version: 1.0' . "\r\n";
@@ -428,15 +427,28 @@ else if($_REQUEST['q']=='create')
                                  * Post login behavior ...
                                  ***/
                                 $deferredJS.=$res['js'];
-                                // ... redirect to home
-                                $deferredJS.="\nwindow.location=\"$baseurl\"";
-                                header("Refresh: 3; url=".$baseurl);
-
+                                /* // ... redirect to home */
+                                /* $deferredJS.="\nwindow.location=\"$baseurl\""; */
+                                /* header("Refresh: 3; url=".$baseurl); */
+                                # Verify the phone number
+                                $phone_verify_form = "<form id='verify_phone' onsubmit='noSubmit();'>
+  <input type='tel' id='phone' name='phone' value='".$res['phone']."' readonly='readonly'/>
+  <input type='hidden' id='username' name='username' value='".$user->getUsername()."'/>
+  <button id='verify_phone_button'>Verify Phone Now</button>
+  <p>
+    <small>
+      <a href='#' id='verify_later'>
+        Verify Later
+      </a>
+    </small>
+  </p>
+</form>";
+                                $login_output .= $phone_verify_form;
                               }
                             else
                               {
                                 if($debug) $login_output.=displayDebug($res);
-                                $login_output.="<p class='error'>".$res[1]."</p><p>Use your browser's back button to try again.</p>";
+                                $login_output.="<p class='error'>".$res["error"]."</p><p>Use your browser's back button to try again.</p>";
                               }
                             ob_end_flush();
                           }
@@ -473,6 +485,7 @@ else if($_REQUEST['q']=='logout')
   }
 else if(isset($_REQUEST['confirm']))
   {
+    ############## Rewrite this to use the built in object methods
     // toggle user flag
     $id=$_REQUEST['lookup'];
     $result=lookupItem($id,'id',null,null,false);
@@ -530,7 +543,7 @@ else if(isset($_REQUEST['2fa']))
   <form id='totp_start'>
     <fieldset>
       <legend>Login to continue</legend>
-      <input type='email' value='".$user->username."' readonly='readonly' id='username' name='username'/><br/>
+      <input type='email' value='".$user->getUsername()."' readonly='readonly' id='username' name='username'/><br/>
       <input type='password' id='password' name='password'/><br/>
       <input type='hidden' id='secret' name='secret' value='".$_COOKIE[$cookiekey]."'/>
       <input type='hidden' id='hash' name='hash' value='".$_COOKIE[$cookieauth]."'/>
@@ -548,7 +561,7 @@ else if(isset($_REQUEST['2fa']))
   <form id='totp_remove' onsubmit='event.preventDefault();'>
     <fieldset>
       <legend>Remove Two-Factor Authentication</legend>
-      <input type='email' value='".$username."' readonly='readonly' id='username' name='username'/><br/>
+      <input type='email' value='".$user->getUsername()."' readonly='readonly' id='username' name='username'/><br/>
       <input type='password' id='password' name='password'/><br/>
       <input type='number' id='code' name='code' placeholder='Authenticator Code or Backup Code' size='32' maxlength='32'/>
       <button id='remove_totp_button' class='totpbutton'>Remove Two-Factor Authentication</button>
@@ -574,10 +587,16 @@ else
   }
 $login_output.="</div>";
 ob_end_flush();
+
+$totpOverride = !empty($redirect_url) ? "totpParams.home = \"".$redirect_url."\"":null;
+
 echo "<script type='text/javascript'>
         if(typeof passwords != 'object') passwords = new Object();
         passwords.overrideLength=$password_threshold_length;
         passwords.minLen=$minimum_password_length;
+        if(typeof totpParams != 'object') totpParams = new Object();
+        $totpOverride
+
 function loadScript(url, callback) {
     // Adding the script tag to the head as suggested before
     var head = document.getElementsByTagName('head')[0];
