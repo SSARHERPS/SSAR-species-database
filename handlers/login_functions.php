@@ -714,6 +714,10 @@ class UserFunctions extends DBHelper
      * @param string $dname The display name of the user.
      * @return array
      ***/
+    if(strlen($pw_in)>8192)
+      {
+        throw(new Exception("Passwords must be less than 8192 characters in length."));
+      }
     // Send email for validation
     $ou=$username;
     /***
@@ -826,6 +830,10 @@ class UserFunctions extends DBHelper
 
   public function lookupUser($username,$pw,$return=true,$totp_code=false)
   {
+    if(strlen($pw_in)>8192)
+      {
+        throw(new Exception("Passwords must be less than 8192 characters in length."));
+      }
     // check it's a valid email! validation skipped.
     require_once(dirname(__FILE__).'/xml.php');
     $xml=new Xml;
