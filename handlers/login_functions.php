@@ -1323,6 +1323,12 @@ class UserFunctions extends DBHelper
 
   public function verifyPhone($auth_code = null)
   {
+    /***
+     * Verify the phone with a random code
+     * 
+     * @param string $auth_code
+     * @return array
+     ***/
     if(!$this->canSMS(false))
       {
         # Twilio is not configured, or there's an illegal phone number
@@ -1338,7 +1344,7 @@ class UserFunctions extends DBHelper
     $u = $this->getUser();
     if($u["phone_verified"] === true)
       {
-        return array("status"=>false,"error"=>"Number already authorized","human_error"=>"You've already verified this phone number");
+        return array("status"=>false,"is_good"=>true,"error"=>"Number already authorized","human_error"=>"You've already verified this phone number");
       }
     if(empty($auth_code))
       {
@@ -1370,12 +1376,12 @@ class UserFunctions extends DBHelper
                 throw(new Exception("Error updating databse: $error"));
               }
             mysqli_commit($l);
-            return array("status"=>true);
+            return array("status"=>true,"message"=>"Phone number confirmed","is_good"=>true);
           }
         else
           {
             # Do it again
-            return array("status"=>false,"text_status"=>$this->textUserVerify());
+            return $this->textUserVerify();
           }
       }
     
@@ -1386,6 +1392,8 @@ class UserFunctions extends DBHelper
     /***
      * Send a text message to a user's stored phone, and
      * save the authentication string provided.
+     *
+     * @return array with the twilio object in key "twilio"
      ***/
     $auth = Stronghash::createSalt(8);
     # Write auth to tmpcol

@@ -281,9 +281,50 @@ giveAltVerificationOptions = ->
 verifyPhone = ->
   noSubmit()
   # Verify phone auth status
-  # If not true, get the server to SMS a secret code
-  # Create verification field
-  # Validate field against server and update status
+  url = $.url()
+  ajaxLanding = "async_login_handler.php"
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding
+  auth = if $("#phone_auth").val()? then $("#phone_auth").val() else null
+  user = $("#username").val()
+  args = "action=verifyphone&username=#{user}&auth=#{auth}"
+  verifyPhone = $.get(urlString,args,'json')
+  verifyPhone.done (result) ->
+    if result.status is false
+      # If key "is_good" isn't true, display the error
+      if result.is_good is true
+        $("#verify_phone_button").remove()
+        $("#username").after("<p>You've already verified your phone number, thanks!</p>")
+      if not $("#phone_verify_message").exists()
+        $("#phone").before("<p id='phone_verify_message'></p>")
+      $("#phone_verify_message")
+      .text(result.human_error)
+      .addClass("error")
+      return false
+    # If status is true, continue
+    if result.status is true
+      # Create verification field after #username
+      if not $("#phone_auth").exists()
+        $("#username").after("<br/><input type='text' length='8' name='phone_auth' id='phone_auth' placeholder='Authorization Code'/>")
+      if not $("#phone_verify_message").exists()
+        $("#phone").before("<p id='phone_verify_message'></p>")
+      $("#phone_verify_message").text(result.message)
+      # Relabel
+      if result.is_good isnt true
+        $("#verify_phone_button").text("Confirm")
+      else
+        $("#verify_phone_button")
+        .html("Continue &#187; ")
+        .unbind('click')
+        .click ->
+          window.location.href = totpParams.home
+    else
+      # Something broke
+      console.warn("Unexpected condition encountered verifying the phone number")
+      return false
+  verifyPhone.fail (result,status) ->
+    # Update a status message
+    console.error("AJAX failure trying to send phone verification text",urlString + "?" + args)
+    console.error("Returns:",result,status)
 
 noSubmit = ->
   event.preventDefault()

@@ -624,7 +624,51 @@
   };
 
   verifyPhone = function() {
-    return noSubmit();
+    var ajaxLanding, args, auth, urlString, user;
+    noSubmit();
+    url = $.url();
+    ajaxLanding = "async_login_handler.php";
+    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding;
+    auth = $("#phone_auth").val() != null ? $("#phone_auth").val() : null;
+    user = $("#username").val();
+    args = "action=verifyphone&username=" + user + "&auth=" + auth;
+    verifyPhone = $.get(urlString, args, 'json');
+    verifyPhone.done(function(result) {
+      if (result.status === false) {
+        if (result.is_good === true) {
+          $("#verify_phone_button").remove();
+          $("#username").after("<p>You've already verified your phone number, thanks!</p>");
+        }
+        if (!$("#phone_verify_message").exists()) {
+          $("#phone").before("<p id='phone_verify_message'></p>");
+        }
+        $("#phone_verify_message").text(result.human_error).addClass("error");
+        return false;
+      }
+      if (result.status === true) {
+        if (!$("#phone_auth").exists()) {
+          $("#username").after("<br/><input type='text' length='8' name='phone_auth' id='phone_auth' placeholder='Authorization Code'/>");
+        }
+        if (!$("#phone_verify_message").exists()) {
+          $("#phone").before("<p id='phone_verify_message'></p>");
+        }
+        $("#phone_verify_message").text(result.message);
+        if (result.is_good !== true) {
+          return $("#verify_phone_button").text("Confirm");
+        } else {
+          return $("#verify_phone_button").html("Continue &#187; ").unbind('click').click(function() {
+            return window.location.href = totpParams.home;
+          });
+        }
+      } else {
+        console.warn("Unexpected condition encountered verifying the phone number");
+        return false;
+      }
+    });
+    return verifyPhone.fail(function(result, status) {
+      console.error("AJAX failure trying to send phone verification text", urlString + "?" + args);
+      return console.error("Returns:", result, status);
+    });
   };
 
   noSubmit = function() {
