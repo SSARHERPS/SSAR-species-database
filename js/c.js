@@ -564,10 +564,12 @@
       media: "screen",
       href: totpParams.popStylesheetPath
     }).appendTo("head");
-    html = "<div id='secret_id_panel' class='" + totpParams.popClass + "'><p class='close-popup'>X</p><h2>" + secret + "</h2></div>";
-    $("#totp_add").after(html);
+    html = "<div id='cover_wrapper'><div id='secret_id_panel' class='" + totpParams.popClass + " cover_content'><p class='close-popup'>X</p><h2>" + secret + "</h2></div></div>";
+    $("article").after(html);
+    $("article").addClass("blur");
     return $(".close-popup").click(function() {
-      return $("#secret_id_panel").remove();
+      $("#secret_id_panel").remove();
+      return $("article").removeClass("blur");
     });
   };
 
@@ -685,7 +687,38 @@
     });
   };
 
-  showInstructions = function() {};
+  showInstructions = function(path) {
+    if (path == null) {
+      path = "help/instructions_pop.html";
+    }
+    console.log("Showing instructions");
+    $("<link/>", {
+      rel: "stylesheet",
+      type: "text/css",
+      media: "screen",
+      href: totpParams.popStylesheetPath
+    }).appendTo("head");
+    return $.get(path).done(function(html) {
+      var assetPath, urlString;
+      $("article").after(html);
+      $("article").addClass("blur");
+      url = $.url();
+      urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../";
+      assetPath = "" + urlString + "assets/";
+      console.log("Looking in " + assetPath);
+      $(".android").html("<img src='" + assetPath + "playstore.png' alt='Google Play Store'/>");
+      $(".ios").html("<img src='" + assetPath + "appstore.png' alt='iOS App Store'/>");
+      $(".wp8").html("<img src='" + assetPath + "wpstore.png' alt='Windows Phone Store'/>");
+      $(".app_link_container a").addClass("newwindow");
+      mapNewWindows();
+      return $(".close-popup").click(function() {
+        $("article").removeClass("blur");
+        return $("#cover_wrapper").remove();
+      });
+    }).fail(function(result, status) {
+      return console.error("Failed to load instructions @ " + path, result, status);
+    });
+  };
 
   noSubmit = function() {
     event.preventDefault();
@@ -693,7 +726,6 @@
   };
 
   $(function() {
-    console.log("Running login onloads");
     $("#password").keyup(function() {
       return checkPasswordLive();
     }).change(function() {
@@ -723,8 +755,7 @@
       return doTOTPRemove();
     });
     $("#alternate_verification_prompt").click(function() {
-      giveAltVerificationOptions();
-      return console.log("Showing alternate options");
+      return giveAltVerificationOptions();
     });
     $("#verify_phone").click(function() {
       return verifyPhone();
@@ -734,6 +765,9 @@
     });
     $("#verify_later").click(function() {
       return window.location.href = totpParams.home;
+    });
+    $("#totp_help").click(function() {
+      return showInstructions();
     });
     return $("<link/>", {
       rel: "stylesheet",

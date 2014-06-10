@@ -115,9 +115,9 @@ else
     if($captive_login) header("Refresh: 0; url=$baseurl");
   }
 
+$random = "<li><a href='#' id='totp_help'>Help with Two-Factor Authentication</a></li>";
 
-
-$settings_blob = "<section id='account_settings'><h2>Settings</h2><ul id='settings_list'><li><a href='?2fa=t'>".$twofactor."</a></li>".$verifyphone_link."</ul></section>";
+$settings_blob = "<section id='account_settings'><h2>Settings</h2><ul id='settings_list'><li><a href='?2fa=t'>".$twofactor."</a></li>".$verifyphone_link.$random."</ul></section>";
 
 
 $login_output="<div id='login_block'>";
@@ -569,6 +569,7 @@ else if(isset($_REQUEST['2fa']))
       <button id='add_totp_button' class='totpbutton'>Add Two-Factor Authentication</button>
     </fieldset>
   </form>
+  <a href='#' id='totp_help'>Help with Two-Factor Authentication</a>
 </section>";
         $login_output .= $totp_add_form;
       }

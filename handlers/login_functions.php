@@ -1225,13 +1225,12 @@ class UserFunctions extends DBHelper
         if(empty($user)) return array("status"=>false,"error"=>"Problem assigning user");
         // write it to the db
         // replace or append based on flag
-        require_once(dirname(__FILE__).'/../CONFIG.php');
         $real_col=$this->sanitize($col);
         if(!$replace)
           {
             // pull the existing data ...
             $l=$this->openDB();
-            $prequery="SELECT $real_col FROM `".$this->getTable()."` WHERE $where_col='$user'";
+            $prequery="SELECT `$real_col` FROM `".$this->getTable()."` WHERE `$where_col`='$user'";
             // Look for relevent JSON entries or XML entries and replace them
             $r=mysqli_query($l,$prequery);
             $row=mysqli_fetch_row($r);
@@ -1266,13 +1265,17 @@ class UserFunctions extends DBHelper
         else $real_data=$this->sanitize($data);
 
         if(empty($real_data)) return array('status'=>false,'error'=>'Invalid input data (sanitization error)');
-        $query="UPDATE `".$this->getTable()."` SET $real_col=\"".$real_data."\" WHERE $where_col='$user'";
+        $query="UPDATE `".$this->getTable()."` SET `$real_col`=\"".$real_data."\" WHERE `$where_col`='$user'";
         $l=$this->openDB();
         mysqli_query($l,'BEGIN');
         $r=mysqli_query($l,$query);
         $finish_query= $r ? 'COMMIT':'ROLLBACK';
+        if($finish_query == 'ROLLBACK')
+          {
+            $error = mysqli_error($l);
+          }
         $r2=mysqli_query($l,$finish_query);
-        return array('status'=>$r,'data'=>$data,'col'=>$col,'action'=>$finish_query,'result'=>$r2,'method'=>$method);
+        return array('status'=>$r,'data'=>$data,'col'=>$col,'action'=>$finish_query,'result'=>$r2,'method'=>$method,"error"=>$error);
       }
     else return array('status'=>false,'error'=>'Bad validation','method'=>$method);
   }

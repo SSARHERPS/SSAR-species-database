@@ -224,10 +224,12 @@ popupSecret = (secret) ->
     media:"screen"
     href:totpParams.popStylesheetPath
     }).appendTo("head")
-  html="<div id='secret_id_panel' class='#{totpParams.popClass}'><p class='close-popup'>X</p><h2>#{secret}</h2></div>"
-  $("#totp_add").after(html)
+  html="<div id='cover_wrapper'><div id='secret_id_panel' class='#{totpParams.popClass} cover_content'><p class='close-popup'>X</p><h2>#{secret}</h2></div></div>"
+  $("article").after(html)
+  $("article").addClass("blur")
   $(".close-popup").click ->
     $("#secret_id_panel").remove()
+    $("article").removeClass("blur")
 
 giveAltVerificationOptions = ->
   # Put up an overlay, and ask if the user wants to remove 2FA or get a text
@@ -340,15 +342,40 @@ verifyPhone = ->
     console.error("AJAX failure trying to send phone verification text",urlString + "?" + args)
     console.error("Returns:",result,status)
 
-showInstructions = ->
+showInstructions = (path = "help/instructions_pop.html") ->
+  console.log("Showing instructions")
+  $("<link/>",{
+    rel:"stylesheet"
+    type:"text/css"
+    media:"screen"
+    href:totpParams.popStylesheetPath
+    }).appendTo("head")
   # Load the instructions
+  $.get path
+  .done (html) ->
+    $("article").after(html)
+    $("article").addClass("blur")
+    # Fill the images
+    url = $.url()
+    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../"
+    assetPath = "#{urlString}assets/"
+    console.log("Looking in #{assetPath}")
+    $(".android").html("<img src='#{assetPath}playstore.png' alt='Google Play Store'/>")
+    $(".ios").html("<img src='#{assetPath}appstore.png' alt='iOS App Store'/>")
+    $(".wp8").html("<img src='#{assetPath}wpstore.png' alt='Windows Phone Store'/>")
+    $(".app_link_container a").addClass("newwindow")
+    mapNewWindows()
+    $(".close-popup").click ->
+      $("article").removeClass("blur")
+      $("#cover_wrapper").remove()
+  .fail (result,status) ->
+    console.error("Failed to load instructions @ #{path}",result,status)
 
 noSubmit = ->
   event.preventDefault()
   event.returnValue = false
 
 $ ->
-  console.log("Running login onloads")
   $("#password")
   .keyup ->
     checkPasswordLive()
@@ -373,16 +400,17 @@ $ ->
     doTOTPRemove()
   $("#alternate_verification_prompt").click ->
     giveAltVerificationOptions()
-    console.log("Showing alternate options")
   $("#verify_phone").click ->
     verifyPhone()
   $("#verify_phone_button").click ->
     verifyPhone();
   $("#verify_later").click ->
     window.location.href = totpParams.home
+  $("#totp_help").click ->
+    showInstructions()
   $("<link/>",{
     rel:"stylesheet"
     type:"text/css"
     media:"screen"
     href:totpParams.mainStylesheetPath
-    }).appendTo("head")  
+    }).appendTo("head")
