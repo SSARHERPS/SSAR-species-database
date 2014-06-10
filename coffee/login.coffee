@@ -296,14 +296,23 @@ verifyPhone = ->
   verifyPhone.done (result) ->
     if result.status is false
       # If key "is_good" isn't true, display the error
-      if result.is_good is true
-        $("#verify_phone_button").remove()
-        $("#username").after("<p>You've already verified your phone number, thanks!</p>")
       if not $("#phone_verify_message").exists()
         $("#phone").before("<p id='phone_verify_message'></p>")
+      if result.is_good is true
+        $("#verify_phone_button").remove()
+        message = "<p>You've already verified your phone number, thanks!</p>"
+        setClass = "good"
+      else
+        message = result.human_error
+        setClass = "error"
       $("#phone_verify_message")
-      .text(result.human_error)
-      .addClass("error")
+      .text(message)
+      .addClass(setClass)
+      if result.fatal is true
+        $("#verify_phone_button").attr("disabled",true)
+        $("#verify_phone")
+        .unbind('submit')
+        .attr("onsubmit","")
       return false
     # If status is true, continue
     if result.status is true

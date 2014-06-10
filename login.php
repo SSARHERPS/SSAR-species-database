@@ -68,6 +68,33 @@ try
   $logged_in=$user->validateUser($_COOKIE[$cookielink]);
   # This should only show when there isn't two factor enabled ...
   $twofactor = $user->has2FA() ? "Remove two-factor authentication":"Add two-factor authentication";
+  $phone_verify_template = "<form id='verify_phone' onsubmit='noSubmit();'>
+  <input type='tel' id='phone' name='phone' value='".$res['phone']."' readonly='readonly'/>
+  <input type='hidden' id='username' name='username' value='".$user->getUsername()."'/>
+  <button id='verify_phone_button'>Verify Phone Now</button>
+  <p>
+    <small>
+      <a href='#' id='verify_later'>
+        Verify Later
+      </a>
+    </small>
+  </p>
+</form>";
+  try
+    {
+  $needPhone = !$user->canSMS();
+  $deferredJS .= "console.log('Needs phone? ',".strbool($needPhone).");\n";
+  $altPhone = "<p>Congratulations! Your phone number is verified.</p>";
+}
+  catch(Exception $e)
+    {
+  $needPhone = false;
+  $deferredJS .= "console.warn('An exception was thrown checking for SMS-ability:','".$e->getMessage()."');\n";
+  $altPhone = "<p>You don't have a phone number registered with us. Please go to account settings and add a phone number.</p>";
+}
+  $verifyphone_link =  $needPhone ? "<li><a href='?q=verify'>Verify Phone</a></li>":null;
+  $phone_verify_form = $needPhone ? $phone_verify_template : $altPhone;
+
 }
 catch (Exception $e)
   {
@@ -90,7 +117,7 @@ else
 
 
 
-$settings_blob = "<section id='account_settings'><h2>Settings</h2><p><a href='?2fa=t'>".$twofactor."</a></p></section>";
+$settings_blob = "<section id='account_settings'><h2>Settings</h2><ul id='settings_list'><li><a href='?2fa=t'>".$twofactor."</a></li>".$verifyphone_link."</ul></section>";
 
 
 $login_output="<div id='login_block'>";
@@ -431,18 +458,6 @@ else if($_REQUEST['q']=='create')
                                 /* $deferredJS.="\nwindow.location=\"$baseurl\""; */
                                 /* header("Refresh: 3; url=".$baseurl); */
                                 # Verify the phone number
-                                $phone_verify_form = "<form id='verify_phone' onsubmit='noSubmit();'>
-  <input type='tel' id='phone' name='phone' value='".$res['phone']."' readonly='readonly'/>
-  <input type='hidden' id='username' name='username' value='".$user->getUsername()."'/>
-  <button id='verify_phone_button'>Verify Phone Now</button>
-  <p>
-    <small>
-      <a href='#' id='verify_later'>
-        Verify Later
-      </a>
-    </small>
-  </p>
-</form>";
                                 $login_output .= $phone_verify_form;
                               }
                             else
@@ -465,6 +480,10 @@ else if($_REQUEST['q']=='create')
         else $login_output.=$createform;
       }
     else $login_output.="<p class='error'>This site's ReCAPTCHA library hasn't been set up. Please contact the site administrator.</p>";
+  }
+else if($_REQUEST['q'] == "verify")
+  {
+    $login_output .= $phone_verify_form;
   }
 else if($_REQUEST['q']=='logout')
   {

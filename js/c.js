@@ -639,15 +639,24 @@
     args = "action=verifyphone&username=" + user + "&auth=" + auth;
     verifyPhone = $.get(urlString, args, 'json');
     verifyPhone.done(function(result) {
+      var message, setClass;
       if (result.status === false) {
-        if (result.is_good === true) {
-          $("#verify_phone_button").remove();
-          $("#username").after("<p>You've already verified your phone number, thanks!</p>");
-        }
         if (!$("#phone_verify_message").exists()) {
           $("#phone").before("<p id='phone_verify_message'></p>");
         }
-        $("#phone_verify_message").text(result.human_error).addClass("error");
+        if (result.is_good === true) {
+          $("#verify_phone_button").remove();
+          message = "<p>You've already verified your phone number, thanks!</p>";
+          setClass = "good";
+        } else {
+          message = result.human_error;
+          setClass = "error";
+        }
+        $("#phone_verify_message").text(message).addClass(setClass);
+        if (result.fatal === true) {
+          $("#verify_phone_button").attr("disabled", true);
+          $("#verify_phone").unbind('submit').attr("onsubmit", "");
+        }
         return false;
       }
       if (result.status === true) {

@@ -317,7 +317,16 @@ class UserFunctions extends DBHelper
       }
     else if(!$twilio_status) return false;
     $userdata = $this->getUser();
-    $verified = $strict ? self::isValidPhone($this->getPhone()) && boolstr($userdata["phone_verified"]) === true : self::isValidPhone($this->getPhone());
+    if($strict)
+      {
+        if(!self::isValidPhone($this->getPhone()))
+          {
+            throw(new Exception("Illegal phone number."));
+          }
+      }
+    # If we're strict, the user only can SMS when the phone number is verified.
+    # Otherwise, we just return the status of the phone number itself.
+    $verified = $strict ? boolstr($userdata["phone_verified"]) === true : self::isValidPhone($this->getPhone());
     return $verified;
   }
 
@@ -1340,7 +1349,7 @@ class UserFunctions extends DBHelper
           }
         else
           {
-            return array("status"=>false,"error"=>"Bad phone","human_error"=>"We don't have a valid phone number to text a message to!");
+            return array("status"=>false,"error"=>"Bad phone","human_error"=>"We don't have a valid phone number to text a message to!","fatal"=>true);
           }
       }
     $u = $this->getUser();
