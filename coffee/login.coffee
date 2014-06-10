@@ -1,31 +1,31 @@
 # Login functions
 
-if typeof passwords isnt 'object' then passwords = new Object()
-passwords.goodbg = "#cae682"
-passwords.badbg = "#e5786d"
+if typeof window.passwords isnt 'object' then window.passwords = new Object()
+window.passwords.goodbg = "#cae682"
+window.passwords.badbg = "#e5786d"
 # Password lengths can be overriden in CONFIG.php,
 # which then defines the values for these before the script loads.
-passwords.minLength ?= 8
-passwords.overrideLength ?= 21
+window.passwords.minLength ?= 8
+window.passwords.overrideLength ?= 21
 
-if typeof totpParams isnt 'object' then totpParams = new Object()
-totpParams.mainStylesheetPath = "css/otp_styles.css"
-totpParams.popStylesheetPath = "css/otp_panels.css"
-totpParams.popClass = "pop-panel"
+if typeof window.totpParams isnt 'object' then window.totpParams = new Object()
+window.totpParams.mainStylesheetPath = "css/otp_styles.css"
+window.totpParams.popStylesheetPath = "css/otp_panels.css"
+window.totpParams.popClass = "pop-panel"
 # The value $redirect_url in CONFIG.php overrides this value
-if not totpParams.home?
+if not window.totpParams.home?
   url = $.url()
-  totpParams.home =  url.attr('protocol') + '://' + url.attr('host') + '/'
+  window.totpParams.home =  url.attr('protocol') + '://' + url.attr('host') + '/'
 
 checkPasswordLive = ->
   pass = $("#password").val()
   # The 8 should be passwords.minLength
-  if pass.length >passwords.overrideLength or pass.match(/^(?:(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$)$/)
-    $("#password").css("background",passwords.goodbg)
-    passwords.basepwgood = true
+  if pass.length >window.passwords.overrideLength or pass.match(/^(?:(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$)$/)
+    $("#password").css("background",window.passwords.goodbg)
+    window.passwords.basepwgood = true
   else
-    $("#password").css("background",passwords.badbg)
-    passwords.basepwgood = false
+    $("#password").css("background",window.passwords.badbg)
+    window.passwords.basepwgood = false
   evalRequirements()
   if not isNull($("#password2").val())
     checkMatchPassword()
@@ -34,21 +34,21 @@ checkPasswordLive = ->
 
 checkMatchPassword = ->
   if $("#password").val() is $("#password2").val()
-    $('#password2').css('background', passwords.goodbg)
-    passwords.passmatch = true
+    $('#password2').css('background', window.passwords.goodbg)
+    window.passwords.passmatch = true
   else
-    $('#password2').css('background', passwords.badbg)
-    passwords.passmatch = false
+    $('#password2').css('background', window.passwords.badbg)
+    window.passwords.passmatch = false
   toggleNewUserSubmit()
   return false
 
 toggleNewUserSubmit = ->
   try
-    dbool = not(passwords.passmatch && passwords.basepwgood)
+    dbool = not(window.passwords.passmatch && window.passwords.basepwgood)
     $("#createUser_submit").attr("disabled",dbool)
   catch e
-    passwords.passmatch = false
-    passwords.basepwgood = false
+    window.passwords.passmatch = false
+    window.passwords.basepwgood = false
 
 evalRequirements = ->
   unless $("#strength-meter").exists()
@@ -56,22 +56,21 @@ evalRequirements = ->
     $("#login .right").prepend(html)
   pass = $("#password").val()
   pstrength = zxcvbn(pass)
-  $(".strength-eval").css("background",passwords.badbg)
-  if pass.length > 20 then $(".strength-eval").css("background",passwords.goodbg)
+  $(".strength-eval").css("background",window.passwords.badbg)
+  if pass.length > 20 then $(".strength-eval").css("background",window.passwords.goodbg)
   else
-    if pass.match(/^(?:((?=.*\d)|(?=.*\W+)).*$)$/) then $("#strength-numspecial .strength-eval").css("background",passwords.goodbg)
-    if pass.match(/^(?=.*[a-z]).*$/) then $("#strength-alpha .strength-eval").css("background",passwords.goodbg)
-    if pass.match(/^(?=.*[A-Z]).*$/) then $("#strength-alphacap .strength-eval").css("background",passwords.goodbg)
+    if pass.match(/^(?:((?=.*\d)|(?=.*\W+)).*$)$/) then $("#strength-numspecial .strength-eval").css("background",window.passwords.goodbg)
+    if pass.match(/^(?=.*[a-z]).*$/) then $("#strength-alpha .strength-eval").css("background",window.passwords.goodbg)
+    if pass.match(/^(?=.*[A-Z]).*$/) then $("#strength-alphacap .strength-eval").css("background",window.passwords.goodbg)
   $("#password-strength").attr("value",pstrength.score+1);
 
 doEmailCheck = ->
   # Perform a GET request to see if the chosen email is already taken
 
-doTOTPSubmit = (home = totpParams.home) ->
+doTOTPSubmit = (home = window.totpParams.home) ->
   # Get the code from #totp_code and push it through
   # to async_login_handler.php , get the results and behave appropriately
   noSubmit()
-  console.log("Running TOTPSubmit")
   animateLoad()
   code = $("#totp_code").val()
   user = $("#username").val()
@@ -82,7 +81,6 @@ doTOTPSubmit = (home = totpParams.home) ->
   urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding
   args = "action=verifytotp&code=#{code}&user=#{user}&password=#{pass}&remote=#{ip}"
   totp = $.post(urlString ,args,'json')
-  console.log("Checking",urlString + "?" + args)
   totp.done (result) ->
     # Check the result
     if result.status is true
@@ -103,7 +101,6 @@ doTOTPSubmit = (home = totpParams.home) ->
             # Take us home
             home ?= url.attr('protocol') + '://' + url.attr('host') + '/'
             stopLoad()
-            console.log(result["cookies"])
             delay 500, ->
               window.location.href = home
       catch e
@@ -193,14 +190,14 @@ saveTOTP = (key,hash) ->
   ajaxLanding = "async_login_handler.php"
   urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding
   args = "action=savetotp&secret=#{key}&user=#{user}&hash=#{hash}&code=#{code}"
-  console.log("Checking",urlString  + "?" + args)
   totp = $.post(urlString ,args,'json')
   totp.done (result) ->
     # We're done!
     if result.status is true
-      html = "<h1>Done!</h1><h2>Write down and save this backup code. Without it, you cannot disable two-factor authentication if you lose your device.</h2><pre>#{result.backup}</pre>"
+      html = "<h1>Done!</h1><h2>Write down and save this backup code. Without it, you cannot disable two-factor authentication if you lose your device.</h2><pre id='backup_code'>#{result.backup}</pre><br/><button id='to_home'>Home &#187;</a>"
       $("#totp_add").html(html)
-      console.log("Success!")
+      $("#to_home").click ->
+        window.location.href = window.totpParams.home
       stopLoad()
     else
       html = "<p class='error' id='temp_error'>#{result.human_error}</p>"
@@ -222,18 +219,17 @@ popupSecret = (secret) ->
     rel:"stylesheet"
     type:"text/css"
     media:"screen"
-    href:totpParams.popStylesheetPath
+    href:window.totpParams.popStylesheetPath
     }).appendTo("head")
-  html="<div id='cover_wrapper'><div id='secret_id_panel' class='#{totpParams.popClass} cover_content'><p class='close-popup'>X</p><h2>#{secret}</h2></div></div>"
+  html="<div id='cover_wrapper'><div id='secret_id_panel' class='#{window.totpParams.popClass} cover_content'><p class='close-popup'>X</p><h2>#{secret}</h2></div></div>"
   $("article").after(html)
   $("article").addClass("blur")
   $(".close-popup").click ->
-    $("#secret_id_panel").remove()
+    $("#cover_wrapper").remove()
     $("article").removeClass("blur")
 
 giveAltVerificationOptions = ->
   # Put up an overlay, and ask if the user wants to remove 2FA or get a text
-  console.log("Running alt options")
   url = $.url()
   ajaxLanding = "async_login_handler.php"
   urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding
@@ -246,44 +242,47 @@ giveAltVerificationOptions = ->
   messages = new Object()
   messages.remove = "<a href='#' id='#{remove_id}'>Remove two-factor authentication</a>"
   # First see if the user can SMS at all before populating the message options
+  
   sms = $.get(urlString,args,'json')
   sms.done (result) ->
     if result[0] is true
       messages.sms = "<a href='#' id='#{sms_id}'>Send SMS</a>"
     else
       console.warn("Couldn't get a valid result",result,urlString+"?"+args)
+    pop_content = ""
+    $.each messages,(k,v) ->
+      pop_content += v
+    html = "<div id='#{pane_id}'><p>#{pop_content}</p><p id='#{pane_messages}'></p></div>"
+    # Attach it to DOM
+    $("#totp_submit").after(html)
+    # Attach event handlers
+    $("##{sms_id}").click ->
+      # Attempt to send the TOTP
+      args = "action=sendtotptext&user=#{user}"
+      sms_totp = $.get(urlString,args,'json')
+      console.log("Sending message ...",urlString+"?"+args)
+      sms_totp.done (result) ->
+        if result.status is true
+          # Remove the pane and replace totp_message
+          $("##{pane_id}").remove()
+          $("#totp_message").text(result.message)
+        else
+          #Place a notice in pane_messages
+          $("##{pane_messages}")
+          .addClass("error")
+          .text(result.human_error)
+          console.error(result.error)
+      sms_totp.fail (result,status) ->
+        console.error("AJAX failure trying to send TOTP text",urlString + "?" + args)
+        console.error("Returns:",result,status)
   sms.fail (result,status) ->
     # Just don't populate the thing
     console.error("Could not check SMS-ability",result,status)
-  pop_content = ""
-  $.each messages,(k,v) ->
-    pop_content += v
-  html = "<div id='#{pane_id}'><p>#{pop_content}</p><p id='#{pane_messages}'></p></div>"
-  # Attach it to DOM
-  $("#totp_submit").after(html)
-  # Attach event handlers
-  $("##{remove_id}").click ->
-    # Take them to the page where they can remove the TOTP
-    totpParams.home ?=  url.attr('protocol') + '://' + url.attr('host') + '/login.php'
-    window.location.href = totpParams.home + "?2fa=t"
-  $("##{sms_id}").click ->
-    # Attempt to send the TOTP
-    args = "action=sendtotptext&user=#{user}"
-    sms_totp = $.get(urlString,args,'json')
-    sms_totp.done (result) ->
-      if result.status is true
-        # Remove the pane and replace totp_message
-        $("##{pane_id}").remove()
-        $("#totp_message").text(result.message)
-      else
-        #Place a notice in pane_messages
-        $("##{pane_messages}")
-        .addClass("error")
-        .text(result.human_error)
-        console.error(result.error)
-    sms_totp.fail (result,status) ->
-      console.error("AJAX failure trying to send TOTP text",urlString + "?" + args)
-      console.error("Returns:",result,status)
+  sms.always ->
+    $("##{remove_id}").click ->
+      # Take them to the page where they can remove the TOTP
+      window.totpParams.home ?=  url.attr('protocol') + '://' + url.attr('host') + '/login.php'
+      window.location.href = window.totpParams.home + "?2fa=t"
 
 verifyPhone = ->
   noSubmit()
@@ -294,8 +293,8 @@ verifyPhone = ->
   auth = if $("#phone_auth").val()? then $("#phone_auth").val() else null
   user = $("#username").val()
   args = "action=verifyphone&username=#{user}&auth=#{auth}"
-  verifyPhone = $.get(urlString,args,'json')
-  verifyPhone.done (result) ->
+  verifyPhoneAjax = $.get(urlString,args,'json')
+  verifyPhoneAjax.done (result) ->
     if result.status is false
       # If key "is_good" isn't true, display the error
       if not $("#phone_verify_message").exists()
@@ -328,27 +327,29 @@ verifyPhone = ->
       if result.is_good isnt true
         $("#verify_phone_button").text("Confirm")
       else
+        $("#phone_auth").remove()
+        $("#verify_later").remove()
         $("#verify_phone_button")
         .html("Continue &#187; ")
         .unbind('click')
         .click ->
-          window.location.href = totpParams.home
+          window.location.href = window.totpParams.home
     else
       # Something broke
-      console.warn("Unexpected condition encountered verifying the phone number")
+      console.warn("Unexpected condition encountered verifying the phone number",urlString)
+      console.log(result)
       return false
-  verifyPhone.fail (result,status) ->
+  verifyPhoneAjax.fail (result,status) ->
     # Update a status message
     console.error("AJAX failure trying to send phone verification text",urlString + "?" + args)
     console.error("Returns:",result,status)
 
 showInstructions = (path = "help/instructions_pop.html") ->
-  console.log("Showing instructions")
   $("<link/>",{
     rel:"stylesheet"
     type:"text/css"
     media:"screen"
-    href:totpParams.popStylesheetPath
+    href:window.totpParams.popStylesheetPath
     }).appendTo("head")
   # Load the instructions
   $.get path
@@ -359,7 +360,6 @@ showInstructions = (path = "help/instructions_pop.html") ->
     url = $.url()
     urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../"
     assetPath = "#{urlString}assets/"
-    console.log("Looking in #{assetPath}")
     $(".android").html("<img src='#{assetPath}playstore.png' alt='Google Play Store'/>")
     $(".ios").html("<img src='#{assetPath}appstore.png' alt='iOS App Store'/>")
     $(".wp8").html("<img src='#{assetPath}wpstore.png' alt='Windows Phone Store'/>")
@@ -376,7 +376,7 @@ noSubmit = ->
   event.returnValue = false
 
 $ ->
-  $("#password")
+  $("#password.create")
   .keyup ->
     checkPasswordLive()
   .change ->
@@ -400,17 +400,17 @@ $ ->
     doTOTPRemove()
   $("#alternate_verification_prompt").click ->
     giveAltVerificationOptions()
-  $("#verify_phone").click ->
+  $("#verify_phone").submit ->
     verifyPhone()
   $("#verify_phone_button").click ->
     verifyPhone();
   $("#verify_later").click ->
-    window.location.href = totpParams.home
+    window.location.href = window.totpParams.home
   $("#totp_help").click ->
     showInstructions()
   $("<link/>",{
     rel:"stylesheet"
     type:"text/css"
     media:"screen"
-    href:totpParams.mainStylesheetPath
+    href:window.totpParams.mainStylesheetPath
     }).appendTo("head")

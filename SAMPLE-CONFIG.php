@@ -82,7 +82,7 @@ $db_cols=array(
   "private_key"=>"text",
   "secret"=>"varchar(255)",
   "emergency_code"=>"varchar(255)",
-  "phone"=>"int(10)",
+  "phone"=>"varchar(10)",
   "phone_verified"=>"bool",
 );
 

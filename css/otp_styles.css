@@ -44,3 +44,15 @@ progress,progress::-webkit-progress-value,progress::progress-value,progress::-mo
 .clear {
     clear:both;
 }
+#backup_code {
+    font-size:2em;
+    text-align:center;
+    padding:.5em;
+    border:3px solid #f00;
+}
+h1 {
+    font-size:2em;
+}
+#alt_auth_pane a {
+    padding:.5em;
+}

@@ -326,7 +326,7 @@ class UserFunctions extends DBHelper
       }
     # If we're strict, the user only can SMS when the phone number is verified.
     # Otherwise, we just return the status of the phone number itself.
-    $verified = $strict ? boolstr($userdata["phone_verified"]) === true : self::isValidPhone($this->getPhone());
+    $verified = $strict ? $userdata["phone_verified"] == true : self::isValidPhone($this->getPhone());
     return $verified;
   }
 
@@ -350,7 +350,7 @@ class UserFunctions extends DBHelper
   private static function isValidPhone($number)
   {
     $number = self::cleanPhone($number);
-    return is_integer($number) && strlen($number) === 10;
+    return strlen($number) == 10;
   }
 
   public static function microtime_float()
@@ -370,6 +370,7 @@ class UserFunctions extends DBHelper
 
   public static function doLoadOTP()
   {
+    require_once(dirname(__FILE__).'/../base32/src/Base32/Base32.php');
     require_once(dirname(__FILE__).'/../totp/lib/OTPHP/OTPInterface.php');
     require_once(dirname(__FILE__).'/../totp/lib/OTPHP/OTP.php');
     require_once(dirname(__FILE__).'/../totp/lib/OTPHP/TOTPInterface.php');
@@ -391,8 +392,6 @@ class UserFunctions extends DBHelper
      * @param bool $is_test if it's a test run, check the temporary rather than real column.
      * @return bool
      ***/
-    require_once(dirname(__FILE__).'/../base32/src/Base32/Base32.php');
-
     self::doLoadOTP();
     $secret = $this->getSecret($is_test);
     if($secret === false) return false;
@@ -654,6 +653,7 @@ class UserFunctions extends DBHelper
     try
       {
         require_once(dirname(__FILE__)."/../qr/qrlib.php");
+        require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
         $salt = Stronghash::createSalt();
         $persistent = !empty($data_path);
         if(!$persistent)
@@ -668,7 +668,6 @@ class UserFunctions extends DBHelper
                   }
               }
             $web_dir = 'temp/';
-            require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
             $filename = $tmp_dir . sha1($salt) . ".png";
           }
         else
@@ -829,7 +828,7 @@ class UserFunctions extends DBHelper
 
         if (is_numeric($id) && !empty($userdata))
           {
-            $this->getUser($userdata);
+            $this->getUser(array("id"=>$id));
             $cookies=$this->createCookieTokens();
 
             return array_merge(array("status"=>true,"message"=>'Success!'),$userdata,$cookies);
@@ -1187,7 +1186,7 @@ class UserFunctions extends DBHelper
   }
 
 
-  public function writeToUser($data,$col,$validation_data=null,$replace=true)
+  public function writeToUser($data,$col,$validation_data=null,$replace=true,$alert_forbidden_column = true)
   {
     if(empty($data) || empty($col)) return array('status'=>false,'error'=>'Bad request');
     $validated=false;
@@ -1318,9 +1317,9 @@ class UserFunctions extends DBHelper
      ***/
     if($this->canSMS($strict))
       {
-        require_once("twilio/Services/Twilio.php");
         try
           {
+            require_once(dirname(__FILE__)."/../twilio/Services/Twilio.php");
             $client = new Services_Twilio($this->getTwilioSID(),$this->getTwilioToken());
             return $client->account->messages->sendMessage($this->getTwilioNumber(),$this->getPhone(),$message);
           }
@@ -1356,7 +1355,7 @@ class UserFunctions extends DBHelper
           }
       }
     $u = $this->getUser();
-    if($u["phone_verified"] === true)
+    if($u["phone_verified"] == true)
       {
         return array("status"=>false,"is_good"=>true,"error"=>"Number already authorized","human_error"=>"You've already verified this phone number");
       }
@@ -1381,15 +1380,15 @@ class UserFunctions extends DBHelper
           {
             # Set verified to true, and empty the special
             $query = "UPDATE `".$this->getTable()."` SET `".$this->tmpcol."`='', `phone_verified`=true WHERE `".$this->usercol."`='".$this->getUsername()."'";
-            mysqli_begin_transaction($l);
+            mysqli_query($l,"BEGIN");
             $r = mysqli_query($l,$query);
             if($r === false)
               {
                 $error = mysqli_error($l);
-                mysqli_rollback($l);
+                mysqli_query($l,"ROLLBACK");
                 throw(new Exception("Error updating databse: $error"));
               }
-            mysqli_commit($l);
+            mysqli_query($l,"COMMIT");
             return array("status"=>true,"message"=>"Phone number confirmed","is_good"=>true);
           }
         else
@@ -1409,6 +1408,7 @@ class UserFunctions extends DBHelper
      *
      * @return array with the twilio object in key "twilio"
      ***/
+    require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
     $auth = Stronghash::createSalt(8);
     # Write auth to tmpcol
     $query = "UPDATE `".$this->getTable()."` SET `".$this->tmpcol."`='$auth' WHERE `".$this->usercol."`='".$this->getUsername()."'";

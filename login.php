@@ -52,8 +52,8 @@ $user=new UserFunctions;
 
 if($debug==true)
   {
-    if($r===true) echo "<p>(Database OK)</p>";
-    else echo "<p>(Database Error - ' $r ')</p>";
+    /*if($r===true) echo "<p>(Database OK)</p>";
+      else echo "<p>(Database Error - ' $r ')</p>";*/
     echo "<p>Visiting $baseurl on '$shorturl' with a human domain '$domain'</p>";
     echo displayDebug($_REQUEST);
     echo "<p>".displayDebug(sanitize('tigerhawk_vok-goes.special@gmail.com'))."</p>";
@@ -68,8 +68,8 @@ try
   $logged_in=$user->validateUser($_COOKIE[$cookielink]);
   # This should only show when there isn't two factor enabled ...
   $twofactor = $user->has2FA() ? "Remove two-factor authentication":"Add two-factor authentication";
-  $phone_verify_template = "<form id='verify_phone' onsubmit='noSubmit();'>
-  <input type='tel' id='phone' name='phone' value='".$res['phone']."' readonly='readonly'/>
+  $phone_verify_template = "<form id='verify_phone' onsubmit='event.preventDefault();'>
+  <input type='tel' id='phone' name='phone' value='".$user->getPhone()."' readonly='readonly'/>
   <input type='hidden' id='username' name='username' value='".$user->getUsername()."'/>
   <button id='verify_phone_button'>Verify Phone Now</button>
   <p>
@@ -83,7 +83,7 @@ try
   try
     {
   $needPhone = !$user->canSMS();
-  $deferredJS .= "console.log('Needs phone? ',".strbool($needPhone).");\n";
+  $deferredJS .= "console.log('Needs phone? ',".strbool($needPhone).",".sanitize($user->getPhone()).");\n";
   $altPhone = "<p>Congratulations! Your phone number is verified.</p>";
 }
   catch(Exception $e)
@@ -224,9 +224,9 @@ if($_REQUEST['q']=='submitlogin')
                         $pw_characters=json_decode($userdata['password'],true);
 
                         // pieces:
-                        $salt=$cookie_result['source']['salt'];
-                        $otsalt=$cookie_result['source']['server_salt'];
-                        $cookie_secret=$cookie_result['source']['secret']; // won't grab new data until refresh, use passed
+                        $salt=$cookie_result['source'][1];
+                        $otsalt=$cookie_result['source'][2];
+                        $cookie_secret=$cookie_result['source'][0]; // won't grab new data until refresh, use passed
 
                         $value_create=array($cookie_secret,$salt,$otsalt,$_SERVER['REMOTE_ADDR'],$site_security_token);
                         $value=sha1(implode('',$value_create));
@@ -360,12 +360,12 @@ else if($_REQUEST['q']=='create')
 	      <label for='password'>
 		Password:
 	      </label>
-	      <input type='password' name='password' id='password' placeholder='Password' required='required'/>
+	      <input type='password' name='password' id='password' placeholder='Password' class='create' required='required'/>
 	      <br/>
 	      <label for='password2'>
 		Confirm Password:
 	      </label>
-	      <input type='password' name='password2' id='password2' placeholder='Confirm password' required='required'/>
+	      <input type='password' name='password2' id='password2' class='create' placeholder='Confirm password' required='required'/>
 	      <br/>
               <label for='fname'>
                 First Name:
