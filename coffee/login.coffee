@@ -71,6 +71,7 @@ doTOTPSubmit = (home = totpParams.home) ->
   # Get the code from #totp_code and push it through
   # to async_login_handler.php , get the results and behave appropriately
   noSubmit()
+  console.log("Running TOTPSubmit")
   animateLoad()
   code = $("#totp_code").val()
   user = $("#username").val()
@@ -230,6 +231,7 @@ popupSecret = (secret) ->
 
 giveAltVerificationOptions = ->
   # Put up an overlay, and ask if the user wants to remove 2FA or get a text
+  console.log("Running alt options")
   url = $.url()
   ajaxLanding = "async_login_handler.php"
   urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding
@@ -246,6 +248,8 @@ giveAltVerificationOptions = ->
   sms.done (result) ->
     if result[0] is true
       messages.sms = "<a href='#' id='#{sms_id}'>Send SMS</a>"
+    else
+      console.warn("Couldn't get a valid result",result,urlString+"?"+args)
   sms.fail (result,status) ->
     # Just don't populate the thing
     console.error("Could not check SMS-ability",result,status)
@@ -254,6 +258,7 @@ giveAltVerificationOptions = ->
     pop_content += v
   html = "<div id='#{pane_id}'><p>#{pop_content}</p><p id='#{pane_messages}'></p></div>"
   # Attach it to DOM
+  $("#totp_submit").after(html)
   # Attach event handlers
   $("##{remove_id}").click ->
     # Take them to the page where they can remove the TOTP
@@ -326,11 +331,15 @@ verifyPhone = ->
     console.error("AJAX failure trying to send phone verification text",urlString + "?" + args)
     console.error("Returns:",result,status)
 
+showInstructions = ->
+  # Load the instructions
+
 noSubmit = ->
   event.preventDefault()
   event.returnValue = false
 
 $ ->
+  console.log("Running login onloads")
   $("#password")
   .keyup ->
     checkPasswordLive()
@@ -354,7 +363,8 @@ $ ->
   $("#remove_totp_button").click ->
     doTOTPRemove()
   $("#alternate_verification_prompt").click ->
-    giveAltVerificationOptions();
+    giveAltVerificationOptions()
+    console.log("Showing alternate options")
   $("#verify_phone").click ->
     verifyPhone()
   $("#verify_phone_button").click ->

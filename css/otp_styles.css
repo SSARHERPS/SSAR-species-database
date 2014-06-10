@@ -41,3 +41,12 @@ progress,progress::-webkit-progress-value,progress::progress-value,progress::-mo
     text-transform:uppercase;
     font-family:"droid sans mono",consolas,monospace;
 }
+#cover_wrapper {
+    width:100%;
+    height:100%;
+    z-index: 1000;
+    background:rgba(255,255,255,.6);
+    position:fixed;
+    top:0;
+    left:0;
+}

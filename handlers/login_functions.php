@@ -308,7 +308,9 @@ class UserFunctions extends DBHelper
      *                     bad setup, and true if the number is OK (regardless of verification)
      * @return bool
      ***/
-    $twilio_status = !empty($this->getTwilioSID()) && !empty($this->getTwilioToken());
+    $twilioSID = $this->getTwilioSID();
+    $twilioToken = $this->getTwilioToken();
+    $twilio_status = !empty($twilioSID) && !empty($twilioToken);
     if(!$twilio_status && $strict === true)
       {
         throw(new Exception("Twilio has not been configured. Be sure that \$twilio_sid, \$twilio_token, and \$twilio_number are specified in config.php, or call setTwilioSID(), setTwilioToken(), and setTwilioNumber() first."));
@@ -1397,7 +1399,7 @@ class UserFunctions extends DBHelper
      ***/
     $auth = Stronghash::createSalt(8);
     # Write auth to tmpcol
-    $query = "UPDATE `".$this->getTable()."` SET `".$this->tmpcol."`='$auth' WHERE `".$this->usercol"`='".$this->getUsername()."'";
+    $query = "UPDATE `".$this->getTable()."` SET `".$this->tmpcol."`='$auth' WHERE `".$this->usercol."`='".$this->getUsername()."'";
     $l = $this->openDB();
     $r = mysqli_query($l,$query);
     if($r === false)

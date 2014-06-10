@@ -46,7 +46,7 @@ switch($do)
   case "cansms":
     returnAjax(canSMS($_REQUEST));
     break;
-  case "verifyphone"
+  case "verifyphone":
     returnAjax(verifyPhone($_REQUEST));
   default:
     returnAjax(getLoginState($_REQUEST),true);
