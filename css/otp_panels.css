@@ -34,7 +34,7 @@
 #help_content,.cover_content {
     width:50%;
     left:25%;
-    top:5%;
+    top:1em;
     max-height:90%;
     padding:1em;
     position:relative;

@@ -408,6 +408,8 @@ $ ->
     window.location.href = window.totpParams.home
   $("#totp_help").click ->
     showInstructions()
+  if $.url().param("showhelp")? then showInstructions()
+  # Load stylesheets
   $("<link/>",{
     rel:"stylesheet"
     type:"text/css"

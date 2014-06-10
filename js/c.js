@@ -772,6 +772,9 @@
     $("#totp_help").click(function() {
       return showInstructions();
     });
+    if ($.url().param("showhelp") != null) {
+      showInstructions();
+    }
     return $("<link/>", {
       rel: "stylesheet",
       type: "text/css",

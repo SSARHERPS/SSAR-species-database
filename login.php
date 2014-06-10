@@ -115,7 +115,7 @@ else
     if($captive_login) header("Refresh: 0; url=$baseurl");
   }
 
-$random = "<li><a href='#' id='totp_help'>Help with Two-Factor Authentication</a></li>";
+// $random = "<li><a href='#' id='totp_help'>Help with Two-Factor Authentication</a></li>";
 
 $settings_blob = "<section id='account_settings'><h2>Settings</h2><ul id='settings_list'><li><a href='?2fa=t'>".$twofactor."</a></li>".$verifyphone_link.$random."</ul></section>";
 
