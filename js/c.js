@@ -330,6 +330,10 @@
     window.totpParams.home = url.attr('protocol') + '://' + url.attr('host') + '/';
   }
 
+  if (window.totpParams.relative == null) {
+    window.totpParams.relative = "";
+  }
+
   checkPasswordLive = function() {
     var pass;
     pass = $("#password").val();
@@ -732,7 +736,7 @@
       media: "screen",
       href: window.totpParams.popStylesheetPath
     }).appendTo("head");
-    return $.get(path).done(function(html) {
+    return $.get(window.totpParams.relative + path).done(function(html) {
       var assetPath, urlString;
       $("article").after(html);
       $("article").addClass("blur");

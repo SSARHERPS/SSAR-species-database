@@ -1,7 +1,7 @@
 <?php
 /*
  * This is designed to be included in a page, and doesn't have the page framework on its own.
- * Be sure after including this file to output the variable 
+ * Be sure after including this file to output the variable
  * $login_output
  * If you want a display
  */
@@ -484,7 +484,7 @@ else if($_REQUEST['q']=='create')
 </form>";
                                 $login_output .= $phone_verify_form;
                                 # Give the option to add two-factor now; force it if flag enabled
-                                
+
                               }
                             else
                               {
@@ -634,7 +634,8 @@ else
 $login_output.="</div>";
 ob_end_flush();
 
-$totpOverride = !empty($redirect_url) ? "totpParams.home = \"".$redirect_url."\"":null;
+$totpOverride = !empty($redirect_url) ? "totpParams.home = \"".$redirect_url."\"\n":null;
+$totpOverride .= !empty($relative_path) ? "totpParams.relative = \"".$relative_path."\"\n":null;
 
 $deferredScriptBlock = "<script type='text/javascript'>
         if(typeof passwords != 'object') passwords = new Object();

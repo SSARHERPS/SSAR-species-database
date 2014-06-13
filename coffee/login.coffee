@@ -16,6 +16,8 @@ window.totpParams.popClass = "pop-panel"
 if not window.totpParams.home?
   url = $.url()
   window.totpParams.home =  url.attr('protocol') + '://' + url.attr('host') + '/'
+if not window.totpParams.relative?
+  window.totpParams.relative = ""
 
 checkPasswordLive = ->
   pass = $("#password").val()
@@ -383,7 +385,7 @@ showInstructions = (path = "help/instructions_pop.html") ->
     href:window.totpParams.popStylesheetPath
     }).appendTo("head")
   # Load the instructions
-  $.get path
+  $.get window.totpParams.relative+path
   .done (html) ->
     $("article").after(html)
     $("article").addClass("blur")

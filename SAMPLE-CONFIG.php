@@ -10,6 +10,9 @@ $debug=false;
 $use_javascript_cookies=false;
 $redirect_to_home = true;
 
+# Path to this library from callers
+$relative_path = "";
+
 $site_name = "";
 
 $default_user_table='userdata';
