@@ -416,7 +416,7 @@
     ip = $("#remote").val();
     url = $.url();
     ajaxLanding = "async_login_handler.php";
-    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding;
+    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.relative + ajaxLanding;
     args = "action=verifytotp&code=" + code + "&user=" + user + "&password=" + pass + "&remote=" + ip;
     totp = $.post(urlString, args, 'json');
     totp.done(function(result) {
@@ -469,7 +469,7 @@
     animateLoad();
     url = $.url();
     ajaxLanding = "async_login_handler.php";
-    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding;
+    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.relative + ajaxLanding;
     args = "action=removetotp&code=" + code + "&username=" + user + "&password=" + pass;
     remove_totp = $.get(urlString, args, 'json');
     remove_totp.done(function(result) {
@@ -501,7 +501,7 @@
     key = $("#secret").val();
     url = $.url();
     ajaxLanding = "async_login_handler.php";
-    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding;
+    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.relative + ajaxLanding;
     args = "action=maketotp&password=" + password + "&user=" + user;
     totp = $.post(urlString, args, 'json');
     totp.done(function(result) {
@@ -557,7 +557,7 @@
     user = $("#username").val();
     url = $.url();
     ajaxLanding = "async_login_handler.php";
-    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding;
+    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.relative + ajaxLanding;
     args = "action=savetotp&secret=" + key + "&user=" + user + "&hash=" + hash + "&code=" + code;
     totp = $.post(urlString, args, 'json');
     totp.done(function(result) {
@@ -608,7 +608,7 @@
     var ajaxLanding, args, messages, pane_id, pane_messages, remove_id, sms, sms_id, urlString, user;
     url = $.url();
     ajaxLanding = "async_login_handler.php";
-    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding;
+    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.relative + ajaxLanding;
     user = $("#username").val();
     args = "action=cansms&user=" + user;
     remove_id = "remove_totp_link";
@@ -670,7 +670,7 @@
     noSubmit();
     url = $.url();
     ajaxLanding = "async_login_handler.php";
-    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../" + ajaxLanding;
+    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.relative + ajaxLanding;
     auth = $("#phone_auth").val() != null ? $("#phone_auth").val() : null;
     user = $("#username").val();
     args = "action=verifyphone&username=" + user + "&auth=" + auth;
