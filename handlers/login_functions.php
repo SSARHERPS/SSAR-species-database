@@ -11,7 +11,7 @@ class UserFunctions extends DBHelper
   {
     /***
      * @param string $username the user to be instanced with
-     * @param string $lookup_column the column to look them up in. 
+     * @param string $lookup_column the column to look them up in.
      *                              Ignored if $username is null, defaults to $user_column
      * @param array $db_params Optional override database parameters.
      *                         The required keys are:
@@ -24,7 +24,7 @@ class UserFunctions extends DBHelper
      ***/
     # Set up the parameters in CONFIG.php
     require_once(dirname(__FILE__).'/../CONFIG.php');
-    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue,$ip_record,$default_user_database,$default_sql_user,$default_sql_password,$sql_url,$default_user_table,$baseurl,$twilio_sid,$twilio_token,$twilio_number,$site_name;
+    global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue,$ip_record,$default_user_database,$default_sql_user,$default_sql_password,$sql_url,$default_user_table,$baseurl,$twilio_sid,$twilio_token,$twilio_number,$site_name,$link_column;
 
     if(!empty($db_params))
       {
@@ -97,6 +97,7 @@ class UserFunctions extends DBHelper
     $this->pwcol = $password_column;
     $this->cookiecol = $cookie_ver_column;
     $this->usercol = $user_column;
+    $this->linkcol = $link_column;
     $this->tmpcol = $temporary_storage;
     $this->totpcol = $totp_column;
     $this->totpbackup = $totp_rescue;
@@ -149,7 +150,8 @@ class UserFunctions extends DBHelper
   private function getThresholdLength() { return $this->thresholdLength; }
   private function getSupportEmail() { return $this->supportEmail; }
   private function needsManualAuth() { return $this->needsAuth === true; }
-  private function getSecret($is_test = false) {
+  private function getSecret($is_test = false)
+  {
     $userdata = $this->getUser();
     if($is_test)
       {
@@ -157,7 +159,8 @@ class UserFunctions extends DBHelper
       }
     return empty($userdata[$this->totpcol]) ? false:$userdata[$this->totpcol];
   }
-  public function has2FA() {
+  public function has2FA()
+  {
     $userdata = $this->getUser();
     return !empty($userdata[$this->totpcol]);
   }
@@ -191,6 +194,7 @@ class UserFunctions extends DBHelper
       }
 
     if(array_key_exists($this->usercol,$userdata)) $this->username = $userdata[$this->usercol];
+    if(array_key_exists($this->linkcol,$userdata)) $this->userlink = $userdata[$this->linkcol];
     return $userdata;
   }
 
@@ -596,17 +600,17 @@ class UserFunctions extends DBHelper
           }
       }
     # Unset backup and totpcol
-    $query = "UPDATE `".$this->getTable()."` SET `".$this->totpcol."`='', `".$this->tmpcol."`='', `".$this->totpbackup."`='' WHERE `".$this->usercol."`='".$this->username."'";
+    $query = "UPDATE `".$this->getTable()."` SET `".$this->totpcol."`='', `".$this->tmpcol."`='', `".$this->totpbackup."`='' WHERE `".$this->usercol."`='".$this->getUsername()."'";
     mysqli_query($l,"BEGIN");
     $r = mysqli_query($l,$query);
     if($r === false)
       {
         $e = mysqli_error($l);
         mysqli_query($l,"ROLLBACK");
-        return array("status"=>false,"error"=>$e,"human_error"=>"Could not unset two-factor authentication","username"=>$this->username);
+        return array("status"=>false,"error"=>$e,"human_error"=>"Could not unset two-factor authentication","username"=>$this->getUsername());
       }
     mysqli_query($l,"COMMIT");
-    return true;
+    return array("status"=>true,"username"=>$this->getUsername());
   }
 
 
@@ -1096,11 +1100,12 @@ class UserFunctions extends DBHelper
             $userdata=$r[1];
           }
         $id=$userdata['id'];
-
+        $dblink = $userdata[$this->linkcol];
+        
         # Nom, cookies!
         $expire_days=7;
         $expire=time()+3600*24*$expire_days;
-        // Create a one-time key, store serverside
+        # Create a one-time key, store serverside
         require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
         $otsalt=Stronghash::createSalt();
         $cookie_secret=Stronghash::createSalt();
@@ -1135,7 +1140,6 @@ class UserFunctions extends DBHelper
 
         $xml=new Xml;
         $user_greet=$xml->getTagContents($userdata['name'],"<fname>"); // for now
-        $dblink=$userdata['dblink'];
 
         setcookie($cookieauth,$value,$expire);
         setcookie($cookiekey,$cookie_secret,$expire);
@@ -1338,7 +1342,7 @@ class UserFunctions extends DBHelper
   {
     /***
      * Verify the phone with a random code
-     * 
+     *
      * @param string $auth_code
      * @return array
      ***/
@@ -1347,7 +1351,7 @@ class UserFunctions extends DBHelper
         # Twilio is not configured, or there's an illegal phone number
         if(self::isValidPhone($this->getPhone()))
           {
-            throw(new Exception("SMS is not properly configured. Check your CONFIG."));            
+            throw(new Exception("SMS is not properly configured. Check your CONFIG."));
           }
         else
           {
@@ -1397,7 +1401,7 @@ class UserFunctions extends DBHelper
             return $this->textUserVerify();
           }
       }
-    
+
   }
 
   private function textUserVerify()

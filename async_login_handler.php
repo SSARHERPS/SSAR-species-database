@@ -37,6 +37,9 @@ switch($do)
   case "savetotp":
     returnAjax(saveTOTP($_REQUEST));
     break;
+  case "removetotp":
+    returnAjax(removeTOTP($_REQUEST));
+    break;
   case "sendtotptext":
     returnAjax(sendTOTPText($_REQUEST));
     break;
@@ -168,6 +171,15 @@ function verifyTOTP($get)
   $return["cookies"] = $cookie_result;
   $return["string"] = json_encode($cookie_result["raw_cookie"]);
   return $return;
+}
+
+function removeTOTP($get)
+{
+  /***
+   * Remove the TOTP code
+   ***/
+  $u = new UserFunctions();
+  return $u->removeTOTP($get['username'],$get['password'],$get['code']);
 }
 
 function sendTOTPText($get)

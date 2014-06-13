@@ -3,9 +3,6 @@
  * This is designed to be included in a page, and doesn't have the page framework on its own.
  */
 
-$debug=false;
-$use_javascript_cookies=false;
-
 require_once(dirname(__FILE__).'/CONFIG.php');
 
 if(empty($baseurl))
@@ -391,6 +388,7 @@ else if($_REQUEST['q']=='create')
                 Do not fill this field
               </label>
 	      <input type='text' name='honey' id='honey' class='hide'/>
+        <p>Please enter both words shown in the prompt below</p>
               $recaptcha
               </div>
               <div class='right' style='width:25%'>
@@ -455,10 +453,27 @@ else if($_REQUEST['q']=='create')
                                  ***/
                                 $deferredJS.=$res['js'];
                                 /* // ... redirect to home */
-                                /* $deferredJS.="\nwindow.location=\"$baseurl\""; */
-                                /* header("Refresh: 3; url=".$baseurl); */
+                                if($redirect_to_home === true)
+                                  {
+                                    $deferredJS.="\nwindow.location=\"$baseurl\"";
+                                    header("Refresh: 3; url=".$baseurl);
+                                  }
                                 # Verify the phone number
+                                $phone_verify_template = "<form id='verify_phone' onsubmit='event.preventDefault();'>
+  <input type='tel' id='phone' name='phone' value='".$user->getPhone()."' readonly='readonly'/>
+  <input type='hidden' id='username' name='username' value='".$user->getUsername()."'/>
+  <button id='verify_phone_button'>Verify Phone Now</button>
+  <p>
+    <small>
+      <a href='#' id='verify_later'>
+        Verify Later
+      </a>
+    </small>
+  </p>
+</form>";
                                 $login_output .= $phone_verify_form;
+                                # Give the option to add two-factor now; force it if flag enabled
+                                
                               }
                             else
                               {
@@ -576,13 +591,13 @@ else if(isset($_REQUEST['2fa']))
     else if ($logged_in && $user->has2FA())
       {
         # Remove 2FA from the user
-        $totp_remove_form = "<section id='totp_remove'>
-  <p class='error'>Are you sure you want to disable two-factor authentication?</p>
+        $totp_remove_form = "<section id='totp_remove_section'>
+  <p id='totp_message' class='error'>Are you sure you want to disable two-factor authentication?</p>
   <form id='totp_remove' onsubmit='event.preventDefault();'>
     <fieldset>
       <legend>Remove Two-Factor Authentication</legend>
       <input type='email' value='".$user->getUsername()."' readonly='readonly' id='username' name='username'/><br/>
-      <input type='password' id='password' name='password'/><br/>
+      <input type='password' id='password' name='password' placeholder='Password'/><br/>
       <input type='number' id='code' name='code' placeholder='Authenticator Code or Backup Code' size='32' maxlength='32'/>
       <button id='remove_totp_button' class='totpbutton'>Remove Two-Factor Authentication</button>
     </fieldset>
@@ -610,7 +625,7 @@ ob_end_flush();
 
 $totpOverride = !empty($redirect_url) ? "totpParams.home = \"".$redirect_url."\"":null;
 
-echo "<script type='text/javascript'>
+$deferredBlock = "<script type='text/javascript'>
         if(typeof passwords != 'object') passwords = new Object();
         passwords.overrideLength=$password_threshold_length;
         passwords.minLen=$minimum_password_length;
@@ -656,7 +671,9 @@ window.onload = function() {
     if (!window.jQuery) {
         loadScript('//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js',lateJS);
     }
-    else lateJS;
+    else lateJS();
 }
 </script>";
+
+echo $deferredBlock;
 ?>

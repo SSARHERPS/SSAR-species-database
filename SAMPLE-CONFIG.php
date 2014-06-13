@@ -5,7 +5,10 @@
  ***/
 
 # pulls the user back to the main page if not logged in
-$captive_login=false; 
+$captive_login=false;
+$debug=false;
+$use_javascript_cookies=false;
+$redirect_to_home = true;
 
 $site_name = "";
 
@@ -27,7 +30,7 @@ $recaptcha_private_key="";
  * Very important! I suggest taking all three results and concatenating them:
  * https://www.random.org/passwords/?num=3&len=24&format=plain&rnd=new
  ***/
-$site_security_token=""; 
+$site_security_token="";
 
 /***
  * If not set, minimum password length defaults to 8, with a threshold of 20.
@@ -82,7 +85,7 @@ $db_cols=array(
   "private_key"=>"text",
   "secret"=>"varchar(255)",
   "emergency_code"=>"varchar(255)",
-  "phone"=>"varchar(10)",
+  "phone"=>"varchar(20)",
   "phone_verified"=>"bool",
 );
 
@@ -91,6 +94,7 @@ $db_cols=array(
  ***/
 
 $user_column = "username";
+$link_column = "dblink";
 $password_column = "password";
 $cookie_ver_column = "auth_key";
 
