@@ -9,8 +9,6 @@ window.passwords.minLength ?= 8
 window.passwords.overrideLength ?= 21
 
 if typeof window.totpParams isnt 'object' then window.totpParams = new Object()
-window.totpParams.mainStylesheetPath = "css/otp_styles.css"
-window.totpParams.popStylesheetPath = "css/otp_panels.css"
 window.totpParams.popClass = "pop-panel"
 # The value $redirect_url in CONFIG.php overrides this value
 if not window.totpParams.home?
@@ -18,6 +16,8 @@ if not window.totpParams.home?
   window.totpParams.home =  url.attr('protocol') + '://' + url.attr('host') + '/'
 if not window.totpParams.relative?
   window.totpParams.relative = ""
+window.totpParams.mainStylesheetPath = window.totpParams.relative+"css/otp_styles.css"
+window.totpParams.popStylesheetPath = window.totpParams.relative+"css/otp_panels.css"
 
 checkPasswordLive = ->
   pass = $("#password").val()
@@ -390,9 +390,7 @@ showInstructions = (path = "help/instructions_pop.html") ->
     $("article").after(html)
     $("article").addClass("blur")
     # Fill the images
-    url = $.url()
-    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../"
-    assetPath = "#{urlString}assets/"
+    assetPath = "#{window.totpParams.relative}assets/"
     $(".android").html("<img src='#{assetPath}playstore.png' alt='Google Play Store'/>")
     $(".ios").html("<img src='#{assetPath}appstore.png' alt='iOS App Store'/>")
     $(".wp8").html("<img src='#{assetPath}wpstore.png' alt='Windows Phone Store'/>")

@@ -319,10 +319,6 @@
     window.totpParams = new Object();
   }
 
-  window.totpParams.mainStylesheetPath = "css/otp_styles.css";
-
-  window.totpParams.popStylesheetPath = "css/otp_panels.css";
-
   window.totpParams.popClass = "pop-panel";
 
   if (window.totpParams.home == null) {
@@ -333,6 +329,10 @@
   if (window.totpParams.relative == null) {
     window.totpParams.relative = "";
   }
+
+  window.totpParams.mainStylesheetPath = window.totpParams.relative + "css/otp_styles.css";
+
+  window.totpParams.popStylesheetPath = window.totpParams.relative + "css/otp_panels.css";
 
   checkPasswordLive = function() {
     var pass;
@@ -737,12 +737,10 @@
       href: window.totpParams.popStylesheetPath
     }).appendTo("head");
     return $.get(window.totpParams.relative + path).done(function(html) {
-      var assetPath, urlString;
+      var assetPath;
       $("article").after(html);
       $("article").addClass("blur");
-      url = $.url();
-      urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + url.attr('directory') + "/../";
-      assetPath = "" + urlString + "assets/";
+      assetPath = "" + window.totpParams.relative + "assets/";
       $(".android").html("<img src='" + assetPath + "playstore.png' alt='Google Play Store'/>");
       $(".ios").html("<img src='" + assetPath + "appstore.png' alt='iOS App Store'/>");
       $(".wp8").html("<img src='" + assetPath + "wpstore.png' alt='Windows Phone Store'/>");
