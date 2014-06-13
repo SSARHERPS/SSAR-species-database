@@ -222,7 +222,7 @@ class UserFunctions extends DBHelper
       {
         # See if we can get this from the cookies
         $user_id=$_COOKIE[$this->domain."_link"];
-        $col = "dblink";
+        $col = $this->linkcol;
       }
 
     # Do we have an ID to work with?
@@ -802,7 +802,7 @@ class UserFunctions extends DBHelper
           case "secdata":
             $store[]=$sdata_init;
             break;
-          case "dblink":
+          case $this->linkcol:
             $store[]=$hardlink;
             break;
           case "phone":
@@ -1023,7 +1023,7 @@ class UserFunctions extends DBHelper
      * @param bool $detail Provide detailed returns
      * @return bool|array bool if $detail is false, array if $detail is true
      ***/
-    if(strpos($userid,"@")===false && !empty($userid)) $userid = array("dblink"=>$userid);
+    if(strpos($userid,"@")===false && !empty($userid)) $userid = array($this->linkcol=>$userid);
     try
       {
         $userdata = $this->getUser($userid);
@@ -1204,13 +1204,13 @@ class UserFunctions extends DBHelper
     $validated=false;
     if(is_array($validation_data))
       {
-        if(array_key_exists('dblink',$validation_data))
+        if(array_key_exists($this->linkcol,$validation_data))
           {
             // confirm with validateUser();
-            $validated=$this->validateUser($validation_data['dblink'],$validation_data['hash'],$validation_data['secret']);
+            $validated=$this->validateUser($validation_data[$this->linkcol],$validation_data['hash'],$validation_data['secret']);
             $method='Confirmation token';
-            $where_col='dblink';
-            $user=$validation_data['dblink'];
+            $where_col=$this->linkcol;
+            $user=$validation_data[$this->linkcol];
           }
         else if(array_key_exists('password',$validation_data))
           {
@@ -1231,7 +1231,7 @@ class UserFunctions extends DBHelper
     if($validated)
       {
         $userdata = $this->getUser();
-        $where_col = "dblink";
+        $where_col = $this->linkcol;
         $user = $userdata[$where_col];
         if(empty($user)) return array("status"=>false,"error"=>"Problem assigning user");
         // write it to the db
