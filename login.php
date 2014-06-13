@@ -1,6 +1,9 @@
 <?php
 /*
  * This is designed to be included in a page, and doesn't have the page framework on its own.
+ * Be sure after including this file to output the variable 
+ * $login_output
+ * If you want a display
  */
 
 require_once(dirname(__FILE__).'/CONFIG.php');
@@ -206,7 +209,15 @@ if($_REQUEST['q']=='submitlogin')
                 // Need access -- name (id), email. Give server access?
                 $login_output.="<p>Logging in from another device or browser will end your session here. You will be redirected in 3 seconds...</p>";
                 $logged_in=true;
-                $durl=$_SERVER['PHP_SELF'];
+                if($redirect_to_home !== true && empty($redirect_url))
+                  {
+                    $durl = $_SERVER['PHP_SELF'];
+                  }
+                else
+                  {
+                    if($redirect_to_home === true) $durl = $baseurl;
+                    else $durl = $redirect_url;
+                  }
                 if(isset($_COOKIE[$cookieuser]) || $logged_in===true)
                   {
                     $cookiedebug.=" cookie-enter";
@@ -625,7 +636,7 @@ ob_end_flush();
 
 $totpOverride = !empty($redirect_url) ? "totpParams.home = \"".$redirect_url."\"":null;
 
-$deferredBlock = "<script type='text/javascript'>
+$deferredScriptBlock = "<script type='text/javascript'>
         if(typeof passwords != 'object') passwords = new Object();
         passwords.overrideLength=$password_threshold_length;
         passwords.minLen=$minimum_password_length;
@@ -675,5 +686,5 @@ window.onload = function() {
 }
 </script>";
 
-echo $deferredBlock;
+echo $deferredScriptBlock;
 ?>
