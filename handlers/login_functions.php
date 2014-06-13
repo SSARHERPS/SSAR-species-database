@@ -193,8 +193,8 @@ class UserFunctions extends DBHelper
         throw(new Exception($error));
       }
 
-    if(array_key_exists($this->usercol,$userdata)) $this->username = $userdata[$this->usercol];
-    if(array_key_exists($this->linkcol,$userdata)) $this->userlink = $userdata[$this->linkcol];
+    if(@array_key_exists($this->usercol,$userdata)) $this->username = $userdata[$this->usercol];
+    if(@array_key_exists($this->linkcol,$userdata)) $this->userlink = $userdata[$this->linkcol];
     return $userdata;
   }
 
