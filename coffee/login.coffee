@@ -394,6 +394,9 @@ showInstructions = (path = "help/instructions_pop.html") ->
     $(".android").html("<img src='#{assetPath}playstore.png' alt='Google Play Store'/>")
     $(".ios").html("<img src='#{assetPath}appstore.png' alt='iOS App Store'/>")
     $(".wp8").html("<img src='#{assetPath}wpstore.png' alt='Windows Phone Store'/>")
+    $(".large_totp_icon").each ->
+      newSource = assetPath + $(this).attr("src")
+      $(this).attr("src",newSource)
     $(".app_link_container a").addClass("newwindow")
     mapNewWindows()
     $(".close-popup").click ->

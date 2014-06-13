@@ -744,6 +744,11 @@
       $(".android").html("<img src='" + assetPath + "playstore.png' alt='Google Play Store'/>");
       $(".ios").html("<img src='" + assetPath + "appstore.png' alt='iOS App Store'/>");
       $(".wp8").html("<img src='" + assetPath + "wpstore.png' alt='Windows Phone Store'/>");
+      $(".large_totp_icon").each(function() {
+        var newSource;
+        newSource = assetPath + $(this).attr("src");
+        return $(this).attr("src", newSource);
+      });
       $(".app_link_container a").addClass("newwindow");
       mapNewWindows();
       return $(".close-popup").click(function() {
