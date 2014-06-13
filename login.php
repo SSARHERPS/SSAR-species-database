@@ -663,11 +663,11 @@ function loadScript(url, callback) {
 var lateJS= function() {
     try {
         console.log('Loading late libraries');
-        $.getScript('js/zxcvbn/zxcvbn.js');
-        $.getScript('js/base64.min.js');
-        $.getScript('js/jquery.cookie.min.js');
-        $.getScript('js/purl.min.js');
-        $.getScript('js/c.min.js');
+        $.getScript('".$relative_path."js/zxcvbn/zxcvbn.js');
+        $.getScript('".$relative_path."js/base64.min.js');
+        $.getScript('".$relative_path."js/jquery.cookie.min.js');
+        $.getScript('".$relative_path."js/purl.min.js');
+        $.getScript('".$relative_path."js/c.min.js');
         $(document).ready(function(){
             $deferredJS
         });
