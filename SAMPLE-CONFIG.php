@@ -64,6 +64,7 @@ $db_cols=array(
   "username"=>"text",
   "password"=>"text",
   "pass_meta"=>"text",
+  "salt"=>"varchar(255)",
   "creation"=>"float(16)",
   "status_tracker"=>"text",
   "name"=>"text",

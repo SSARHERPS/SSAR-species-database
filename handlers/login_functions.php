@@ -1024,7 +1024,15 @@ class UserFunctions extends DBHelper
      * @return bool|array bool if $detail is false, array if $detail is true
      ***/
     if(strpos($userid,"@")===false && !empty($userid)) $userid = array("dblink"=>$userid);
-    $userdata = $this->getUser($userid);
+    try
+      {
+        $userdata = $this->getUser($userid);
+      }
+    catch(Exception $e)
+      {
+        # There is no data at all here, or something horribly broken.
+        $userdata = "";
+      }
     if(is_array($userdata))
       {
         $pw_characters=json_decode($userdata[$this->pwcol],true);
