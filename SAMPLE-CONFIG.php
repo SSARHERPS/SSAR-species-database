@@ -10,6 +10,8 @@ $debug=false;
 $use_javascript_cookies=false;
 $redirect_to_home = true;
 
+$require_two_factor = false;
+
 $ask_twofactor_at_signup = false;
 $ask_verify_phone_at_signup = false;
 # Redirect the user after the account has been created
@@ -19,7 +21,7 @@ $post_create_redirect = false;
 $baseurl = ""; # define if other than the hosted URL
 $redirect_url = ""; # define if other than the hosted URL
 
-# Path to this library from callers
+# Path to this library from callers, relative to the top level
 $relative_path = "";
 
 $site_name = "";

@@ -8,6 +8,12 @@
 
 require_once(dirname(__FILE__).'/CONFIG.php');
 
+if($require_two_factor)
+  {
+    # Implies this
+    $ask_twofactor_at_signup = true;
+  }
+
 if($ask_twofactor_at_signup || $ask_verify_phone_at_signup)
   {
     # Override any redirects
@@ -72,6 +78,13 @@ if($debug==true)
 try
 {
   $logged_in=$user->validateUser($_COOKIE[$cookielink]);
+  if(!$user->has2FA() && $require_two_factor === true && !isset($_REQUEST['2fa']))
+    {
+      # If require two factor is on, always force it post login
+      header("Refresh: 0; url=".$_SERVER['PHP_SELF']."?2fa=t");
+      $deferredJS.="\nwindow.location.href=\"".$_SERVER['PHP_SELF']."?2fa=t\"";
+      ob_end_flush();
+    }
   # This should only show when there isn't two factor enabled ...
   $twofactor = $user->has2FA() ? "Remove two-factor authentication":"Add two-factor authentication";
   $phone_verify_template = "<form id='verify_phone' onsubmit='event.preventDefault();'>
@@ -118,7 +131,11 @@ if($logged_in)
   }
 else
   {
-    if($captive_login) header("Refresh: 0; url=$baseurl");
+    if($captive_login)
+      {
+        header("Refresh: 0; url=$baseurl");
+        $deferredJS.="\nwindow.location.href=\"$baseurl\"";
+      }
   }
 
 // $random = "<li><a href='#' id='totp_help'>Help with Two-Factor Authentication</a></li>";
@@ -213,7 +230,6 @@ if($_REQUEST['q']=='submitlogin')
             else
               {
                 // Need access -- name (id), email. Give server access?
-                $login_output.="<p>Logging in from another device or browser will end your session here. You will be redirected in 3 seconds...</p>";
                 $logged_in=true;
                 if($redirect_to_home !== true && empty($redirect_url))
                   {
@@ -249,7 +265,7 @@ if($_REQUEST['q']=='submitlogin')
                             // Good cookie
                             $cookiedebug.=' good-auth';
                             $logged_in=true;
-                            $user=$_COOKIE[$cookieuser];
+                            $user_cookie=$_COOKIE[$cookieuser];
                             if($use_javascript_cookies) $deferredJS.="\n".$cookie_result['js'];
                           }
                         else
@@ -285,6 +301,19 @@ if($_REQUEST['q']=='submitlogin')
                           }
                         else $cookiedebug.="\nWould wipe here";
                       }
+                    if(!$user->has2FA() && $require_two_factor === true)
+                      {
+                        # If require two factor is on, always force it post login
+                        if($debug !== true)
+                          {
+                            header("Refresh: 0; url=".$_SERVER['PHP_SELF']."?2fa=t");
+                            $deferredJS.="\nwindow.location.href=\"".$_SERVER['PHP_SELF']."?2fa=t\"";
+                           }
+                        ob_end_flush();
+                        $cancel_redirects = true;
+                        $login_output .= "<h1>You must set up two-factor authentication to continue.</h1><p>You'll be redirected in less than 10 seconds ...</p>";
+                      }
+                    else $login_output.="<p>Logging in from another device or browser will end your session here. You will be redirected in 3 seconds...</p>";
                   }
                 else
                   {
@@ -302,7 +331,7 @@ if($_REQUEST['q']=='submitlogin')
                     echo "<p>Would refresh to:".$durl."</p>";
 
                   }
-                else header("Refresh: 3; url=".$durl);
+                else if($cancel_redirects !== true) header("Refresh: 3; url=".$durl);
               }
             ob_end_flush(); // Flush the buffer, start displaying
           }
@@ -480,7 +509,7 @@ else if($_REQUEST['q']=='create')
                                         if($redirect_to_home === true) $durl = $baseurl;
                                         else $durl = $redirect_url;
                                       }
-                                    $deferredJS.="\nwindow.location=\"$durl\"";
+                                    $deferredJS.="\nwindow.location.href=\"$durl\"";
                                     header("Refresh: 3; url=".$durl);
                                   }
                                 if($ask_verify_phone_at_signup)
@@ -498,7 +527,7 @@ else if($_REQUEST['q']=='create')
     </small>
   </p>
 </form>";
-                                    $login_output .= "<h2>Verifying your Phone</h2>".$phone_verify_form; 
+                                    $login_output .= "<h2>Verifying your Phone</h2>".$phone_verify_template;
                                   }
                                 # Give the option to add two-factor now; force it if flag enabled
                                 if($ask_twofactor_at_signup)
@@ -506,7 +535,7 @@ else if($_REQUEST['q']=='create')
                                     # Give user 2FA
                                     $totp_add_form = "<section id='totp_add'>
   <p id='totp_message'>Two factor authentication is very secure, but when you enable it, you'll be unable to log in without your mobile device.</p>
-  <form id='totp_start'>
+  <form id='totp_start' onsubmit='event.preventDefault();'>
     <fieldset>
       <legend>Login to continue</legend>
       <input type='email' value='".$user->getUsername()."' readonly='readonly' id='username' name='username'/><br/>
@@ -633,6 +662,7 @@ else if(isset($_REQUEST['2fa']))
   </form>
   <a href='#' id='totp_help'>Help with Two-Factor Authentication</a>
 </section>";
+        if($require_two_factor) $totp_add_form = "<h1>This site requires two-factor authentication</h1><h2>Please set up two-factor authentication to continue.</h2>".$totp_add_form;
         $login_output .= $totp_add_form;
       }
     else if ($logged_in && $user->has2FA())
@@ -672,54 +702,25 @@ ob_end_flush();
 
 $totpOverride = !empty($redirect_url) ? "totpParams.home = \"".$redirect_url."\"\n":null;
 $totpOverride .= !empty($relative_path) ? "totpParams.relative = \"".$relative_path."\"\n":null;
+$totpOverride .= !empty($working_subdirectory) ? "totpParams.subdirectory = \"".$working_subdirectory."\"\n":null;
 
-$deferredScriptBlock = "<script type='text/javascript'>
+$deferredScriptBlock = "<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js'></script>
+<script type='text/javascript' src='".$relative_path."js/loadJQuery.js'></script>
+<script type='text/javascript'>
         if(typeof passwords != 'object') passwords = new Object();
         passwords.overrideLength=$password_threshold_length;
         passwords.minLen=$minimum_password_length;
         if(typeof totpParams != 'object') totpParams = new Object();
         $totpOverride
 
-function loadScript(url, callback) {
-    // Adding the script tag to the head as suggested before
-    var head = document.getElementsByTagName('head')[0];
-    var script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = url;
-
-    // Then bind the event to the callback function.
-    // There are several events for cross browser compatibility.
-    script.onreadystatechange = callback;
-    script.onload = callback;
-
-    // Fire the loading
-    head.appendChild(script);
-}
-
-var lateJS= function() {
+var loadLast = function () {
     try {
-        console.log('Loading late libraries');
-        $.getScript('".$relative_path."js/zxcvbn/zxcvbn.js');
-        $.getScript('".$relative_path."js/base64.min.js');
-        $.getScript('".$relative_path."js/jquery.cookie.min.js');
-        $.getScript('".$relative_path."js/purl.min.js');
-        $.getScript('".$relative_path."js/c.min.js');
-        $(document).ready(function(){
-            $deferredJS
-        });
+        $deferredJS
     }
-    catch (e) {
-        // failed to load anyway
-        console.log('Failed to load jQuery');
-        // Draw an error
+    catch (e)
+    {
+        console.error(\"Couldn't load deferred calls\");
     }
-}
-
-window.onload = function() {
-    if (!window.jQuery) {
-        loadScript('//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js',lateJS);
-    }
-    else lateJS();
 }
 </script>";
 

@@ -16,6 +16,8 @@ if not window.totpParams.home?
   window.totpParams.home =  url.attr('protocol') + '://' + url.attr('host') + '/'
 if not window.totpParams.relative?
   window.totpParams.relative = ""
+if not window.totpParams.subdirectory?
+  window.totpParams.subdirectory = ""
 window.totpParams.mainStylesheetPath = window.totpParams.relative+"css/otp_styles.css"
 window.totpParams.popStylesheetPath = window.totpParams.relative+"css/otp_panels.css"
 
@@ -80,7 +82,7 @@ doTOTPSubmit = (home = window.totpParams.home) ->
   ip = $("#remote").val()
   url = $.url()
   ajaxLanding = "async_login_handler.php"
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.relative + ajaxLanding
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding
   args = "action=verifytotp&code=#{code}&user=#{user}&password=#{pass}&remote=#{ip}"
   totp = $.post(urlString ,args,'json')
   totp.done (result) ->
@@ -108,14 +110,18 @@ doTOTPSubmit = (home = window.totpParams.home) ->
       catch e
         console.error("Unexpected error while validating",e.message);
     else
-      $("#totp_message").text(result.human_error)
+      $("#totp_message")
+      .text(result.human_error)
+      .addClass("error")
       $("#totp_code").val("") # Clear it
       $("#totp_code").focus()
       stopLoadError()
       console.error("Invalid code error",result.error,result);
   totp.fail (result,status) ->
     # Be smart about the failure
-    $("#totp_message").text("Failed to contact server. Please try again.")
+    $("#totp_message")
+    .text("Failed to contact server. Please try again.")
+    .addClass("error")
     console.error("AJAX failure",urlString  + "?" + args,result,status)
     stopLoadError()
 
@@ -125,13 +131,15 @@ doTOTPRemove = ->
   animateLoad()
   url = $.url()
   ajaxLanding = "async_login_handler.php"
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.relative + ajaxLanding
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding
   args = "action=removetotp&code=#{code}&username=#{user}&password=#{pass}"
   remove_totp = $.get(urlString,args,'json')
   remove_totp.done (result) ->
     # Check the result
     unless result.status is true
-      $("#totp_message").text(result.human_error)
+      $("#totp_message")
+      .text(result.human_error)
+      .addClass("error")
       console.error(result.error)
       stopLoadError()
       return false
@@ -145,7 +153,9 @@ doTOTPRemove = ->
     return false
   remove_totp.fail (result,status) ->
     # Be smart about the failure
-    $("#totp_message").text("Failed to contact server. Please try again.")
+    $("#totp_message")
+    .text("Failed to contact server. Please try again.")
+    .addClass("error")
     console.error("AJAX failure",urlString  + "?" + args,result,status)
     stopLoadError()
 
@@ -160,20 +170,24 @@ makeTOTP = ->
   key = $("#secret").val()
   url = $.url()
   ajaxLanding = "async_login_handler.php"
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.relative + ajaxLanding
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding
   args = "action=maketotp&password=#{password}&user=#{user}"
   totp = $.post(urlString,args,'json')
   totp.done (result) ->
     # Yay! Replace the form ....
     if result.status is true
+      $("#totp_message")
+      .html("To continue, scan this barcode with your smartphone authenticator application. <small><a href='#' id='alt_totp_help'>Don't have the app?</a></small>")
+      .removeClass("error")
+      .addClass("good")
+      console.log(result)
       svg = result.svg
       raw = result.raw
       # Name these in variables to avoid user conflicts
       show_secret_id = "show_secret"
       show_alt = "showAltBarcode"
       barcodeDiv = "secretBarcode"
-      html = "<form id='totp_verify'>
-  <p>To continue, scan this barcode with your smartphone authenticator application. <small><a href='#' id='alt_totp_help'>Don't have the app?</a></small></p>
+      html = "<form id='totp_verify' onsubmit='event.preventDefault();'>
   <p style='font-weight:bold'>If you're unable to do so, <a href='#' id='#{show_secret_id}'>click here to manually input your key.</a></p>
   <div id='#{barcodeDiv}'>
     #{result.svg}
@@ -187,7 +201,8 @@ makeTOTP = ->
     <button id='verify_totp_button' class='totpbutton'>Verify</button>
   </fieldset>
 </form>"
-      $("#totp_add").html(html)
+      $("#totp_start").remove()
+      $("#totp_message").after(html)
       $("#alt_totp_help").click ->
         showInstructions()
       $("##{show_secret_id}").click ->
@@ -205,10 +220,14 @@ makeTOTP = ->
       stopLoad()
     else
       console.error("Couldn't generate TOTP code",urlString  + "?" + args)
-      $("#totp_message").text("There was an error generating your code. Please try again.")
+      $("#totp_message")
+      .text("There was an error generating your code. Please try again.")
+      .addClass("error")
       stopLoadError()
   totp.fail (result,status) ->
-    $("#totp_message").text("Failed to contact server. Please try again.")
+    $("#totp_message")
+    .text("Failed to contact server. Please try again.")
+    .addClass("error")
     console.error("AJAX failure",urlString  + "?" + args,result,status)
     stopLoadError()
   return false
@@ -220,7 +239,7 @@ saveTOTP = (key,hash) ->
   user = $("#username").val()
   url = $.url()
   ajaxLanding = "async_login_handler.php"
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.relative + ajaxLanding
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding
   args = "action=savetotp&secret=#{key}&user=#{user}&hash=#{hash}&code=#{code}"
   totp = $.post(urlString ,args,'json')
   totp.done (result) ->
@@ -264,7 +283,7 @@ giveAltVerificationOptions = ->
   # Put up an overlay, and ask if the user wants to remove 2FA or get a text
   url = $.url()
   ajaxLanding = "async_login_handler.php"
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.relative + ajaxLanding
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding
   user = $("#username").val()
   args = "action=cansms&user=#{user}"
   remove_id = "remove_totp_link"
@@ -321,7 +340,7 @@ verifyPhone = ->
   # Verify phone auth status
   url = $.url()
   ajaxLanding = "async_login_handler.php"
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.relative + ajaxLanding
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding
   auth = if $("#phone_auth").val()? then $("#phone_auth").val() else null
   user = $("#username").val()
   args = "action=verifyphone&username=#{user}&auth=#{auth}"
@@ -442,7 +461,11 @@ $ ->
     window.location.href = window.totpParams.home
   $("#totp_help").click ->
     showInstructions()
-  if $.url().param("showhelp")? then showInstructions()
+  try
+    if $.url().param("showhelp")? then showInstructions()
+  catch e
+    delay 300, ->
+      if $.url().param("showhelp")? then showInstructions()
   # Load stylesheets
   $("<link/>",{
     rel:"stylesheet"

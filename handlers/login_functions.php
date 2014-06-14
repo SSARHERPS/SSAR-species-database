@@ -470,11 +470,23 @@ class UserFunctions extends DBHelper
         $totp->setLabel($this->username);
         $totp->setIssuer($provider);
         $uri = $totp->getProvisioningURI($label,$provider);
+        # iPhones don't actually accept the full, valid URI
         $unsafe_uri = urldecode($uri);
-        $secret_part = explode("secret=",$unsafe_uri);
-        $iphone32 = str_replace("=","",$secret_part[1]);
-        $iphone_uri = $secret_part[0]."secret=".$iphone32; #still no good
-        $retarr = self::generateQR($uri);
+        $uri_args = explode("?",$unsafe_uri);          
+        $iphone_uri = $uri_args[0]."?";
+        $iphone_args = array();
+        $iphone_safe_args = array("secret","issuer");
+        foreach(explode("&",$uri_args[1]) as $paramval)
+          {
+            $pv = explode("=",$paramval);
+            $param = $pv[0];
+            $val = $pv[1];
+            if(in_array($param,$iphone_safe_args)) $iphone_args[] = $param."=".$val;
+          }
+        $iphone_uri .= implode("&",$iphone_args);
+        /* $iphone32 = str_replace("=","",$secret_part[1]); */
+        /* $iphone_uri = $secret_part[0]."secret=".$iphone32; #still no good */
+        $retarr = self::generateQR($iphone_uri);
 
         # Let's get a human-readable secret
         $human_secret0 = str_replace("=","",$secret);
@@ -1188,7 +1200,9 @@ class UserFunctions extends DBHelper
           'raw_auth'=>$value,
           'raw_cookie'=>$raw_data,
           'basis'=>$value_create,
-          'expires'=>"{expires:$expire_days,path:'/'}"
+          'expires'=>"{expires:$expire_days,path:'/'}",
+          "link_column"=>$this->linkcol,
+          "userdata"=>$userdata
         );
       }
     catch(Exception $e)
