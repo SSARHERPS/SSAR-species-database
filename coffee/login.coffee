@@ -129,6 +129,9 @@ doTOTPRemove = ->
   # Remove 2FA
   noSubmit()
   animateLoad()
+  user = $("#username").val()
+  pass = $("#password").val()
+  code = $("#code").val()
   url = $.url()
   ajaxLanding = "async_login_handler.php"
   urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding
@@ -149,6 +152,8 @@ doTOTPRemove = ->
     .addClass('good')
     .text("Two-factor authentication removed for #{result.username}.")
     $("#totp_remove").remove()
+    console.log(urlString + "?" + args);
+    console.log(result)
     stopLoad()
     return false
   remove_totp.fail (result,status) ->
@@ -198,6 +203,8 @@ makeTOTP = ->
     <legend>Confirmation</legend>
     <input type='number' size='6' maxlength='6' id='code' name='code' placeholder='Code'/>
     <input type='hidden' id='username' name='username' value='#{user}'/>
+    <input type='hidden' id='hash' name='hash' value='#{hash}'/>
+    <input type='hidden' id='secret' name='secret' value='#{key}'/>
     <button id='verify_totp_button' class='totpbutton'>Verify</button>
   </fieldset>
 </form>"
@@ -236,6 +243,8 @@ saveTOTP = (key,hash) ->
   noSubmit()
   animateLoad()
   code = $("#code").val()
+  hash = $("#hash").val()
+  key = $("#secret").val()
   user = $("#username").val()
   url = $.url()
   ajaxLanding = "async_login_handler.php"
@@ -293,7 +302,7 @@ giveAltVerificationOptions = ->
   messages = new Object()
   messages.remove = "<a href='#' id='#{remove_id}'>Remove two-factor authentication</a>"
   # First see if the user can SMS at all before populating the message options
-  
+
   sms = $.get(urlString,args,'json')
   sms.done (result) ->
     if result[0] is true
@@ -429,16 +438,18 @@ noSubmit = ->
   event.returnValue = false
 
 $ ->
-  $("#password.create")
-  .keyup ->
-    checkPasswordLive()
-  .change ->
-    checkPasswordLive()
-  $("#password2")
-  .change ->
-    checkMatchPassword()
-  .keyup ->
-    checkMatchPassword()
+  if $("#password.create").exists()
+    loadJS(window.totpParams.relative+"js/zxcvbn/zxcvbn.js")
+    $("#password.create")
+    .keyup ->
+      checkPasswordLive()
+    .change ->
+      checkPasswordLive()
+    $("#password2")
+    .change ->
+      checkMatchPassword()
+    .keyup ->
+      checkMatchPassword()
   $("#totp_submit").submit ->
     doTOTPSubmit()
   $("#verify_totp_button").click ->

@@ -449,7 +449,7 @@ class UserFunctions extends DBHelper
     try
       {
         require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
-        $salt = Stronghash::createSalt(12);
+        $salt = Stronghash::createSalt();
         require_once(dirname(__FILE__).'/../base32/src/Base32/Base32.php');
         $secret = Base32::encode($salt);
         ## The resulting provisioning URI should now be sent to the user
@@ -586,6 +586,7 @@ class UserFunctions extends DBHelper
             return array("status"=>false,"error"=>"Bad credentials","result"=>$verify,"human_error"=>"Sorry, bad username or password.");
           }
       }
+    $this->getUser();
     # Check code for length, if it's long it's the backup
     if(strlen($code)>6)
       {
@@ -621,8 +622,12 @@ class UserFunctions extends DBHelper
         mysqli_query($l,"ROLLBACK");
         return array("status"=>false,"error"=>$e,"human_error"=>"Could not unset two-factor authentication","username"=>$this->getUsername());
       }
-    mysqli_query($l,"COMMIT");
-    return array("status"=>true,"username"=>$this->getUsername());
+    $r = mysqli_query($l,"COMMIT");
+    if($r === false)
+      {
+        return array("status"=>false,"error"=>mysqli_error($l),"human_error"=>"Server error verifying removal. Please try again.");
+      }
+    return array("status"=>true,"query"=>$query,"username"=>$this->getUsername());
   }
 
 

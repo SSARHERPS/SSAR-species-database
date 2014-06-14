@@ -51,6 +51,7 @@ switch($do)
     break;
   case "verifyphone":
     returnAjax(verifyPhone($_REQUEST));
+    break;
   default:
     returnAjax(getLoginState($_REQUEST),true);
   }

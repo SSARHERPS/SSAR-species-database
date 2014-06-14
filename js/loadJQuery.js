@@ -17,7 +17,6 @@ function cascadeJQLoad(i) { // Use alternate CDNs where appropriate to load jQue
         "jquery.cookie.min.js",
         "purl.min.js",
         "base64.min.js",
-        "zxcvbn/zxcvbn-async.js",
         "c.min.js"
     ];
     if (window.jQuery !== undefined) {

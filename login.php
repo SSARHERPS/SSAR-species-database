@@ -78,7 +78,7 @@ if($debug==true)
 try
 {
   $logged_in=$user->validateUser($_COOKIE[$cookielink]);
-  if(!$user->has2FA() && $require_two_factor === true && !isset($_REQUEST['2fa']))
+  if(!$user->has2FA() && $require_two_factor === true && !isset($_REQUEST['2fa']) && $logged_in)
     {
       # If require two factor is on, always force it post login
       header("Refresh: 0; url=".$_SERVER['PHP_SELF']."?2fa=t");
@@ -675,7 +675,7 @@ else if(isset($_REQUEST['2fa']))
       <legend>Remove Two-Factor Authentication</legend>
       <input type='email' value='".$user->getUsername()."' readonly='readonly' id='username' name='username'/><br/>
       <input type='password' id='password' name='password' placeholder='Password'/><br/>
-      <input type='number' id='code' name='code' placeholder='Authenticator Code or Backup Code' size='32' maxlength='32'/>
+      <input type='text' id='code' name='code' placeholder='Authenticator Code or Backup Code' size='32' maxlength='32' autocomplete='off'/><br/>
       <button id='remove_totp_button' class='totpbutton'>Remove Two-Factor Authentication</button>
     </fieldset>
   </form>
@@ -705,7 +705,7 @@ $totpOverride .= !empty($relative_path) ? "totpParams.relative = \"".$relative_p
 $totpOverride .= !empty($working_subdirectory) ? "totpParams.subdirectory = \"".$working_subdirectory."\"\n":null;
 
 $deferredScriptBlock = "<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js'></script>
-<script type='text/javascript' src='".$relative_path."js/loadJQuery.js'></script>
+<script type='text/javascript' src='".$relative_path."js/loadJQuery.min.js'></script>
 <script type='text/javascript'>
         if(typeof passwords != 'object') passwords = new Object();
         passwords.overrideLength=$password_threshold_length;
