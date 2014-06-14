@@ -10,6 +10,15 @@ $debug=false;
 $use_javascript_cookies=false;
 $redirect_to_home = true;
 
+$ask_twofactor_at_signup = false;
+$ask_verify_phone_at_signup = false;
+# Redirect the user after the account has been created
+$post_create_redirect = false;
+
+
+$baseurl = ""; # define if other than the hosted URL
+$redirect_url = ""; # define if other than the hosted URL
+
 # Path to this library from callers
 $relative_path = "";
 
@@ -54,10 +63,6 @@ $profile_picture_storage = $user_data_storage.'';
  ***/
 
 $needs_manual_authentication = false;
-
-
-$baseurl = ""; # define if other than the hosted URL
-$redirect_url = ""; # define if other than the hosted URL
 
 
 /***

@@ -8,6 +8,12 @@
 
 require_once(dirname(__FILE__).'/CONFIG.php');
 
+if($ask_twofactor_at_signup || $ask_verify_phone_at_signup)
+  {
+    # Override any redirects
+    $post_create_redirect = false;
+  }
+
 if(empty($baseurl))
   {
     $baseurl = 'http';
@@ -463,14 +469,24 @@ else if($_REQUEST['q']=='create')
                                  * Post login behavior ...
                                  ***/
                                 $deferredJS.=$res['js'];
-                                /* // ... redirect to home */
-                                if($redirect_to_home === true)
+                                if($post_create_redirect)
                                   {
-                                    $deferredJS.="\nwindow.location=\"$baseurl\"";
-                                    header("Refresh: 3; url=".$baseurl);
+                                    if($redirect_to_home !== true && empty($redirect_url))
+                                      {
+                                        $durl = $_SERVER['PHP_SELF'];
+                                      }
+                                    else
+                                      {
+                                        if($redirect_to_home === true) $durl = $baseurl;
+                                        else $durl = $redirect_url;
+                                      }
+                                    $deferredJS.="\nwindow.location=\"$durl\"";
+                                    header("Refresh: 3; url=".$durl);
                                   }
-                                # Verify the phone number
-                                $phone_verify_template = "<form id='verify_phone' onsubmit='event.preventDefault();'>
+                                if($ask_verify_phone_at_signup)
+                                  {
+                                    # Verify the phone number
+                                    $phone_verify_template = "<form id='verify_phone' onsubmit='event.preventDefault();'>
   <input type='tel' id='phone' name='phone' value='".$user->getPhone()."' readonly='readonly'/>
   <input type='hidden' id='username' name='username' value='".$user->getUsername()."'/>
   <button id='verify_phone_button'>Verify Phone Now</button>
@@ -482,8 +498,28 @@ else if($_REQUEST['q']=='create')
     </small>
   </p>
 </form>";
-                                $login_output .= $phone_verify_form;
+                                    $login_output .= "<h2>Verifying your Phone</h2>".$phone_verify_form; 
+                                  }
                                 # Give the option to add two-factor now; force it if flag enabled
+                                if($ask_twofactor_at_signup)
+                                  {
+                                    # Give user 2FA
+                                    $totp_add_form = "<section id='totp_add'>
+  <p id='totp_message'>Two factor authentication is very secure, but when you enable it, you'll be unable to log in without your mobile device.</p>
+  <form id='totp_start'>
+    <fieldset>
+      <legend>Login to continue</legend>
+      <input type='email' value='".$user->getUsername()."' readonly='readonly' id='username' name='username'/><br/>
+      <input type='password' id='password' name='password'/><br/>
+      <input type='hidden' id='secret' name='secret' value='".$_COOKIE[$cookiekey]."'/>
+      <input type='hidden' id='hash' name='hash' value='".$_COOKIE[$cookieauth]."'/>
+      <button id='add_totp_button' class='totpbutton'>Add Two-Factor Authentication</button>
+    </fieldset>
+  </form>
+  <a href='#' id='totp_help'>Help with Two-Factor Authentication</a>
+</section>";
+                                    $login_output .= "<h2>Adding two-factor authentication</h2>".$totp_add_form;
+                                  }
 
                               }
                             else
