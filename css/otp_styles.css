@@ -1,13 +1,27 @@
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
-  -webkit-appearance: none; 
-  margin: 0; 
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 input[type='number'] {
     -moz-appearance:textfield;
+    -o-appearance:textfield;
+    -webkit-appearance:textfield;
 }
-#strength-meter {
+#password-strength {
+    font-family:"sans-serif";
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    appearance:none;
+}
 
+/* Progress bar */
+progress,progress::progress-value {
+    color: #0063a6;
+}
+/* Progress backgrounds ... */
+progress::-webkit-progress-bar {
+    background-color:#eee;
 }
 .label {
     text-align:center;
@@ -22,9 +36,6 @@ input[type='number'] {
     display:inline-block;
     margin:.25em;
     width: 2em;
-}
-progress,progress::-webkit-progress-value,progress::progress-value,progress::-moz-progress-bar {
-    background:orange;
 }
 
 #totp_message {
@@ -63,4 +74,11 @@ input[readonly] {
     border:0;
     display:block;
     font-weight:bold;
+}
+.hide {
+    display:none!important;
+}
+#password_security {
+    float:right;
+    max-width:33%;
 }

@@ -382,13 +382,26 @@
   };
 
   evalRequirements = function() {
-    var html, pass, pstrength;
+    var green_channel, html, moz_css, new_end, notice, pass, pstrength, red_channel, webkit_css;
     if (!$("#strength-meter").exists()) {
-      html = "<div id='strength-meter'><div id='strength-requirements'><div id='strength-alpha'><p class='label'>a</p><div class='strength-eval'></div></div><div id='strength-alphacap'><p class='label'>A</p><div class='strength-eval'></div></div><div id='strength-numspecial'><p class='label'>1/!</p><div class='strength-eval'></div></div></div><div id='strength-bar'><label for='password-strength'>Strength: </label><progress id='password-strength' max='5'></progress></div></div>";
-      $("#login .right").prepend(html);
+      html = "<div id='strength-meter'><div id='strength-requirements'><p style='float:left;margin-top:2em'>Character Classes:</p><div id='strength-alpha'><p class='label'>a</p><div class='strength-eval'></div></div><div id='strength-alphacap'><p class='label'>A</p><div class='strength-eval'></div></div><div id='strength-numspecial'><p class='label'>1/!</p><div class='strength-eval'></div></div></div><div id='strength-bar'><label for='password-strength'>Strength: </label><progress id='password-strength' max='5'></progress><p>Time to crack: <span id='crack-time'></span></p></div></div>";
+      notice = "<p><small>We require a password of at least " + window.passwords.minLength + " characters with at least one upper case letter, at least one lower case letter, and at least one digit or special character. You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least " + window.passwords.overrideLength + " characters, with no security requirements.</small></p>";
+      $("#password_security").html(html + notice);
     }
     pass = $("#password").val();
     pstrength = zxcvbn(pass);
+    green_channel = (toInt(pstrength.score) + 1) * 51;
+    red_channel = 255 - toInt(Math.pow(pstrength.score, 2) * 16);
+    if (red_channel < 0) {
+      red_channel = 0;
+    }
+    new_end = "rgb(" + red_channel + "," + green_channel + ",0)";
+    webkit_css = "\nprogress[value]::-webkit-progress-value { background: -webkit-linear-gradient(left,rgb(255,0,30)," + new_end + "), -webkit-linear-gradient(top,rgba(255, 255, 255, .5), rgba(0, 0, 0, .5)); }";
+    moz_css = "\nprogress::-moz-progress-bar { background: -moz-linear-gradient(left,rgb(255,0,30)," + new_end + "), -moz-linear-gradient(top,rgba(255, 255, 255, .5), rgba(0, 0, 0, .5)); }";
+    if (!$("#dynamic").exists()) {
+      $("<style type='text/css' id='dynamic' />").appendTo("head");
+    }
+    $("#dynamic").text(webkit_css + moz_css);
     $(".strength-eval").css("background", window.passwords.badbg);
     if (pass.length > 20) {
       $(".strength-eval").css("background", window.passwords.goodbg);
@@ -403,7 +416,8 @@
         $("#strength-alphacap .strength-eval").css("background", window.passwords.goodbg);
       }
     }
-    return $("#password-strength").attr("value", pstrength.score + 1);
+    $("#password-strength").attr("value", pstrength.score + 1);
+    return $("#crack-time").text(pstrength.crack_time_display);
   };
 
   doEmailCheck = function() {};

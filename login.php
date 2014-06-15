@@ -75,10 +75,43 @@ if($debug==true)
     echo displayDebug($user->validateUser($_COOKIE[$cookielink],null,null,true));
   }
 
+$login_output = "";
+
+if($_REQUEST['q']=='logout')
+  {
+    setcookie($cookieuser,false,time()-3600*24*365,'/');
+    setcookie($cookieperson,false,time()-3600*24*365,'/');
+    setcookie($cookieauth,false,time()-3600*24*365,'/');
+    setcookie($cookiekey,false,time()-3600*24*365,'/');
+    setcookie($cookiepic,false,time()-3600*24*365,'/');
+    // do JS cookie wipe too
+    $deferredJS.="\n$.removeCookie('$cookieuser',{path:'/'});";
+    $deferredJS.="\n$.removeCookie('$cookieperson',{path:'/'});";
+    $deferredJS.="\n$.removeCookie('$cookieauth',{path:'/'});";
+    $deferredJS.="\n$.removeCookie('$cookiekey',{path:'/'});";
+    $deferredJS.="\n$.removeCookie('$cookiepic',{path:'/'});";
+    $deferredScriptBlock = "<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js'></script>
+<script type='text/javascript' src='".$relative_path."js/loadJQuery.min.js'></script>
+<script type='text/javascript'>
+var loadLast = function () {
+    try {
+        $deferredJS
+    }
+    catch (e)
+    {
+        console.error(\"Couldn't load deferred calls\");
+    }
+}
+</script>";
+    header("Refresh: 2; url=".$_SERVER['PHP_SELF']);
+    ob_end_flush();
+    $login_output.="<h1>Logging out ...</h1>".$deferredScriptBlock;
+  }
+
 try
 {
   $logged_in=$user->validateUser($_COOKIE[$cookielink]);
-  if(!$user->has2FA() && $require_two_factor === true && !isset($_REQUEST['2fa']) && $logged_in)
+  if(!$user->has2FA() && $require_two_factor === true && !isset($_REQUEST['2fa']) && $logged_in && $_REQUEST['q']!='logout')
     {
       # If require two factor is on, always force it post login
       header("Refresh: 0; url=".$_SERVER['PHP_SELF']."?2fa=t");
@@ -143,7 +176,7 @@ else
 $settings_blob = "<section id='account_settings'><h2>Settings</h2><ul id='settings_list'><li><a href='?2fa=t'>".$twofactor."</a></li>".$verifyphone_link.$random."</ul></section>";
 
 
-$login_output="<div id='login_block'>";
+$login_output.="<div id='login_block'>";
 $alt_forms="<div id='alt_logins'>
 <!-- OpenID, Google, Twitter, Facebook -->
 </div>";
@@ -383,6 +416,7 @@ else if($_REQUEST['q']=='create')
     // Create a new user
     // display login form
     // include a captcha and honeypot
+    $login_output .= "<style type='text/css' href='css/otp_styles.css'/>";
     require_once(dirname(__FILE__).'/handlers/recaptchalib.php');
     if(!empty($recaptcha_public_key) && !empty($recaptcha_private_key))
       {
@@ -393,6 +427,9 @@ else if($_REQUEST['q']=='create')
         $prefill_lname = $_POST['lname'];
         $prefill_fname = $_POST['fname'];
         $createform = "<style type='text/css'>.hide { display:none !important; }</style>
+              <div id='password_security'>
+              
+              </div>
 	    <form id='login' method='post' action='?q=create&amp;s=next'>
               <div class='left'>
 	      <label for='username'>
@@ -436,9 +473,6 @@ else if($_REQUEST['q']=='create')
 	      <input type='text' name='honey' id='honey' class='hide'/>
         <p>Please enter both words shown in the prompt below</p>
               $recaptcha
-              </div>
-              <div class='right' style='width:25%'>
-              <p><small>We require a password of at least $minimum_password_length characters with at least one upper case letter, at least one lower case letter, and at least one digit or special character. You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least $password_threshold_length characters, with no security requirements.</small></p>
               </div>
               <br class='clear'/>
 	      <input type='submit' value='Create' id='createUser_submit' disabled='disabled'/>
@@ -576,23 +610,6 @@ else if($_REQUEST['q'] == "verify")
   {
     $login_output .= $phone_verify_form;
   }
-else if($_REQUEST['q']=='logout')
-  {
-    setcookie($cookieuser,false,time()-3600*24*365);
-    setcookie($cookieperson,false,time()-3600*24*365);
-    setcookie($cookieauth,false,time()-3600*24*365);
-    setcookie($cookiekey,false,time()-3600*24*365);
-    setcookie($cookiepic,false,time()-3600*24*365);
-    header("Refresh: 0; url=".$_SERVER['PHP_SELF']);
-    // do JS cookie wipe too
-    $deferredJS.="\n$.removeCookie('$cookieuser');";
-    $deferredJS.="\n$.removeCookie('$cookieperson');";
-    $deferredJS.="\n$.removeCookie('$cookieauth');";
-    $deferredJS.="\n$.removeCookie('$cookiekey');";
-    $deferredJS.="\n$.removeCookie('$cookiepic');";
-    ob_end_flush();
-    $login_output.=$loginform.$loginform_close;
-  }
 else if(isset($_REQUEST['confirm']))
   {
     ############## Rewrite this to use the built in object methods
@@ -709,7 +726,7 @@ $deferredScriptBlock = "<script type='text/javascript' src='https://ajax.googlea
 <script type='text/javascript'>
         if(typeof passwords != 'object') passwords = new Object();
         passwords.overrideLength=$password_threshold_length;
-        passwords.minLen=$minimum_password_length;
+        passwords.minLength=$minimum_password_length;
         if(typeof totpParams != 'object') totpParams = new Object();
         $totpOverride
 
