@@ -23,8 +23,8 @@ window.totpParams.popStylesheetPath = window.totpParams.relative+"css/otp_panels
 
 checkPasswordLive = ->
   pass = $("#password").val()
-  # The 8 should be passwords.minLength
-  if pass.length >window.passwords.overrideLength or pass.match(/^(?:(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$)$/)
+  re = new RegExp("^(?:(?=^.{#{window.passwords.minLength},}$)((?=.*\\d)|(?=.*\\W+))(?![.\\n])(?=.*[A-Z])(?=.*[a-z]).*$)$")
+  if pass.length >window.passwords.overrideLength or pass.match(re)
     $("#password").css("background",window.passwords.goodbg)
     window.passwords.basepwgood = true
   else

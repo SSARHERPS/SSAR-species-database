@@ -1205,9 +1205,7 @@ class UserFunctions extends DBHelper
           'raw_auth'=>$value,
           'raw_cookie'=>$raw_data,
           'basis'=>$value_create,
-          'expires'=>"{expires:$expire_days,path:'/'}",
-          "link_column"=>$this->linkcol,
-          "userdata"=>$userdata
+          'expires'=>"{expires:$expire_days,path:'/'}"
         );
       }
     catch(Exception $e)

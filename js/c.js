@@ -339,9 +339,10 @@
   window.totpParams.popStylesheetPath = window.totpParams.relative + "css/otp_panels.css";
 
   checkPasswordLive = function() {
-    var pass;
+    var pass, re;
     pass = $("#password").val();
-    if (pass.length > window.passwords.overrideLength || pass.match(/^(?:(?=^.{8,}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$)$/)) {
+    re = new RegExp("^(?:(?=^.{" + window.passwords.minLength + ",}$)((?=.*\\d)|(?=.*\\W+))(?![.\\n])(?=.*[A-Z])(?=.*[a-z]).*$)$");
+    if (pass.length > window.passwords.overrideLength || pass.match(re)) {
       $("#password").css("background", window.passwords.goodbg);
       window.passwords.basepwgood = true;
     } else {
