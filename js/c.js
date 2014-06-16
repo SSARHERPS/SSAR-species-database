@@ -294,9 +294,21 @@
       window.picturefill();
     } catch (_error) {
       e = _error;
-      console.log("Could not execute picturefill.");
+      console.warn("Could not execute picturefill.");
     }
-    return mapNewWindows();
+    mapNewWindows();
+    try {
+      lateJS();
+    } catch (_error) {
+      e = _error;
+      console.warn("There was an error calling lateJS(). If you haven't set that up, you can safely ignore this.");
+    }
+    try {
+      return loadLast();
+    } catch (_error) {
+      e = _error;
+      return console.warn("There was an error calling loadLast(). This may result in unexpected behaviour.");
+    }
   });
 
   if (typeof window.passwords !== 'object') {

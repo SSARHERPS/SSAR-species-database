@@ -175,6 +175,17 @@ $ ->
     window.picturefill()
   catch e
     # We don't actually care here, probably hasn't been imported
-    console.log("Could not execute picturefill.")
+    console.warn("Could not execute picturefill.")
   mapNewWindows()
+  # Load any calls the script asked for
+  try
+    # Has the user embedded their own scripts?
+    lateJS()
+  catch e
+    console.warn("There was an error calling lateJS(). If you haven't set that up, you can safely ignore this.")
+  try
+    # The really last stuff
+    loadLast()
+  catch e
+    console.warn("There was an error calling loadLast(). This may result in unexpected behaviour.")
     

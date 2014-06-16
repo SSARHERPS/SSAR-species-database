@@ -31,31 +31,17 @@ Submodules have their own dependencies -- see the submodule pages for their incl
 
 ## Server configuration
 
-The database is expected to have the following columns:
+The server is expected to have the basic number of columns and types listed in `SAMPLE-CONFIG.php`. If you change any of the default mappings, be sure to update the variables.
 
-```
-username
-password
-pass_meta
-creation
-status_tracker
-name
-flag
-admin_flag
-su_flag
-disabled
-dtime
-last_ip
-last_login
-auth_key
-data
-secdata
-special_1
-special_2
-dblink
-defaults
-public_key
-private_key
-secret
-emergency_code
-```
+## Installation
+
+1. Edit `SAMPLE-CONFIG.php` to suit your configuration and re-save it as `CONFIG.php`.
+2. Upload this whole directory to your webserver.
+3. Where you need access to any login functions or scripts, include `path_to_dir/login.php`.
+   1. If you want to actually output the login screen, be sure to print the variable `$login_output`.
+
+You're set!
+
+## Debugging odd behavior
+
+The most likely reason for a misbehaving application is something else bound to the document onload handler. Anything you want to be handled on load insert into a function named `lateJS()`, and it will be called by the script.

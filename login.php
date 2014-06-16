@@ -20,6 +20,15 @@ if($ask_twofactor_at_signup || $ask_verify_phone_at_signup)
     $post_create_redirect = false;
   }
 
+if(!empty($self_referential))
+  {
+    $self_url = $self_referential;
+  }
+else
+  {
+    $self_url = $_SERVER['PHP_SELF'];
+  }
+
 if(empty($baseurl))
   {
     $baseurl = 'http';
@@ -103,7 +112,7 @@ var loadLast = function () {
     }
 }
 </script>";
-    header("Refresh: 2; url=".$_SERVER['PHP_SELF']);
+    header("Refresh: 2; url=".$baseurl);
     ob_end_flush();
     $login_output.="<h1>Logging out ...</h1>".$deferredScriptBlock;
   }
@@ -114,8 +123,8 @@ try
   if(!$user->has2FA() && $require_two_factor === true && !isset($_REQUEST['2fa']) && $logged_in && $_REQUEST['q']!='logout')
     {
       # If require two factor is on, always force it post login
-      header("Refresh: 0; url=".$_SERVER['PHP_SELF']."?2fa=t");
-      $deferredJS.="\nwindow.location.href=\"".$_SERVER['PHP_SELF']."?2fa=t\"";
+      header("Refresh: 0; url=".$self_url."?2fa=t");
+      $deferredJS.="\nwindow.location.href=\"".$self_url."?2fa=t\";";
       ob_end_flush();
     }
   # This should only show when there isn't two factor enabled ...
@@ -167,7 +176,7 @@ else
     if($captive_login)
       {
         header("Refresh: 0; url=$baseurl");
-        $deferredJS.="\nwindow.location.href=\"$baseurl\"";
+        $deferredJS.="\nwindow.location.href=\"$baseurl\";";
       }
   }
 
@@ -266,7 +275,7 @@ if($_REQUEST['q']=='submitlogin')
                 $logged_in=true;
                 if($redirect_to_home !== true && empty($redirect_url))
                   {
-                    $durl = $_SERVER['PHP_SELF'];
+                    $durl = $self_url;
                   }
                 else
                   {
@@ -339,8 +348,8 @@ if($_REQUEST['q']=='submitlogin')
                         # If require two factor is on, always force it post login
                         if($debug !== true)
                           {
-                            header("Refresh: 0; url=".$_SERVER['PHP_SELF']."?2fa=t");
-                            $deferredJS.="\nwindow.location.href=\"".$_SERVER['PHP_SELF']."?2fa=t\"";
+                            header("Refresh: 0; url=".$self_url."?2fa=t");
+                            $deferredJS.="\nwindow.location.href=\"".$self_url."?2fa=t\";";
                            }
                         ob_end_flush();
                         $cancel_redirects = true;
@@ -416,7 +425,7 @@ else if($_REQUEST['q']=='create')
     // Create a new user
     // display login form
     // include a captcha and honeypot
-    $login_output .= "<style type='text/css' href='css/otp_styles.css'/>";
+    $login_output .= "<style type='text/css' href='".$relative_path."css/otp_styles.css'/>";
     require_once(dirname(__FILE__).'/handlers/recaptchalib.php');
     if(!empty($recaptcha_public_key) && !empty($recaptcha_private_key))
       {
@@ -536,14 +545,14 @@ else if($_REQUEST['q']=='create')
                                   {
                                     if($redirect_to_home !== true && empty($redirect_url))
                                       {
-                                        $durl = $_SERVER['PHP_SELF'];
+                                        $durl = $self_url;
                                       }
                                     else
                                       {
                                         if($redirect_to_home === true) $durl = $baseurl;
                                         else $durl = $redirect_url;
                                       }
-                                    $deferredJS.="\nwindow.location.href=\"$durl\"";
+                                    $deferredJS.="\nwindow.location.href=\"$durl\";";
                                     header("Refresh: 3; url=".$durl);
                                   }
                                 if($ask_verify_phone_at_signup)
@@ -667,7 +676,7 @@ else if(isset($_REQUEST['2fa']))
         # Give user 2FA
         $totp_add_form = "<section id='totp_add'>
   <p id='totp_message'>Two factor authentication is very secure, but when you enable it, you'll be unable to log in without your mobile device.</p>
-  <form id='totp_start'>
+  <form id='totp_start' onsubmit='event.preventDefault();'>
     <fieldset>
       <legend>Login to continue</legend>
       <input type='email' value='".$user->getUsername()."' readonly='readonly' id='username' name='username'/><br/>
@@ -712,14 +721,14 @@ else if(isset($_REQUEST['2fa']))
 else
   {
     if(!$logged_in) $login_output.=$login_preamble . $loginform.$loginform_close;
-    else $login_output.="<p id='signin_greeting'>Welcome back, $first_name</p><br/><p id='logout_para'><aside class='ssmall'><a href='?q=logout'>(Logout)</a></aside></p>".$settings_blob;
+    else $login_output.="<p id='signin_greeting'>Welcome back, $first_name</p><br/><p id='logout_para'><aside class='ssmall'><a href='?q=logout'>(Logout)</a></aside></p>".$settings_blob."<button id='next' name='next'>Continue &#187;</button>";
   }
 $login_output.="</div>";
 ob_end_flush();
 
-$totpOverride = !empty($redirect_url) ? "totpParams.home = \"".$redirect_url."\"\n":null;
-$totpOverride .= !empty($relative_path) ? "totpParams.relative = \"".$relative_path."\"\n":null;
-$totpOverride .= !empty($working_subdirectory) ? "totpParams.subdirectory = \"".$working_subdirectory."\"\n":null;
+$totpOverride = !empty($redirect_url) ? "window.totpParams.home = \"".$redirect_url."\";\n":null;
+$totpOverride .= !empty($relative_path) ? "window.totpParams.relative = \"".$relative_path."\";\n":null;
+$totpOverride .= !empty($working_subdirectory) ? "window.totpParams.subdirectory = \"".$working_subdirectory."\";\n":null;
 
 $deferredScriptBlock = "<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js'></script>
 <script type='text/javascript' src='".$relative_path."js/loadJQuery.min.js'></script>
