@@ -86,7 +86,7 @@ class UserFunctions extends DBHelper
     if(!empty($profile_picture_storage))
       {
         $profile_picture_storage .= substr($profile_picture_storage,-1)=='/' ? '':'/';
-        $this->picture_path = $this->data_path . $profile_picture_storage;
+        $this->picture_path = $profile_picture_storage;
       }
     else $this->picture_path = $this->data_path . "profilepics/";
 
