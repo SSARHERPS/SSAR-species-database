@@ -39,9 +39,11 @@ The server is expected to have the basic number of columns and types listed in `
 2. Upload this whole directory to your webserver.
 3. Where you need access to any login functions or scripts, include `path_to_dir/login.php`.
    1. If you want to actually output the login screen, be sure to print the variable `$login_output`.
+4. Set `handlers/temp` as server-writeable.
 
 You're set!
 
 ## Debugging odd behavior
 
 The most likely reason for a misbehaving application is something else bound to the document onload handler. Anything you want to be handled on load insert into a function named `lateJS()`, and it will be called by the script.
+
