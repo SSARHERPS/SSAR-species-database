@@ -9,6 +9,7 @@ $captive_login=false;
 $debug=false;
 $use_javascript_cookies=false;
 $redirect_to_home = true;
+$displaywarnings = true;
 
 $require_two_factor = false;
 

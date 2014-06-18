@@ -43,7 +43,13 @@ The server is expected to have the basic number of columns and types listed in `
 
 You're set!
 
-## Debugging odd behavior
+### JavaScript
+
+This loads a number of libraries asynchronously in `js/loadJQuery.js`. If you encounter issues, you may want to manually insert these libraries into your pages. In particular, it may have issues with pages that are served as XHTML.
+
+### Debugging odd behavior
 
 The most likely reason for a misbehaving application is something else bound to the document onload handler. Anything you want to be handled on load insert into a function named `lateJS()`, and it will be called by the script.
+
+If you have functions that redraw the screen, and want to force a user to use two-factor authentication, there may be issues. Check for the variable `window.totpParams.tfaLock`; it will be set as `true` when a lock is needed, and you can wrap any redrawing functions in there.
 

@@ -289,7 +289,7 @@ function getFromUser($get) {
           $query="SELECT $col FROM `$default_user_table` WHERE dblink='$id'";
           $r=mysqli_query($l,$query);
           $row=mysqli_fetch_row($r);
-          return array('status'=>true,'data'=>deescape($row[0]));
+          return array('status'=>true,'data'=>deescape($row[0]),"col"=>$col,"id"=>$id);
         }
       else return array('status'=>false,'error'=>'Invalid user');
     }

@@ -355,7 +355,7 @@ class DBHelper {
           {
             if(!empty($field) && !empty($value_arr[$i]))
               {
-                $equatestring.="$field='" . $value_arr[$i] . "',";
+                $equatestring.="`$field`='" . $value_arr[$i] . "',";
                 $i++;
               }
             else $i++;

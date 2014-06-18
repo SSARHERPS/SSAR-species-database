@@ -425,7 +425,7 @@ else if($_REQUEST['q']=='create')
     // Create a new user
     // display login form
     // include a captcha and honeypot
-    $login_output .= "<style type='text/css' href='".$relative_path."css/otp_styles.css'/>";
+    $login_output .= "<link rel='stylesheet' type='text/css' href='".$relative_path."css/otp_styles.css'/>";
     require_once(dirname(__FILE__).'/handlers/recaptchalib.php');
     if(!empty($recaptcha_public_key) && !empty($recaptcha_private_key))
       {
@@ -437,7 +437,7 @@ else if($_REQUEST['q']=='create')
         $prefill_fname = $_POST['fname'];
         $createform = "<style type='text/css'>.hide { display:none !important; }</style>
               <div id='password_security'>
-              
+
               </div>
 	    <form id='login' method='post' action='?q=create&amp;s=next'>
               <div class='left'>
@@ -488,7 +488,7 @@ else if($_REQUEST['q']=='create')
 	    </form><br class='clear'/>";
         $secnotice="<p><small>Remember your security best practices! Do not use the same password you use for other sites. While your information is <a href='http://en.wikipedia.org/wiki/Cryptographic_hash_function' $newwindow>hashed</a> with a multiple-round hash function, <a href='http://arstechnica.com/security/2013/05/how-crackers-make-minced-meat-out-of-your-passwords/' $newwindow>passwords are easy to crack!</a></small></p>";
         $createform.=$secnotice; # Password security notice
-        if($_SERVER["HTTPS"] != "on")
+        if($_SERVER["HTTPS"] != "on" && $displaywarnings === true)
           {
             $createform.="<div class='error danger'><p>Warning: This form is insecure</p></div>";
           }
@@ -598,6 +598,7 @@ else if($_REQUEST['q']=='create')
                               {
                                 if($debug) $login_output.=displayDebug($res);
                                 $login_output.="<p class='error'>".$res["error"]."</p><p>Use your browser's back button to try again.</p>";
+                                $deferredJS = "console.error('Got response',".json_encode($res).")";
                               }
                             ob_end_flush();
                           }
@@ -729,6 +730,15 @@ ob_end_flush();
 $totpOverride = !empty($redirect_url) ? "window.totpParams.home = \"".$redirect_url."\";\n":null;
 $totpOverride .= !empty($relative_path) ? "window.totpParams.relative = \"".$relative_path."\";\n":null;
 $totpOverride .= !empty($working_subdirectory) ? "window.totpParams.subdirectory = \"".$working_subdirectory."\";\n":null;
+try
+  {
+    $need_tfa = !$user->has2FA();
+  }
+catch (Exception $e)
+  {
+    $need_tfa = false;
+  }
+$totpOverride .= $need_tfa && $require_two_factor ? "window.totpParams.tfaLock = true;\n":"window.totpParams.tfaLock = false;\n";
 
 $deferredScriptBlock = "<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js'></script>
 <script type='text/javascript' src='".$relative_path."js/loadJQuery.min.js'></script>
@@ -750,5 +760,5 @@ var loadLast = function () {
 }
 </script>";
 
-echo $deferredScriptBlock;
+$login_output .= $deferredScriptBlock;
 ?>

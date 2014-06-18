@@ -663,14 +663,14 @@ class UserFunctions extends DBHelper
 
   public static function generateQR($uri,$data_path = null,$identifier_path = null)
   {
-    /*
+    /***
      * Generate a QR code from a string
      *
      * @param string $uri
      * @param string $data_path The path to the write directory
      * @param string $identifier_path An optional subdirectory for paths; makes loops easier
      * @returns array with the main results in "svg" and "raw" keys, with a Google fallback in the "url" key
-     */
+     ***/
     try
       {
         require_once(dirname(__FILE__)."/../qr/qrlib.php");
@@ -1501,22 +1501,22 @@ class UserFunctions extends DBHelper
 
   public static function encryptThis($key,$string)
   {
-    /*
+    /***
      * @param string $key
      * @param string $string
      * @return string An encrypted, base64-encoded result
-     */
+     ***/
 
     $encrypted = base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_256, md5($key), $string, MCRYPT_MODE_CBC, md5(md5($key))));
     return $encrypted;
   }
   public static function decryptThis($key,$encrypted)
   {
-    /*
+    /***
      * @param string $key
      * @param string $encrypted A base 64 encoded string
      * @return string The decrypted string
-     */
+     ***/
 
     $decrypted = rtrim(mcrypt_decrypt(MCRYPT_RIJNDAEL_256, md5($key), base64_decode($encrypted), MCRYPT_MODE_CBC, md5(md5($key))), "\0");
     return $decrypted;
