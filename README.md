@@ -9,13 +9,15 @@ genus
 species
 subspecies
 deprecated_scientific # Stored as JSON object, eg {"Genus species":"Authority:Year"}
-major_type # eg, lizard, turtle. Stored as {"scientific":"common"} JSON object
+major_type # eg, squamata
+major_common_type # eg, lizard, turtle. 
 major_subtype # eg, snake v. non-snake, aquatic vs. tortoise. Only common, public use -- match "expectation"
 minor_type # eg, lacertid, boa, pleurodire, dendrobatid; roughly a ranked "family", scientific only
 linnean_class # Deprecated, included for compatibility
 linnean_order # Deprecated, included for compatibility
-authority # eg, Linnaeus
-authority_year # eg, 2014
+genus_authority #  eg, "Linnaeus"
+species_authority # eg, "Attenborough"
+authority_year # eg, {2013:2014}
 notes # Miscellaneous notes
 image # hit calphotos api if this field is empty
 ```
