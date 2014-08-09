@@ -25,7 +25,7 @@ SSAR Species Name Database
 
 ### Updating the database
 
-1. Run the file [`parsers/db/update_sql_from_csv.py](https://github.com/tigerhawkvok/SSAR-species-database/blob/master/parsers/db/update_sql_from_csv.py) and do as above.
+1. Run the file [`parsers/db/update_sql_from_csv.py`](https://github.com/tigerhawkvok/SSAR-species-database/blob/master/parsers/db/update_sql_from_csv.py) and do as above.
 
 ## Columns
 
