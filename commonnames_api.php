@@ -72,8 +72,9 @@ function checkColumnExists($column)
   $cols = $db->getColumns();
   if(!in_array($column,$cols))
     {
-      returnAjax(array("status"=>false,"error"=>"Invalid column","human_error"=>"Sorry, you specified a lookup criterion that doesn't exist. Please try again.","column"=>$column))
+      returnAjax(array("status"=>false,"error"=>"Invalid column","human_error"=>"Sorry, you specified a lookup criterion that doesn't exist. Please try again.","column"=>$column));
     }
+  return true;
 }
 
 /*****************************
@@ -94,20 +95,46 @@ if(isset($_REQUEST['filter']))
       {
         $params = json_decode($_REQUEST['filter'],true);
       }
+    # Does the "BOOLEAN_TYPE" key exist?
+    if(!array_key_exists("BOOLEAN_TYPE",$params)) returnAjax(array("status"=>false,"error"=>"Missing required parameter","human_error"=>"The key 'BOOLEAN_TYPE' must exist and be either 'AND' or 'OR'.","given"=>$params));
+    # Is it valid?
+    if($params['BOOLEAN_TYPE'] != "AND" || $params['BOOLEAN_TYPE'] != "OR") returnAjax(array("status"=>false,"error"=>"Missing required parameter","human_error"=>"The key 'BOOLEAN_TYPE' must exist and be either 'AND' or 'OR'.","given"=>$params));
+    # Do all the columns exist?
+    foreach($params as $col=>$lookup)
+      {
+        checkColumnExists($col);
+      }
+    
   }
 
-
-/*****************************
- * Modes the API will accept
- *****************************/
-
-
+$search = $db->sanitize(deEscape($_REQUEST['q']));
 
 
 /*****************************
  * The actual handlers
  *****************************/
 
+function areSimilar($string1,$string2,$distance=70,$depth=3)
+{
+  /*
+   * Returns a TRUE if $string2 is similar to $string1,
+   * FALSE otherwise.
+   */
+  # Is it a substring?
+  $i=1;
+  if(metaphone($string1) == metaphone($string2) && $i<=$depth ) return true;
+  $i++;
+  if(soundex($string1) == soundex($string2) && $i<=$depth) return true;
+  $i++;
+  $similar_difference = similar_text($string1,$string2,$percent);
+  if($percent >= $distance && $i <=$depth) return true;
+  $i++;
+  $max_distance = strlen($string1)*($distance/100);
+  if(levenshtein($string1,$string2) < $max_distance && $i<=$depth) return true;
+  $i++;
+  return false;
+}
 
+# Parse out the parameters before doing the query
 
 ?>
