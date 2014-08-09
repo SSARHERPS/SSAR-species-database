@@ -1,7 +1,7 @@
 import time, os, glob, sys, qinput, string, yn
 
-defaultFile = "../../ssar_predatabase.csv"
-outputFile = "../../ssar_predatabase_clean.csv"
+defaultFile = "../ssar_predatabase.csv"
+outputFile = "../ssar_predatabase_clean.csv"
 exitScriptPrompt = "Press Control-c to exit."
 
 def doExit():
