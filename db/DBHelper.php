@@ -140,6 +140,7 @@ class DBHelper {
     return $r && $r2;
   }
 
+
   public static function cleanInput($input)
   {
 
@@ -153,22 +154,24 @@ class DBHelper {
     $output = preg_replace($search, '', $input);
     return $output;
   }
-  
-  protected function mysql_escape_mimic($inp) { 
-    if(is_array($inp)) 
-      return array_map(__METHOD__, $inp); 
 
-    if(!empty($inp) && is_string($inp)) { 
-      return str_replace(array('\\', "\0", "\n", "\r", "'", '"', "\x1a"), array('\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'), $inp); 
-    } 
-
-    return $inp; 
+  protected function mysql_escape_mimic($inp)
+  {
+    if(is_array($inp))
+      {
+        return array_map(__METHOD__, $inp);
+      }
+    if(!empty($inp) && is_string($inp))
+      {
+        return str_replace(array('\\', "\0", "\n", "\r", "'", '"', "\x1a"), array('\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'), $inp);
+      }
+    return $inp;
   }
-  
+
   public function sanitize($input)
   {
     # Emails get mutilated here -- let's check that first
-    $preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
+    $preg = "/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
     if(preg_match($preg,$input) === 1)
       {
         # It's an email, let's escape it and be done with it
@@ -450,7 +453,7 @@ class DBHelper {
       }
     $column=key($unq_id);
     $uval=current($unq_id);
-    
+
     if(!$this->is_entry($uval,$column,$precleaned))
       {
         throw(new Exception("No item '$uval' exists for column '$column'"));
@@ -520,63 +523,76 @@ class DBHelper {
   }
 
 
-/* if(!function_exists('returnTableContents')) */
-/*   { */
-/*     function returnTableContents($search_column,$search_criteria,$returned_fields_arr=null,$table_name=null,$database_name=null,$leave_open=true) */
-/*     { */
-/*       global $default_user_table,$default_user_database; */
-/*       if(empty($database_name)) $database_name=$default_user_database; */
-/*       if(empty($table_name)) $table_name = $default_user_table; */
-/*       $query="SELECT * FROM `$table_name`"; */
-/*       if($search_criteria!='*') */
-/*         { */
-/*           $search_criteria=trim($this->sanitize($search_criteria)); */
-/*           $query .=" WHERE cast($search_column as char) like '%$search_criteria%'"; */
-/*         } */
-/*       $l=openDB($database_name); */
-/*       $result= mysqli_query($l,$query); */
-/*       if($result!==false) */
-/*         { */
-/*           $count = mysqli_num_rows($result); */
-/*           if($returned_fields_arr==null) */
-/*             { */
-/*               if(!$leave_open) mysqli_close($l); */
-/*               return $result; */
-/*             } */
-/*           else */
-/*             { */
-/*               if(is_array($returned_fields_arr)) $answer = array(); */
-/*               while($results_arr=mysqli_fetch_assoc($result)) */
-/*                 { */
-/*                   if(is_array($returned_fields_arr)) */
-/*                     { */
-/*                       foreach($returned_fields_arr as $key) */
-/*                         { */
-/*                           if(array_key_exists($key,$results_arr)) */
-/*                             { */
-/*                               $answer[]=$results_arr[$key]; // return as a long array with item types repeating every N elements */
-/*                             } */
-/*                           else $answer[] = false; */
-/*                         } */
-/*                     } */
-/*                   else */
-/*                     { */
-/*                       if(array_key_exists($returned_fields_arr,$results_arr)) */
-/*                         { */
-/*                           $answer = $results_arr[$returned_fields_arr]; */
-/*                           return $answer; */
-/*                         } */
-/*                       else $answer=false; */
-/*                     } */
-/*                 } */
-/*               if(!$leave_open) mysqli_close($l); */
-/*               return $answer; */
+public function doQuery($search,$cols = "*",$boolean_type = "AND", $loose = false, $precleaned = false)
+{
+  if(!is_array($search))
+    {
+      return false;
+    }
+  if($precleaned !== true)
+    {
+      foreach ($search as $col=>$crit)
+        {
+          $search[$this->sanitize($col)] = $this->sanitize($crit);
+        }
+      if(is_array($cols))
+        {
+          foreach($cols as $k=>$column)
+            {
+              $cols[$k] = $this->sanitize($column);
+            }
+        }
+      else $cols = $this->sanitize($cols);
+    }
+  if($cols != "*") $col_selector = is_array($cols) ? "`".implode("`,`",$cols)."`":"`".$cols."`";
+  else $col_selector = $cols;
+  if(strtolower($boolean_type) != "and" || strtolower($boolean_type) != "or") return false;
+  $where_arr = array();
+  foreach($search as $col=>$crit)
+    {
+      $where_arr[] = $loose ? "`".$col."` LIKE '%".$crit."%'":"`".$col."`='".$crit."'";
+    }
+  $where = "(".implode(" ".strtoupper($boolean_type)." ",$where_arr).")";
+  $query = "SELECT $col_selector FROM `".$this->getTable()."` WHERE $where";
+  $l = $this->openDB();
+  return mysqli_query($l,$query);
+}
 
-/*             } */
-/*         } */
-/*       else return false; */
-/*     } */
-/*   } */
+public function doSoundex($search,$cols = "*",$precleaned = false)
+{
+  if(!is_array($search))
+    {
+      return false;
+    }
+  if(sizeof($search) > 1)
+    {
+      return false;
+    }
+  if($precleaned !== true)
+    {
+      foreach ($search as $col=>$crit)
+        {
+          $search[$this->sanitize($col)] = $this->sanitize($crit);
+        }
+      if(is_array($cols))
+        {
+          foreach($cols as $k=>$column)
+            {
+              $cols[$k] = $this->sanitize($column);
+            }
+        }
+      else $cols = $this->sanitize($cols);
+    }
+  if($cols != "*") $col_selector = is_array($cols) ? "`".implode("`,`",$cols)."`":"`".$cols."`";
+  else $col_selector = $cols;
+  $column = key($search);
+  $crit = $search[$column];
+  $query = "SELECT $col_selector FROM `".$this->getTable()."` WHERE (STRCMP(SUBSTR(SOUNDEX($column),1,LENGTH(SOUNDEX('$crit'))),SOUNDEX('$crit'))=0 OR `$column` LIKE '%$crit%')"; # ORDER BY score DESC
+  $l = $this->openDB();
+  return mysqli_query($l,$query);
+}
+
+
 
 }
 
