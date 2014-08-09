@@ -12,6 +12,7 @@ if(!function_exists('curPageURL'))
       } else {
         $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
       }
+      require_once(dirname(__FILE__).'/DBHelper.php');
       return DBHelper::cleanInput($pageURL);
     }
   }
@@ -157,7 +158,12 @@ if(!function_exists('strbool'))
     }
     function boolstr($string)
     {
-      // returns the boolean of a string 'true' or 'false'
+      /***
+       * Takes a string or truthy value and makes it a boolean
+       *
+       * @param a truthy value
+       * @return bool true if "true", "1", etc; false otherwise
+       ***/
       if(is_string($string)) return strtolower($string)==='true' ? true:false;
       else if(is_bool($string)) return $string;
       else if(preg_match("/[0-1]/",$string)) return $string==1 ? true:false;
@@ -230,17 +236,18 @@ if(!function_exists('smart_decode64'))
         {
           try
             {
-              // clean
+              # clean
+              require_once(dirname(__FILE__).'/DBHelper.php');
               if(is_array($working))
                 {
                   foreach($working as $k=>$v)
                     {
-                      $ck=sanitize($k);
-                      $cv=sanitize($v);
+                      $ck=DBHelper::staticSanitize($k);
+                      $cv=DBHelper::staticSanitize($v);
                       $prepped_data[$ck]=$cv;
                     }
                 }
-              else $prepped_data=sanitize($working);
+              else $prepped_data=DBHelper::staticSanitize($working);
             }
           catch (Exception $e)
             {

@@ -153,7 +153,18 @@ class DBHelper {
     $output = preg_replace($search, '', $input);
     return $output;
   }
+  
+  protected function mysql_escape_mimic($inp) { 
+    if(is_array($inp)) 
+      return array_map(__METHOD__, $inp); 
 
+    if(!empty($inp) && is_string($inp)) { 
+      return str_replace(array('\\', "\0", "\n", "\r", "'", '"', "\x1a"), array('\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'), $inp); 
+    } 
+
+    return $inp; 
+  }
+  
   public function sanitize($input)
   {
     # Emails get mutilated here -- let's check that first
@@ -180,11 +191,44 @@ class DBHelper {
           }
         $input  = htmlentities(self::cleanInput($input));
         $input=str_replace("_","&#95;",$input); // Fix _ potential wildcard
-        $input=str_replace("_","&#37;",$input); // Fix % potential wildcard
+        $input=str_replace("%","&#37;",$input); // Fix % potential wildcard
         $input=str_replace("'","&#39;",$input);
         $input=str_replace('"',"&#34;",$input);
         $l=$this->openDB();
         $output = mysqli_real_escape_string($l,$input);
+      }
+    return $output;
+  }
+
+  public static function staticSanitize($input)
+  {
+    # Emails get mutilated here -- let's check that first
+    $preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
+    if(preg_match($preg,$input) === 1)
+      {
+        # It's an email, let's escape it and be done with it
+        $output = mysql_escape_mimic($input);
+        return $output;
+      }
+    if (is_array($input))
+      {
+        foreach($input as $var=>$val)
+          {
+            $output[$var] = self::staticSanitize($val);
+          }
+      }
+    else
+      {
+        if (get_magic_quotes_gpc())
+          {
+            $input = stripslashes($input);
+          }
+        $input  = htmlentities(self::cleanInput($input));
+        $input=str_replace("_","&#95;",$input); // Fix _ potential wildcard
+        $input=str_replace("%","&#37;",$input); // Fix % potential wildcard
+        $input=str_replace("'","&#39;",$input);
+        $input=str_replace('"',"&#34;",$input);
+        $output = mysql_escape_mimic($input);
       }
     return $output;
   }
