@@ -16,12 +16,13 @@ $db->setCols(array(col1,col2,...));
 
 ```php
 $db = new DBHelper();
-$db->setSQLUser($default_sql_user);
-$db->setDB($default_user_database);
-$db->setSQLPW($default_sql_password);
-$db->setSQLURL($sql_url);
-$db->setCols($db_cols);
-$db->setTable($default_user_table);
+$db->setSQLUser(DEFAULT_SQL_USER);
+$db->setDB(DEFAULT_SQL_DATABASE);
+$db->setSQLPW(DEFAULT_SQL_PASSWORD);
+$db->setSQLURL(DEFAULT_SQL_URL); # Defaults to "localhost" if not set
+$db->setTable(DEFAULT_DATABASE_TABLE);
+# Highly reccommended
+$db->setCols(array(col1,col2,...));
 ```
 
 ## Usage
