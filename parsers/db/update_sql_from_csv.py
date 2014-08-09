@@ -1,9 +1,6 @@
-### Written to address
-### https://github.com/tigerhawkvok/Lemotion-Current/issues/114
-### Common calls for #114 are in
-### https://github.com/tigerhawkvok/Lemotion-Current/issues/114#issuecomment-40261647
-
-
+###
+# Generate a series of SQL update statements for an existing database
+###
 
 ## Helper functions
 

@@ -112,6 +112,7 @@ def generateInsertSqlQueries(rowList,tableName,makeLower=True):
     j=0
     query = ""
     queryList = list()
+    queryList.append("DROP TABLE IF EXISTS `"+tableName+"`;")
     first=True
     try:
         for row in rowList:

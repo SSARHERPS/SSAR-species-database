@@ -1,6 +1,32 @@
 SSAR Species Name Database
 ======================
 
+## Setting up the database
+
+### Preparing for the database
+
+1. Take your root Excel file and save it as a CSV
+2. Run the file [`parsers/db/clean_and_parse_to_sql.py`](https://github.com/tigerhawkvok/SSAR-species-database/blob/master/parsers/db/clean_and_parse_to_sql.py)
+3. The resulting file in the directory root is ready to be imported into the database
+
+### Importing into the database
+
+**Note this will delete the existing table**
+
+1. You can SSH into the database and paste the contents of the `sql` file generated above.
+2. Otherwise, you can upload the file, then SSH into the database, and run `source FILENAME.sql` when visiting the database in the `mysql` prompt:
+  
+  ```
+  mysql> \r DATABASE_NAME
+  mysql> source FILENAME.sql
+  ```
+
+  This is the most reliable way to do it.
+
+### Updating the database
+
+1. Run the file [`parsers/db/update_sql_from_csv.py](https://github.com/tigerhawkvok/SSAR-species-database/blob/master/parsers/db/update_sql_from_csv.py) and do as above.
+
 ## Columns
 
 ```php
@@ -10,7 +36,7 @@ species
 subspecies
 deprecated_scientific # Stored as JSON object, eg {"Genus species":"Authority:Year"}
 major_type # eg, squamata
-major_common_type # eg, lizard, turtle. 
+major_common_type # eg, lizard, turtle.
 major_subtype # eg, snake v. non-snake, aquatic vs. tortoise. Only common, public use -- match "expectation"
 minor_type # eg, lacertid, boa, pleurodire, dendrobatid; roughly a ranked "family", scientific only
 linnean_class # Deprecated, included for compatibility

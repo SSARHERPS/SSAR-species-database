@@ -1,7 +1,7 @@
 import time, os, glob, sys, qinput, string, yn
 
-defaultFile = "../ssar_predatabase.csv"
-outputFile = "../ssar_predatabase_clean.csv"
+defaultFile = "../../ssar_predatabase.csv"
+outputFile = "../../ssar_predatabase_clean.csv"
 exitScriptPrompt = "Press Control-c to exit."
 
 def doExit():
@@ -30,7 +30,7 @@ def cleanSpecies(data):
     authority = ",".join(data_split)
     return [year,authority]
 
-def cleanCSV(path = defaultFile):
+def cleanCSV(path = defaultFile, newPath = outputFile):
     if not os.path.isfile(path):
         print("Invalid file.")
         return False
@@ -45,7 +45,6 @@ def cleanCSV(path = defaultFile):
         doExit()
     import csv
     rows = csv.reader(contents.split("\n"),delimiter=",")
-    newPath = path + ".cleaned.csv"
     newFile = open(newPath,"w", newline='')
     cleanRows = csv.writer(newFile,delimiter=",",quoting=csv.QUOTE_ALL)
     genus_auth_col = 0
@@ -80,7 +79,7 @@ def cleanCSV(path = defaultFile):
         if i%50 is 0 and i > 0:
             print("Cleaned",i,"rows...")
     print("Finished cleaning",i,"rows.")
-    return cleanRows
+    return newPath
 
 
 path = None
@@ -107,7 +106,6 @@ while path is None:
             print("Invalid file.",exitScriptPrompt)
             print("You provided",path)
             path = None
-            continue
     except KeyboardInterrupt:
         doExit()
 
