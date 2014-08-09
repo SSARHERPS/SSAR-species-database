@@ -1,8 +1,17 @@
 <?php
 
-/***
+/***********************************************************
  * SSAR Common names database API target
- ***/
+ *
+ * API DESCRIPTION HERE
+ *
+ * API MODES HERE
+ *
+ *
+ * Initial version by Philip Kahn
+ * Started July 2014
+ * https://github.com/tigerhawkvok/SSAR-species-database
+ **********************************************************/
 
 /*****************
  * Setup
