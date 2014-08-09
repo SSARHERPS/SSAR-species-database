@@ -27,7 +27,7 @@ $db->setSQLURL($sql_url);
 $db->setCols($db_cols);
 $db->setTable($default_table);
 
-if(isset($_SERVER['QUERY_STRING'])) parse_str($_SERVER['QUERY_STRING'],$_GET);
+if(isset($_SERVER['QUERY_STRING'])) parse_str($_SERVER['QUERY_STRING'],$_REQUEST);
 
 $start_script_timer = microtime_float();
 
@@ -64,6 +64,37 @@ function returnAjax($data)
   print json_encode($data,JSON_FORCE_OBJECT);
   exit();
 }
+
+function checkColumnExists($column)
+{
+  if empty($column) return true;
+  global $db;
+  $cols = $db->getColumns();
+  if(!in_array($column,$cols))
+    {
+      returnAjax(array("status"=>false,"error"=>"Invalid column","human_error"=>"Sorry, you specified a lookup criterion that doesn't exist. Please try again.","column"=>$column))
+    }
+}
+
+/*****************************
+ * Setup flags
+ *****************************/
+
+$flag_fuzzy = boolstr($_REQUEST['fuzzy']);
+# Default limit is specified in CONFIG
+$limit = is_numeric($_REQUEST['limit']) && $_REQUEST['limit'] >= 1 ? intval($_REQUEST['limit']):$default_limit;
+
+checkColumnExists($_REQUEST['only']);
+checkColumnExists($_REQUEST['include']);
+
+if(isset($_REQUEST['filter']))
+  {
+    $params = smart_decode64($_REQUEST['filter']);
+    if($params === false)
+      {
+        $params = json_decode($_REQUEST['filter'],true);
+      }
+  }
 
 
 /*****************************

@@ -66,4 +66,4 @@ image # hit calphotos api if this field is empty
 3. `include`: Include the additional columns in this csv list. Return an error if invalid column specified.
 4. `type`: restrict search to this `major_type`. Literal scientific match only. Return an error if the type does not exist.
 5. `filter`: restrict search by this list of {"`column`":"value"} object list. Requires key "BOOLEAN_TYPE" set to either "AND" or "OR". Return an error if the key does not exist, or if an unknown column is specified.
-6. `count`: Search result return limit.
+6. `limit`: Search result return limit.
