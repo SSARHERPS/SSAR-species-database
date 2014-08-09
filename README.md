@@ -3,15 +3,15 @@ SSAR Species Name Database
 
 ## Setting up the database
 
-### Preparing for the database
+### Manually preparing the database
 
 1. Take your root Excel file and save it as a CSV
 2. Run the file [`parsers/db/clean_and_parse_to_sql.py`](https://github.com/tigerhawkvok/SSAR-species-database/blob/master/parsers/db/clean_and_parse_to_sql.py)
 3. The resulting file in the directory root is ready to be imported into the database
 
-### Importing into the database
+### Manually importing into the database
 
-**Note this will delete the existing table**
+**NOTE: This will delete the existing table**
 
 1. You can SSH into the database and paste the contents of the `sql` file generated above.
 2. Otherwise, you can upload the file, then SSH into the database, and run `source FILENAME.sql` when visiting the database in the `mysql` prompt:
@@ -23,7 +23,7 @@ SSAR Species Name Database
 
   This is the most reliable way to do it.
 
-### Updating the database
+### Manually updating the database
 
 1. Run the file [`parsers/db/update_sql_from_csv.py`](https://github.com/tigerhawkvok/SSAR-species-database/blob/master/parsers/db/update_sql_from_csv.py) and do as above.
 
