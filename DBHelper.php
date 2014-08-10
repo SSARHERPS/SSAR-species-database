@@ -523,7 +523,7 @@ class DBHelper {
   }
 
 
-public function doQuery($search,$cols = "*",$boolean_type = "AND", $loose = false, $precleaned = false)
+public function doQuery($search,$cols = "*",$boolean_type = "AND", $loose = false, $precleaned = false, $order_by = false)
 {
   if(!is_array($search))
     {
@@ -554,12 +554,18 @@ public function doQuery($search,$cols = "*",$boolean_type = "AND", $loose = fals
     }
   $where = "(".implode(" ".strtoupper($boolean_type)." ",$where_arr).")";
   $query = "SELECT $col_selector FROM `".$this->getTable()."` WHERE $where";
+  if($order_by !== false)
+    {
+      $ordering = explode(",",$order_by);
+      $order = " ORDER BY "."`".implode("`,`",$ordering)."`";
+      $query .= $order;
+    }
   $l = $this->openDB();
   $r = mysqli_query($l,$query);
   return $r === false ? mysqli_error($l):$r;
 }
 
-public function doSoundex($search,$cols = "*",$precleaned = false)
+public function doSoundex($search,$cols = "*",$precleaned = false,$order_by = false)
 {
   if(!is_array($search))
     {
@@ -588,7 +594,13 @@ public function doSoundex($search,$cols = "*",$precleaned = false)
   else $col_selector = $cols;
   $column = key($search);
   $crit = $search[$column];
-  $query = "SELECT $col_selector FROM `".$this->getTable()."` WHERE (STRCMP(SUBSTR(SOUNDEX($column),1,LENGTH(SOUNDEX('$crit'))),SOUNDEX('$crit'))=0 OR `$column` LIKE '%$crit%')"; # ORDER BY score DESC
+  $query = "SELECT $col_selector FROM `".$this->getTable()."` WHERE (STRCMP(SUBSTR(SOUNDEX($column),1,LENGTH(SOUNDEX('$crit'))),SOUNDEX('$crit'))=0 OR `$column` LIKE '%$crit%')";
+  if($order_by !== false)
+    {
+      $ordering = explode(",",$order_by);
+      $order = " ORDER BY "."`".implode("`,`",$ordering)."`";
+      $query .= $order;
+    }
   $l = $this->openDB();
   $r = mysqli_query($l,$query);
   return $r === false ? mysqli_error($l) : $r;
