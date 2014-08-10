@@ -65,14 +65,17 @@ function returnAjax($data)
   exit();
 }
 
-function checkColumnExists($column)
+function checkColumnExists($column_list)
 {
-  if empty($column) return true;
+  if empty($column_list) return true;
   global $db;
   $cols = $db->getColumns();
-  if(!in_array($column,$cols))
+  foreach(explode(",",$column_list) as $colum)
     {
-      returnAjax(array("status"=>false,"error"=>"Invalid column","human_error"=>"Sorry, you specified a lookup criterion that doesn't exist. Please try again.","column"=>$column));
+      if(!in_array($column,$cols))
+        {
+          returnAjax(array("status"=>false,"error"=>"Invalid column","human_error"=>"Sorry, you specified a lookup criterion that doesn't exist. Please try again.","columns"=>$column_list));
+        }
     }
   return true;
 }
@@ -226,24 +229,58 @@ if(empty($params) || !empty($search))
             # escaped from normal handling.
             $extra_params = array();
             $extra_boolean_type = " OR ";
-            $extra_params["common_name"] = $search;
-            $extra_params["genus"] = $search;
-            $extra_params["species"] = $search;
-            $extra_params["major_common_type"] = $search;
-            $extra_params["major_subtype"] = $search;
-            $extra_params["deprecated_scientific"] = $search;
+            if(!isset($_REQUEST['only']))
+              {
+                $extra_params["common_name"] = $search;
+                $extra_params["genus"] = $search;
+                $extra_params["species"] = $search;
+                $extra_params["major_common_type"] = $search;
+                $extra_params["major_subtype"] = $search;
+                $extra_params["deprecated_scientific"] = $search;
+              }
+            else
+              {
+                foreach(explode(",",$_REQUEST['only']) as $column)
+                  {
+                    $extra_params[$db->sanitize($column)] = $search;
+                  }
+              }
+            if(isset($_REQUEST['include']))
+              {
+                foreach(explode(",",$_REQUEST['include']) as $column)
+                  {
+                    $extra_params[$db->sanitize($column)] = $search;
+                  }
+              }
             $extra_filter = implode($extra_boolean_type,$extra_params);
             $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);
           }
         else
           {
             $boolean_type = "OR";
-            $params["common_name"] = $search;
-            $params["genus"] = $search;
-            $params["species"] = $search;
-            $params["major_common_type"] = $search;
-            $params["major_subtype"] = $search;
-            $params["deprecated_scientific"] = $search;
+            if(!isset($_REQUEST['only']))
+              {
+                $params["common_name"] = $search;
+                $params["genus"] = $search;
+                $params["species"] = $search;
+                $params["major_common_type"] = $search;
+                $params["major_subtype"] = $search;
+                $params["deprecated_scientific"] = $search;
+              }
+            else
+              {
+                foreach(explode(",",$_REQUEST['only']) as $column)
+                  {
+                    $params[$db->sanitize($column)] = $search;
+                  }
+              }
+            if(isset($_REQUEST['include']))
+              {
+                foreach(explode(",",$_REQUEST['include']) as $column)
+                  {
+                    $params[$db->sanitize($column)] = $search;
+                  }
+              }
             if(!$flag_fuzzy)
               {
                 $r = $db->doQuery($params,"*",$boolean_type,$loose,true);
@@ -283,6 +320,24 @@ if(empty($params) || !empty($search))
     else
       {
         # Spaces in search
+        ###############################
+        ## Not convinced this makes sense here .... maybe only with
+        ## common names?
+        if(isset($_REQUEST['only']))
+          {
+            foreach(explode(",",$_REQUEST['only']) as $column)
+              {
+                $params[$db->sanitize($column)] = $search;
+              }
+          }
+        if(isset($_REQUEST['include']))
+          {
+            foreach(explode(",",$_REQUEST['include']) as $column)
+              {
+                $params[$db->sanitize($column)] = $search;
+              }
+          }
+        ###################################
         if($boolean_type !== false)
           {
             # Handle the complicated statement. It'll need to be

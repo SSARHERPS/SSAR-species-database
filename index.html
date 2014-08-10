@@ -8,6 +8,22 @@
     <script type="text/javascript" src="js/loadJQuery.js"></script>
   </head>
   <body>
-    
+    <form id="search_form" onsubmit="event.preventDefault()">
+      <label for="search">Search:</label>
+      <input type="text" name="search" id="search"/>
+      <br/>
+      <label for="type">Restrict to:</label>
+      <select id="type" name="type">
+        <option value="any">All</option>
+        <!-- More as per flag 4 in readme -->
+      </select>
+      <fieldset>
+        <legend>Options</legend>
+        List of options with "restrict" and "include"
+      </fieldset>
+    </form>
+    <div id="result_container">
+      
+    </div>
   </body>
 </html>
