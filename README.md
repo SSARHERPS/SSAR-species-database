@@ -68,3 +68,4 @@ image # hit calphotos api if this field is empty
 5. `filter`: restrict search by this list of {"`column`":"value"} object list. Requires key "BOOLEAN_TYPE" set to either "AND" or "OR". Return an error if the key does not exist, or if an unknown column is specified.
 6. `limit`: Search result return limit.
 7. `loose`: Don't check for strict matches, allow partials
+8. `order`: A csv list of columns to order by. Defaults to genus, species, subspecies.

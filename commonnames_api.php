@@ -91,6 +91,9 @@ $limit = is_numeric($_REQUEST['limit']) && $_REQUEST['limit'] >= 1 ? intval($_RE
 
 checkColumnExists($_REQUEST['only']);
 checkColumnExists($_REQUEST['include']);
+checkColumnExists($_REQUEST['order']);
+
+$order_by = isset($_REQUEST['order']) ? $_REQUEST['order']:"genus,species,subspecies";
 
 $params = array();
 $boolean_type = false;
@@ -176,6 +179,10 @@ function handleParamSearch($filter_params,$loose = false,$boolean_type = "AND", 
     }
   $where = "(".$where.")";
   $query .= $where;
+  global $order_by;
+  $ordering = explode(",",$order_by);
+  $order = " ORDER BY "."`".implode("`,`",$ordering)."`";
+  $query .= $order;
   $l = $db->openDB();
   $r = mysqli_query($l,$query);
   if($r === false)
@@ -205,7 +212,7 @@ if(empty($params) || !empty($search))
         $col = "authority_year";
         $loose = true; # Always true because of the way data is stored
         $params[$col] = $search;
-        $r = $db->doQuery($params,"*",$boolean_type,$loose,true);
+        $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
         try
           {
             while($row = mysqli_fetch_assoc($r))
@@ -283,7 +290,7 @@ if(empty($params) || !empty($search))
               }
             if(!$flag_fuzzy)
               {
-                $r = $db->doQuery($params,"*",$boolean_type,$loose,true);
+                $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
                 try {
                   while($row = mysqli_fetch_assoc($r))
                     {
@@ -300,7 +307,7 @@ if(empty($params) || !empty($search))
               {
                 foreach($params as $search_column=>$search_criteria)
                   {
-                    $r = $db->doSoundex(array($search_column=>$search_criteria),"*",true);
+                    $r = $db->doSoundex(array($search_column=>$search_criteria),"*",true,$order_by);
                     try
                       {
                         while($row = mysqli_fetch_assoc($r))
@@ -382,7 +389,7 @@ if(empty($params) || !empty($search))
                 $params["genus"] = $exp[0];
                 $params["species"] = $exp[1];
                 if(sizeof($exp) == 3) $params["subspecies"] = $exp[2];
-                $r = $db->doQuery($params,"*",$boolean_type,$loose,true);
+                $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
                 try
                   {
                     $method = "scientific";
@@ -399,7 +406,7 @@ if(empty($params) || !empty($search))
                         # Always has to be a loose query
                         $method = "deprecated_scientific";
                         $fallback = false;
-                        $r = $db->doQuery(array("deprecated_scientific"=>$search),"*",$boolean_type,true,true);
+                        $r = $db->doQuery(array("deprecated_scientific"=>$search),"*",$boolean_type,true,true,$order_by);
                         try
                           {
                             while($row = mysqli_fetch_assoc($r))
@@ -424,7 +431,7 @@ if(empty($params) || !empty($search))
               {
                 $method = "space_fallback";
                 $params["common_name"] = $search;
-                $r = $db->doQuery($params,"*",$boolean_type,$loose,true);
+                $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
                 try
                   {
                     while($row = mysqli_fetch_assoc($r))
