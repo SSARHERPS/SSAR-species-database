@@ -224,7 +224,16 @@ if(empty($params) || !empty($search))
           {
             # Handle the complicated statement. It'll need to be
             # escaped from normal handling.
-            $result_vector = handleParamSearch();
+            $extra_params = array();
+            $extra_boolean_type = " OR ";
+            $extra_params["common_name"] = $search;
+            $extra_params["genus"] = $search;
+            $extra_params["species"] = $search;
+            $extra_params["major_common_type"] = $search;
+            $extra_params["major_subtype"] = $search;
+            $extra_params["deprecated_scientific"] = $search;
+            $extra_filter = implode($extra_boolean_type,$extra_params);
+            $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);
           }
         else
           {
@@ -278,7 +287,35 @@ if(empty($params) || !empty($search))
           {
             # Handle the complicated statement. It'll need to be
             # escaped from normal handling.
-            $result_vector = handleParamSearch();
+            $extra_params = array();
+            $exp = explode(" ",$search);
+            $fallback = true;
+            $method = "scientific";
+            if(sizeof($exp) == 2 || sizeof($exp) == 3)
+              {
+                $extra_boolean_type = " AND ";
+                $extra_params["genus"] = $exp[0];
+                $extra_params["species"] = $exp[1];
+                if(sizeof($exp) == 3) $extra_params["subspecies"] = $exp[2];
+                $where_arr = array();
+                foreach($extra_params as $col=>$crit)
+                  {
+                    $where_arr[] = $loose ? "`".$col."` LIKE '%".$crit."%'":"`".$col."`='".$crit."'";
+                  }
+                $extra_filter = implode($extra_boolean_type,$where_arr);
+              }
+            $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);
+            if(sizeof($result_vector) == 0)
+              {
+                $result_vector = handleParamSearch($params,$loose,$boolean_type,"`deprecated_scientific` LIKE '%".$search."%'");
+                $method = "deprecated_scientific";
+                if(sizeof($result_vector) == 0)
+                  {
+                    $col = "common_name";
+                    $extra_filter = $loose ? "`".$col."` LIKE '%".$search."%'":"`".$col."`='".$search."'";
+                    $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);
+                  }
+              }
           }
         else
           {
@@ -308,10 +345,17 @@ if(empty($params) || !empty($search))
                         $method = "deprecated_scientific";
                         $fallback = false;
                         $r = $db->doQuery(array("deprecated_scientific"=>$search),"*",$boolean_type,true,true);
-                        ###### TODO HANDLE ERRORS
-                        while($row = mysqli_fetch_assoc($r))
+                        try
                           {
-                            $result_vector[] = $row;
+                            while($row = mysqli_fetch_assoc($r))
+                              {
+                                $result_vector[] = $row;
+                              }
+                          }
+                        catch(Exception $e)
+                          {
+                            if(is_string($r)) $error = $r;
+                            else $error = $e;
                           }
                       }
                   }
@@ -344,7 +388,7 @@ if(empty($params) || !empty($search))
   }
 else
   {
-    $result_vector = handleParamSearch();
+    $result_vector = handleParamSearch($params,$loose,$boolean_type);
   }
 if(isset($error))
   {
