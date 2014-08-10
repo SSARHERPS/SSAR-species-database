@@ -152,14 +152,39 @@ function areSimilar($string1,$string2,$distance=70,$depth=3)
   return false;
 }
 
-function handleParamSearch($filter_params,$extra_params = false)
+function handleParamSearch($filter_params,$loose = false,$boolean_type = "AND", $extra_params = false)
 {
   /***
    * Handle the searches when they're using advanced options
    *
+   * @param extra_params a literal query
    * @return array the result vector
    ***/
-  return false;
+  $query = "SELECT * FROM `".$db->getTable()."` WHERE ";
+  $where_arr = array();
+  foreach($filter_params as $col=>$crit)
+    {
+      $where_arr[] = $loose ? "`".$col."` LIKE '%".$crit."%'":"`".$col."`='".$crit."'";
+    }
+  $where = "".implode(" ".strtoupper($boolean_type)." ",$where_arr)."";
+  if(!empty($extra_params))
+    {
+      $where .= " AND (".$extra_params.")";
+    }
+  $where = "(".$where.")";
+  $query .= $where;
+  $l = $db->openDB();
+  $r = mysqli_query($l,$query);
+  if($r === false)
+    {
+      returnAjax("status"=>false,"error"=>mysqli_error($l),"human_error"=>"There was an error executing this query");
+    }
+  $result_vector = array();
+  while($row = mysqli_fetch_assoc($r))
+    {
+      $result_vector[] = $row;
+    }
+  return $result_vector;
 }
 
 /****
@@ -178,10 +203,17 @@ if(empty($params) || !empty($search))
         $loose = true; # Always true because of the way data is stored
         $params[$col] = $search;
         $r = $db->doQuery($params,"*",$boolean_type,$loose,true);
-        #######TODO HANDLE ERROR
-        while($row = mysqli_fetch_assoc($r))
+        try
           {
-            $result_vector[] = $row;
+            while($row = mysqli_fetch_assoc($r))
+              {
+                $result_vector[] = $row;
+              }
+          }
+        catch(Exception $e)
+          {
+            if(is_string($r)) $error = $r;
+            else $error = $e;
           }
       }
     else if (strpos(" ",$search) === false)
@@ -206,10 +238,16 @@ if(empty($params) || !empty($search))
             if(!$flag_fuzzy)
               {
                 $r = $db->doQuery($params,"*",$boolean_type,$loose,true);
-                #######TODO HANDLE ERROR
-                while($row = mysqli_fetch_assoc($r))
+                try {
+                  while($row = mysqli_fetch_assoc($r))
+                    {
+                      $result_vector[] = $row;
+                    }
+                }
+                catch(Exception $e)
                   {
-                    $result_vector[] = $row;
+                    if(is_string($r)) $error = $r;
+                    else $error = $e;
                   }
               }
             else
@@ -217,10 +255,17 @@ if(empty($params) || !empty($search))
                 foreach($params as $search_column=>$search_criteria)
                   {
                     $r = $db->doSoundex(array($search_column=>$search_criteria),"*",true);
-                    ############ TODO HANDLE ERRORS
-                    while($row = mysqli_fetch_assoc($r))
+                    try
                       {
-                        $result_vector[] = $row;
+                        while($row = mysqli_fetch_assoc($r))
+                          {
+                            $result_vector[] = $row;
+                          }
+                      }
+                    catch(Exception $e)
+                      {
+                        if(is_string($r)) $error = $r;
+                        else $error = $e;
                       }
                   }
               }
@@ -246,27 +291,34 @@ if(empty($params) || !empty($search))
                 $params["species"] = $exp[1];
                 if(sizeof($exp) == 3) $params["subspecies"] = $exp[2];
                 $r = $db->doQuery($params,"*",$boolean_type,$loose,true);
-                #######TODO HANDLE ERROR
-                if(mysqli_num_rows($r) > 0)
+                try
                   {
-                    while($row = mysqli_fetch_assoc($r))
-                      {
-                        $result_vector[] = $row;
-                      }
                     $method = "scientific";
                     $fallback = false;
-                  }
-                else
-                  {
-                    # Always has to be a loose query
-                    $r = $db->doQuery(array("deprecated_scientific"=>$search),"*",$boolean_type,true,true);
-                    ###### TODO HANDLE ERRORS
-                    while($row = mysqli_fetch_assoc($r))
+                    if(mysqli_num_rows($r) > 0)
                       {
-                        $result_vector[] = $row;
+                        while($row = mysqli_fetch_assoc($r))
+                          {
+                            $result_vector[] = $row;
+                          }
                       }
-                    $method = "deprecated_scientific";
-                    $fallback = false;
+                    else
+                      {
+                        # Always has to be a loose query
+                        $method = "deprecated_scientific";
+                        $fallback = false;
+                        $r = $db->doQuery(array("deprecated_scientific"=>$search),"*",$boolean_type,true,true);
+                        ###### TODO HANDLE ERRORS
+                        while($row = mysqli_fetch_assoc($r))
+                          {
+                            $result_vector[] = $row;
+                          }
+                      }
+                  }
+                catch(Exception $e)
+                  {
+                    if(is_string($r)) $error = $r;
+                    else $error = $e;
                   }
               }
             if($fallback)
@@ -274,9 +326,17 @@ if(empty($params) || !empty($search))
                 $method = "space_fallback";
                 $params["common_name"] = $search;
                 $r = $db->doQuery($params,"*",$boolean_type,$loose,true);
-                while($row = mysqli_fetch_assoc($r))
+                try
                   {
-                    $result_vector[] = $row;
+                    while($row = mysqli_fetch_assoc($r))
+                      {
+                        $result_vector[] = $row;
+                      }
+                  }
+                catch(Exception $e)
+                  {
+                    if(is_string($r)) $error = $r;
+                    else $error = $e;
                   }
               }
           }
@@ -286,8 +346,11 @@ else
   {
     $result_vector = handleParamSearch();
   }
-
-returnAjax(array("status"=>true,"result"=>$result_vector,"count"=>sizeof($result_vector),"method"=>$method));
+if(isset($error))
+  {
+    returnAjax(array("status"=>false,"error"=>$error,"human_error"=>"There was a problem performing this query. Please try again.","method"=>$method));
+  }
+else returnAjax(array("status"=>true,"result"=>$result_vector,"count"=>sizeof($result_vector),"method"=>$method));
 
 
 ?>
