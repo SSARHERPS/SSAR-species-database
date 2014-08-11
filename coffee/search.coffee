@@ -14,6 +14,7 @@ performSearch = ->
   $.post(searchParams.targetApi,args,"json")
   .done (result) ->
     # Populate the result container
+    console.log("Search executed by #{result.method} with #{result.count} results.")
     if result.status is true
       formatSearchResults(result)
       return false

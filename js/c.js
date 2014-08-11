@@ -308,6 +308,7 @@
     console.log("Got search value " + s);
     args = "q=" + s;
     return $.post(searchParams.targetApi, args, "json").done(function(result) {
+      console.log("Search executed by " + result.method + " with " + result.count + " results.");
       if (result.status === true) {
         formatSearchResults(result);
         return false;
