@@ -59,6 +59,14 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       console.log("Processed #{i} rows")
       $(container).html(html)
 
+sortResults = (by_column) ->
+  # Somethign clever -- look at each of the by_column points, then
+  # throw those into an array and sort those, using their index as a
+  # map to data and re-mapping data by those orders. May need to use
+  # the index of a duplicated array as the reference - walk through
+  # sorted and lookup position in reference, then data[index] = data[ref_pos]
+  data = searchParams.result
+
 $ ->
   # Do bindings
   console.log("Doing onloads ...")
