@@ -1,6 +1,10 @@
 SSAR Species Name Database
 ======================
 
+## Installation
+
+Install this in the `cndb` folder below the root directory of the site. **If this is to be located elsewhere**, change the variable `searchParams.targetApi` in `/coffee/search.coffee` and recompile the coffeescript.
+
 ## Setting up the database
 
 ### Manually preparing the database
@@ -27,7 +31,7 @@ SSAR Species Name Database
 
 1. Run the file [`parsers/db/update_sql_from_csv.py`](https://github.com/tigerhawkvok/SSAR-species-database/blob/master/parsers/db/update_sql_from_csv.py) and do as above.
 
-## Columns
+### Columns
 
 ```php
 common_name
