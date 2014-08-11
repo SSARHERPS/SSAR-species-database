@@ -293,27 +293,35 @@
 
   searchParams = new Object();
 
-  searchParams.targetApi = "commonnames_api.php";
+  searchParams.targetApi = "cndb/commonnames_api.php";
 
   searchParams.targetContainer = "#result_container";
 
   performSearch = function() {
     var args, s;
     s = $("#search").val();
+    console.log("Got search value " + s);
     args = "q=" + s;
     return $.post(searchParams.targetApi, args, "json").done(function(result) {
       return false;
     }).fail(function(result, error) {
       console.error("There was an error performing the search");
-      return console.warn(result, error, result.errorMessage);
+      console.warn(result, error, result.errorMessage);
+      error = "" + result.status + " - " + result.statusText;
+      $("#search-status").attr("text", "Couldn't execute the search - " + error);
+      return $("#search-status")[0].show();
     }).always(function() {
       return false;
     });
   };
 
   $(function() {
-    return $("#search_form").submit(function(e) {
+    console.log("Doing onloads ...");
+    $("#search_form").submit(function(e) {
       e.preventDefault();
+      return performSearch();
+    });
+    return $("#do-search").click(function() {
       return performSearch();
     });
   });

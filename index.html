@@ -4,13 +4,17 @@
     <title>SSAR North American Common Names Database</title>
     <meta http-equiv="Content-Type" content="application/xhtml+xml;charset=utf-8" />
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <link rel="stylesheet" type="text/css" media="screen" href="css/main.css"/>
+    <link href="https://fonts.googleapis.com/css?family=Droid+Sans:400,700|Droid+Sans+Mono|Roboto:400,100,300,500,700,100italic,300italic,400italic,500italic,700italic" rel='stylesheet' type='text/css'/>
+    <script src="bower_components/platform/platform.js"></script>
+    <link rel="import" href="bower_components/paper-elements/paper-elements.html"/>
+    <link rel="import" href="bower_components/core-elements/core-elements.html"/>
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script type="text/javascript" src="js/loadJQuery.js"></script>
   </head>
   <body>
     <form id="search_form" onsubmit="event.preventDefault()">
-      <label for="search">Search:</label>
-      <input type="text" name="search" id="search" placeholder="Search"/>
+      <paper-input label="Search" id="search" required autofocus floatingLabel></paper-input><br/>
       <br/>
       <label for="type">Restrict to:</label>
       <select id="type" name="type">
@@ -21,7 +25,9 @@
         <legend>Options</legend>
         List of options with "restrict to" and "include", corresponding to 2 and 3 in readme
       </fieldset>
+      <paper-fab id="do-search" icon="search" raisedButton class="materialblue"></paper-fab>
     </form>
+    <paper-toast id="search-status"></paper-toast>
     <div id="result_container">
       
     </div>

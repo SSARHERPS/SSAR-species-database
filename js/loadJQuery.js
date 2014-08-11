@@ -15,9 +15,12 @@ function cascadeJQLoad(i) { // Use alternate CDNs where appropriate to load jQue
         "picturefill.min.js",
         "c.min.js"
     ];
-    if (window.jQuery === undefined && i < jq_paths.length) {
+    if (window.jQuery !== undefined) {
+        i = jq_paths.length -1;
+    }
+    if (i < jq_paths.length) {
+        loadJQ(jq_paths[i], i+1, dependent_libraries);
         i++;
-        loadJQ(jq_paths[i], i, dependent_libraries);
     }
     if (window.jQuery === undefined && i == jq_paths.length) {
         // jQuery failed to load
