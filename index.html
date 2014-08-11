@@ -14,22 +14,31 @@
   </head>
   <body>
     <form id="search_form" onsubmit="event.preventDefault()">
-      <paper-input label="Search" id="search" required autofocus floatingLabel></paper-input><br/>
+      <paper-input label="Search" id="search" name="search" disabled required autofocus floatingLabel></paper-input>
+      <paper-fab id="do-search" icon="search" raisedButton class="materialblue"></paper-fab>
+      <br/>
       <br/>
       <label for="type">Restrict to:</label>
-      <select id="type" name="type">
-        <option value="any">All</option>
-        <!-- More as per flag 4 in readme -->
-      </select>
+      <core-dropdown id="type" name="type" selected="any" valueattr="data-type">
+        <core-item label="All" data-type="any"></core-item>
+        <core-item label="Non-Snake Lizards" data-type="squamata"></core-item>
+        <core-item label="Snakes" data-type="serpentes"></core-item>
+        <core-item label="Turtles" data-type="testudines"></core-item>
+        <core-item label="Crocodiles &amp; Alligators" data-type="crocodylia"></core-item>
+        <core-item label="Salamanders" data-type="caudata"></core-item>
+        <core-item label="Frogs" data-type="anura"></core-item>
+        <core-item label="Caecilians" data-type="gymnophiona"></core-item>
+        <!-- As per flag 4 in readme -->
+      </core-dropdown>
       <fieldset>
         <legend>Options</legend>
         List of options with "restrict to" and "include", corresponding to 2 and 3 in readme
       </fieldset>
-      <paper-fab id="do-search" icon="search" raisedButton class="materialblue"></paper-fab>
+      <input type="submit" style="display:none;" value="Search"/>
     </form>
     <paper-toast id="search-status"></paper-toast>
     <div id="result_container">
-      
+
     </div>
   </body>
 </html>

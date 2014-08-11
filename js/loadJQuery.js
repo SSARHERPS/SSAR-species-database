@@ -16,9 +16,27 @@ function cascadeJQLoad(i) { // Use alternate CDNs where appropriate to load jQue
         "c.min.js"
     ];
     if (window.jQuery !== undefined) {
-        i = jq_paths.length -1;
+        // Load libraries that rely on jQuery
+            if (typeof(dependent_libraries) == "object") {
+                try {
+                    try {
+                        var jsFileLocation = $("script[src*='loadJQuery.min']").attr('src').replace('loadJQuery.min.js', '');
+                    } catch (e) {
+                        var jsFileLocation = $("script[src*='loadJQuery']").attr('src').replace('loadJQuery.js', '');
+                    }
+                } catch (e) {
+                    var jsFileLocation = "";
+                }
+                $.each(dependent_libraries, function() {
+                    var relpath = this.toString();
+                    var filepath;
+                    if (relpath.search("://") === -1) filepath = jsFileLocation + relpath;
+                    else filepath = relpath;
+                    loadJS(filepath);
+                });
+            }
     }
-    if (i < jq_paths.length) {
+    else if (i < jq_paths.length) {
         loadJQ(jq_paths[i], i+1, dependent_libraries);
         i++;
     }
