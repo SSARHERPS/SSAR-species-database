@@ -8,7 +8,7 @@ require_once(dirname(__FILE__).'/functions.inc');
 
 class DBHelper {
 
-  public function __construct($database,$user,$pw,$url = "localhost",$table = null)
+  public function __construct($database,$user,$pw,$url = "localhost",$table = null,$cols = null)
   {
     /***
      * @param string $database the database to connect to
@@ -16,12 +16,18 @@ class DBHelper {
      * @param string $pw the password for $user in $database
      * @param string $url the URL of the SQL server
      * @param string $table the default table
+     * @param array $cols the column information. Note that it must be
+     * specified here in the constructor!!
      ***/
     $this->db = $database;
     $this->SQLuser = $user;
     $this->pw = $pw;
     $this->url = $url;
     $this->table = $table;
+    if(is_array($cols))
+      {
+        $this->setCols($cols);
+      }
   }
 
   public function getDB()
