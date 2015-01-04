@@ -1,0 +1,27 @@
+{
+  "name": "SSAR-species-database",
+  "version": "1.0.0",
+  "description": "SSAR Common Names Database",
+  "main": "commonnamnes_api.php",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tigerhawkvok/SSAR-species-database.git"
+  },
+  "author": "Philip Kahn <tigerhawkvok@gmail.com>",
+  "license": "GPLv3",
+  "bugs": {
+    "url": "https://github.com/tigerhawkvok/SSAR-species-database/issues"
+  },
+  "homepage": "https://github.com/tigerhawkvok/SSAR-species-database",
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "coffee-script": "^1.8.0",
+    "grunt-contrib-uglify": "^0.6.0",
+    "grunt-shell": "^1.1.1",
+    "grunt-contrib-coffee": "^0.12.0",
+    "grunt-contrib-watch": "^0.6.1"
+  }
+}

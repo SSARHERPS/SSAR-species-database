@@ -5,6 +5,8 @@ SSAR Species Name Database
 
 Install this in the `cndb` folder below the root directory of the site. **If this is to be located elsewhere**, change the variable `searchParams.targetApi` in `/coffee/search.coffee` and recompile the coffeescript.
 
+You can re-prepare the files by running `grunt compile` at the root directory.
+
 ## Setting up the database
 
 ### Manually preparing the database
