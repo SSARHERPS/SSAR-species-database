@@ -200,8 +200,28 @@ $result_vector = array();
 if(empty($params) || !empty($search))
   {
     # There was either a parsing failure, or no filter set.
-    if(empty($search)) $search = "*"; # Wildcard it. Be greedy.
-    if(is_numeric($search))
+    if(empty($search) || empty($params))
+      {
+        $search = "*"; # Wildcard it. Be greedy.
+        $col = "species";
+        $params[$col] = $search;
+        $loose = true;
+        $method = "full_list";
+        $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
+        try
+          {
+            while($row = mysqli_fetch_assoc($r))
+              {
+                $result_vector[] = $row;
+              }
+          }
+        catch(Exception $e)
+          {
+            if(is_string($r)) $error = $r;
+            else $error = $e;
+          }
+      }
+    else if(is_numeric($search))
       {
         $method="year_search";
         $col = "authority_year";
@@ -451,7 +471,7 @@ if(isset($error))
   {
     returnAjax(array("status"=>false,"error"=>$error,"human_error"=>"There was a problem performing this query. Please try again.","method"=>$method));
   }
-else returnAjax(array("status"=>true,"result"=>$result_vector,"count"=>sizeof($result_vector),"method"=>$method));
+else returnAjax(array("status"=>true,"result"=>$result_vector,"count"=>sizeof($result_vector),"method"=>$method,"query"=>$search,"params"=>$params,"query_params"=>array("bool"=>$boolean_type,"loose"=>$loose,"order_by"=>$order_by)));
 
 
 ?>
