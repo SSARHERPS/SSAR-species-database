@@ -212,25 +212,31 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
   searchParams.result = data
   headers = new Array()
   html = ""
-  htmlHead = "<table>\n\t<tr>"
+  htmlHead = "<table id='cndb-result-list'>\n\t<tr class='cndb-row-headers'>"
   htmlClose = "</table>"
+  targetCount = toInt(result.count)-1
   $.each data, (i,row) ->
-    if i is 0
+    if toInt(i) is 0
       j = 0
+      htmlHead += "\n<!-- Table Headers -->"
+      console.log("Row:",row)
       $.each row, (k,v) ->
+        console.log(k)
         htmlHead += "\n\t\t<th>#{k}</th>"
         j++
         if j is Object.size(row)
           htmlHead += "\n\t</tr>"
-    htmlRow = "\n\t<tr id='cndb-row#{i}'>"
+          htmlHead += "\n<!-- End Table Headers -->"
+    htmlRow = "\n\t<tr id='cndb-row#{i}' class='cndb-result-entry'>"
     l = 0
     $.each row, (k,col) ->
-      htmlRow += "\n\t\t<td id='#{k}-#{i}'>#{col}</td>"
+      htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{k}'>#{col}</td>"
       l++
       if l is Object.size(row)
         htmlRow += "\n\t</tr>"
         html += htmlRow
-    if i is Object.size(data)
+    # Check if we're done
+    if toInt(i) is targetCount
       html = htmlHead + html + htmlClose
       console.log("Processed #{i} rows")
       $(container).html(html)
@@ -256,6 +262,7 @@ $ ->
   .done (result) ->
     # Populate the result container
     if result.status is true
+      console.log("Got a valid result, formatting #{result.count} results.")
       formatSearchResults(result)
       return false
     $("#search-status").attr("text",result.human_error)
@@ -272,4 +279,3 @@ $ ->
     # Anything we always want done
     $("#search").attr("disabled",false)
     false
-  

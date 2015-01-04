@@ -327,7 +327,7 @@ performSearch = function() {
 };
 
 formatSearchResults = function(result, container) {
-  var data, headers, html, htmlClose, htmlHead;
+  var data, headers, html, htmlClose, htmlHead, targetCount;
   if (container == null) {
     container = searchParams.targetContainer;
   }
@@ -335,31 +335,36 @@ formatSearchResults = function(result, container) {
   searchParams.result = data;
   headers = new Array();
   html = "";
-  htmlHead = "<table>\n\t<tr>";
+  htmlHead = "<table id='cndb-result-list'>\n\t<tr class='cndb-row-headers'>";
   htmlClose = "</table>";
+  targetCount = toInt(result.count) - 1;
   return $.each(data, function(i, row) {
     var htmlRow, j, l;
-    if (i === 0) {
+    if (toInt(i) === 0) {
       j = 0;
+      htmlHead += "\n<!-- Table Headers -->";
+      console.log("Row:", row);
       $.each(row, function(k, v) {
+        console.log(k);
         htmlHead += "\n\t\t<th>" + k + "</th>";
         j++;
         if (j === Object.size(row)) {
-          return htmlHead += "\n\t</tr>";
+          htmlHead += "\n\t</tr>";
+          return htmlHead += "\n<!-- End Table Headers -->";
         }
       });
     }
-    htmlRow = "\n\t<tr id='cndb-row" + i + "'>";
+    htmlRow = "\n\t<tr id='cndb-row" + i + "' class='cndb-result-entry'>";
     l = 0;
     $.each(row, function(k, col) {
-      htmlRow += "\n\t\t<td id='" + k + "-" + i + "'>" + col + "</td>";
+      htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='" + k + "'>" + col + "</td>";
       l++;
       if (l === Object.size(row)) {
         htmlRow += "\n\t</tr>";
         return html += htmlRow;
       }
     });
-    if (i === Object.size(data)) {
+    if (toInt(i) === targetCount) {
       html = htmlHead + html + htmlClose;
       console.log("Processed " + i + " rows");
       return $(container).html(html);
@@ -383,6 +388,7 @@ $(function() {
   });
   return $.post(searchParams.targetApi, "", "json").done(function(result) {
     if (result.status === true) {
+      console.log("Got a valid result, formatting " + result.count + " results.");
       formatSearchResults(result);
       return false;
     }
