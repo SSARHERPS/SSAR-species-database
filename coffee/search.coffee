@@ -9,7 +9,7 @@ performSearch = ->
     $("#search-status").attr("text","Please enter a search term.")
     $("#search-status")[0].show()
     return false
-  console.log("Got search value #{s}")
+  console.log("Got search value #{s}, hitting","#{searchParams.targetApi}?#{args}")
   args = "q=#{s}"
   $.post(searchParams.targetApi,args,"json")
   .done (result) ->

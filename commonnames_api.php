@@ -189,6 +189,7 @@ function handleParamSearch($filter_params,$loose = false,$boolean_type = "AND", 
     {
       $result_vector[] = $row;
     }
+  $result_vector["query"] = $query;
   return $result_vector;
 }
 
@@ -200,7 +201,7 @@ $result_vector = array();
 if(empty($params) || !empty($search))
   {
     # There was either a parsing failure, or no filter set.
-    if(empty($search) || empty($params))
+    if(empty($search))
       {
         $search = "*"; # Wildcard it. Be greedy.
         $col = "species";
@@ -319,6 +320,7 @@ if(empty($params) || !empty($search))
                     if(is_string($r)) $error = $r;
                     else $error = $e;
                   }
+                # $result_vector["debug"] = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by,true);
               }
             else
               {

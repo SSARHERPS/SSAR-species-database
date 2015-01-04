@@ -303,7 +303,7 @@ performSearch = function() {
     $("#search-status")[0].show();
     return false;
   }
-  console.log("Got search value " + s);
+  console.log("Got search value " + s + ", hitting", "" + searchParams.targetApi + "?" + args);
   args = "q=" + s;
   return $.post(searchParams.targetApi, args, "json").done(function(result) {
     console.log("Search executed by " + result.method + " with " + result.count + " results.");
