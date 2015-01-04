@@ -18,11 +18,9 @@
  *****************/
 
 require_once("CONFIG.php");
-require_once(dirname(__FILE__)."/core/db/DBHelper.php");
+require_once(dirname(__FILE__)."/core/core.php");
 
-$db = new DBHelper($default_database,$default_sql_user,$default_sql_password);
-$db->setTable($default_table);
-$db->setCols($db_cols);
+$db = new DBHelper($default_database,$default_sql_user,$default_sql_password,$default_sql_url,$default_table,$db_cols);
 
 if(isset($_SERVER['QUERY_STRING'])) parse_str($_SERVER['QUERY_STRING'],$_REQUEST);
 
