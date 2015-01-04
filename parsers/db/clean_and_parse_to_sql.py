@@ -2,8 +2,8 @@
 
 import time, os, glob, sys, qinput, string, yn, json
 
-defaultFile = "../../ssar_predatabase.csv"
-outputFile = "../../ssar_predatabase_clean.csv"
+defaultFile = "../../sql_ref/ssar_predatabase.csv"
+outputFile = "../../sql_ref/ssar_predatabase_clean.csv"
 exitScriptPrompt = "Press Control-c to exit."
 default_table = "north_american_species"
 
