@@ -206,9 +206,9 @@ if(empty($params) || !empty($search))
         $col = "species";
         $params[$col] = $search;
         $loose = true;
-        $method = "full_list";
+        $method = "full_simple_list";
         $l = $db->openDB();
-        $query = "SELECT * FROM `".$db->getTable()."` ORDER BY ".$order_by;
+        $query = "SELECT ".$order_by." FROM `".$db->getTable()."` ORDER BY ".$order_by;
         $r = mysqli_query($l,$query);
         try
           {
