@@ -20,13 +20,9 @@
 require_once("CONFIG.php");
 require_once(dirname(__FILE__)."/core/db/DBHelper.php");
 
-$db = new DBHelper();
-$db->setSQLUser($default_sql_user);
-$db->setDB($default_database);
-$db->setSQLPW($default_sql_password);
-$db->setSQLURL($sql_url);
-$db->setCols($db_cols);
+$db = new DBHelper($default_database,$default_sql_user,$default_sql_password);
 $db->setTable($default_table);
+$db->setCols($db_cols);
 
 if(isset($_SERVER['QUERY_STRING'])) parse_str($_SERVER['QUERY_STRING'],$_REQUEST);
 
@@ -68,7 +64,7 @@ function returnAjax($data)
 
 function checkColumnExists($column_list)
 {
-  if empty($column_list) return true;
+  if(empty($column_list)) return true;
   global $db;
   $cols = $db->getColumns();
   foreach(explode(",",$column_list) as $colum)
@@ -188,7 +184,7 @@ function handleParamSearch($filter_params,$loose = false,$boolean_type = "AND", 
   $r = mysqli_query($l,$query);
   if($r === false)
     {
-      returnAjax("status"=>false,"error"=>mysqli_error($l),"human_error"=>"There was an error executing this query");
+      returnAjax(array("status"=>false,"error"=>mysqli_error($l),"human_error"=>"There was an error executing this query"));
     }
   $result_vector = array();
   while($row = mysqli_fetch_assoc($r))

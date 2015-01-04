@@ -291,7 +291,7 @@ $(function() {
 
 searchParams = new Object();
 
-searchParams.targetApi = "cndb/commonnames_api.php";
+searchParams.targetApi = "commonnames_api.php";
 
 searchParams.targetContainer = "#result_container";
 
