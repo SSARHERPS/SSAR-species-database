@@ -487,7 +487,7 @@ public function doQuery($search,$cols = "*",$boolean_type = "AND", $loose = fals
     }
   if($cols != "*") $col_selector = is_array($cols) ? "`".implode("`,`",$cols)."`":"`".$cols."`";
   else $col_selector = $cols;
-  if(strtolower($boolean_type) != "and" || strtolower($boolean_type) != "or") return false;
+  if(strtolower($boolean_type) != "and" && strtolower($boolean_type) != "or") return false;
   $where_arr = array();
   foreach($search as $col=>$crit)
     {
