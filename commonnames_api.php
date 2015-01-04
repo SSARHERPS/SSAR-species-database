@@ -207,7 +207,9 @@ if(empty($params) || !empty($search))
         $params[$col] = $search;
         $loose = true;
         $method = "full_list";
-        $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
+        $l = $db->openDB();
+        $query = "SELECT * FROM `".$db->getTable()."` ORDER BY ".$order_by;
+        $r = mysqli_query($l,$query);
         try
           {
             while($row = mysqli_fetch_assoc($r))
