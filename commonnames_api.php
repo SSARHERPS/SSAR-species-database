@@ -17,7 +17,8 @@
  * Setup
  *****************/
 
-require_once(dirname(__FILE__)."/db/DBHelper.php");
+require_once("CONFIG.php");
+require_once(dirname(__FILE__)."/core/db/DBHelper.php");
 
 $db = new DBHelper();
 $db->setSQLUser($default_sql_user);
