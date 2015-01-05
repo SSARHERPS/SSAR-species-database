@@ -335,6 +335,13 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
           # Empty placeholder
           alt = ""
         if k isnt alt
+          if k is "image"
+            if isNull(col)
+              # Get a CalPhotos link as
+              # http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=batrachoseps+attenuatus
+              col = "<a href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{row.genus}+#{row.species}' class='newwindow'>IMG</a>"
+            else
+              col = "<a href='#'>LOCAL IMG</a>"
           htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{k}'>#{col}</td>"
       l++
       if l is Object.size(row)
@@ -345,6 +352,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       html = htmlHead + html + htmlClose
       console.log("Processed #{toInt(i)+1} rows")
       $(container).html(html)
+      mapNewWindows()
       stopLoad()
 
 sortResults = (by_column) ->

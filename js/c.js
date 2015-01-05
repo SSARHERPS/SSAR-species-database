@@ -519,6 +519,13 @@ formatSearchResults = function(result, container) {
           alt = "";
         }
         if (k !== alt) {
+          if (k === "image") {
+            if (isNull(col)) {
+              col = "<a href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=" + row.genus + "+" + row.species + "' class='newwindow'>IMG</a>";
+            } else {
+              col = "<a href='#'>LOCAL IMG</a>";
+            }
+          }
           htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='" + k + "'>" + col + "</td>";
         }
       }
@@ -532,6 +539,7 @@ formatSearchResults = function(result, container) {
       html = htmlHead + html + htmlClose;
       console.log("Processed " + (toInt(i) + 1) + " rows");
       $(container).html(html);
+      mapNewWindows();
       return stopLoad();
     }
   });
