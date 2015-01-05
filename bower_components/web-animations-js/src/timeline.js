@@ -21,7 +21,7 @@
   };
 
   scope.AnimationTimeline.prototype = {
-    // FIXME: This needs to return the wrapped players in Web Animations Next
+    // FIXME: This needs to return the wrapped players in maxifill
     // TODO: Does this need to be sorted?
     // TODO: Do we need to consider needsRetick?
     getAnimationPlayers: function() {
@@ -36,7 +36,7 @@
     play: function(source) {
       var player = new scope.Player(source);
       this._players.push(player);
-      scope.restartWebAnimationsNextTick();
+      scope.restartMaxifillTick();
       player.play();
       return player;
     },
@@ -44,21 +44,21 @@
 
   var ticking = false;
 
-  scope.restartWebAnimationsNextTick = function() {
+  scope.restartMaxifillTick = function() {
     if (!ticking) {
       ticking = true;
-      requestAnimationFrame(webAnimationsNextTick);
+      requestAnimationFrame(maxifillTick);
     }
   };
 
-  function webAnimationsNextTick(t) {
+  function maxifillTick(t) {
     var timeline = window.document.timeline;
     timeline.currentTime = t;
     timeline._discardPlayers();
     if (timeline._players.length == 0)
       ticking = false;
     else
-      requestAnimationFrame(webAnimationsNextTick);
+      requestAnimationFrame(maxifillTick);
   }
 
   var timeline = new scope.AnimationTimeline();
@@ -74,4 +74,4 @@
     window.document.timeline = timeline;
   } catch (e) { }
 
-})(webAnimationsShared, webAnimationsNext, webAnimationsTesting);
+})(webAnimationsShared, webAnimationsMaxifill, webAnimationsTesting);

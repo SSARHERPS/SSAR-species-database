@@ -3,7 +3,7 @@
   var scopeSrc = [
       'src/scope.js'];
 
-  var webAnimations1Src = [
+  var minifillSrc = [
       'src/animation-node.js',
       'src/effect.js',
       'src/property-interpolation.js',
@@ -29,7 +29,7 @@
       'src/property-names.js',
   ];
 
-  var liteWebAnimations1Src = [
+  var liteMinifillSrc = [
       'src/animation-node.js',
       'src/effect.js',
       'src/property-interpolation.js',
@@ -53,18 +53,16 @@
 
   var sharedSrc = [
       'src/timing-utilities.js',
-      'src/normalize-keyframes.js',
-      'src/deprecation.js',
-  ];
+      'src/normalize-keyframes.js'];
 
-  var webAnimationsNextSrc = [
+  var maxifillSrc = [
       'src/timeline.js',
-      'src/web-animations-next-player.js',
+      'src/maxifill-player.js',
       'src/animation-constructor.js',
       'src/effect-callback.js',
       'src/group-constructors.js'];
 
-  var webAnimations1Test = [
+  var minifillTest = [
       'test/js/animation-node.js',
       'test/js/apply-preserving-inline-style.js',
       'test/js/box-handler.js',
@@ -81,7 +79,7 @@
       'test/js/timing.js',
       'test/js/transform-handler.js'];
 
-  var webAnimationsNextTest = webAnimations1Test.concat(
+  var maxifillTest = minifillTest.concat(
       'test/js/animation-constructor.js',
       'test/js/effect-callback.js',
       'test/js/group-constructors.js',
@@ -94,25 +92,25 @@
     'web-animations': {
       scopeSrc: scopeSrc,
       sharedSrc: sharedSrc,
-      webAnimations1Src: webAnimations1Src,
-      webAnimationsNextSrc: [],
-      src: scopeSrc.concat(sharedSrc).concat(webAnimations1Src),
-      test: webAnimations1Test,
+      minifillSrc: minifillSrc,
+      maxifillSrc: [],
+      src: scopeSrc.concat(sharedSrc).concat(minifillSrc),
+      test: minifillTest,
     },
     'web-animations-next': {
       scopeSrc: scopeSrc,
       sharedSrc: sharedSrc,
-      webAnimations1Src: webAnimations1Src,
-      webAnimationsNextSrc: webAnimationsNextSrc,
-      src: scopeSrc.concat(sharedSrc).concat(webAnimations1Src).concat(webAnimationsNextSrc),
-      test: webAnimationsNextTest,
+      minifillSrc: minifillSrc,
+      maxifillSrc: maxifillSrc,
+      src: scopeSrc.concat(sharedSrc).concat(minifillSrc).concat(maxifillSrc),
+      test: maxifillTest,
     },
     'web-animations-next-lite': {
       scopeSrc: scopeSrc,
       sharedSrc: sharedSrc,
-      webAnimations1Src: liteWebAnimations1Src,
-      webAnimationsNextSrc: webAnimationsNextSrc,
-      src: scopeSrc.concat(sharedSrc).concat(liteWebAnimations1Src).concat(webAnimationsNextSrc),
+      minifillSrc: liteMinifillSrc,
+      maxifillSrc: maxifillSrc,
+      src: scopeSrc.concat(sharedSrc).concat(liteMinifillSrc).concat(maxifillSrc),
       test: [],
     },
   };

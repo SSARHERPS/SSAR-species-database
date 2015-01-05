@@ -13,8 +13,8 @@
 // limitations under the License.
 
 var webAnimationsShared = {};
-var webAnimations1 = {};
-var webAnimationsNext = {};
+var webAnimationsMinifill = {};
+var webAnimationsMaxifill = {};
 
 if (!WEB_ANIMATIONS_TESTING)
   var webAnimationsTesting = null;

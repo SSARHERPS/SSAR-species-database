@@ -259,4 +259,4 @@
   if (WEB_ANIMATIONS_TESTING)
     testing.parseTransform = parseTransform;
 
-})(webAnimations1, webAnimationsTesting);
+})(webAnimationsMinifill, webAnimationsTesting);

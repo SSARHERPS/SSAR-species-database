@@ -47,7 +47,8 @@
     // Stores the inline style of the element on its behalf while the
     // polyfill uses the element's inline style to simulate web animations.
     // This is needed to fake regular inline style CSSOM access on the element.
-    this._surrogateStyle = document.createElementNS('http://www.w3.org/1999/xhtml', 'div').style;
+    this._surrogateElement = document.createElement('div');
+    this._surrogateStyle = this._surrogateElement.style;
     this._style = element.style;
     this._length = 0;
     this._isAnimatedProperty = {};
@@ -156,19 +157,10 @@
     if (element._webAnimationsPatchedStyle)
       return;
 
+    // If this style patch fails (on Safari and iOS) use the apply-preserving-inline-style-methods.js
+    // module instead and restrict inline style interactions to the methods listed in styleMethods.
     var animatedStyle = new AnimatedCSSStyleDeclaration(element);
-    try {
-      configureProperty(element, 'style', { get: function() { return animatedStyle; } });
-    } catch (_) {
-      // iOS and older versions of Safari (pre v7) do not support overriding an element's
-      // style object. Animations will clobber any inline styles as a result.
-      element.style._set = function(property, value) {
-        element.style[property] = value;
-      };
-      element.style._clear = function(property) {
-        element.style[property] = '';
-      };
-    }
+    configureProperty(element, 'style', { get: function() { return animatedStyle; } });
 
     // We must keep a handle on the patched style to prevent it from getting GC'd.
     element._webAnimationsPatchedStyle = element.style;
@@ -188,4 +180,4 @@
   if (WEB_ANIMATIONS_TESTING)
     testing.ensureStyleIsPatched = ensureStyleIsPatched;
 
-})(webAnimations1, webAnimationsTesting);
+})(webAnimationsMinifill, webAnimationsTesting);

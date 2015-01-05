@@ -82,4 +82,4 @@
 
   scope.addPropertiesHandler(parseShape, mergeShapes, ['shape-outside']);
 
-})(webAnimations1);
+})(webAnimationsMinifill);

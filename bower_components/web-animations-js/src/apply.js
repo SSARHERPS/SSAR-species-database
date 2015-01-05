@@ -22,4 +22,4 @@
     element.style[scope.propertyName(property)] = '';
   };
 
-})(webAnimations1, webAnimationsTesting);
+})(webAnimationsMinifill, webAnimationsTesting);

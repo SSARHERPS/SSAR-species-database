@@ -1,6 +1,6 @@
 suite('timing', function() {
   setup(function() {
-    webAnimations1.timeline._players = [];
+    webAnimationsMinifill.timeline._players = [];
   });
 
   test('pause and scrub', function() {

@@ -14,7 +14,7 @@
 
 (function(scope, testing) {
 
-  var canvas = document.createElementNS('http://www.w3.org/1999/xhtml', 'canvas');
+  var canvas = document.createElement('canvas');
   canvas.width = canvas.height = 1;
   var context = canvas.getContext('2d');
 
@@ -59,4 +59,4 @@
     testing.parseColor = parseColor;
   }
 
-})(webAnimations1, webAnimationsTesting);
+})(webAnimationsMinifill, webAnimationsTesting);

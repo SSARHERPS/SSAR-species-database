@@ -50,8 +50,7 @@
 
   function InternalTimeline() {
     this._players = [];
-    // Android 4.3 browser has window.performance, but not window.performance.now
-    this.currentTime = window.performance && performance.now ? performance.now() : 0;
+    this.currentTime = window.performance ? performance.now() : 0;
   };
 
   InternalTimeline.prototype = {
@@ -145,4 +144,4 @@
   var timeline = new InternalTimeline();
   scope.timeline = timeline;
 
-})(webAnimationsShared, webAnimations1, webAnimationsTesting);
+})(webAnimationsShared, webAnimationsMinifill, webAnimationsTesting);

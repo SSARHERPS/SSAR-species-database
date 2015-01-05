@@ -32,4 +32,4 @@
     return aliased[property] || property;
   };
 
-})(webAnimations1, webAnimationsTesting);
+})(webAnimationsMinifill, webAnimationsTesting);

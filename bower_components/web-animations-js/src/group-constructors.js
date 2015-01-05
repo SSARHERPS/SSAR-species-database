@@ -75,8 +75,7 @@
     player._player._wrapper = player;
     player._isGroup = true;
     scope.awaitStartTime(player);
-    player._updateChildren();
   };
 
 
-})(webAnimationsShared, webAnimationsNext, webAnimationsTesting);
+})(webAnimationsShared, webAnimationsMaxifill, webAnimationsTesting);

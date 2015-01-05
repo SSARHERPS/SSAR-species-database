@@ -46,4 +46,4 @@
     testing.interpolate = interpolate;
   }
 
-})(webAnimations1, webAnimationsTesting);
+})(webAnimationsMinifill, webAnimationsTesting);

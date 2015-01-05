@@ -174,4 +174,4 @@
   scope.mergeWrappedNestedRepeated = mergeWrappedNestedRepeated;
   scope.mergeList = mergeList;
 
-})(webAnimations1);
+})(webAnimationsMinifill);

@@ -13,7 +13,7 @@
 // limitations under the License.
 (function(shared, scope, testing) {
 
-  var nullTarget = document.createElementNS('http://www.w3.org/1999/xhtml', 'div');
+  var nullTarget = document.createElement('div');
 
   var sequenceNumber = 0;
   scope.bindPlayerForCustomEffect = function(player) {
@@ -83,4 +83,4 @@
       register(this._callback);
   };
 
-})(webAnimationsShared, webAnimationsNext, webAnimationsTesting);
+})(webAnimationsShared, webAnimationsMaxifill, webAnimationsTesting);
