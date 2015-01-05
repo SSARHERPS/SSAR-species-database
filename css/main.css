@@ -68,6 +68,10 @@ body {
 .cndb-result-entry:hover {
     background: rgba(0,0,0,.2)!important;
 }
+.cndb-result-entry td {
+    padding-left:.5rem;
+    padding-right:.5rem;
+}
 #search {
     position:relative;
     top:-3em;
@@ -85,4 +89,8 @@ body {
 }
 #loader.bad::shadow .circle {
     border-color:rgba(255,0,0,0.9);
+}
+paper-dropdown.dropdown {
+/* Override Bootstrap */
+    position:absolute;
 }

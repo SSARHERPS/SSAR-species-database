@@ -466,7 +466,9 @@ formatSearchResults = function(result, container) {
       $.each(row, function(k, v) {
         var niceKey;
         niceKey = k.replace("_", " ");
-        htmlHead += "\n\t\t<th>" + niceKey + "</th>";
+        if (niceKey !== "id" && niceKey !== "image") {
+          htmlHead += "\n\t\t<th class='text-center'>" + niceKey + "</th>";
+        }
         j++;
         if (j === Object.size(row)) {
           htmlHead += "\n\t</tr>";
@@ -477,7 +479,21 @@ formatSearchResults = function(result, container) {
     htmlRow = "\n\t<tr id='cndb-row" + i + "' class='cndb-result-entry'>";
     l = 0;
     $.each(row, function(k, col) {
-      htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='" + k + "'>" + col + "</td>";
+      var d, e, genus, species;
+      if (k !== "id" && k !== "image") {
+        if (k === "authority_year") {
+          try {
+            d = JSON.parse(col);
+            genus = Object.keys(d)[0];
+            species = d[genus];
+            col = "G: " + genus + "<br/>S: " + species;
+          } catch (_error) {
+            e = _error;
+            d = col;
+          }
+        }
+        htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='" + k + "'>" + col + "</td>";
+      }
       l++;
       if (l === Object.size(row)) {
         htmlRow += "\n\t</tr>";

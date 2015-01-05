@@ -295,7 +295,8 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       htmlHead += "\n<!-- Table Headers -->"
       $.each row, (k,v) ->
         niceKey = k.replace("_"," ")
-        htmlHead += "\n\t\t<th>#{niceKey}</th>"
+        if niceKey isnt "id" and niceKey isnt "image"
+          htmlHead += "\n\t\t<th class='text-center'>#{niceKey}</th>"
         j++
         if j is Object.size(row)
           htmlHead += "\n\t</tr>"
@@ -303,7 +304,17 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
     htmlRow = "\n\t<tr id='cndb-row#{i}' class='cndb-result-entry'>"
     l = 0
     $.each row, (k,col) ->
-      htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{k}'>#{col}</td>"
+      if k isnt "id" and k isnt "image"
+        if k is "authority_year"
+          try
+            d = JSON.parse(col)
+            genus = Object.keys(d)[0]
+            species = d[genus]
+            col = "G: #{genus}<br/>S: #{species}"
+          catch e
+            # Render as-is
+            d = col
+        htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{k}'>#{col}</td>"
       l++
       if l is Object.size(row)
         htmlRow += "\n\t</tr>"
