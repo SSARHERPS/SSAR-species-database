@@ -477,10 +477,17 @@ formatSearchResults = function(result, container) {
       j = 0;
       htmlHead += "\n<!-- Table Headers -->";
       $.each(row, function(k, v) {
-        var niceKey;
-        niceKey = k.replace("_", " ");
+        var alt, niceKey;
+        niceKey = k.replace(/_/g, " ");
         if (niceKey !== "id" && niceKey !== "image") {
-          htmlHead += "\n\t\t<th class='text-center'>" + niceKey + "</th>";
+          if ($("#show-deprecated").polymerSelected() !== true) {
+            alt = "deprecated_scientific";
+          } else {
+            alt = "";
+          }
+          if (k !== alt) {
+            htmlHead += "\n\t\t<th class='text-center'>" + niceKey + "</th>";
+          }
         }
         j++;
         if (j === Object.size(row)) {
@@ -492,7 +499,7 @@ formatSearchResults = function(result, container) {
     htmlRow = "\n\t<tr id='cndb-row" + i + "' class='cndb-result-entry'>";
     l = 0;
     $.each(row, function(k, col) {
-      var d, e, genus, species;
+      var alt, d, e, genus, species;
       if (k !== "id" && k !== "image") {
         if (k === "authority_year") {
           try {
@@ -505,7 +512,14 @@ formatSearchResults = function(result, container) {
             d = col;
           }
         }
-        htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='" + k + "'>" + col + "</td>";
+        if ($("#show-deprecated").polymerSelected() !== true) {
+          alt = "deprecated_scientific";
+        } else {
+          alt = "";
+        }
+        if (k !== alt) {
+          htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='" + k + "'>" + col + "</td>";
+        }
       }
       l++;
       if (l === Object.size(row)) {

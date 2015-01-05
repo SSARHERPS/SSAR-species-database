@@ -302,9 +302,15 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       j = 0
       htmlHead += "\n<!-- Table Headers -->"
       $.each row, (k,v) ->
-        niceKey = k.replace("_"," ")
+        niceKey = k.replace(/_/g," ")
         if niceKey isnt "id" and niceKey isnt "image"
-          htmlHead += "\n\t\t<th class='text-center'>#{niceKey}</th>"
+          if $("#show-deprecated").polymerSelected() isnt true
+            alt = "deprecated_scientific"
+          else
+            # Empty placeholder
+            alt = ""
+          if k isnt alt
+            htmlHead += "\n\t\t<th class='text-center'>#{niceKey}</th>"
         j++
         if j is Object.size(row)
           htmlHead += "\n\t</tr>"
@@ -322,7 +328,13 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
           catch e
             # Render as-is
             d = col
-        htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{k}'>#{col}</td>"
+        if $("#show-deprecated").polymerSelected() isnt true
+          alt = "deprecated_scientific"
+        else
+          # Empty placeholder
+          alt = ""
+        if k isnt alt
+          htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{k}'>#{col}</td>"
       l++
       if l is Object.size(row)
         htmlRow += "\n\t</tr>"
