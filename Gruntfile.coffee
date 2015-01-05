@@ -20,6 +20,8 @@ module.exports = (grunt) ->
         command: "cake min"
       bower:
         command: ["bower update"].join("&&")
+      minify:
+        command: ["java -jar yuicompressor.jar bower_components/purl/purl.js -o js/purl.min.js","java -jar yuicompressor.jar bower_components/xmlToJSON/lib/xmlToJSON.js -o js/xmlToJSON.min.js","java -jar yuicompressor.jar js/loadJQuery.js -o js/loadJQuery.min.js"].join("&&")
     coffee:
       compile:
         options:
@@ -36,6 +38,6 @@ module.exports = (grunt) ->
   # Now the tasks
   grunt.registerTask("default",["watch"])
   grunt.registerTask("compile","Compile coffeescript",["coffee:compile","shell:min"])
-  grunt.registerTask("update","Update bower dependencies",["shell:bower"])
+  grunt.registerTask("update","Update bower dependencies",["shell:bower","shell:minify"])
   grunt.registerTask "build","Compile and update, then watch", ->
     grunt.task.run("update","compile","default")
