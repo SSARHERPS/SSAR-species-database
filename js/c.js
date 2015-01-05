@@ -540,7 +540,7 @@ formatSearchResults = function(result, container) {
       $.each(row, function(k, v) {
         var alt, niceKey;
         niceKey = k.replace(/_/g, " ");
-        if (niceKey !== "id" && niceKey !== "image") {
+        if (niceKey !== "id") {
           if ($("#show-deprecated").polymerSelected() !== true) {
             alt = "deprecated_scientific";
           } else {
@@ -560,8 +560,8 @@ formatSearchResults = function(result, container) {
     htmlRow = "\n\t<tr id='cndb-row" + i + "' class='cndb-result-entry'>";
     l = 0;
     $.each(row, function(k, col) {
-      var alt, d, e, genus, species;
-      if (k !== "id" && k !== "image") {
+      var alt, d, e, genus, species, taxonQuery;
+      if (k !== "id") {
         if (k === "authority_year") {
           try {
             d = JSON.parse(col);
@@ -581,7 +581,11 @@ formatSearchResults = function(result, container) {
         if (k !== alt) {
           if (k === "image") {
             if (isNull(col)) {
-              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=" + row.genus + "+" + row.species + "' class='newwindow'></paper-icon-button>";
+              taxonQuery = "" + row.genus + "+" + row.species;
+              if (row.subspecies != null) {
+                taxonQuery = "" + taxonQuery + "+" + row.subspecies;
+              }
+              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=" + taxonQuery + "' class='newwindow'></paper-icon-button>";
             } else {
               col = "<paper-icon-button icon='image:image' data-lightbox='" + col + "' class='lightboximage'></paper-icon-button>";
             }

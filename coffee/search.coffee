@@ -61,7 +61,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       htmlHead += "\n<!-- Table Headers -->"
       $.each row, (k,v) ->
         niceKey = k.replace(/_/g," ")
-        if niceKey isnt "id" and niceKey isnt "image"
+        if niceKey isnt "id" #and niceKey isnt "image"
           if $("#show-deprecated").polymerSelected() isnt true
             alt = "deprecated_scientific"
           else
@@ -76,7 +76,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
     htmlRow = "\n\t<tr id='cndb-row#{i}' class='cndb-result-entry'>"
     l = 0
     $.each row, (k,col) ->
-      if k isnt "id" and k isnt "image"
+      if k isnt "id" #and k isnt "image"
         if k is "authority_year"
           try
             d = JSON.parse(col)
@@ -96,7 +96,10 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
             if isNull(col)
               # Get a CalPhotos link as
               # http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=batrachoseps+attenuatus
-              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{row.genus}+#{row.species}' class='newwindow'></paper-icon-button>"
+              taxonQuery = "#{row.genus}+#{row.species}"
+              if row.subspecies?
+                taxonQuery = "#{taxonQuery}+#{row.subspecies}"
+              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{taxonQuery}' class='newwindow'></paper-icon-button>"
             else
               col = "<paper-icon-button icon='image:image' data-lightbox='#{col}' class='lightboximage'></paper-icon-button>"
           htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{k}'>#{col}</td>"
