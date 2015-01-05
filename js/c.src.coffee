@@ -258,6 +258,7 @@ performSearch = ->
   animateLoad()
   if $("#strict-search").polymerSelected() isnt true
     s = s.toLowerCase()
+    s = "#{s}&loose=true"
   args = "q=#{s}"
   console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
   $.get(searchParams.targetApi,args,"json")

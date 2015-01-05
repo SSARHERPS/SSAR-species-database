@@ -427,6 +427,7 @@ performSearch = function() {
   animateLoad();
   if ($("#strict-search").polymerSelected() !== true) {
     s = s.toLowerCase();
+    s = "" + s + "&loose=true";
   }
   args = "q=" + s;
   console.log("Got search value " + s + ", hitting", "" + searchParams.apiPath + "?" + args);
