@@ -49,7 +49,7 @@ linnean_class # Deprecated, included for compatibility
 linnean_order # Deprecated, included for compatibility
 genus_authority #  eg, "Linnaeus"
 species_authority # eg, "Attenborough"
-authority_year # eg, {2013:2014}
+authority_year # eg, {2013:2014} in the format {"Genus Authority Year":"Species Authority Year"}
 notes # Miscellaneous notes
 image # hit calphotos api if this field is empty
 ```
