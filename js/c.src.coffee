@@ -1,6 +1,10 @@
 # Basic inits
 root = exports ? this
 
+uri = new Object()
+uri.o = $.url()
+uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host') + '/'
+
 isBool = (str) -> str is true or str is false
 
 isEmpty = (str) -> not str or str.length is 0
@@ -174,8 +178,11 @@ $ ->
     
 
 searchParams = new Object()
+searchParams.workingDir = "cndb"
 searchParams.targetApi = "commonnames_api.php"
 searchParams.targetContainer = "#result_container"
+uri.urlString = uri.urlString + searchParams.workingDir + "/"
+searchParams.apiPath = uri.urlString + searchParams.targetApi
 
 performSearch = ->
   # Do things
@@ -184,12 +191,16 @@ performSearch = ->
     $("#search-status").attr("text","Please enter a search term.")
     $("#search-status")[0].show()
     return false
-  console.log("Got search value #{s}, hitting","#{searchParams.targetApi}?#{args}")
   args = "q=#{s}"
-  $.post(searchParams.targetApi,args,"json")
+  console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
+  $.get(searchParams.targetApi,args,"json")
   .done (result) ->
     # Populate the result container
     console.log("Search executed by #{result.method} with #{result.count} results.")
+    if toInt(result.count) is 0
+      $("#search-status").attr("text","\"#{s}\" returned no results.")
+      $("#search-status")[0].show()
+      return false
     if result.status is true
       formatSearchResults(result)
       return false
@@ -219,10 +230,9 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
     if toInt(i) is 0
       j = 0
       htmlHead += "\n<!-- Table Headers -->"
-      console.log("Row:",row)
       $.each row, (k,v) ->
-        console.log(k)
-        htmlHead += "\n\t\t<th>#{k}</th>"
+        niceKey = k.replace("_"," ")
+        htmlHead += "\n\t\t<th>#{niceKey}</th>"
         j++
         if j is Object.size(row)
           htmlHead += "\n\t</tr>"
@@ -255,6 +265,9 @@ $ ->
   $("#search_form").submit (e) ->
     e.preventDefault()
     performSearch()
+  # Bind enter keydown
+  $("#search_form").keypress (e) ->
+    if e.which is 13 then performSearch()
   $("#do-search").click ->
     performSearch()
   # Do a fill of the result container

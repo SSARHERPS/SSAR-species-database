@@ -1,7 +1,13 @@
-var animateLoad, byteCount, delay, formatSearchResults, isBlank, isBool, isEmpty, isJson, isNull, isNumber, mapNewWindows, performSearch, root, roundNumber, searchParams, sortResults, stopLoad, stopLoadError, toFloat, toInt,
+var animateLoad, byteCount, delay, formatSearchResults, isBlank, isBool, isEmpty, isJson, isNull, isNumber, mapNewWindows, performSearch, root, roundNumber, searchParams, sortResults, stopLoad, stopLoadError, toFloat, toInt, uri,
   __slice = [].slice;
 
 root = typeof exports !== "undefined" && exports !== null ? exports : this;
+
+uri = new Object();
+
+uri.o = $.url();
+
+uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host') + '/';
 
 isBool = function(str) {
   return str === true || str === false;
@@ -291,9 +297,15 @@ $(function() {
 
 searchParams = new Object();
 
+searchParams.workingDir = "cndb";
+
 searchParams.targetApi = "commonnames_api.php";
 
 searchParams.targetContainer = "#result_container";
+
+uri.urlString = uri.urlString + searchParams.workingDir + "/";
+
+searchParams.apiPath = uri.urlString + searchParams.targetApi;
 
 performSearch = function() {
   var args, s;
@@ -303,10 +315,15 @@ performSearch = function() {
     $("#search-status")[0].show();
     return false;
   }
-  console.log("Got search value " + s + ", hitting", "" + searchParams.targetApi + "?" + args);
   args = "q=" + s;
-  return $.post(searchParams.targetApi, args, "json").done(function(result) {
+  console.log("Got search value " + s + ", hitting", "" + searchParams.apiPath + "?" + args);
+  return $.get(searchParams.targetApi, args, "json").done(function(result) {
     console.log("Search executed by " + result.method + " with " + result.count + " results.");
+    if (toInt(result.count) === 0) {
+      $("#search-status").attr("text", "\"" + s + "\" returned no results.");
+      $("#search-status")[0].show();
+      return false;
+    }
     if (result.status === true) {
       formatSearchResults(result);
       return false;
@@ -343,10 +360,10 @@ formatSearchResults = function(result, container) {
     if (toInt(i) === 0) {
       j = 0;
       htmlHead += "\n<!-- Table Headers -->";
-      console.log("Row:", row);
       $.each(row, function(k, v) {
-        console.log(k);
-        htmlHead += "\n\t\t<th>" + k + "</th>";
+        var niceKey;
+        niceKey = k.replace("_", " ");
+        htmlHead += "\n\t\t<th>" + niceKey + "</th>";
         j++;
         if (j === Object.size(row)) {
           htmlHead += "\n\t</tr>";
@@ -382,6 +399,11 @@ $(function() {
   $("#search_form").submit(function(e) {
     e.preventDefault();
     return performSearch();
+  });
+  $("#search_form").keypress(function(e) {
+    if (e.which === 13) {
+      return performSearch();
+    }
   });
   $("#do-search").click(function() {
     return performSearch();

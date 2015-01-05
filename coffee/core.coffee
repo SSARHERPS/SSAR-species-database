@@ -1,6 +1,10 @@
 # Basic inits
 root = exports ? this
 
+uri = new Object()
+uri.o = $.url()
+uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host') + '/'
+
 isBool = (str) -> str is true or str is false
 
 isEmpty = (str) -> not str or str.length is 0
