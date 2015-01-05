@@ -113,14 +113,24 @@ jQuery.fn.exists = function() {
 };
 
 jQuery.fn.polymerSelected = function(setSelected) {
-  var val;
+  var e, val;
   if (setSelected == null) {
     setSelected = void 0;
   }
   if (setSelected != null) {
-    return jQuery(this).prop("selected", setSelected);
+    try {
+      return jQuery(this).prop("selected", setSelected);
+    } catch (_error) {
+      e = _error;
+      return false;
+    }
   } else {
-    val = jQuery(this)[0].selected;
+    try {
+      val = jQuery(this)[0].selected;
+    } catch (_error) {
+      e = _error;
+      return false;
+    }
     if (val === "null" || (val == null)) {
       val = void 0;
     }
@@ -415,6 +425,9 @@ performSearch = function() {
     return false;
   }
   animateLoad();
+  if ($("#strict-search").polymerSelected() !== true) {
+    s = s.toLowerCase();
+  }
   args = "q=" + s;
   console.log("Got search value " + s + ", hitting", "" + searchParams.apiPath + "?" + args);
   return $.get(searchParams.targetApi, args, "json").done(function(result) {

@@ -66,9 +66,15 @@ jQuery.fn.polymerSelected = (setSelected = undefined) ->
   # See
   # https://www.polymer-project.org/docs/elements/paper-elements.html#paper-dropdown-menu
   if setSelected?
-    jQuery(this).prop("selected",setSelected)
+    try
+      jQuery(this).prop("selected",setSelected)
+    catch e
+      return false
   else
-    val = jQuery(this)[0].selected
+    try
+      val = jQuery(this)[0].selected
+    catch e
+      return false
     if val is "null" or not val?
       val = undefined
     val

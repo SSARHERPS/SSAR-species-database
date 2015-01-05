@@ -13,6 +13,8 @@ performSearch = ->
     $("#search-status")[0].show()
     return false
   animateLoad()
+  if $("#strict-search").polymerSelected() isnt true
+    s = s.toLowerCase()
   args = "q=#{s}"
   console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
   $.get(searchParams.targetApi,args,"json")
