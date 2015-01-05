@@ -1,4 +1,4 @@
-var animateLoad, byteCount, delay, formatSearchResults, isBlank, isBool, isEmpty, isJson, isNull, isNumber, mapNewWindows, performSearch, root, roundNumber, searchParams, sortResults, stopLoad, stopLoadError, toFloat, toInt, uri,
+var animateLoad, byteCount, delay, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, mapNewWindows, openLink, openTab, performSearch, randomInt, root, roundNumber, searchParams, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
   __slice = [].slice;
 
 root = typeof exports !== "undefined" && exports !== null ? exports : this;
@@ -80,6 +80,10 @@ Boolean.prototype.toBool = function() {
   return this.toString() === 'true';
 };
 
+Number.prototype.toBool = function() {
+  return this === 1;
+};
+
 Object.size = function(obj) {
   var key, size;
   size = 0;
@@ -108,6 +112,46 @@ jQuery.fn.exists = function() {
   return jQuery(this).length > 0;
 };
 
+jQuery.fn.polymerSelected = function(setSelected) {
+  var val;
+  if (setSelected == null) {
+    setSelected = void 0;
+  }
+  if (setSelected != null) {
+    return jQuery(this).prop("selected", setSelected);
+  } else {
+    val = jQuery(this)[0].selected;
+    if (val === "null" || (val == null)) {
+      val = void 0;
+    }
+    return val;
+  }
+};
+
+jQuery.fn.polymerChecked = function(setChecked) {
+  var val;
+  if (setChecked == null) {
+    setChecked = void 0;
+  }
+  if (setChecked != null) {
+    return jQuery(this).prop("checked", setChecked);
+  } else {
+    val = jQuery(this)[0].checked;
+    if (val === "null" || (val == null)) {
+      val = void 0;
+    }
+    return val;
+  }
+};
+
+jQuery.fn.isVisible = function() {
+  return jQuery(this).css("display") !== "none";
+};
+
+jQuery.fn.hasChildren = function() {
+  return Object.size(jQuery(this).children()) > 3;
+};
+
 byteCount = (function(_this) {
   return function(s) {
     return encodeURI(s).split(/%..|./).length - 1;
@@ -117,6 +161,24 @@ byteCount = (function(_this) {
 function shuffle(o) { //v1.0
     for (var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
     return o;
+};
+
+randomInt = function(lower, upper) {
+  var start, _ref, _ref1;
+  if (lower == null) {
+    lower = 0;
+  }
+  if (upper == null) {
+    upper = 1;
+  }
+  start = Math.random();
+  if (lower == null) {
+    _ref = [0, lower], lower = _ref[0], upper = _ref[1];
+  }
+  if (lower > upper) {
+    _ref1 = [upper, lower], lower = _ref1[0], upper = _ref1[1];
+  }
+  return Math.floor(start * (upper - lower + 1) + lower);
 };
 
 window.debounce_timer = null;
@@ -200,34 +262,80 @@ mapNewWindows = function() {
   });
 };
 
+toastStatusMessage = function(message, className, duration, selector) {
+  var html;
+  if (className == null) {
+    className = "error";
+  }
+  if (duration == null) {
+    duration = 3000;
+  }
+  if (selector == null) {
+    selector = "#status-message";
+  }
+
+  /*
+   * Pop up a status message
+   */
+  if (!isNumber(duration)) {
+    duration = 3000;
+  }
+  if (selector.slice(0, 1) === !"#") {
+    selector = "#" + selector;
+  }
+  if (!$(selector).exists()) {
+    html = "<paper-toast id=\"" + (selector.slice(1)) + "\" duration=\"" + duration + "\"></paper-toast>";
+    $(html).appendTo("body");
+  }
+  $(selector).attr("text", message);
+  $(selector).addClass(className);
+  $(selector)[0].show();
+  return delay(duration + 500, function() {
+    $(selector).empty();
+    $(selector).removeClass(className);
+    return $(selector).attr("text", "");
+  });
+};
+
+openLink = function(url) {
+  if (url == null) {
+    return false;
+  }
+  window.open(url);
+  return false;
+};
+
+openTab = function(url) {
+  return openLink(url);
+};
+
+goTo = function(url) {
+  if (url == null) {
+    return false;
+  }
+  window.location.href = url;
+  return false;
+};
+
 animateLoad = function(d, elId) {
-  var big, e, offset, offset2, sm_d, small;
+  var e, selector;
   if (d == null) {
     d = 50;
   }
   if (elId == null) {
-    elId = "#status-container";
+    elId = "loader";
+  }
+  if (elId.slice(0, 1) === "#") {
+    selector = elId;
+    elId = elId.slice(1);
+  } else {
+    selector = "#" + elId;
   }
   try {
-    if ($(elId).exists()) {
-      sm_d = roundNumber(d * .5);
-      big = $(elId).find('.ball');
-      small = $(elId).find('.ball1');
-      big.removeClass('stop hide');
-      big.css({
-        width: "" + d + "px",
-        height: "" + d + "px"
-      });
-      offset = roundNumber(d / 2 + sm_d / 2 + 9);
-      offset2 = roundNumber((d + 10) / 2 - (sm_d + 6) / 2);
-      small.removeClass('stop hide');
-      small.css({
-        width: "" + sm_d + "px",
-        height: "" + sm_d + "px",
-        top: "-" + offset + "px",
-        'margin-left': "" + offset2 + "px"
-      });
-      return true;
+    if (!$(selector).exists()) {
+      $("body").append("<paper-spinner id=\"" + elId + "\" active></paper-spinner");
+    } else {
+      $(selector).attr("active", true);
     }
     return false;
   } catch (_error) {
@@ -237,21 +345,22 @@ animateLoad = function(d, elId) {
 };
 
 stopLoad = function(elId) {
-  var big, e, small;
+  var e, selector;
   if (elId == null) {
-    elId = "#status-container";
+    elId = "loader";
+  }
+  if (elId.slice(0, 1) === "#") {
+    selector = elId;
+    elId = elId.slice(1);
+  } else {
+    selector = "#" + elId;
   }
   try {
-    if ($(elId).exists()) {
-      big = $(elId).find('.ball');
-      small = $(elId).find('.ball1');
-      big.addClass('bballgood ballgood');
-      small.addClass('bballgood ball1good');
-      return delay(250, function() {
-        big.addClass('stop hide');
-        big.removeClass('bballgood ballgood');
-        small.addClass('stop hide');
-        return small.removeClass('bballgood ball1good');
+    if ($(selector).exists()) {
+      $(selector).addClass("good");
+      return delay(1000, function() {
+        $(selector).removeClass("good");
+        return $(selector).attr("active", false);
       });
     }
   } catch (_error) {
@@ -261,21 +370,22 @@ stopLoad = function(elId) {
 };
 
 stopLoadError = function(elId) {
-  var big, e, small;
+  var e, selector;
   if (elId == null) {
-    elId = "#status-container";
+    elId = "loader";
+  }
+  if (elId.slice(0, 1) === "#") {
+    selector = elId;
+    elId = elId.slice(1);
+  } else {
+    selector = "#" + elId;
   }
   try {
-    if ($(elId).exists()) {
-      big = $(elId).find('.ball');
-      small = $(elId).find('.ball1');
-      big.addClass('bballerror ballerror');
-      small.addClass('bballerror ball1error');
-      return delay(1500, function() {
-        big.addClass('stop hide');
-        big.removeClass('bballerror ballerror');
-        small.addClass('stop hide');
-        return small.removeClass('bballerror ball1error');
+    if ($(selector).exists()) {
+      $(selector).addClass("bad");
+      return delay(3000, function() {
+        $(selector).removeClass("bad");
+        return $(selector).attr("active", false);
       });
     }
   } catch (_error) {
@@ -283,17 +393,6 @@ stopLoadError = function(elId) {
     return console.log('Could not stop load error animation', e.message);
   }
 };
-
-$(function() {
-  var e;
-  try {
-    window.picturefill();
-  } catch (_error) {
-    e = _error;
-    console.log("Could not execute picturefill.");
-  }
-  return mapNewWindows();
-});
 
 searchParams = new Object();
 
