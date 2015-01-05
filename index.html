@@ -7,6 +7,7 @@
     <link rel="stylesheet" type="text/css" media="screen" href="css/main.css"/>
     <link href="https://fonts.googleapis.com/css?family=Droid+Sans:400,700|Droid+Sans+Mono|Roboto:400,100,300,500,700,100italic,300italic,400italic,500italic,700italic" rel='stylesheet' type='text/css'/>
     <script src="bower_components/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="bower_components/font-roboto/roboto.html"/>
     <link rel="import" href="bower_components/polymer/polymer.html"/>
     <link rel="import" href="bower_components/paper-elements/paper-elements.html"/>
     <link rel="import" href="bower_components/core-elements/core-elements.html"/>
@@ -19,18 +20,24 @@
       <paper-fab id="do-search" icon="search" raisedButton class="materialblue"></paper-fab>
       <br/>
       <br/>
-      <label for="type">Restrict to:</label>
-      <core-dropdown id="type" name="type" selected="any" valueattr="data-type">
-        <core-item label="All" data-type="any"></core-item>
-        <core-item label="Non-Snake Lizards" data-type="squamata"></core-item>
-        <core-item label="Snakes" data-type="serpentes"></core-item>
-        <core-item label="Turtles" data-type="testudines"></core-item>
-        <core-item label="Crocodiles &amp; Alligators" data-type="crocodylia"></core-item>
-        <core-item label="Salamanders" data-type="caudata"></core-item>
-        <core-item label="Frogs" data-type="anura"></core-item>
-        <core-item label="Caecilians" data-type="gymnophiona"></core-item>
-        <!-- As per flag 4 in readme -->
-      </core-dropdown>
+      <core-label>
+        <span class="sr-only">Clade Restriction</span>
+        <paper-dropdown-menu label="Clade Restriction" for>
+          <paper-dropdown id="type" name="type" selected="any" valueattr="data-type" class="dropdown">
+            <core-menu class="menu">
+              <paper-item data-type="any">All</paper-item>
+              <paper-item data-type="squamata">Non-Snake Lizards</paper-item>
+              <paper-item data-type="serpentes">Snakes</paper-item>
+              <paper-item data-type="testudines">Turtles</paper-item>
+              <paper-item data-type="crocodylia">Crocodiles &amp; Alligators</paper-item>
+              <paper-item data-type="caudata">Salamanders</paper-item>
+              <paper-item data-type="anura">Frogs</paper-item>
+              <paper-item data-type="gymnophiona">Caecilians</paper-item>
+              <!-- As per flag 4 in readme -->
+            </core-menu>
+          </paper-dropdown>
+        </paper-dropdown-menu>
+      </core-label>
       <fieldset>
         <legend>Options</legend>
         List of options with "restrict to" and "include", corresponding to 2 and 3 in readme

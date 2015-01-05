@@ -414,6 +414,7 @@ performSearch = function() {
     $("#search-status")[0].show();
     return false;
   }
+  animateLoad();
   args = "q=" + s;
   console.log("Got search value " + s + ", hitting", "" + searchParams.apiPath + "?" + args);
   return $.get(searchParams.targetApi, args, "json").done(function(result) {
@@ -421,6 +422,7 @@ performSearch = function() {
     if (toInt(result.count) === 0) {
       $("#search-status").attr("text", "\"" + s + "\" returned no results.");
       $("#search-status")[0].show();
+      stopLoadError();
       return false;
     }
     if (result.status === true) {
@@ -430,13 +432,15 @@ performSearch = function() {
     $("#search-status").attr("text", result.human_error);
     $("#search-status")[0].show();
     console.error(result.error);
-    return console.warn(result);
+    console.warn(result);
+    return stopLoadError();
   }).fail(function(result, error) {
     console.error("There was an error performing the search");
     console.warn(result, error, result.statusText);
     error = "" + result.status + " - " + result.statusText;
     $("#search-status").attr("text", "Couldn't execute the search - " + error);
-    return $("#search-status")[0].show();
+    $("#search-status")[0].show();
+    return stopLoadError();
   }).always(function() {
     return false;
   });
@@ -482,8 +486,9 @@ formatSearchResults = function(result, container) {
     });
     if (toInt(i) === targetCount) {
       html = htmlHead + html + htmlClose;
-      console.log("Processed " + i + " rows");
-      return $(container).html(html);
+      console.log("Processed " + (toInt(i) + 1) + " rows");
+      $(container).html(html);
+      return stopLoad();
     }
   });
 };
@@ -495,6 +500,7 @@ sortResults = function(by_column) {
 
 $(function() {
   console.log("Doing onloads ...");
+  animateLoad();
   $("#search_form").submit(function(e) {
     e.preventDefault();
     return performSearch();
@@ -516,13 +522,15 @@ $(function() {
     $("#search-status").attr("text", result.human_error);
     $("#search-status")[0].show();
     console.error(result.error);
-    return console.warn(result);
+    console.warn(result);
+    return stopLoadError();
   }).fail(function(result, error) {
     console.error("There was an error loading the generic table");
     console.warn(result, error, result.statusText);
     error = "" + result.status + " - " + result.statusText;
     $("#search-status").attr("text", "Couldn't load table - " + error);
-    return $("#search-status")[0].show();
+    $("#search-status")[0].show();
+    return stopLoadError();
   }).always(function() {
     $("#search").attr("disabled", false);
     return false;

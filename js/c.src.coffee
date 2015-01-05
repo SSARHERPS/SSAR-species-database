@@ -249,6 +249,7 @@ performSearch = ->
     $("#search-status").attr("text","Please enter a search term.")
     $("#search-status")[0].show()
     return false
+  animateLoad()
   args = "q=#{s}"
   console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
   $.get(searchParams.targetApi,args,"json")
@@ -258,6 +259,7 @@ performSearch = ->
     if toInt(result.count) is 0
       $("#search-status").attr("text","\"#{s}\" returned no results.")
       $("#search-status")[0].show()
+      stopLoadError()
       return false
     if result.status is true
       formatSearchResults(result)
@@ -266,12 +268,14 @@ performSearch = ->
     $("#search-status")[0].show()
     console.error(result.error)
     console.warn(result)
+    stopLoadError()
   .fail (result,error) ->
     console.error("There was an error performing the search")
     console.warn(result,error,result.statusText)
     error = "#{result.status} - #{result.statusText}"
     $("#search-status").attr("text","Couldn't execute the search - #{error}")
     $("#search-status")[0].show()
+    stopLoadError()
   .always ->
     # Anything we always want done
     false
@@ -283,6 +287,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
   html = ""
   htmlHead = "<table id='cndb-result-list'>\n\t<tr class='cndb-row-headers'>"
   htmlClose = "</table>"
+  # We start at 0, so we want to count one below
   targetCount = toInt(result.count)-1
   $.each data, (i,row) ->
     if toInt(i) is 0
@@ -306,8 +311,9 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
     # Check if we're done
     if toInt(i) is targetCount
       html = htmlHead + html + htmlClose
-      console.log("Processed #{i} rows")
+      console.log("Processed #{toInt(i)+1} rows")
       $(container).html(html)
+      stopLoad()
 
 sortResults = (by_column) ->
   # Somethign clever -- look at each of the by_column points, then
@@ -320,6 +326,7 @@ sortResults = (by_column) ->
 $ ->
   # Do bindings
   console.log("Doing onloads ...")
+  animateLoad()
   $("#search_form").submit (e) ->
     e.preventDefault()
     performSearch()
@@ -340,12 +347,14 @@ $ ->
     $("#search-status")[0].show()
     console.error(result.error)
     console.warn(result)
+    stopLoadError()
   .fail (result,error) ->
     console.error("There was an error loading the generic table")
     console.warn(result,error,result.statusText)
     error = "#{result.status} - #{result.statusText}"
     $("#search-status").attr("text","Couldn't load table - #{error}")
     $("#search-status")[0].show()
+    stopLoadError()
   .always ->
     # Anything we always want done
     $("#search").attr("disabled",false)
