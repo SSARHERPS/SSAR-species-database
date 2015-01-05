@@ -477,8 +477,9 @@ uri.urlString = uri.urlString + searchParams.workingDir + "/";
 searchParams.apiPath = uri.urlString + searchParams.targetApi;
 
 performSearch = function() {
-  var args, s;
+  var args, s, sOrig;
   s = $("#search").val();
+  sOrig = s;
   if (isNull(s)) {
     $("#search-status").attr("text", "Please enter a search term.");
     $("#search-status")[0].show();
@@ -494,7 +495,7 @@ performSearch = function() {
   return $.get(searchParams.targetApi, args, "json").done(function(result) {
     console.log("Search executed by " + result.method + " with " + result.count + " results.");
     if (toInt(result.count) === 0) {
-      $("#search-status").attr("text", "\"" + s + "\" returned no results.");
+      $("#search-status").attr("text", "\"" + sOrig + "\" returned no results.");
       $("#search-status")[0].show();
       stopLoadError();
       return false;
