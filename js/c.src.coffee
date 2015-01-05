@@ -149,6 +149,9 @@ mapNewWindows = ->
     # Add a click and keypress listener to
     # open links with this class in a new window
     curHref = $(this).attr("href")
+    if not curHref?
+      # Support non-standard elements
+      curHref = $(this).attr("data-href")
     openInNewWindow = (url) ->
       if not url? then return false
       window.open(url)
@@ -373,9 +376,9 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
             if isNull(col)
               # Get a CalPhotos link as
               # http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=batrachoseps+attenuatus
-              col = "<a href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{row.genus}+#{row.species}' class='newwindow'>IMG</a>"
+              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{row.genus}+#{row.species}' class='newwindow'></paper-icon-button>"
             else
-              col = "<a href='#{col}' class='lightboximage'>LOCAL IMG</a>"
+              col = "<paper-icon-button icon='image:image' data-lightbox='#{col}' class='lightboximage'></paper-icon-button>"
           htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{k}'>#{col}</td>"
       l++
       if l is Object.size(row)

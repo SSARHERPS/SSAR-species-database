@@ -256,6 +256,9 @@ mapNewWindows = function() {
   return $(".newwindow").each(function() {
     var curHref, openInNewWindow;
     curHref = $(this).attr("href");
+    if (curHref == null) {
+      curHref = $(this).attr("data-href");
+    }
     openInNewWindow = function(url) {
       if (url == null) {
         return false;
@@ -578,9 +581,9 @@ formatSearchResults = function(result, container) {
         if (k !== alt) {
           if (k === "image") {
             if (isNull(col)) {
-              col = "<a href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=" + row.genus + "+" + row.species + "' class='newwindow'>IMG</a>";
+              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=" + row.genus + "+" + row.species + "' class='newwindow'></paper-icon-button>";
             } else {
-              col = "<a href='" + col + "' class='lightboximage'>LOCAL IMG</a>";
+              col = "<paper-icon-button icon='image:image' data-lightbox='" + col + "' class='lightboximage'></paper-icon-button>";
             }
           }
           htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='" + k + "'>" + col + "</td>";

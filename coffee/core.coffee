@@ -149,6 +149,9 @@ mapNewWindows = ->
     # Add a click and keypress listener to
     # open links with this class in a new window
     curHref = $(this).attr("href")
+    if not curHref?
+      # Support non-standard elements
+      curHref = $(this).attr("data-href")
     openInNewWindow = (url) ->
       if not url? then return false
       window.open(url)
