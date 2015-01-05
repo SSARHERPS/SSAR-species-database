@@ -98,7 +98,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
               # http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=batrachoseps+attenuatus
               col = "<a href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{row.genus}+#{row.species}' class='newwindow'>IMG</a>"
             else
-              col = "<a href='#'>LOCAL IMG</a>"
+              col = "<a href='#{col}' class='lightboximage'>LOCAL IMG</a>"
           htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{k}'>#{col}</td>"
       l++
       if l is Object.size(row)
@@ -110,6 +110,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       console.log("Processed #{toInt(i)+1} rows")
       $(container).html(html)
       mapNewWindows()
+      lightboxImages()
       stopLoad()
 
 sortResults = (by_column) ->

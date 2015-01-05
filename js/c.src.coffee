@@ -240,6 +240,40 @@ stopLoadError = (elId="loader") ->
   catch e
     console.log('Could not stop load error animation', e.message);
 
+lightboxImages = (selector = ".lightboximage") ->
+  options =
+      onStart: ->
+        overlayOn()
+      onEnd: ->
+        overlayOff()
+        activityIndicatorOff()
+      onLoadStart: ->
+        activityIndicatorOn()
+      onLoadEnd: ->
+        activityIndicatorOff()
+      allowedTypes: 'png|jpg|jpeg|gif'
+  ###
+  $(selector).has("img").each ->
+    if not $(this).attr("nolightbox")?
+      $(this).imageLightbox(options)
+  ###
+  # Until these narrower selectors work, let's use this
+  $(selector).imageLightbox(options)
+
+activityIndicatorOn = ->
+  $('<div id="imagelightbox-loading"><div></div></div>' ).appendTo('body')
+activityIndicatorOff = ->
+  $('#imagelightbox-loading').remove()
+overlayOn = ->
+  $('<div id="imagelightbox-overlay"></div>').appendTo('body')
+overlayOff = ->
+  $('#imagelightbox-overlay').remove()
+
+formatScientificNames = (selector = ".sciname") ->
+    $(".sciname").each ->
+      # Is it italic?
+      nameStyle = if $(this).css("font-style") is "italic" then "normal" else "italic"
+      $(this).css("font-style",nameStyle)
 
 searchParams = new Object()
 searchParams.workingDir = "cndb"
@@ -341,7 +375,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
               # http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=batrachoseps+attenuatus
               col = "<a href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{row.genus}+#{row.species}' class='newwindow'>IMG</a>"
             else
-              col = "<a href='#'>LOCAL IMG</a>"
+              col = "<a href='#{col}' class='lightboximage'>LOCAL IMG</a>"
           htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{k}'>#{col}</td>"
       l++
       if l is Object.size(row)
@@ -353,6 +387,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       console.log("Processed #{toInt(i)+1} rows")
       $(container).html(html)
       mapNewWindows()
+      lightboxImages()
       stopLoad()
 
 sortResults = (by_column) ->

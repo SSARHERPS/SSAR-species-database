@@ -1,4 +1,4 @@
-var animateLoad, byteCount, delay, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, mapNewWindows, openLink, openTab, performSearch, randomInt, root, roundNumber, searchParams, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, byteCount, delay, formatScientificNames, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, mapNewWindows, openLink, openTab, overlayOff, overlayOn, performSearch, randomInt, root, roundNumber, searchParams, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
   __slice = [].slice;
 
 root = typeof exports !== "undefined" && exports !== null ? exports : this;
@@ -404,6 +404,63 @@ stopLoadError = function(elId) {
   }
 };
 
+lightboxImages = function(selector) {
+  var options;
+  if (selector == null) {
+    selector = ".lightboximage";
+  }
+  options = {
+    onStart: function() {
+      return overlayOn();
+    },
+    onEnd: function() {
+      overlayOff();
+      return activityIndicatorOff();
+    },
+    onLoadStart: function() {
+      return activityIndicatorOn();
+    },
+    onLoadEnd: function() {
+      return activityIndicatorOff();
+    },
+    allowedTypes: 'png|jpg|jpeg|gif'
+  };
+
+  /*
+  $(selector).has("img").each ->
+    if not $(this).attr("nolightbox")?
+      $(this).imageLightbox(options)
+   */
+  return $(selector).imageLightbox(options);
+};
+
+activityIndicatorOn = function() {
+  return $('<div id="imagelightbox-loading"><div></div></div>').appendTo('body');
+};
+
+activityIndicatorOff = function() {
+  return $('#imagelightbox-loading').remove();
+};
+
+overlayOn = function() {
+  return $('<div id="imagelightbox-overlay"></div>').appendTo('body');
+};
+
+overlayOff = function() {
+  return $('#imagelightbox-overlay').remove();
+};
+
+formatScientificNames = function(selector) {
+  if (selector == null) {
+    selector = ".sciname";
+  }
+  return $(".sciname").each(function() {
+    var nameStyle;
+    nameStyle = $(this).css("font-style") === "italic" ? "normal" : "italic";
+    return $(this).css("font-style", nameStyle);
+  });
+};
+
 searchParams = new Object();
 
 searchParams.workingDir = "cndb";
@@ -523,7 +580,7 @@ formatSearchResults = function(result, container) {
             if (isNull(col)) {
               col = "<a href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=" + row.genus + "+" + row.species + "' class='newwindow'>IMG</a>";
             } else {
-              col = "<a href='#'>LOCAL IMG</a>";
+              col = "<a href='" + col + "' class='lightboximage'>LOCAL IMG</a>";
             }
           }
           htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='" + k + "'>" + col + "</td>";
@@ -540,6 +597,7 @@ formatSearchResults = function(result, container) {
       console.log("Processed " + (toInt(i) + 1) + " rows");
       $(container).html(html);
       mapNewWindows();
+      lightboxImages();
       return stopLoad();
     }
   });
