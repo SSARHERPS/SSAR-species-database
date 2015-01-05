@@ -601,6 +601,7 @@ formatSearchResults = function(result, container) {
       $(container).html(html);
       mapNewWindows();
       lightboxImages();
+      $("#result-count").text(" - " + result.count + " entries");
       return stopLoad();
     }
   });

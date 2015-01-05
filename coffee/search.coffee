@@ -111,6 +111,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       $(container).html(html)
       mapNewWindows()
       lightboxImages()
+      $("#result-count").text(" - #{result.count} entries")
       stopLoad()
 
 sortResults = (by_column) ->

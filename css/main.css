@@ -52,7 +52,7 @@ body {
     color: #607d8b;
     
 }
-.genus,.genus_authority,.species_authority {
+.genus,.genus_authority,.species_authority,.common_name {
     text-transform:capitalize;
 }
 .genus,.species,.subspecies {
@@ -67,6 +67,7 @@ body {
 }
 .cndb-result-entry:hover {
     background: rgba(0,0,0,.2)!important;
+    transition: all .2s ease-out;
 }
 .cndb-result-entry td {
     padding-left:.5rem;
