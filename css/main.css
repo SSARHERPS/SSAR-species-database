@@ -1,3 +1,7 @@
+body {
+    
+}
+
 .materialblue {
     background:#5677fc;
     color:#fff;
@@ -62,4 +66,11 @@
 }
 .cndb-result-entry:hover {
     background: rgba(0,0,0,.2)!important;
+}
+#search {
+    position:relative;
+    top:-3em;
+}
+#search_form {
+    position:relative;
 }
