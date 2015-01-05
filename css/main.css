@@ -1,5 +1,6 @@
 body {
-    font-family:"Roboto","Droid Sans","Helvetica Neue","Helvetica","Veranda",sans-serif;
+    font-family:"Roboto","Droid Sans","Helvetica Neue","Helvetica","Veranda",sans-serif !important;
+    padding:1rem;
 }
 
 .materialblue {
