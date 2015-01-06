@@ -99,9 +99,9 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
               # Get a CalPhotos link as
               # http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=batrachoseps+attenuatus
               taxonQuery = "#{row.genus}+#{row.species}"
-              if row.subspecies?
+              if not isNull(row.subspecies)
                 taxonQuery = "#{taxonQuery}+#{row.subspecies}"
-              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{taxonQuery}' class='newwindow'></paper-icon-button>"
+              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{taxonQuery}' class='newwindow calphoto' data-taxon=\"#{taxonQuery}\"></paper-icon-button>"
             else
               col = "<paper-icon-button icon='image:image' data-lightbox='#{col}' class='lightboximage'></paper-icon-button>"
           htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{k}'>#{col}</td>"
@@ -118,6 +118,40 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       lightboxImages()
       $("#result-count").text(" - #{result.count} entries")
       stopLoad()
+      # Lazy-replace linkout calphotos with images. Each one needs a hit!
+      # deferCalPhotos()
+
+deferCalPhotos = (selector = ".calphoto") ->
+  ###
+  # Defer renders of calphoto linkouts
+  # Hit targets of form
+  # http://calphotos.berkeley.edu/cgi-bin/img_query?getthumbinfo=1&num=all&taxon=Acris+crepitans&format=xml
+  ###
+  count = $(selector).length
+  cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query"
+  i = 0
+  $(selector).each ->
+    i++
+    thisLinkout = $(this)
+    taxon = thisLinkout.attr("data-taxon")
+    args = "getthumbinfo=1&num=all&cconly=1&taxon=#{taxon}&format=xml"
+    $.get(cpUrl,args)
+    .done (resultXml) ->
+      result = xmlToJSON.parseString(resultXml)
+      data = result.xml.calphotos
+      thumb = data.thumb_url
+      large = data.enlarge_jpeg_url
+      link = data.enlarge_url
+      # Render a thumbnail that onclick will lightbox
+      html = "<a href='#{large}' class='calphoto-img-anchor'><img src='#{thumb}' data-href='#{link}' class='calphoto-img-thumb' data-taxon='#{taxon}'/></a>"
+      thisLinkout.replaceWith(html)
+      false
+    .fail (result,status) ->
+      false
+    .always ->
+      if i is count
+        lightboxImages(".calphoto-image-anchor")
+  false
 
 sortResults = (by_column) ->
   # Somethign clever -- look at each of the by_column points, then

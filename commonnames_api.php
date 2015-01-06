@@ -64,12 +64,12 @@ function checkColumnExists($column_list)
 {
   if(empty($column_list)) return true;
   global $db;
-  $cols = $db->getColumns();
-  foreach(explode(",",$column_list) as $colum)
+  $cols = $db->getCols();
+  foreach(explode(",",$column_list) as $column)
     {
-      if(!in_array($column,$cols))
+      if(!array_key_exists($column,$cols))
         {
-          returnAjax(array("status"=>false,"error"=>"Invalid column","human_error"=>"Sorry, you specified a lookup criterion that doesn't exist. Please try again.","columns"=>$column_list));
+          returnAjax(array("status"=>false,"error"=>"Invalid column","human_error"=>"Sorry, you specified a lookup criterion that doesn't exist. Please try again.","columns"=>$column_list,"bad_column"=>$column));
         }
     }
   return true;

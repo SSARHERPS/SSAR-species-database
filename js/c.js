@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, byteCount, delay, formatScientificNames, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, mapNewWindows, openLink, openTab, overlayOff, overlayOn, performSearch, randomInt, root, roundNumber, searchParams, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, byteCount, deferCalPhotos, delay, formatScientificNames, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, mapNewWindows, openLink, openTab, overlayOff, overlayOn, performSearch, randomInt, root, roundNumber, searchParams, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
   __slice = [].slice;
 
 root = typeof exports !== "undefined" && exports !== null ? exports : this;
@@ -583,10 +583,10 @@ formatSearchResults = function(result, container) {
           if (k === "image") {
             if (isNull(col)) {
               taxonQuery = "" + row.genus + "+" + row.species;
-              if (row.subspecies != null) {
+              if (!isNull(row.subspecies)) {
                 taxonQuery = "" + taxonQuery + "+" + row.subspecies;
               }
-              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=" + taxonQuery + "' class='newwindow'></paper-icon-button>";
+              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=" + taxonQuery + "' class='newwindow calphoto' data-taxon=\"" + taxonQuery + "\"></paper-icon-button>";
             } else {
               col = "<paper-icon-button icon='image:image' data-lightbox='" + col + "' class='lightboximage'></paper-icon-button>";
             }
@@ -610,6 +610,47 @@ formatSearchResults = function(result, container) {
       return stopLoad();
     }
   });
+};
+
+deferCalPhotos = function(selector) {
+  var count, cpUrl, i;
+  if (selector == null) {
+    selector = ".calphoto";
+  }
+
+  /*
+   * Defer renders of calphoto linkouts
+   * Hit targets of form
+   * http://calphotos.berkeley.edu/cgi-bin/img_query?getthumbinfo=1&num=all&taxon=Acris+crepitans&format=xml
+   */
+  count = $(selector).length;
+  cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query";
+  i = 0;
+  $(selector).each(function() {
+    var args, taxon, thisLinkout;
+    i++;
+    thisLinkout = $(this);
+    taxon = thisLinkout.attr("data-taxon");
+    args = "getthumbinfo=1&num=all&cconly=1&taxon=" + taxon + "&format=xml";
+    return $.get(cpUrl, args).done(function(resultXml) {
+      var data, html, large, link, result, thumb;
+      result = xmlToJSON.parseString(resultXml);
+      data = result.xml.calphotos;
+      thumb = data.thumb_url;
+      large = data.enlarge_jpeg_url;
+      link = data.enlarge_url;
+      html = "<a href='" + large + "' class='calphoto-img-anchor'><img src='" + thumb + "' data-href='" + link + "' class='calphoto-img-thumb' data-taxon='" + taxon + "'/></a>";
+      thisLinkout.replaceWith(html);
+      return false;
+    }).fail(function(result, status) {
+      return false;
+    }).always(function() {
+      if (i === count) {
+        return lightboxImages(".calphoto-image-anchor");
+      }
+    });
+  });
+  return false;
 };
 
 sortResults = function(by_column) {
