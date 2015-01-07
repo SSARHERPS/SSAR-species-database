@@ -3,7 +3,8 @@ root = exports ? this
 
 uri = new Object()
 uri.o = $.url()
-uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host') + '/'
+uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host')  + uri.o.attr("directory")
+uri.query = uri.o.attr("fragment")
 
 isBool = (str) -> str is true or str is false
 
@@ -277,3 +278,7 @@ formatScientificNames = (selector = ".sciname") ->
       # Is it italic?
       nameStyle = if $(this).css("font-style") is "italic" then "normal" else "italic"
       $(this).css("font-style",nameStyle)
+
+prepURI = (string) ->
+  string = encodeURIComponent(string)
+  string.replace(/%20/g,"+")

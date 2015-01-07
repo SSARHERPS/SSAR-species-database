@@ -3,7 +3,8 @@ root = exports ? this
 
 uri = new Object()
 uri.o = $.url()
-uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host') + '/'
+uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host')  + uri.o.attr("directory")
+uri.query = uri.o.attr("fragment")
 
 isBool = (str) -> str is true or str is false
 
@@ -278,27 +279,34 @@ formatScientificNames = (selector = ".sciname") ->
       nameStyle = if $(this).css("font-style") is "italic" then "normal" else "italic"
       $(this).css("font-style",nameStyle)
 
+prepURI = (string) ->
+  string = encodeURIComponent(string)
+  string.replace(/%20/g,"+")
+
 searchParams = new Object()
-searchParams.workingDir = "cndb"
 searchParams.targetApi = "commonnames_api.php"
 searchParams.targetContainer = "#result_container"
-uri.urlString = uri.urlString + searchParams.workingDir + "/"
 searchParams.apiPath = uri.urlString + searchParams.targetApi
 
-performSearch = ->
-  # Do things
-  s = $("#search").val()
-  # Store a version before we do any search modifiers
-  sOrig = s
-  if isNull(s)
-    $("#search-status").attr("text","Please enter a search term.")
-    $("#search-status")[0].show()
-    return false
+performSearch = (stateArgs = undefined) ->
+  if not stateArgs?
+    s = $("#search").val()
+    # Store a version before we do any search modifiers
+    sOrig = s
+    if isNull(s)
+      $("#search-status").attr("text","Please enter a search term.")
+      $("#search-status")[0].show()
+      return false
+
+    if $("#strict-search").polymerSelected() isnt true
+      s = s.toLowerCase()
+      s = "#{prepURI(s)}&loose=true"
+    else
+      s = prepURI(s)
+    args = "q=#{s}"
+  else
+    args = "q=#{stateArgs}"
   animateLoad()
-  if $("#strict-search").polymerSelected() isnt true
-    s = s.toLowerCase()
-    s = "#{s}&loose=true"
-  args = "q=#{s}"
   console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
   $.get(searchParams.targetApi,args,"json")
   .done (result) ->
@@ -326,6 +334,7 @@ performSearch = ->
     stopLoadError()
   .always ->
     # Anything we always want done
+    setHistory("#{uri.urlString}##{s}")
     false
 
 formatSearchResults = (result,container = searchParams.targetContainer) ->
@@ -441,10 +450,23 @@ sortResults = (by_column) ->
   # sorted and lookup position in reference, then data[index] = data[ref_pos]
   data = searchParams.result
 
+setHistory = (url = "#",state = null, title = null) ->
+  ###
+  # Set up the history to provide something linkable
+  ###
+  history.pushState(state,title,url)
+  # Rewrite the query URL
+  uri.query = $.url(url).attr("fragment")
+  false
+
 $ ->
   # Do bindings
   console.log("Doing onloads ...")
   animateLoad()
+  # Set up popstate
+  window.addEventListener "popstate", (e) ->
+    performSearch(uri.query)
+  ## Set events
   $("#search_form").submit (e) ->
     e.preventDefault()
     performSearch()
@@ -454,7 +476,12 @@ $ ->
   $("#do-search").click ->
     performSearch()
   # Do a fill of the result container
-  $.post(searchParams.targetApi,"","json")
+  if isNull uri.query
+    loadArgs = ""
+  else
+    loadArgs = uri.query
+  console.log("Doing initial search with #{loadArgs}")
+  $.post(searchParams.targetApi,loadArgs,"json")
   .done (result) ->
     # Populate the result container
     if result.status is true

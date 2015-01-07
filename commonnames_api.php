@@ -124,7 +124,7 @@ if(isset($_REQUEST['filter']))
   }
 
 
-$search = $db->sanitize(deEscape($_REQUEST['q']));
+$search = $db->sanitize(deEscape(urldecode($_REQUEST['q'])));
 
 
 
@@ -244,7 +244,7 @@ if(empty($params) || !empty($search))
             else $error = $e;
           }
       }
-    else if (strpos(" ",$search) === false)
+    else if (strpos($search," ") === false)
       {
         $method="spaceless_search";
         # No space in search

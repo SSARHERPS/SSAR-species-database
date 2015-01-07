@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, byteCount, deferCalPhotos, delay, formatScientificNames, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, mapNewWindows, openLink, openTab, overlayOff, overlayOn, performSearch, randomInt, root, roundNumber, searchParams, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, byteCount, deferCalPhotos, delay, formatScientificNames, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, mapNewWindows, openLink, openTab, overlayOff, overlayOn, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
   __slice = [].slice;
 
 root = typeof exports !== "undefined" && exports !== null ? exports : this;
@@ -7,7 +7,9 @@ uri = new Object();
 
 uri.o = $.url();
 
-uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host') + '/';
+uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host') + uri.o.attr("directory");
+
+uri.query = uri.o.attr("fragment");
 
 isBool = function(str) {
   return str === true || str === false;
@@ -464,33 +466,43 @@ formatScientificNames = function(selector) {
   });
 };
 
-searchParams = new Object();
+prepURI = function(string) {
+  string = encodeURIComponent(string);
+  return string.replace(/%20/g, "+");
+};
 
-searchParams.workingDir = "cndb";
+searchParams = new Object();
 
 searchParams.targetApi = "commonnames_api.php";
 
 searchParams.targetContainer = "#result_container";
 
-uri.urlString = uri.urlString + searchParams.workingDir + "/";
-
 searchParams.apiPath = uri.urlString + searchParams.targetApi;
 
-performSearch = function() {
+performSearch = function(stateArgs) {
   var args, s, sOrig;
-  s = $("#search").val();
-  sOrig = s;
-  if (isNull(s)) {
-    $("#search-status").attr("text", "Please enter a search term.");
-    $("#search-status")[0].show();
-    return false;
+  if (stateArgs == null) {
+    stateArgs = void 0;
+  }
+  if (stateArgs == null) {
+    s = $("#search").val();
+    sOrig = s;
+    if (isNull(s)) {
+      $("#search-status").attr("text", "Please enter a search term.");
+      $("#search-status")[0].show();
+      return false;
+    }
+    if ($("#strict-search").polymerSelected() !== true) {
+      s = s.toLowerCase();
+      s = "" + (prepURI(s)) + "&loose=true";
+    } else {
+      s = prepURI(s);
+    }
+    args = "q=" + s;
+  } else {
+    args = "q=" + stateArgs;
   }
   animateLoad();
-  if ($("#strict-search").polymerSelected() !== true) {
-    s = s.toLowerCase();
-    s = "" + s + "&loose=true";
-  }
-  args = "q=" + s;
   console.log("Got search value " + s + ", hitting", "" + searchParams.apiPath + "?" + args);
   return $.get(searchParams.targetApi, args, "json").done(function(result) {
     console.log("Search executed by " + result.method + " with " + result.count + " results.");
@@ -517,6 +529,7 @@ performSearch = function() {
     $("#search-status")[0].show();
     return stopLoadError();
   }).always(function() {
+    setHistory("" + uri.urlString + "#" + s);
     return false;
   });
 };
@@ -658,9 +671,32 @@ sortResults = function(by_column) {
   return data = searchParams.result;
 };
 
+setHistory = function(url, state, title) {
+  if (url == null) {
+    url = "#";
+  }
+  if (state == null) {
+    state = null;
+  }
+  if (title == null) {
+    title = null;
+  }
+
+  /*
+   * Set up the history to provide something linkable
+   */
+  history.pushState(state, title, url);
+  uri.query = $.url(url).attr("fragment");
+  return false;
+};
+
 $(function() {
+  var loadArgs;
   console.log("Doing onloads ...");
   animateLoad();
+  window.addEventListener("popstate", function(e) {
+    return performSearch(uri.query);
+  });
   $("#search_form").submit(function(e) {
     e.preventDefault();
     return performSearch();
@@ -673,7 +709,13 @@ $(function() {
   $("#do-search").click(function() {
     return performSearch();
   });
-  return $.post(searchParams.targetApi, "", "json").done(function(result) {
+  if (isNull(uri.query)) {
+    loadArgs = "";
+  } else {
+    loadArgs = uri.query;
+  }
+  console.log("Doing initial search with " + loadArgs);
+  return $.post(searchParams.targetApi, loadArgs, "json").done(function(result) {
     if (result.status === true) {
       console.log("Got a valid result, formatting " + result.count + " results.");
       formatSearchResults(result);
