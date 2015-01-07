@@ -230,7 +230,7 @@ if(empty($params) || !empty($search))
         $col = "authority_year";
         $loose = true; # Always true because of the way data is stored
         $params[$col] = $search;
-        $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
+        $r = $db->doQuery($params,"*","or",$loose,true,$order_by);
         try
           {
             while($row = mysqli_fetch_assoc($r))
