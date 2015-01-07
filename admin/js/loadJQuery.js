@@ -10,13 +10,14 @@ function cascadeJQLoad(i) { // Use alternate CDNs where appropriate to load jQue
         "ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js",
         "ajax.aspnetcdn.com/ajax/jQuery/jquery-2.1.1.min.js",
         "https://code.jquery.com/jquery-2.1.1.min.js",
-        "cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"
+        "cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js",
+        "bower_components/jquery/dist/jquery.min.js"
     ];
     // Paths to your libraries that require jQuery, relative to this file
     var dependent_libraries = [
         "jquery.cookie.min.js",
         "purl.min.js",
-        "base64.min.js",
+        "../bower_components/js-base64/base64.min.js",
         "c.min.js"
     ];
     if (window.jQuery !== undefined) {

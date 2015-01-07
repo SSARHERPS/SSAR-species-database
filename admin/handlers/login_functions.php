@@ -22,10 +22,10 @@ class UserFunctions extends DBHelper
      *                         (string)"url" (defaults to "localhost")
      *                         and (array)"cols" of type "column_name"=>"type".
      ***/
-    # Set up the parameters in CONFIG.php
-    require_once(dirname(__FILE__).'/../CONFIG.php');
     global $user_data_storage,$profile_picture_storage,$site_security_token,$service_email,$minimum_password_length,$password_threshold_length,$db_cols,$default_user_table,$default_user_database,$password_column,$cookie_ver_column,$user_column,$totp_column,$totp_steps,$temporary_storage,$needs_manual_authentication,$totp_rescue,$ip_record,$default_user_database,$default_sql_user,$default_sql_password,$sql_url,$default_user_table,$baseurl,$twilio_sid,$twilio_token,$twilio_number,$site_name,$link_column;
-
+    # Set up the parameters in CONFIG.php
+    $config_path = dirname(__FILE__).'/../CONFIG.php';
+    require_once($config_path);
     if(!empty($db_params))
       {
         if(!is_array($db_params))
@@ -61,19 +61,30 @@ class UserFunctions extends DBHelper
               }
           }
       }
-    # Configure the database
-    $this->setSQLUser($default_sql_user);
-    $this->setDB($default_user_database);
-    $this->setSQLPW($default_sql_password);
-    $this->setSQLURL($sql_url);
-    $this->setCols($db_cols);
-    $this->setTable($default_user_table);
+
+    try
+      {
+        # Configure the database
+        $this->setSQLUser($default_sql_user);
+        $this->setDB($default_user_database);
+        $this->setSQLPW($default_sql_password);
+        $this->setSQLURL($sql_url);
+        $this->setCols($db_cols);
+        $this->setTable($default_user_table);
+      }
+    catch(Exception $e)
+      {
+        # More complete message
+        $message = "Could not initialize database setup [".$e->getMessage()."] in <".$e->getTraceAsString()."> (using ".$config_path.")";
+        throw(new Exception($message));
+      }
 
     # Check it
-    if(!$this->testSettings())
+    $details = $this->testSettings(null,true);
+    if(!$details['status'] && $details != true)
       {
         # There's a database problem
-        throw(new Exception("Database configuration problem"));
+        throw(new Exception("Database configuration problem - ".json_encode($details)));
       }
 
     if(!empty($user_data_storage))
@@ -109,11 +120,12 @@ class UserFunctions extends DBHelper
     $this->twilio_number = $twilio_number;
     $this->site = $site_name;
 
+    $proto = 'http';
+    if (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") {$proto .= "s";}
+
     if(empty($baseurl))
       {
-        $baseurl = 'http';
-        if ($_SERVER["HTTPS"] == "on") {$baseurl .= "s";}
-        $baseurl .= "://www.";
+        $baseurl = $proto . "://www.";
         $baseurl.=$_SERVER['HTTP_HOST'];
       }
 
@@ -130,10 +142,6 @@ class UserFunctions extends DBHelper
 
     $this->domain = $domain;
     $this->shortUrl = $shorturl;
-    
-    $proto = 'http';
-    if ($_SERVER["HTTPS"] == "on") {$proto .= "s";}
-    
     $this->qualDomain = $proto . "://" . $shorturl;
 
     # Let's be nice and try to set up a user
@@ -788,7 +796,7 @@ class UserFunctions extends DBHelper
      * @param string pw_in The input password. This function will hash it.
      * @param array $name An array of form array(firstName,lastName)
      * @param string $dname The display name of the user.
-     * @return array
+     * @return array {"status"=>bool,"error"=>message,"message"=>user message,[userdata,cookies,auth_result]}
      ***/
     if(strlen($pw_in)>8192)
       {
@@ -913,18 +921,29 @@ class UserFunctions extends DBHelper
     else return array("status"=>false,"error"=>'Failure: unknown database error. Your user was unable to be saved.');
   }
 
+
+
+
+
   public function lookupUser($username,$pw,$return=true,$totp_code=false,$override = false)
   {
     /***
+     * Primary function to check login validation.
      *
-     *
+     * @param string|int $username a username looking at a column set by the
+     * usercol of this object
+     * @param string $pw the plaintext password of the user
+     * @param bool $return whether to return user data, or just the
+     * boolean lookup state
+     * @param bool $totp_code
+     * @param bool $override
      ***/
-    
-    if(strlen($pw_in)>8192)
+
+    if(strlen($pw)>8192)
       {
         throw(new Exception("Passwords must be less than 8192 characters in length."));
       }
-    // check it's a valid email! validation skipped.
+    # check it's a valid email! validation skipped.
     $xml=new Xml;
     $result=$this->lookupItem($username,$this->usercol);
     if($result!==false)
@@ -934,7 +953,7 @@ class UserFunctions extends DBHelper
             $userdata=mysqli_fetch_assoc($result);
             if(is_numeric($userdata['id']))
               {
-                // check password
+                # check password
                 require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
                 $hash=new Stronghash;
                 $data=json_decode($userdata[$this->pwcol],true);
@@ -968,28 +987,27 @@ class UserFunctions extends DBHelper
 
                             $encrypted_secret = self::encryptThis($key,$_COOKIE[$cookiekey]);
                             $encrypted_hash = self::encryptThis($key,$_COOKIE[$cookieauth]);
-                            return array(false,"totp"=>true,"error"=>false,"human_error"=>"Please enter the code generated by the authenticator application on your device.","encrypted_password"=>$encrypted_pw,"encrypted_secret"=>$encrypted_secret,"encrypted_hash"=>$encrypted_hash);
+                            return array(false,"status"=>false,"totp"=>true,"error"=>false,"human_error"=>"Please enter the code generated by the authenticator application on your device.","encrypted_password"=>$encrypted_pw,"encrypted_secret"=>$encrypted_secret,"encrypted_hash"=>$encrypted_hash);
                           }
                         if($this->verifyTOTP($totp_code) !== true)
                           {
                             # Bad TOTP code
-                            return array(false,"totp"=>true,"error"=>"Invalid TOTP code","human_error"=>"Bad verification code. Please try again.");
+                            return array(false,"status"=>false,"totp"=>true,"error"=>"Invalid TOTP code","human_error"=>"Bad verification code. Please try again.");
                           }
                         # Remove the encryption key
                         $query = "UPDATE `".$this->getTable()."` SET `".$this->tmpcol."`='' WHERE `".$this->usercol."`='".$this->username."'";
                         mysqli_query($l,$query);
+                        # Return decrypted userdata, if applicable
+                        # The salt is the password key "salt"
+                        $decname=self::decryptThis($data["salt"].$pw,$userdata['name']);
+                        if(empty($decname))$decname=$userdata['name'];
                         if(!$return)
                           {
-                            # Return decrypted userdata, if applicable
-                            $decname=self::decryptThis($salt.$pw,$userdata['name']);
-                            if(empty($decname))$decname=$userdata['name'];
-                            return true;
+                            return array(true,"status"=>true,$decname);
                           }
                         else
                           {
-                            $decname=self::decryptThis($salt.$pw,$userdata['name']);
-                            if(empty($decname))$decname=$userdata['name'];
-                            $returning=array(true,$userdata);
+                            $returning=array(true,"status"=>true,$userdata);
                             return $returning;
                           }
                       }
@@ -997,70 +1015,72 @@ class UserFunctions extends DBHelper
                     if(($userdata['flag'] || $override) && !$userdata['disabled'])
                       {
                         # This user is OK and not disabled, nor pending validation
+                        # Return decrypted userdata, if applicable
+                        # The salt is the password key "salt"
+                        $decname=self::decryptThis($data["salt"].$pw,$userdata['name']);
+                        if(empty($decname))$decname=$userdata['name'];
                         if(!$return)
                           {
-                            # Return decrypted userdata, if applicable
-                            $decname=self::decryptThis($salt.$pw,$userdata['name']);
-                            if(empty($decname))$decname=$userdata['name'];
-                            return array(true,$decname);
+                            return array(true,"status"=>true,$decname);
                           }
                         else
                           {
-                            $decname=self::decryptThis($salt.$pw,$userdata['name']);
-                            if(empty($decname))$decname=$userdata['name'];
-                            $returning=array(true,$userdata);
+                            $returning=array(true,"status"=>true,$userdata);
                             return $returning;
                           }
                       }
                     else
                       {
-                        if(!$userdata['flag'])return array(false,"message"=>'Your login information is correct, but your account is still being validated, or has been disabled. Please try again later.');
+                        if(!$userdata['flag'])
+                          {
+                            return array(false,"status"=>false,"message"=>'Your login information is correct, but your account is still being validated, or has been disabled. Please try again later.');
+                          }
                         if($userdata['disabled'])
                           {
-                            // do a time check
+                            # do a time check
                             if($userdata['dtime']+3600>self::microtime_float())
                               {
                                 $rem=intval($userdata['dtime'])-intval(self::microtime_float())+3600;
                                 $min=$rem%60;
                                 $sec=$rem-60*$min;
-                                return array(false,'message'=>'Your account has been disabled for too many failed login attempts. Please try again in '.$min.' minutes and '.$sec.' seconds.');
+                                return array(false,"status"=>false,'message'=>'Your account has been disabled for too many failed login attempts. Please try again in '.$min.' minutes and '.$sec.' seconds.');
                               }
                             else
                               {
-                                // Clear login disabled flag
+                                # Clear login disabled flag
                                 $query1="UPDATE `".$this->getTable()."` SET `disabled`=false WHERE `id`=".$userdata['id'];
                                 $l=$this->openDB();
                                 $result=mysqli_query($l,$query1);
                               }
                           }
-                        // All checks passed.
+                        # All checks passed.
                         if(!$return)
                           {
                             $decname=self::decryptThis($salt.$pw,$userdata['name']);
                             if(empty($decname))$decname=$userdata['name'];
-                            return array(true,$decname);
+                            return array(true,"status"=>true,$decname);
                           }
                         else
                           {
-                            $returning=array(true,$userdata);
+                            $returning=array(true,"status"=>true,$userdata);
                             return $returning;
                           }
                       }
                   }
                 else
                   {
-                    return array(false,'message'=>'Sorry, your username or password is incorrect.','error'=>'Bad Password');
+                    return array(false,"status"=>false,'message'=>'Sorry, your username or password is incorrect.','error'=>'Bad Password');
                   }
-                // end good username loop
+                # end good username loop
               }
-            else return array(false,'message'=>'Sorry, your username or password is incorrect.','error'=>'Bad username','desc'=>"No numeric id");
+            else return array(false,"status"=>false,'message'=>'Sorry, your username or password is incorrect.','error'=>'Bad username','desc'=>"No numeric id");
           }
         catch(Exception $e)
           {
-            return array(false,"message"=>"System error. Please try again. If the problem persists, please report it.","error"=>$e->getMessage());
+            return array(false,"status"=>false,"message"=>"System error. Please try again. If the problem persists, please report it.","error"=>$e->getMessage());
           }
       }
-    else return array(false,'message'=>'Sorry, your username or password is incorrect.','error'=>'Bad username','desc'=>$result['error']);
+    else return array(false,"status"=>false,'message'=>'Sorry, your username or password is incorrect.','error'=>'Bad username','desc'=>$result['error']);
   }
 
 
@@ -1275,6 +1295,22 @@ class UserFunctions extends DBHelper
 
   public function writeToUser($data,$col,$validation_data=null,$replace=true,$alert_forbidden_column = true)
   {
+
+    /***
+     * Write data to a user column.
+     *
+     * @param string $data the data to be written
+     * @param string $col the database column to be written to
+     * @param array $validation_data data to verify access to the
+     * user. An array of "password"=>$password or manually provided
+     * cookie data with $this->linkcol as the key. If this isn't
+     * provided, cookies are used.
+     * @param bool $replace whether to replace existing
+     * data. Otherwise, it appends. Default: true.
+     ***/
+
+    $vmeta = false;
+    $error = false;
     if(empty($data) || empty($col)) return array('status'=>false,'error'=>'Bad request');
     $validated=false;
     if(is_array($validation_data))
@@ -1291,8 +1327,8 @@ class UserFunctions extends DBHelper
           {
             # confirm with lookupUser();
             # If TOTP is enabled, this lookup will always fail ...
-            $a=$this->lookupUser($validation_data['username'],$validation_data['password']);
-            $validated=$a[0];
+            $vmeta=$this->lookupUser($validation_data['username'],$validation_data['password']);
+            $validated=$vmeta[0];
             if($validated) $this->getUser(array("username"=>$validation_data['username']));
             $method='Password';
           }
@@ -1311,20 +1347,20 @@ class UserFunctions extends DBHelper
         if(empty($user)) return array("status"=>false,"error"=>"Problem assigning user");
         // write it to the db
         // replace or append based on flag
-        $real_col=$this->sanitize($col);
+        $real_col=$this->sanitize($col,true);
         if(!$replace)
           {
-            // pull the existing data ...
+            # pull the existing data ...
             $l=$this->openDB();
             $prequery="SELECT `$real_col` FROM `".$this->getTable()."` WHERE `$where_col`='$user'";
-            // Look for relevent JSON entries or XML entries and replace them
+            # Look for relevent JSON entries or XML entries and replace them
             $r=mysqli_query($l,$prequery);
             $row=mysqli_fetch_row($r);
             $d=$row[0];
             $jd=json_decode($d,true);
             if($jd==null)
               {
-                // XML -- only takes one tag in!!
+                # XML -- only takes one tag in!!
                 $xml_data=explode("</",$data);
                 $tag=array_pop($xml_data);
                 $tag=$this->sanitize(substr($tag,0,-1));
@@ -1362,16 +1398,36 @@ class UserFunctions extends DBHelper
         $r2=mysqli_query($l,$finish_query);
         return array('status'=>$r,'data'=>$data,'col'=>$col,'action'=>$finish_query,'result'=>$r2,'method'=>$method,"error"=>$error);
       }
-    else return array('status'=>false,'error'=>'Bad validation','method'=>$method);
+    else return array('status'=>false,'error'=>'Bad validation','method'=>$method,"validated_meta"=>$vmeta);
   }
 
-  public function resetUserPassword()
+  public function resetUserPassword($totp = null, $method = null)
   {
     /***
      * Set up the password reset functionality.
      * Without a flag, just send an email to the address on file with a reset link.
-     * With a flag, validate the new password data and reset authentication, then invoke changeUserPassword().
+     * With a flag, validate the new password data and reset
+     * authentication, then invoke changeUserPassword().
      ***/
+     # If the user has 2FA set up, first prompt for the code
+        if($this->has2FA() && $totp == null)
+          {
+        $callback = array("status"=>false,"action"=>"GET_TOTP","canSMS"=>$this->canSMS());
+        return $callback;
+        }
+        else
+          {
+        if($this->has2FA())
+          {
+        # Verify the 2FA
+        }
+        if($this>canSMS() && $method == null)
+          {
+        $callback = array("status"=>false,"action"=>"NEED_METHOD");
+        return $callback;        
+        }
+        # If the user has SMS and email, check $method
+        }
   }
 
   public function doUpdatePassword()
@@ -1451,7 +1507,7 @@ class UserFunctions extends DBHelper
     if(empty($secret_key))
       {
         require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
-        $secret_key = Stronghash::createSalt(strlen($userString));        
+        $secret_key = Stronghash::createSalt(strlen($userString));
       }
     $return['secret'] = $secret_key;
     $auth_code = $secret_key ^ $userString;
@@ -1459,7 +1515,7 @@ class UserFunctions extends DBHelper
     $return['auth'] = $auth_result;
     $return['user'] = $userdata[$this->linkcol];
     return $return;
-    
+
   }
 
   public function requireUserAuth($user_email)
@@ -1573,7 +1629,7 @@ class UserFunctions extends DBHelper
       }
     $ret['status'] = true;
     $mail = $this->getMailObject();
-    
+
     # Let the user know
     $mail->Subject = "Authorization granted to ".$this->getDomain();
     $mail->Body = "<p>Your access to ".$this->getDomain()." as been enabled. <a href='".$this->getQualifiedDomain()."'>Click here to visit the site</a>.";
@@ -1582,7 +1638,7 @@ class UserFunctions extends DBHelper
     $userMail->send();
     # Send out an email to admins saying that they've been authorized.
     $query = "SELECT `".$this->usercol."` FROM ".$this->getTable()." WHERE `admin_flag`=TRUE";
-    $r = mysqli_query($l,$query);    
+    $r = mysqli_query($l,$query);
     $mail->Subject = "[".$this->getDomain()."] New User Authenticated";
     $mail->Body = "<p>".$user_email." was granted access to ".$this->getDomain()." by ".$thisUserEmail.".</p><p>No further action is required, and you can disregard emails asking to grant this user access.</p><p><strong>If you believe this to be in error, immediately take steps to take your site offline</strong></p>";
     while ($row=mysqli_fetch_row($r))
@@ -1600,7 +1656,7 @@ class UserFunctions extends DBHelper
         $ret['error'] = $mail->ErrorInfo;
       }
     return $ret;
-    
+
   }
 
 

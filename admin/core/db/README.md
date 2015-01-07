@@ -1,6 +1,8 @@
 DBHelper PHP class
 ===================
 
+https://github.com/tigerhawkvok/DBHelper
+
 ## Configuration:
 
 ### Short way

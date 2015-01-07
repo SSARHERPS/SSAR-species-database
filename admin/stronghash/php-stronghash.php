@@ -128,7 +128,7 @@ class Stronghash {
                               }
                             catch (Exception $e)
                               {
-                                return array("status"=>false,"error"=>$->getMessage());
+                                return array("status"=>false,"error"=>$e->getMessage());
                               }
                             return array("status"=>true,'hash'=>$hash,"salt"=>$salt,"algo"=>$use."pbkdf2-nn","rounds"=>$rounds);
                           }
@@ -193,11 +193,12 @@ class Stronghash {
                   }
                 else return array("status"=>true,'hash'=>hash($use,$salt.$data),"salt"=>$salt,"algo"=>$use);
               } // End salt-requring functions
-            else return array("status"=>true,'hash'=>hash($use,$salt.$data),"salt"=>$salt,"algo"=>$use);
+            else return array("status"=>true,'hash'=>hash($use,$salt.$data),"salt"=>$salt,"algo"=>$use,"method"=>"hash");
           } // End search for supported hash algos
-        else return array("status"=>true,'hash'=>sha1($salt.$data),"salt"=>$salt,"algo"=>'sha1');
+        else return array("status"=>true,'hash'=>sha1($salt.$data),"salt"=>$salt,"algo"=>'sha1',"method"=>"No algo");
       } // End hash() supported
-    return array("status"=>true,'hash'=>sha1($salt.$data),"salt"=>$salt,"algo"=>'sha1');
+      else return array("status"=>true,'hash'=>sha1($salt.$data),"salt"=>$salt,"algo"=>'sha1',"method"=>"hash() not supported");
+      return array("status"=>false,"error"=>"Error in function!","provided"=>array("data"=>$data,"salt"=>$salt,"use"=>$use,"forcesalt"=>$forcesalt,"rounds"=>$rounds));
 
   }
 
@@ -276,7 +277,7 @@ class Stronghash {
     return $salt;
   }
 
-  private static function microtime_float()
+  public static function microtime_float()
   {
     list($usec, $sec) = explode(" ", microtime());
     return ((float)$usec + (float)$sec);
@@ -317,6 +318,7 @@ class Stronghash {
     else $refhash=array("hash"=>$orig_data,"salt"=>$orig_salt,"algo"=>$orig_algo,"rounds"=>$orig_rounds); //$this->hasher($orig_data,$orig_salt,$orig_algo,false,$orig_rounds);
     if(strlen($orig_data)!=strlen($hash) && !is_array($hash))
       {
+        $base_args = array("data"=>$hash,"salt"=>$orig_salt,"algo"=>$orig_algo,"forcesalt"=>false,"rounds"=>$orig_rounds);
         $hash=$this->hasher($hash,$orig_salt,$orig_algo,false,$orig_rounds);
         $hash_compare=$hash['hash'];
       }
@@ -327,10 +329,10 @@ class Stronghash {
       {
         $match= $hash_compare==$refhash['hash'];
         $match_slow = self::slow_equals($hash_compare,$refhash['hash']);
-        return array("pw_hashed"=>$refhash['hash'],"pw_compare"=>$hash_compare,"data"=>$refhash,"match"=>$match,"slow_match"=>$match_slow,"basehash"=>$refhash,"was_array"=>$was_array);
+        return array("pw_hashed"=>$refhash['hash'],"pw_compare"=>$hash_compare,"data"=>$refhash,"match"=>$match,"slow_match"=>$match_slow,"computed_hash"=>array("computed"=>$hash,"args"=>$base_args),"was_array"=>$was_array);
       }
     
-    if($refhash[0]!==false) return self::slow_equals($hash_compare,$refhash['hash']);
+    if(!isset($refhash[0]) || $refhash[0]!==false) return self::slow_equals($hash_compare,$refhash['hash']);
     else return false;
   }
 

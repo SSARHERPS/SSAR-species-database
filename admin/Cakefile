@@ -27,8 +27,15 @@ task 'doc', 'generate documentation for *.coffee files', ->
 # this will keep the non-minified compiled and joined file updated as files in
 # `inFile` change.
 task 'watch', 'watch and compile changes in source dir', ->
-  watch = exec "coffee -j #{outJS}.js -cw #{strFiles}"
-  watch.stdout.on 'data', (data)-> process.stdout.write data
+  watch = exec "coffee -j #{outJS}.js -cw #{config.srcDir}"
+  watch.stdout.on 'data', (data)->
+    process.stdout.write data
+    # Trim the data and minimize
+    dsplit = data.split("\\")
+    file = dsplit.pop()
+    fsplit = file.split(".")
+    filename = fsplit[0]
+    exec "java -jar #{config.yuic} #{config.outDir}/#{filename}.js -o #{config.outDir}/#{filename}.min.js"
 
 task 'build', 'join and compile *.coffee files', ->
   exec "coffee -j #{outJS}.js -c #{strFiles}", exerr

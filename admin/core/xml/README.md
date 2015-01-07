@@ -4,4 +4,4 @@ php-xml
 Port of classic XML handler functions
 
 
-TODO
+TODO. Do cleanup!

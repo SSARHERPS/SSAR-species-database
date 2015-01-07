@@ -37,12 +37,12 @@ require_once 'PEAR/PackageFileManager/File.php';
 require_once 'PEAR/PackageFileManager2.php';
 PEAR::setErrorHandling(PEAR_ERROR_DIE);
 
-$api_version     = '3.12.4';
+$api_version     = '3.12.8';
 $api_state       = 'stable';
 
-$release_version = '3.12.4';
+$release_version = '3.12.8';
 $release_state   = 'stable';
-$release_notes   = 'Add transcription link to recordings';
+$release_notes   = 'Add Addresses support';
 
 $description = <<<DESC
 A SDK (or helper library, as we're calling them) for PHP developers to write
@@ -75,10 +75,11 @@ $package->setOptions(
     )
 );
 
+
 $package->setPackage('Services_Twilio');
 $package->setSummary('PHP helper library for Twilio');
 $package->setDescription($description);
-$package->setChannel('twilio.github.com/pear');
+$package->setChannel('twilio-pear.herokuapp.com/pear');
 $package->setPackageType('php');
 $package->setLicense(
     'MIT License',
@@ -93,9 +94,9 @@ $package->setAPIStability($api_state);
 
 $package->addMaintainer(
     'lead',
-    'kevinburke',
-    'Kevin Burke',
-    'kevin@twilio.com'
+    'ihumanable',
+    'Matt Nowack',
+    'matt@twilio.com'
 );
 
 

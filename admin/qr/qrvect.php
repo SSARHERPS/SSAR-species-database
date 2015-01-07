@@ -39,7 +39,7 @@
                 if($saveandprint===TRUE){
                     QRtools::save($vect, $filename);
                     header("Content-Type: application/postscript");
-                    header('Content-Disposition: filename="'.$filename.'"');
+                    header('Content-Disposition: filename="qrcode.eps"');
                     echo $vect;
                 }else{
                     QRtools::save($vect, $filename);
@@ -90,7 +90,7 @@
             
             $output = 
             '%!PS-Adobe EPSF-3.0'."\n".
-            '%%Creator: Zend_Matrixcode_Qrcode'."\n".
+            '%%Creator: PHPQrcodeLib'."\n".
             '%%Title: QRcode'."\n".
             '%%CreationDate: '.date('Y-m-d')."\n".
             '%%DocumentData: Clean7Bit'."\n".
@@ -143,14 +143,14 @@
             
             if ($filename === false) {
                 header("Content-Type: image/svg+xml");
-                header('Content-Disposition: filename="qrcode.svg"');
-                return $vect;
+                //header('Content-Disposition: attachment, filename="qrcode.svg"');
+                echo $vect;
             } else {
                 if($saveandprint===TRUE){
                     QRtools::save($vect, $filename);
                     header("Content-Type: image/svg+xml");
-                    header('Content-Disposition: filename="'.$filename.'"');
-                    return $vect;
+                    //header('Content-Disposition: filename="'.$filename.'"');
+                    echo $vect;
                 }else{
                     QRtools::save($vect, $filename);
                 }
@@ -174,14 +174,14 @@
              xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events">'."\n".
             '<desc></desc>'."\n";
 
-            $output = 
+            $output =
             '<?xml version="1.0" encoding="utf-8"?>'."\n".
-            '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">'."\n".
+            '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">'."\n".
             '<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" xmlns:xlink="http://www.w3.org/1999/xlink" width="'.$imgW * $pixelPerPoint.'" height="'.$imgH * $pixelPerPoint.'" viewBox="0 0 '.$imgW * $pixelPerPoint.' '.$imgH * $pixelPerPoint.'">'."\n".
             '<desc></desc>'."\n";
                 
             if(!empty($back_color)) {
-                $backgroundcolor = str_pad(dechex($back_color), 6, "0");
+                $backgroundcolor = str_pad(dechex($back_color), 6, "0", STR_PAD_LEFT);
                 $output .= '<rect width="'.$imgW * $pixelPerPoint.'" height="'.$imgH * $pixelPerPoint.'" fill="#'.$backgroundcolor.'" cx="0" cy="0" />'."\n";
             }
                 
@@ -189,7 +189,7 @@
             '<defs>'."\n".
             '<rect id="p" width="'.$pixelPerPoint.'" height="'.$pixelPerPoint.'" />'."\n".
             '</defs>'."\n".
-            '<g fill="#'.str_pad(dechex($fore_color), 6, "0").'">'."\n";
+            '<g fill="#'.str_pad(dechex($fore_color), 6, "0", STR_PAD_LEFT).'">'."\n";
                 
                 
             // Convert the matrix into pixels
