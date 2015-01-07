@@ -306,6 +306,7 @@ performSearch = (stateArgs = undefined) ->
     args = "q=#{s}"
   else
     args = "q=#{stateArgs}"
+    sOrig = stateArgs.split("&")[0]
   animateLoad()
   console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
   $.get(searchParams.targetApi,args,"json")
@@ -334,7 +335,7 @@ performSearch = (stateArgs = undefined) ->
     stopLoadError()
   .always ->
     # Anything we always want done
-    setHistory("#{uri.urlString}##{s}")
+    if s? then setHistory("#{uri.urlString}##{s}")
     false
 
 formatSearchResults = (result,container = searchParams.targetContainer) ->
@@ -465,6 +466,8 @@ $ ->
   animateLoad()
   # Set up popstate
   window.addEventListener "popstate", (e) ->
+    uri.query = $.url().attr("fragment")
+    console.log("Popping state to #{uri.query}")
     performSearch(uri.query)
   ## Set events
   $("#search_form").submit (e) ->
@@ -480,14 +483,16 @@ $ ->
     loadArgs = ""
   else
     loadArgs = uri.query
-  console.log("Doing initial search with #{loadArgs}")
-  $.post(searchParams.targetApi,loadArgs,"json")
+  console.log("Doing initial search with '#{loadArgs}', hitting","#{searchParams.apiPath}?q=#{loadArgs}")
+  $.get(searchParams.targetApi,"q=#{loadArgs}","json")
   .done (result) ->
     # Populate the result container
-    if result.status is true
+    if result.status is true and result.count > 0
       console.log("Got a valid result, formatting #{result.count} results.")
       formatSearchResults(result)
       return false
+    if result.count is 0
+      result.human_error = "No results for \"#{loadArgs.split("&")[0]}\""
     $("#search-status").attr("text",result.human_error)
     $("#search-status")[0].show()
     console.error(result.error)

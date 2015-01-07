@@ -501,6 +501,7 @@ performSearch = function(stateArgs) {
     args = "q=" + s;
   } else {
     args = "q=" + stateArgs;
+    sOrig = stateArgs.split("&")[0];
   }
   animateLoad();
   console.log("Got search value " + s + ", hitting", "" + searchParams.apiPath + "?" + args);
@@ -529,7 +530,9 @@ performSearch = function(stateArgs) {
     $("#search-status")[0].show();
     return stopLoadError();
   }).always(function() {
-    setHistory("" + uri.urlString + "#" + s);
+    if (s != null) {
+      setHistory("" + uri.urlString + "#" + s);
+    }
     return false;
   });
 };
@@ -695,6 +698,8 @@ $(function() {
   console.log("Doing onloads ...");
   animateLoad();
   window.addEventListener("popstate", function(e) {
+    uri.query = $.url().attr("fragment");
+    console.log("Popping state to " + uri.query);
     return performSearch(uri.query);
   });
   $("#search_form").submit(function(e) {
@@ -714,12 +719,15 @@ $(function() {
   } else {
     loadArgs = uri.query;
   }
-  console.log("Doing initial search with " + loadArgs);
-  return $.post(searchParams.targetApi, loadArgs, "json").done(function(result) {
-    if (result.status === true) {
+  console.log("Doing initial search with '" + loadArgs + "', hitting", "" + searchParams.apiPath + "?q=" + loadArgs);
+  return $.get(searchParams.targetApi, "q=" + loadArgs, "json").done(function(result) {
+    if (result.status === true && result.count > 0) {
       console.log("Got a valid result, formatting " + result.count + " results.");
       formatSearchResults(result);
       return false;
+    }
+    if (result.count === 0) {
+      result.human_error = "No results for \"" + (loadArgs.split("&")[0]) + "\"";
     }
     $("#search-status").attr("text", result.human_error);
     $("#search-status")[0].show();
