@@ -259,6 +259,7 @@ if(empty($params) || !empty($search))
                 $extra_params["common_name"] = $search;
                 $extra_params["genus"] = $search;
                 $extra_params["species"] = $search;
+                $extra_params["subspecies"] = $search;
                 $extra_params["major_common_type"] = $search;
                 $extra_params["major_subtype"] = $search;
                 $extra_params["deprecated_scientific"] = $search;
@@ -288,6 +289,7 @@ if(empty($params) || !empty($search))
                 $params["common_name"] = $search;
                 $params["genus"] = $search;
                 $params["species"] = $search;
+                $params["subspecies"] = $search;
                 $params["major_common_type"] = $search;
                 $params["major_subtype"] = $search;
                 $params["deprecated_scientific"] = $search;
