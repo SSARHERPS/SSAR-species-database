@@ -55,15 +55,11 @@ body {
 #result_container {
     padding:1em;
 }
-.genus,.genus_authority,.species_authority,.common_name {
+.genus,.genus_authority,.species_authority,.common_name,linnean_order,.cndb-row-headers th {
     text-transform:capitalize;
 }
 .genus,.species,.subspecies {
     font-style:italic;
-}
-.cndb-row-headers th {
-    text-transform:capitalize;
-    
 }
 /* .cndb-result-entry:nth-child(2n) { */
 /*     background:rgba(50,50,50,.1); */

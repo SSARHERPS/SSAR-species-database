@@ -426,7 +426,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       if l is Object.size(row)
         htmlRow += "\n\t</tr>"
         html += htmlRow
-    # Check if we're done
+    # Check if we're done 
     if toInt(i) is targetCount
       html = htmlHead + html + htmlClose
       console.log("Processed #{toInt(i)+1} rows")
