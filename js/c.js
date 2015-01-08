@@ -530,8 +530,10 @@ performSearch = function(stateArgs) {
     $("#search-status")[0].show();
     return stopLoadError();
   }).always(function() {
+    var b64s;
+    b64s = Base64.encodeURI(s);
     if (s != null) {
-      setHistory("" + uri.urlString + "#" + s);
+      setHistory("" + uri.urlString + "#" + b64s);
     }
     return false;
   });
@@ -719,7 +721,7 @@ setHistory = function(url, state, title) {
 };
 
 $(function() {
-  var loadArgs;
+  var e, loadArgs;
   console.log("Doing onloads ...");
   animateLoad();
   window.addEventListener("popstate", function(e) {
@@ -742,7 +744,13 @@ $(function() {
   if (isNull(uri.query)) {
     loadArgs = "";
   } else {
-    loadArgs = uri.query;
+    try {
+      loadArgs = Base64.decode(uri.query);
+    } catch (_error) {
+      e = _error;
+      console.error("Bad argument " + uri.query + " => " + loadArgs);
+      loadArgs = "";
+    }
   }
   console.log("Doing initial search with '" + loadArgs + "', hitting", "" + searchParams.apiPath + "?q=" + loadArgs);
   return $.get(searchParams.targetApi, "q=" + loadArgs, "json").done(function(result) {

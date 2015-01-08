@@ -335,7 +335,8 @@ performSearch = (stateArgs = undefined) ->
     stopLoadError()
   .always ->
     # Anything we always want done
-    if s? then setHistory("#{uri.urlString}##{s}")
+    b64s = Base64.encodeURI(s)
+    if s? then setHistory("#{uri.urlString}##{b64s}")
     false
 
 formatSearchResults = (result,container = searchParams.targetContainer) ->
@@ -508,7 +509,11 @@ $ ->
   if isNull uri.query
     loadArgs = ""
   else
-    loadArgs = uri.query
+    try
+      loadArgs = Base64.decode(uri.query)
+    catch e
+      console.error("Bad argument #{uri.query} => #{loadArgs}")
+      loadArgs = ""
   console.log("Doing initial search with '#{loadArgs}', hitting","#{searchParams.apiPath}?q=#{loadArgs}")
   $.get(searchParams.targetApi,"q=#{loadArgs}","json")
   .done (result) ->
