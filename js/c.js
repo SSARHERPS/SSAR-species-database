@@ -538,7 +538,7 @@ performSearch = function(stateArgs) {
 };
 
 formatSearchResults = function(result, container) {
-  var data, headers, html, htmlClose, htmlHead, targetCount;
+  var bootstrapColCount, colClass, data, headers, html, htmlClose, htmlHead, targetCount;
   if (container == null) {
     container = searchParams.targetContainer;
   }
@@ -546,18 +546,20 @@ formatSearchResults = function(result, container) {
   searchParams.result = data;
   headers = new Array();
   html = "";
-  htmlHead = "<table id='cndb-result-list'>\n\t<tr class='cndb-row-headers'>";
+  htmlHead = "<table id='cndb-result-list' class='table table-striped table-hover'>\n\t<tr class='cndb-row-headers'>";
   htmlClose = "</table>";
   targetCount = toInt(result.count) - 1;
+  colClass = null;
+  bootstrapColCount = 0;
   return $.each(data, function(i, row) {
     var htmlRow, j, l;
     if (toInt(i) === 0) {
       j = 0;
-      htmlHead += "\n<!-- Table Headers -->";
+      htmlHead += "\n<!-- Table Headers - " + (Object.size(row)) + " entries -->";
       $.each(row, function(k, v) {
-        var alt, niceKey;
+        var alt, bootstrapColSize, niceKey;
         niceKey = k.replace(/_/g, " ");
-        if (niceKey !== "id") {
+        if (k !== "id" && k !== "minor_type" && k !== "notes") {
           if ($("#show-deprecated").polymerSelected() !== true) {
             alt = "deprecated_scientific";
           } else {
@@ -565,28 +567,46 @@ formatSearchResults = function(result, container) {
           }
           if (k !== alt) {
             htmlHead += "\n\t\t<th class='text-center'>" + niceKey + "</th>";
+            bootstrapColCount++;
           }
         }
         j++;
         if (j === Object.size(row)) {
           htmlHead += "\n\t</tr>";
-          return htmlHead += "\n<!-- End Table Headers -->";
+          htmlHead += "\n<!-- End Table Headers -->";
+          console.log("Got " + bootstrapColCount + " display columns.");
+          bootstrapColSize = roundNumber(12 / bootstrapColCount, 0);
+          return colClass = "col-md-" + bootstrapColSize;
         }
       });
     }
     htmlRow = "\n\t<tr id='cndb-row" + i + "' class='cndb-result-entry'>";
     l = 0;
     $.each(row, function(k, col) {
-      var alt, d, e, genus, species, taxonQuery;
-      if (k !== "id") {
+      var alt, d, e, genus, kClass, species, split, taxonQuery, year;
+      if (k !== "id" && k !== "minor_type" && k !== "notes") {
         if (k === "authority_year") {
           try {
-            d = JSON.parse(col);
+            try {
+              d = JSON.parse(col);
+            } catch (_error) {
+              e = _error;
+              console.warn("There was an error parsing '" + col + "', attempting to fix - ", e.message);
+              split = col.split(":");
+              year = split[1].slice(split[1].search("\"") + 1, -2);
+              console.log("Examining " + year);
+              year = year.replace(/"/g, "'");
+              split[1] = "\"" + year + "\"}";
+              col = split.join(":");
+              console.log("Reconstructed " + col);
+              d = JSON.parse(col);
+            }
             genus = Object.keys(d)[0];
             species = d[genus];
             col = "G: " + genus + "<br/>S: " + species;
           } catch (_error) {
             e = _error;
+            console.error("There was an error parsing '" + col + "'", e.message);
             d = col;
           }
         }
@@ -607,7 +627,12 @@ formatSearchResults = function(result, container) {
               col = "<paper-icon-button icon='image:image' data-lightbox='" + col + "' class='lightboximage'></paper-icon-button>";
             }
           }
-          htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='" + k + "'>" + col + "</td>";
+          if (k !== "genus" && k !== "species" && k !== "subspecies") {
+            kClass = "" + k + " text-center";
+          } else {
+            kClass = k;
+          }
+          htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='" + kClass + " " + colClass + "'>" + col + "</td>";
         }
       }
       l++;

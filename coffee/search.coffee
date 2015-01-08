@@ -58,17 +58,19 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
   searchParams.result = data
   headers = new Array()
   html = ""
-  htmlHead = "<table id='cndb-result-list'>\n\t<tr class='cndb-row-headers'>"
+  htmlHead = "<table id='cndb-result-list' class='table table-striped table-hover'>\n\t<tr class='cndb-row-headers'>"
   htmlClose = "</table>"
   # We start at 0, so we want to count one below
   targetCount = toInt(result.count)-1
+  colClass = null
+  bootstrapColCount = 0
   $.each data, (i,row) ->
     if toInt(i) is 0
       j = 0
-      htmlHead += "\n<!-- Table Headers -->"
+      htmlHead += "\n<!-- Table Headers - #{Object.size(row)} entries -->"
       $.each row, (k,v) ->
         niceKey = k.replace(/_/g," ")
-        if niceKey isnt "id" #and niceKey isnt "image"
+        if k isnt "id"  and k isnt "minor_type" and k isnt "notes" #and niceKey isnt "image"
           if $("#show-deprecated").polymerSelected() isnt true
             alt = "deprecated_scientific"
           else
@@ -76,22 +78,39 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
             alt = ""
           if k isnt alt
             htmlHead += "\n\t\t<th class='text-center'>#{niceKey}</th>"
+            bootstrapColCount++
         j++
         if j is Object.size(row)
           htmlHead += "\n\t</tr>"
           htmlHead += "\n<!-- End Table Headers -->"
+          console.log("Got #{bootstrapColCount} display columns.")
+          bootstrapColSize = roundNumber(12/bootstrapColCount,0)
+          colClass = "col-md-#{bootstrapColSize}"
     htmlRow = "\n\t<tr id='cndb-row#{i}' class='cndb-result-entry'>"
     l = 0
     $.each row, (k,col) ->
-      if k isnt "id" #and k isnt "image"
+      if k isnt "id" and k isnt "minor_type" and k isnt "notes"
         if k is "authority_year"
           try
-            d = JSON.parse(col)
+            try
+              d = JSON.parse(col)
+            catch e
+              # attempt to fix it
+              console.warn("There was an error parsing '#{col}', attempting to fix - ",e.message)
+              split = col.split(":")
+              year = split[1].slice(split[1].search("\"")+1,-2)
+              console.log("Examining #{year}")
+              year = year.replace(/"/g,"'")
+              split[1] = "\"#{year}\"}"
+              col = split.join(":")
+              console.log("Reconstructed #{col}")
+              d = JSON.parse(col)
             genus = Object.keys(d)[0]
             species = d[genus]
             col = "G: #{genus}<br/>S: #{species}"
           catch e
             # Render as-is
+            console.error("There was an error parsing '#{col}'",e.message)
             d = col
         if $("#show-deprecated").polymerSelected() isnt true
           alt = "deprecated_scientific"
@@ -100,6 +119,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
           alt = ""
         if k isnt alt
           if k is "image"
+            # Set up the images
             if isNull(col)
               # Get a CalPhotos link as
               # http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=batrachoseps+attenuatus
@@ -109,7 +129,13 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
               col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{taxonQuery}' class='newwindow calphoto' data-taxon=\"#{taxonQuery}\"></paper-icon-button>"
             else
               col = "<paper-icon-button icon='image:image' data-lightbox='#{col}' class='lightboximage'></paper-icon-button>"
-          htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{k}'>#{col}</td>"
+          # What should be centered, and what should be left-aligned?
+          if k isnt "genus" and k isnt "species" and k isnt "subspecies"
+            kClass = "#{k} text-center"
+          else
+            # Left-aligned
+            kClass = k
+          htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{kClass} #{colClass}'>#{col}</td>"
       l++
       if l is Object.size(row)
         htmlRow += "\n\t</tr>"
