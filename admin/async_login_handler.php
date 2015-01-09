@@ -1,5 +1,7 @@
 <?php
 
+if(!isset($print_login_state)) $print_login_state = true;
+
 require_once(dirname(__FILE__).'/handlers/login_functions.php');
 require_once(dirname(__FILE__).'/core/core.php');
 #require_once(dirname(__FILE__).'/handlers/db_hook.inc');
@@ -17,46 +19,49 @@ function returnAjax($data)
 parse_str($_SERVER['QUERY_STRING'],$_GET);
 $do=isset($_REQUEST['action']) ? strtolower($_REQUEST['action']):null;
 
-switch($do)
+if($print_login_state === true)
   {
-  case 'get_login_status':
-    returnAjax(getLoginState($_REQUEST));
-    break;
-  case 'write':
-    returnAjax(saveToUser($_REQUEST));
-    break;
-  case 'get':
-    returnAjax(getFromUser($_REQUEST));
-    break;
-  case "maketotp":
-    returnAjax(generateTOTPForm($_REQUEST));
-    break;
-  case "verifytotp":
-    returnAjax(verifyTOTP($_REQUEST));
-    break;
-  case "savetotp":
-    returnAjax(saveTOTP($_REQUEST));
-    break;
-  case "removetotp":
-    returnAjax(removeTOTP($_REQUEST));
-    break;
-  case "sendtotptext":
-    returnAjax(sendTOTPText($_REQUEST));
-    break;
-  case "totpstatus":
-    returnAjax(hasTOTP($_REQUEST));
-    break;
-  case "cansms":
-    returnAjax(canSMS($_REQUEST));
-    break;
-  case "verifyphone":
-    returnAjax(verifyPhone($_REQUEST));
-    break;
-  case "removeaccount":
-    returnAjax(removeAccount($_REQUEST));
-    break;
-  default:
-    returnAjax(getLoginState($_REQUEST),true);
+    switch($do)
+      {
+      case 'get_login_status':
+        returnAjax(getLoginState($_REQUEST));
+        break;
+      case 'write':
+        returnAjax(saveToUser($_REQUEST));
+        break;
+      case 'get':
+        returnAjax(getFromUser($_REQUEST));
+        break;
+      case "maketotp":
+        returnAjax(generateTOTPForm($_REQUEST));
+        break;
+      case "verifytotp":
+        returnAjax(verifyTOTP($_REQUEST));
+        break;
+      case "savetotp":
+        returnAjax(saveTOTP($_REQUEST));
+        break;
+      case "removetotp":
+        returnAjax(removeTOTP($_REQUEST));
+        break;
+      case "sendtotptext":
+        returnAjax(sendTOTPText($_REQUEST));
+        break;
+      case "totpstatus":
+        returnAjax(hasTOTP($_REQUEST));
+        break;
+      case "cansms":
+        returnAjax(canSMS($_REQUEST));
+        break;
+      case "verifyphone":
+        returnAjax(verifyPhone($_REQUEST));
+        break;
+      case "removeaccount":
+        returnAjax(removeAccount($_REQUEST));
+        break;
+      default:
+        returnAjax(getLoginState($_REQUEST,true));
+      }
   }
 
 function getLoginState($get,$default=false)
