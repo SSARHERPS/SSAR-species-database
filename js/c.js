@@ -141,7 +141,7 @@ jQuery.fn.exists = function() {
 };
 
 jQuery.fn.polymerSelected = function(setSelected) {
-  var currId, e, prop, val;
+  var childDropdown, e, prop, val;
   if (setSelected == null) {
     setSelected = void 0;
   }
@@ -161,9 +161,13 @@ jQuery.fn.polymerSelected = function(setSelected) {
   } else {
     val = void 0;
     try {
-      currId = jQuery(this).attr("id");
-      prop = $(this).attr("valattr");
-      val = $("#" + currId + " .core-selected").prop(prop);
+      childDropdown = $(this).find("[valueattr]");
+      if (isNull(childDropdown)) {
+        childDropdown = $(this);
+      }
+      prop = childDropdown.attr("valueattr");
+      console.log("Looking at  prop " + prop);
+      val = $(this).find(".core-selected").attr(prop);
     } catch (_error) {
       e = _error;
       return false;

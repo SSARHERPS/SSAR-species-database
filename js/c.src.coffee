@@ -99,9 +99,13 @@ jQuery.fn.polymerSelected = (setSelected = undefined) ->
     val = undefined
     try
       # val = jQuery(this)[0].selected
-      currId = jQuery(this).attr("id")
-      prop = $(this).attr("valattr")
-      val = $("##{currId} .core-selected").prop(prop)
+      childDropdown = $(this).find("[valueattr]")
+      if isNull(childDropdown)
+        childDropdown = $(this)
+      prop = childDropdown.attr("valueattr")
+      console.log("Looking at  prop #{prop}")
+      # selectedItem = 
+      val = $(this).find(".core-selected").attr(prop)
     catch e
       return false
     if val is "null" or not val?
