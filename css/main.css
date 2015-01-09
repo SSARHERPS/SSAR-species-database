@@ -103,7 +103,9 @@ paper-dropdown.dropdown {
 paper-toggle-button {
     margin-left:1rem;
 }
-
+paper-icon-button {
+    vertical-align:middle;
+}
 
 /************
  * Lightbox

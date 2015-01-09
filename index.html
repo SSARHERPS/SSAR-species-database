@@ -21,7 +21,8 @@
     <link rel="import" href="bower_components/core-elements/core-elements.html"/>
     <link rel="import" href="bower_components/core-icons/core-icons.html"/>
     <link rel="import" href="bower_components/core-icons/image-icons.html"/>
-
+    <link rel="import" href="bower_components/core-icons/social-icons.html"/>
+    <link rel="import" href="polymer-elements/copyright-statement.html"/>
 
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
     <script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
@@ -80,13 +81,17 @@
     </div>
     <footer class="row">
       <div class="col-md-8">
-        
+        <copyright-statement copyrightStart="2015" name="Society for the Study of Amphibians and Reptiles"></copyright-statement> 
+      </div>
+      <div class="col-md-1">
+        <!-- <span class="octicon octicon-mark-github click med-octicon" data-url="https://github.com/tigerhawkvok/SSAR-species-database"></span> -->
+        <paper-icon-button icon="social:post-github" class="click" data-url="https://github.com/tigerhawkvok/SSAR-species-database"></paper-icon-button>
+      </div>
+      <div class="col-md-1">
+        <paper-icon-button icon="bug-report" class="click" data-url="https://github.com/tigerhawkvok/SSAR-species-database/issues/new"></paper-icon-button>
       </div>
       <div class="col-md-2">
-        <span class="octicon octicon-mark-github click med-octicon" data-url="https://github.com/tigerhawkvok/SSAR-species-database"></span>
-      </div>
-      <div class="col-md-2">
-        Written with <core-icon icon="polymer" class="click" data-url="https://www.polymer-project.org"></core-icon>
+        Written with <paper-icon-button icon="polymer" class="click" data-url="https://www.polymer-project.org"></paper-icon-button>
       </div>
     </footer>
   </body>
