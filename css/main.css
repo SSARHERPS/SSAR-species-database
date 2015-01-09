@@ -52,6 +52,12 @@ body {
     color: #607d8b;
     
 }
+.click {
+    cursor:pointer;
+}
+.med-octicon {
+    font-size:24px !important;
+}
 #result_container {
     padding:1em;
 }

@@ -295,3 +295,7 @@ formatScientificNames = (selector = ".sciname") ->
 prepURI = (string) ->
   string = encodeURIComponent(string)
   string.replace(/%20/g,"+")
+
+$ ->
+  $(".click").click ->    
+    openTab($(this).attr("data-url"))

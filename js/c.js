@@ -510,6 +510,12 @@ prepURI = function(string) {
   return string.replace(/%20/g, "+");
 };
 
+$(function() {
+  return $(".click").click(function() {
+    return openTab($(this).attr("data-url"));
+  });
+});
+
 searchParams = new Object();
 
 searchParams.targetApi = "commonnames_api.php";

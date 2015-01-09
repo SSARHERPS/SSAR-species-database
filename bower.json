@@ -24,7 +24,8 @@
     "xmlToJSON": "metatribal/xmlToJSON#~1.1.0",
     "purl": "~2.3.1",
     "picturefill": "~2.2.0",
-    "js-base64": "~2.1.5"
+    "js-base64": "~2.1.5",
+    "octicons": "~2.1.2"
   },
   "resolutions": {
     "polymer": "^0.5.0",
