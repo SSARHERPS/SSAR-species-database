@@ -220,6 +220,8 @@ $ ->
     if e.which is 13 then performSearch()
   $("#do-search").click ->
     performSearch()
+  $("#do-search-all").click ->
+    performSearch("")
   # Do a fill of the result container
   if isNull uri.query
     loadArgs = ""
@@ -229,29 +231,34 @@ $ ->
     catch e
       console.error("Bad argument #{uri.query} => #{loadArgs}")
       loadArgs = ""
-  console.log("Doing initial search with '#{loadArgs}', hitting","#{searchParams.apiPath}?q=#{loadArgs}")
-  $.get(searchParams.targetApi,"q=#{loadArgs}","json")
-  .done (result) ->
-    # Populate the result container
-    if result.status is true and result.count > 0
-      console.log("Got a valid result, formatting #{result.count} results.")
-      formatSearchResults(result)
-      return false
-    if result.count is 0
-      result.human_error = "No results for \"#{loadArgs.split("&")[0]}\""
-    $("#search-status").attr("text",result.human_error)
-    $("#search-status")[0].show()
-    console.error(result.error)
-    console.warn(result)
-    stopLoadError()
-  .fail (result,error) ->
-    console.error("There was an error loading the generic table")
-    console.warn(result,error,result.statusText)
-    error = "#{result.status} - #{result.statusText}"
-    $("#search-status").attr("text","Couldn't load table - #{error}")
-    $("#search-status")[0].show()
-    stopLoadError()
-  .always ->
-    # Anything we always want done
+  # Perform the initial search
+  if not isNull(loadArgs)
+    console.log("Doing initial search with '#{loadArgs}', hitting","#{searchParams.apiPath}?q=#{loadArgs}")
+    $.get(searchParams.targetApi,"q=#{loadArgs}","json")
+    .done (result) ->
+      # Populate the result container
+      if result.status is true and result.count > 0
+        console.log("Got a valid result, formatting #{result.count} results.")
+        formatSearchResults(result)
+        return false
+      if result.count is 0
+        result.human_error = "No results for \"#{loadArgs.split("&")[0]}\""
+      $("#search-status").attr("text",result.human_error)
+      $("#search-status")[0].show()
+      console.error(result.error)
+      console.warn(result)
+      stopLoadError()
+    .fail (result,error) ->
+      console.error("There was an error loading the generic table")
+      console.warn(result,error,result.statusText)
+      error = "#{result.status} - #{result.statusText}"
+      $("#search-status").attr("text","Couldn't load table - #{error}")
+      $("#search-status")[0].show()
+      stopLoadError()
+    .always ->
+      # Anything we always want done
+      $("#search").attr("disabled",false)
+      false
+  else
+    stopLoad()
     $("#search").attr("disabled",false)
-    false

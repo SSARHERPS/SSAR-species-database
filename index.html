@@ -30,12 +30,13 @@
     <form id="search_form" onsubmit="event.preventDefault()">
       <paper-input label="Search" id="search" name="search" disabled required autofocus floatingLabel></paper-input>
       <paper-fab id="do-search" icon="search" raisedButton class="materialblue"></paper-fab>
+      <paper-fab id="do-search-all" icon="unfold-more" raisedButton class="materialblue"></paper-fab>
       <br/>
       <br/>
       <core-label>
         <span class="sr-only">Clade Restriction</span>
         <paper-dropdown-menu label="Clade Restriction" for>
-          <paper-dropdown id="type" name="type" selected="any" valueattr="data-type" class="dropdown">
+          <paper-dropdown id="type" name="type" valueattr="data-type" class="dropdown">
             <core-menu class="menu">
               <paper-item data-type="any">All</paper-item>
               <paper-item data-type="squamata">Non-Snake Lizards</paper-item>
@@ -60,7 +61,9 @@
     <br/>
     <h1>Results<span id="result-count"></span></h1>
     <div id="result_container" class="table-responsive row">
-
+      <p>
+        Search for a common or scientific name above to begin.
+      </p>
     </div>
   </body>
 </html>

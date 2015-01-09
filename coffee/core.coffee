@@ -69,11 +69,20 @@ jQuery.fn.polymerSelected = (setSelected = undefined) ->
   if setSelected?
     try
       jQuery(this).prop("selected",setSelected)
+      jQuery(this).prop("active",setSelected)
+      if setSelected is true
+        jQuery(this).addClass("core-selected")
+      else
+        jQuery(this).removeClass("core-selected")
     catch e
       return false
   else
+    val = undefined
     try
-      val = jQuery(this)[0].selected
+      # val = jQuery(this)[0].selected
+      currId = jQuery(this).attr("id")
+      prop = $(this).attr("valattr")
+      val = $("##{currId} .core-selected").prop(prop)
     catch e
       return false
     if val is "null" or not val?

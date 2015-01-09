@@ -1,7 +1,7 @@
 ###
 # The main coffeescript file for administrative stuff
 ###
-
+adminParams = new Object()
 adminParams.loginPage = "admin-login.php"
 adminParams.apiTarget = "admin_api.php"
 

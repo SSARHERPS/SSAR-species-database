@@ -2,8 +2,10 @@
 /*
  * The main coffeescript file for administrative stuff
  */
-var activityIndicatorOff, activityIndicatorOn, animateLoad, byteCount, deferCalPhotos, delay, formatScientificNames, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, mapNewWindows, openLink, openTab, overlayOff, overlayOn, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, byteCount, deferCalPhotos, delay, formatScientificNames, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, mapNewWindows, openLink, openTab, overlayOff, overlayOn, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
   __slice = [].slice;
+
+adminParams = new Object();
 
 adminParams.loginPage = "admin-login.php";
 
@@ -139,20 +141,29 @@ jQuery.fn.exists = function() {
 };
 
 jQuery.fn.polymerSelected = function(setSelected) {
-  var e, val;
+  var currId, e, prop, val;
   if (setSelected == null) {
     setSelected = void 0;
   }
   if (setSelected != null) {
     try {
-      return jQuery(this).prop("selected", setSelected);
+      jQuery(this).prop("selected", setSelected);
+      jQuery(this).prop("active", setSelected);
+      if (setSelected === true) {
+        return jQuery(this).addClass("core-selected");
+      } else {
+        return jQuery(this).removeClass("core-selected");
+      }
     } catch (_error) {
       e = _error;
       return false;
     }
   } else {
+    val = void 0;
     try {
-      val = jQuery(this)[0].selected;
+      currId = jQuery(this).attr("id");
+      prop = $(this).attr("valattr");
+      val = $("#" + currId + " .core-selected").prop(prop);
     } catch (_error) {
       e = _error;
       return false;
@@ -765,6 +776,9 @@ $(function() {
   $("#do-search").click(function() {
     return performSearch();
   });
+  $("#do-search-all").click(function() {
+    return performSearch("");
+  });
   if (isNull(uri.query)) {
     loadArgs = "";
   } else {
@@ -776,32 +790,37 @@ $(function() {
       loadArgs = "";
     }
   }
-  console.log("Doing initial search with '" + loadArgs + "', hitting", "" + searchParams.apiPath + "?q=" + loadArgs);
-  return $.get(searchParams.targetApi, "q=" + loadArgs, "json").done(function(result) {
-    if (result.status === true && result.count > 0) {
-      console.log("Got a valid result, formatting " + result.count + " results.");
-      formatSearchResults(result);
+  if (!isNull(loadArgs)) {
+    console.log("Doing initial search with '" + loadArgs + "', hitting", "" + searchParams.apiPath + "?q=" + loadArgs);
+    return $.get(searchParams.targetApi, "q=" + loadArgs, "json").done(function(result) {
+      if (result.status === true && result.count > 0) {
+        console.log("Got a valid result, formatting " + result.count + " results.");
+        formatSearchResults(result);
+        return false;
+      }
+      if (result.count === 0) {
+        result.human_error = "No results for \"" + (loadArgs.split("&")[0]) + "\"";
+      }
+      $("#search-status").attr("text", result.human_error);
+      $("#search-status")[0].show();
+      console.error(result.error);
+      console.warn(result);
+      return stopLoadError();
+    }).fail(function(result, error) {
+      console.error("There was an error loading the generic table");
+      console.warn(result, error, result.statusText);
+      error = "" + result.status + " - " + result.statusText;
+      $("#search-status").attr("text", "Couldn't load table - " + error);
+      $("#search-status")[0].show();
+      return stopLoadError();
+    }).always(function() {
+      $("#search").attr("disabled", false);
       return false;
-    }
-    if (result.count === 0) {
-      result.human_error = "No results for \"" + (loadArgs.split("&")[0]) + "\"";
-    }
-    $("#search-status").attr("text", result.human_error);
-    $("#search-status")[0].show();
-    console.error(result.error);
-    console.warn(result);
-    return stopLoadError();
-  }).fail(function(result, error) {
-    console.error("There was an error loading the generic table");
-    console.warn(result, error, result.statusText);
-    error = "" + result.status + " - " + result.statusText;
-    $("#search-status").attr("text", "Couldn't load table - " + error);
-    $("#search-status")[0].show();
-    return stopLoadError();
-  }).always(function() {
-    $("#search").attr("disabled", false);
-    return false;
-  });
+    });
+  } else {
+    stopLoad();
+    return $("#search").attr("disabled", false);
+  }
 });
 
 //# sourceMappingURL=../coffee/maps/c.js.map
