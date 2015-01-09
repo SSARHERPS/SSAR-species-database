@@ -28,32 +28,39 @@
   </head>
   <body>
     <form id="search_form" onsubmit="event.preventDefault()">
-      <paper-input label="Search" id="search" name="search" disabled required autofocus floatingLabel></paper-input>
-      <paper-fab id="do-search" icon="search" raisedButton class="materialblue"></paper-fab>
-      <paper-fab id="do-search-all" icon="unfold-more" raisedButton class="materialblue"></paper-fab>
-      <br/>
-      <br/>
-      <core-label>
-        <span class="sr-only">Clade Restriction</span>
-        <paper-dropdown-menu label="Clade Restriction" for>
-          <paper-dropdown id="type" name="type" valueattr="data-type" class="dropdown">
-            <core-menu class="menu">
-              <paper-item data-type="any">All</paper-item>
-              <paper-item data-type="squamata">Non-Snake Lizards</paper-item>
-              <paper-item data-type="serpentes">Snakes</paper-item>
-              <paper-item data-type="testudines">Turtles</paper-item>
-              <paper-item data-type="crocodylia">Crocodiles &amp; Alligators</paper-item>
-              <paper-item data-type="caudata">Salamanders</paper-item>
-              <paper-item data-type="anura">Frogs</paper-item>
-              <paper-item data-type="gymnophiona">Caecilians</paper-item>
-              <!-- As per flag 4 in readme -->
-            </core-menu>
-          </paper-dropdown>
-        </paper-dropdown-menu>
-      </core-label>
-      <fieldset>
+      <div class="col-md-12">
+        <paper-input label="Search" id="search" name="search" disabled required autofocus floatingLabel></paper-input>
+        <paper-fab id="do-search" icon="search" raisedButton class="materialblue"></paper-fab>
+        <paper-fab id="do-search-all" icon="unfold-more" raisedButton class="materialblue"></paper-fab>
+      </div>
+      <fieldset class="col-md-12">
         <legend>Options</legend>
-        List of options with "restrict to" and "include", corresponding to 2 and 3 in readme
+        <core-label class="col-md-4">
+          Loose
+          <paper-toggle-button id="loose" checked></paper-toggle-button>
+        </core-label>
+        <core-label class="col-md-4">
+          Fuzzy
+          <paper-toggle-button id="fuzzy"></paper-toggle-button>
+        </core-label>
+        <core-label class="col-md-4">
+          <span class="sr-only">Clade Restriction</span>
+          <paper-dropdown-menu label="Clade Restriction" for>
+            <paper-dropdown id="type" name="type" valueattr="data-type" class="dropdown">
+              <core-menu class="menu">
+                <paper-item data-type="any">All</paper-item>
+                <paper-item data-type="squamata">Non-Snake Lizards</paper-item>
+                <paper-item data-type="serpentes">Snakes</paper-item>
+                <paper-item data-type="testudines">Turtles</paper-item>
+                <paper-item data-type="crocodylia">Crocodiles &amp; Alligators</paper-item>
+                <paper-item data-type="caudata">Salamanders</paper-item>
+                <paper-item data-type="anura">Frogs</paper-item>
+                <paper-item data-type="gymnophiona">Caecilians</paper-item>
+                <!-- As per flag 4 in readme -->
+              </core-menu>
+            </paper-dropdown>
+          </paper-dropdown-menu>
+        </core-label>
       </fieldset>
       <input type="submit" style="display:none;" value="Search"/>
     </form>
@@ -65,5 +72,13 @@
         Search for a common or scientific name above to begin.
       </p>
     </div>
+    <footer class="row">
+      <div class="col-md-2">
+        <!-- Github -->
+      </div>
+      <div class="col-md-2">
+        Written with <core-icon icon="polymer"></core-icon>
+      </div>
+    </footer>
   </body>
 </html>

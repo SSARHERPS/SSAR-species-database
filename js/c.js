@@ -2,7 +2,7 @@
 /*
  * The main coffeescript file for administrative stuff
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, byteCount, deferCalPhotos, delay, formatScientificNames, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, mapNewWindows, openLink, openTab, overlayOff, overlayOn, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, byteCount, deferCalPhotos, delay, formatScientificNames, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
   __slice = [].slice;
 
 adminParams = new Object();
@@ -526,16 +526,18 @@ performSearch = function(stateArgs) {
   if (stateArgs == null) {
     s = $("#search").val();
     sOrig = s;
+    s = s.toLowerCase();
     if (isNull(s)) {
       $("#search-status").attr("text", "Please enter a search term.");
       $("#search-status")[0].show();
       return false;
     }
-    if ($("#strict-search").polymerSelected() !== true) {
-      s = s.toLowerCase();
-      s = "" + (prepURI(s)) + "&loose=true";
-    } else {
-      s = prepURI(s);
+    s = prepURI(s);
+    if ($("#loose").polymerChecked()) {
+      s = "" + s + "&loose=true";
+    }
+    if ($("#fuzzy").polymerChecked()) {
+      s = "" + s + "&fuzzy=true";
     }
     args = "q=" + s;
   } else {
@@ -593,7 +595,7 @@ formatSearchResults = function(result, container) {
   colClass = null;
   bootstrapColCount = 0;
   return $.each(data, function(i, row) {
-    var htmlRow, j, l;
+    var htmlRow, j, l, taxonQuery;
     if (toInt(i) === 0) {
       j = 0;
       htmlHead += "\n<!-- Table Headers - " + (Object.size(row)) + " entries -->";
@@ -621,10 +623,14 @@ formatSearchResults = function(result, container) {
         }
       });
     }
-    htmlRow = "\n\t<tr id='cndb-row" + i + "' class='cndb-result-entry'>";
+    taxonQuery = "" + row.genus + "+" + row.species;
+    if (!isNull(row.subspecies)) {
+      taxonQuery = "" + taxonQuery + "+" + row.subspecies;
+    }
+    htmlRow = "\n\t<tr id='cndb-row" + i + "' class='cndb-result-entry' data-taxon=\"" + taxonQuery + "\">";
     l = 0;
     $.each(row, function(k, col) {
-      var alt, d, e, genus, kClass, species, split, taxonQuery, year;
+      var alt, d, e, genus, kClass, species, split, year;
       if (k !== "id" && k !== "minor_type" && k !== "notes") {
         if (k === "authority_year") {
           try {
@@ -659,10 +665,6 @@ formatSearchResults = function(result, container) {
         if (k !== alt) {
           if (k === "image") {
             if (isNull(col)) {
-              taxonQuery = "" + row.genus + "+" + row.species;
-              if (!isNull(row.subspecies)) {
-                taxonQuery = "" + taxonQuery + "+" + row.subspecies;
-              }
               col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=" + taxonQuery + "' class='newwindow calphoto' data-taxon=\"" + taxonQuery + "\"></paper-icon-button>";
             } else {
               col = "<paper-icon-button icon='image:image' data-lightbox='" + col + "' class='lightboximage'></paper-icon-button>";
@@ -688,6 +690,7 @@ formatSearchResults = function(result, container) {
       $(container).html(html);
       mapNewWindows();
       lightboxImages();
+      modalTaxon();
       $("#result-count").text(" - " + result.count + " entries");
       return stopLoad();
     }
@@ -731,6 +734,37 @@ deferCalPhotos = function(selector) {
         return lightboxImages(".calphoto-image-anchor");
       }
     });
+  });
+  return false;
+};
+
+modalTaxon = function(taxon) {
+  var html;
+  if (taxon == null) {
+    taxon = void 0;
+  }
+  if (taxon == null) {
+    $(".cndb-result-entry").click(function() {
+      return modalTaxon($(this).attr("data-taxon"));
+    });
+    return false;
+  }
+  animateLoad();
+  if (!$("#modal-taxon").exists()) {
+    html = "<paper-action-dialog backdrop layered id='modal-taxon'><paper-button affirmative autofocus>Close</paper-button></paper-action-dialog>";
+    $("#result_container").after(html);
+  }
+  $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
+    var data, humanTaxon;
+    data = result.result[0];
+    console.log("Got", data);
+    humanTaxon = taxon.charAt(0).toUpperCase() + taxon.slice(1);
+    humanTaxon = humanTaxon.replace(/\+/g, " ");
+    $("#modal-taxon").attr("heading", humanTaxon);
+    stopLoad();
+    return $("#modal-taxon")[0].open();
+  }).fail(function(result, status) {
+    return stopLoadError();
   });
   return false;
 };

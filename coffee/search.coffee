@@ -8,16 +8,16 @@ performSearch = (stateArgs = undefined) ->
     s = $("#search").val()
     # Store a version before we do any search modifiers
     sOrig = s
+    s = s.toLowerCase()
     if isNull(s)
       $("#search-status").attr("text","Please enter a search term.")
       $("#search-status")[0].show()
       return false
-
-    if $("#strict-search").polymerSelected() isnt true
-      s = s.toLowerCase()
-      s = "#{prepURI(s)}&loose=true"
-    else
-      s = prepURI(s)
+    s = prepURI(s)
+    if $("#loose").polymerChecked()
+      s = "#{s}&loose=true"
+    if $("#fuzzy").polymerChecked()
+      s = "#{s}&fuzzy=true"
     args = "q=#{s}"
   else
     args = "q=#{stateArgs}"
@@ -87,7 +87,10 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
           console.log("Got #{bootstrapColCount} display columns.")
           bootstrapColSize = roundNumber(12/bootstrapColCount,0)
           colClass = "col-md-#{bootstrapColSize}"
-    htmlRow = "\n\t<tr id='cndb-row#{i}' class='cndb-result-entry'>"
+    taxonQuery = "#{row.genus}+#{row.species}"
+    if not isNull(row.subspecies)
+      taxonQuery = "#{taxonQuery}+#{row.subspecies}"
+    htmlRow = "\n\t<tr id='cndb-row#{i}' class='cndb-result-entry' data-taxon=\"#{taxonQuery}\">"
     l = 0
     $.each row, (k,col) ->
       if k isnt "id" and k isnt "minor_type" and k isnt "notes"
@@ -124,9 +127,6 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
             if isNull(col)
               # Get a CalPhotos link as
               # http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=batrachoseps+attenuatus
-              taxonQuery = "#{row.genus}+#{row.species}"
-              if not isNull(row.subspecies)
-                taxonQuery = "#{taxonQuery}+#{row.subspecies}"
               col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{taxonQuery}' class='newwindow calphoto' data-taxon=\"#{taxonQuery}\"></paper-icon-button>"
             else
               col = "<paper-icon-button icon='image:image' data-lightbox='#{col}' class='lightboximage'></paper-icon-button>"
@@ -148,6 +148,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       $(container).html(html)
       mapNewWindows()
       lightboxImages()
+      modalTaxon()
       $("#result-count").text(" - #{result.count} entries")
       stopLoad()
       # Lazy-replace linkout calphotos with images. Each one needs a hit!
@@ -183,6 +184,33 @@ deferCalPhotos = (selector = ".calphoto") ->
     .always ->
       if i is count
         lightboxImages(".calphoto-image-anchor")
+  false
+
+modalTaxon = (taxon = undefined) ->
+  if not taxon?
+    $(".cndb-result-entry").click ->
+      modalTaxon($(this).attr("data-taxon"))
+    return false
+  # Pop open a paper action dialog ...
+  # https://www.polymer-project.org/docs/elements/paper-elements.html#paper-action-dialog
+  animateLoad()
+  if not $("#modal-taxon").exists()
+    html = "<paper-action-dialog backdrop layered id='modal-taxon'><paper-button affirmative autofocus>Close</paper-button></paper-action-dialog>"
+    $("#result_container").after(html)
+  $.get(searchParams.targetApi,"q=#{taxon}","json")
+  .done (result) ->
+    data = result.result[0]
+    console.log("Got",data)
+    # Populate the taxon
+    # Set the heading
+    humanTaxon = taxon.charAt(0).toUpperCase()+taxon.slice(1)
+    humanTaxon = humanTaxon.replace(/\+/g," ")
+    $("#modal-taxon").attr("heading",humanTaxon)
+    # Open it
+    stopLoad()
+    $("#modal-taxon")[0].open()
+  .fail (result,status) ->
+    stopLoadError()    
   false
 
 sortResults = (by_column) ->
