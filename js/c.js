@@ -1,5 +1,29 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, byteCount, deferCalPhotos, delay, formatScientificNames, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, mapNewWindows, openLink, openTab, overlayOff, overlayOn, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
+
+/*
+ * The main coffeescript file for administrative stuff
+ */
+var activityIndicatorOff, activityIndicatorOn, animateLoad, byteCount, deferCalPhotos, delay, formatScientificNames, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, mapNewWindows, openLink, openTab, overlayOff, overlayOn, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
   __slice = [].slice;
+
+adminParams.loginPage = "admin-login.php";
+
+adminParams.apiTarget = "admin_api.php";
+
+loadAdminUi = function() {
+
+  /*
+   * Main wrapper function. Checks for a valid login state, then
+   * fetches/draws the page contents if it's OK. Otherwise, boots the
+   * user back to the login page.
+   */
+  return false;
+};
+
+$(function() {
+  if (window.loadAdminUi === true) {
+    return loadAdminUi();
+  }
+});
 
 root = typeof exports !== "undefined" && exports !== null ? exports : this;
 
