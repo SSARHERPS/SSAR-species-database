@@ -51,8 +51,10 @@
           <paper-toggle-button id="fuzzy"></paper-toggle-button>
         </core-label>
         <core-label class="col-md-4">
+          <!-- This is a filter column. We need a radio button for
+          AND/OR, and then to walk through the filters and append the object to the query. -->
           <span class="sr-only">Clade Restriction</span>
-          <paper-dropdown-menu label="Clade Restriction" for>
+          <paper-dropdown-menu label="Clade Restriction" data-column="major_type"  for>
             <paper-dropdown id="type" name="type" valueattr="data-type" class="dropdown">
               <core-menu class="menu">
                 <paper-item data-type="any">All</paper-item>
