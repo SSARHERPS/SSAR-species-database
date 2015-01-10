@@ -2,7 +2,7 @@
 /*
  * The main coffeescript file for administrative stuff
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, byteCount, deferCalPhotos, delay, formatScientificNames, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, byteCount, deferCalPhotos, delay, formatScientificNames, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
   __slice = [].slice;
 
 adminParams = new Object();
@@ -703,6 +703,42 @@ formatSearchResults = function(result, container) {
   });
 };
 
+parseTaxonYear = function(taxonYearString, strict) {
+  var d, e, genus, species, split, year;
+  if (strict == null) {
+    strict = true;
+  }
+  try {
+    d = JSON.parse(taxonYearString);
+  } catch (_error) {
+    e = _error;
+    console.warn("There was an error parsing '" + taxonYearString + "', attempting to fix - ", e.message);
+    split = taxonYearString.split(":");
+    year = split[1].slice(split[1].search("\"") + 1, -2);
+    console.log("Examining " + year);
+    year = year.replace(/"/g, "'");
+    split[1] = "\"" + year + "\"}";
+    taxonYearString = split.join(":");
+    console.log("Reconstructed " + taxonYearString);
+    try {
+      d = JSON.parse(taxonYearString);
+    } catch (_error) {
+      e = _error;
+      if (strict) {
+        return false;
+      } else {
+        return taxonYearString;
+      }
+    }
+  }
+  genus = Object.keys(d)[0];
+  species = d[genus];
+  year = new Object();
+  year.genus = genus;
+  year.species = species;
+  return year;
+};
+
 deferCalPhotos = function(selector) {
   var count, cpUrl, i;
   if (selector == null) {
@@ -757,13 +793,56 @@ modalTaxon = function(taxon) {
   }
   animateLoad();
   if (!$("#modal-taxon").exists()) {
-    html = "<paper-action-dialog backdrop layered id='modal-taxon'><paper-button affirmative autofocus>Close</paper-button></paper-action-dialog>";
+    html = "<paper-action-dialog backdrop layered closeSelector=\"[affirmative]\" id='modal-taxon'><div id='modal-taxon-content'></div><paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button><paper-button dismissive id='modal-calphotos-linkout'>CalPhotos</paper-button><paper-button affirmative autofocus>Close</paper-button></paper-action-dialog>";
     $("#result_container").after(html);
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
-    var data, humanTaxon;
+    var data, deprecatedHtml, e, humanTaxon, i, minorTypeHtml, sn, year, yearHtml;
     data = result.result[0];
     console.log("Got", data);
+    year = parseTaxonYear(data.authority_year);
+    yearHtml = "";
+    if (year !== false) {
+      yearHtml = "<p><span class='genus'>" + data.genus + "</span>, <span class='genus_authority'>" + data.genus_authority + "</span> " + year.genus + "; <span class='species'>" + data.species + "</span>, <span class='species_authority'>" + data.species_authority + "</span> " + year.species + "</p>";
+    }
+    deprecatedHtml = "";
+    if (!isNull(data.deprecated_scientific)) {
+      deprecatedHtml = "<p>Deprecated names:";
+      try {
+        sn = JSON.parse(data.deprecated_scientific);
+        i = 0;
+        $.each(sn, function(scientific, authority) {
+          i++;
+          if (i !== 1) {
+            deprecatedHtml += "; ";
+          }
+          deprecatedHtml += "<span class='sciname'>" + scientific + "</span>, " + authority;
+          if (i === Object.size(sn)) {
+            return deprecatedHtml += "</p>";
+          }
+        });
+      } catch (_error) {
+        e = _error;
+        deprecatedHtml = "";
+        console.error("There were deprecated scientific names, but the JSON was malformed.");
+      }
+    }
+    minorTypeHtml = "";
+    if (!isNull(data.minor_type)) {
+      minorTypeHtml = " <core-icon icon='arrow-forward'></core-icon> <span id='taxon-minor-type'>" + data.minor_type + "</span>";
+    }
+    if (isNull(data.notes)) {
+      data.notes = "Sorry, we have no notes on this taxon yet.";
+    }
+    html = "<div id='meta-taxon-info'>" + yearHtml + "<p>Common name: <span id='taxon-common-name' class='common-name'>" + data.common_name + "</span></p><p>Type: <span id='taxon-type'>" + data.major_type + "</span> (<span id='taxon-common-type'>" + data.major_common_type + "</span>) <core-icon icon='arrow-forward'></core-icon> <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "</p>" + deprecatedHtml + "</div><h3>Taxon Notes</h3><p id='taxon-notes'>" + data.notes + "</p>";
+    $("#modal-taxon-content").html(html);
+    $("#modal-inat-linkout").unbind().click(function() {
+      return openTab("http://www.inaturalist.org/taxa/search?q=" + taxon);
+    });
+    $("#modal-calphotos-linkout").unbind().click(function() {
+      return openTab("http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=" + taxon);
+    });
+    formatScientificNames();
     humanTaxon = taxon.charAt(0).toUpperCase() + taxon.slice(1);
     humanTaxon = humanTaxon.replace(/\+/g, " ");
     $("#modal-taxon").attr("heading", humanTaxon);

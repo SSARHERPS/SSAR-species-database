@@ -154,6 +154,33 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       # Lazy-replace linkout calphotos with images. Each one needs a hit!
       # deferCalPhotos()
 
+parseTaxonYear = (taxonYearString,strict = true) ->
+  try
+    d = JSON.parse(taxonYearString)
+  catch e
+    # attempt to fix it
+    console.warn("There was an error parsing '#{taxonYearString}', attempting to fix - ",e.message)
+    split = taxonYearString.split(":")
+    year = split[1].slice(split[1].search("\"")+1,-2)
+    console.log("Examining #{year}")
+    year = year.replace(/"/g,"'")
+    split[1] = "\"#{year}\"}"
+    taxonYearString = split.join(":")
+    console.log("Reconstructed #{taxonYearString}")
+    try
+      d = JSON.parse(taxonYearString)
+    catch e
+      if strict
+        return false
+      else
+        return taxonYearString
+  genus = Object.keys(d)[0]
+  species = d[genus]
+  year = new Object()
+  year.genus = genus
+  year.species = species
+  return year
+
 deferCalPhotos = (selector = ".calphoto") ->
   ###
   # Defer renders of calphoto linkouts
@@ -195,13 +222,50 @@ modalTaxon = (taxon = undefined) ->
   # https://www.polymer-project.org/docs/elements/paper-elements.html#paper-action-dialog
   animateLoad()
   if not $("#modal-taxon").exists()
-    html = "<paper-action-dialog backdrop layered id='modal-taxon'><paper-button affirmative autofocus>Close</paper-button></paper-action-dialog>"
+    html = "<paper-action-dialog backdrop layered closeSelector=\"[affirmative]\" id='modal-taxon'><div id='modal-taxon-content'></div><paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button><paper-button dismissive id='modal-calphotos-linkout'>CalPhotos</paper-button><paper-button affirmative autofocus>Close</paper-button></paper-action-dialog>"
     $("#result_container").after(html)
   $.get(searchParams.targetApi,"q=#{taxon}","json")
   .done (result) ->
     data = result.result[0]
     console.log("Got",data)
+    year = parseTaxonYear(data.authority_year)
+    yearHtml = ""
+    if year isnt false
+      yearHtml = "<p><span class='genus'>#{data.genus}</span>, <span class='genus_authority'>#{data.genus_authority}</span> #{year.genus}; <span class='species'>#{data.species}</span>, <span class='species_authority'>#{data.species_authority}</span> #{year.species}</p>"
+    deprecatedHtml = ""
+    if not isNull(data.deprecated_scientific)
+      deprecatedHtml = "<p>Deprecated names:"
+      try
+        sn = JSON.parse(data.deprecated_scientific)
+        i = 0
+        $.each sn, (scientific,authority) ->
+          i++
+          if i isnt 1
+            deprecatedHtml += "; "
+          deprecatedHtml += "<span class='sciname'>#{scientific}</span>, #{authority}"
+          if i is Object.size(sn)
+            deprecatedHtml += "</p>"
+      catch e
+        # skip it
+        deprecatedHtml = ""
+        console.error("There were deprecated scientific names, but the JSON was malformed.")
+    minorTypeHtml = ""
+    if not isNull(data.minor_type)
+      minorTypeHtml = " <core-icon icon='arrow-forward'></core-icon> <span id='taxon-minor-type'>#{data.minor_type}</span>"
     # Populate the taxon
+    if isNull(data.notes)
+      data.notes = "Sorry, we have no notes on this taxon yet."
+    html = "<div id='meta-taxon-info'>#{yearHtml}<p>Common name: <span id='taxon-common-name' class='common-name'>#{data.common_name}</span></p><p>Type: <span id='taxon-type'>#{data.major_type}</span> (<span id='taxon-common-type'>#{data.major_common_type}</span>) <core-icon icon='arrow-forward'></core-icon> <span id='taxon-subtype'>#{data.major_subtype}</span>#{minorTypeHtml}</p>#{deprecatedHtml}</div><h3>Taxon Notes</h3><p id='taxon-notes'>#{data.notes}</p>"
+    $("#modal-taxon-content").html(html)
+    $("#modal-inat-linkout")
+    .unbind()
+    .click ->
+      openTab("http://www.inaturalist.org/taxa/search?q=#{taxon}")
+    $("#modal-calphotos-linkout")
+    .unbind()
+    .click ->
+      openTab("http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{taxon}")
+    formatScientificNames()
     # Set the heading
     humanTaxon = taxon.charAt(0).toUpperCase()+taxon.slice(1)
     humanTaxon = humanTaxon.replace(/\+/g," ")
