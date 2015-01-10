@@ -549,7 +549,11 @@ performSearch = function(stateArgs) {
     args = "q=" + s;
   } else {
     args = "q=" + stateArgs;
+    console.log("Searching on " + stateArgs);
     sOrig = stateArgs.split("&")[0];
+  }
+  if (s === "#" || (isNull(s) && isNull(args))) {
+    return false;
   }
   animateLoad();
   console.log("Got search value " + s + ", hitting", "" + searchParams.apiPath + "?" + args);
@@ -835,7 +839,7 @@ modalTaxon = function(taxon) {
     if (isNull(data.notes)) {
       data.notes = "Sorry, we have no notes on this taxon yet.";
     }
-    html = "<div id='meta-taxon-info'>" + yearHtml + "<p>Common name: <span id='taxon-common-name' class='common-name'>" + data.common_name + "</span></p><p>Type: <span id='taxon-type'>" + data.major_type + "</span> (<span id='taxon-common-type'>" + data.major_common_type + "</span>) <core-icon icon='arrow-forward'></core-icon> <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "</p>" + deprecatedHtml + "</div><h3>Taxon Notes</h3><p id='taxon-notes'>" + data.notes + "</p>";
+    html = "<div id='meta-taxon-info'>" + yearHtml + "<p>Common name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span></p><p>Type: <span id='taxon-type'>" + data.major_type + "</span> (<span id='taxon-common-type'>" + data.major_common_type + "</span>) <core-icon icon='arrow-forward'></core-icon> <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "</p>" + deprecatedHtml + "</div><h3>Taxon Notes</h3><p id='taxon-notes'>" + data.notes + "</p>";
     $("#modal-taxon-content").html(html);
     $("#modal-inat-linkout").unbind().click(function() {
       return openTab("http://www.inaturalist.org/taxa/search?q=" + taxon);
@@ -880,13 +884,17 @@ setHistory = function(url, state, title) {
 };
 
 $(function() {
-  var e, fuzzyState, loadArgs, looseState, queryUrl;
+  var e, fuzzyState, loadArgs, looseState, queryUrl, temp;
   console.log("Doing onloads ...");
   animateLoad();
   window.addEventListener("popstate", function(e) {
+    var loadArgs, temp;
     uri.query = $.url().attr("fragment");
-    console.log("Popping state to " + uri.query);
-    return performSearch(uri.query);
+    loadArgs = Base64.decode(uri.query);
+    console.log("Popping state to " + loadArgs);
+    performSearch(loadArgs);
+    temp = loadArgs.split("&")[0];
+    return $("#search").attr("value", temp);
   });
   $("#search_form").submit(function(e) {
     e.preventDefault();
@@ -923,6 +931,8 @@ $(function() {
       }
       $("#loose").prop("checked", looseState);
       $("#fuzzy").prop("checked", fuzzyState);
+      temp = loadArgs.split("&")[0];
+      $("#search").attr("value", temp);
     } catch (_error) {
       e = _error;
       console.error("Bad argument " + uri.query + " => " + loadArgs + ", looseState, fuzzyState", looseState, fuzzyState, "" + searchParams.apiPath + "?q=" + loadArgs);

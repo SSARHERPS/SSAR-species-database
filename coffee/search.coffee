@@ -21,7 +21,10 @@ performSearch = (stateArgs = undefined) ->
     args = "q=#{s}"
   else
     args = "q=#{stateArgs}"
+    console.log("Searching on #{stateArgs}")
     sOrig = stateArgs.split("&")[0]
+  if s is "#" or (isNull(s) and isNull(args))
+    return false
   animateLoad()
   console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
   $.get(searchParams.targetApi,args,"json")
@@ -255,7 +258,7 @@ modalTaxon = (taxon = undefined) ->
     # Populate the taxon
     if isNull(data.notes)
       data.notes = "Sorry, we have no notes on this taxon yet."
-    html = "<div id='meta-taxon-info'>#{yearHtml}<p>Common name: <span id='taxon-common-name' class='common-name'>#{data.common_name}</span></p><p>Type: <span id='taxon-type'>#{data.major_type}</span> (<span id='taxon-common-type'>#{data.major_common_type}</span>) <core-icon icon='arrow-forward'></core-icon> <span id='taxon-subtype'>#{data.major_subtype}</span>#{minorTypeHtml}</p>#{deprecatedHtml}</div><h3>Taxon Notes</h3><p id='taxon-notes'>#{data.notes}</p>"
+    html = "<div id='meta-taxon-info'>#{yearHtml}<p>Common name: <span id='taxon-common-name' class='common_name'>#{data.common_name}</span></p><p>Type: <span id='taxon-type'>#{data.major_type}</span> (<span id='taxon-common-type'>#{data.major_common_type}</span>) <core-icon icon='arrow-forward'></core-icon> <span id='taxon-subtype'>#{data.major_subtype}</span>#{minorTypeHtml}</p>#{deprecatedHtml}</div><h3>Taxon Notes</h3><p id='taxon-notes'>#{data.notes}</p>"
     $("#modal-taxon-content").html(html)
     $("#modal-inat-linkout")
     .unbind()
@@ -301,8 +304,11 @@ $ ->
   # Set up popstate
   window.addEventListener "popstate", (e) ->
     uri.query = $.url().attr("fragment")
-    console.log("Popping state to #{uri.query}")
-    performSearch(uri.query)
+    loadArgs = Base64.decode(uri.query)
+    console.log("Popping state to #{loadArgs}")
+    performSearch(loadArgs)
+    temp = loadArgs.split("&")[0]
+    $("#search").attr("value",temp)
   ## Set events
   $("#search_form").submit (e) ->
     e.preventDefault()
@@ -331,6 +337,8 @@ $ ->
         fuzzyState = false
       $("#loose").prop("checked",looseState)
       $("#fuzzy").prop("checked",fuzzyState)
+      temp = loadArgs.split("&")[0]
+      $("#search").attr("value",temp)
     catch e
       console.error("Bad argument #{uri.query} => #{loadArgs}, looseState, fuzzyState",looseState,fuzzyState,"#{searchParams.apiPath}?q=#{loadArgs}")
       console.warn(e.message)
