@@ -880,7 +880,7 @@ setHistory = function(url, state, title) {
 };
 
 $(function() {
-  var e, loadArgs;
+  var e, fuzzyState, loadArgs, looseState, queryUrl;
   console.log("Doing onloads ...");
   animateLoad();
   window.addEventListener("popstate", function(e) {
@@ -908,9 +908,25 @@ $(function() {
   } else {
     try {
       loadArgs = Base64.decode(uri.query);
+      queryUrl = $.url("" + searchParams.apiPath + "?q=" + loadArgs);
+      try {
+        looseState = queryUrl.param("loose").toBool();
+      } catch (_error) {
+        e = _error;
+        looseState = false;
+      }
+      try {
+        fuzzyState = queryUrl.param("fuzzy").toBool();
+      } catch (_error) {
+        e = _error;
+        fuzzyState = false;
+      }
+      $("#loose").prop("checked", looseState);
+      $("#fuzzy").prop("checked", fuzzyState);
     } catch (_error) {
       e = _error;
-      console.error("Bad argument " + uri.query + " => " + loadArgs);
+      console.error("Bad argument " + uri.query + " => " + loadArgs + ", looseState, fuzzyState", looseState, fuzzyState, "" + searchParams.apiPath + "?q=" + loadArgs);
+      console.warn(e.message);
       loadArgs = "";
     }
   }
@@ -943,7 +959,8 @@ $(function() {
     });
   } else {
     stopLoad();
-    return $("#search").attr("disabled", false);
+    $("#search").attr("disabled", false);
+    return $("#loose").prop("checked", true);
   }
 });
 

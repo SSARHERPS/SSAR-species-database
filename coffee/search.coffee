@@ -141,7 +141,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       if l is Object.size(row)
         htmlRow += "\n\t</tr>"
         html += htmlRow
-    # Check if we're done 
+    # Check if we're done
     if toInt(i) is targetCount
       html = htmlHead + html + htmlClose
       console.log("Processed #{toInt(i)+1} rows")
@@ -274,7 +274,7 @@ modalTaxon = (taxon = undefined) ->
     stopLoad()
     $("#modal-taxon")[0].open()
   .fail (result,status) ->
-    stopLoadError()    
+    stopLoadError()
   false
 
 sortResults = (by_column) ->
@@ -320,8 +320,20 @@ $ ->
   else
     try
       loadArgs = Base64.decode(uri.query)
+      queryUrl = $.url("#{searchParams.apiPath}?q=#{loadArgs}")
+      try
+        looseState = queryUrl.param("loose").toBool()
+      catch e
+        looseState = false
+      try
+        fuzzyState = queryUrl.param("fuzzy").toBool()
+      catch e
+        fuzzyState = false
+      $("#loose").prop("checked",looseState)
+      $("#fuzzy").prop("checked",fuzzyState)
     catch e
-      console.error("Bad argument #{uri.query} => #{loadArgs}")
+      console.error("Bad argument #{uri.query} => #{loadArgs}, looseState, fuzzyState",looseState,fuzzyState,"#{searchParams.apiPath}?q=#{loadArgs}")
+      console.warn(e.message)
       loadArgs = ""
   # Perform the initial search
   if not isNull(loadArgs)
@@ -354,3 +366,4 @@ $ ->
   else
     stopLoad()
     $("#search").attr("disabled",false)
+    $("#loose").prop("checked",true)
