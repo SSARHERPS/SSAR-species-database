@@ -930,7 +930,7 @@ $(function() {
       loadArgs = "";
     }
   }
-  if (!isNull(loadArgs)) {
+  if (!isNull(loadArgs) && loadArgs !== "#") {
     console.log("Doing initial search with '" + loadArgs + "', hitting", "" + searchParams.apiPath + "?q=" + loadArgs);
     return $.get(searchParams.targetApi, "q=" + loadArgs, "json").done(function(result) {
       if (result.status === true && result.count > 0) {

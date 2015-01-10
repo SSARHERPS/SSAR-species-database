@@ -658,7 +658,7 @@ $ ->
       console.warn(e.message)
       loadArgs = ""
   # Perform the initial search
-  if not isNull(loadArgs)
+  if not isNull(loadArgs) and loadArgs isnt "#"
     console.log("Doing initial search with '#{loadArgs}', hitting","#{searchParams.apiPath}?q=#{loadArgs}")
     $.get(searchParams.targetApi,"q=#{loadArgs}","json")
     .done (result) ->
