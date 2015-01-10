@@ -318,6 +318,7 @@ prepURI = (string) ->
 $ ->
   $(".click").click ->    
     openTab($(this).attr("data-url"))
+  $('[data-toggle="tooltip"]').tooltip()
 
 searchParams = new Object()
 searchParams.targetApi = "commonnames_api.php"

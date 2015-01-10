@@ -511,9 +511,10 @@ prepURI = function(string) {
 };
 
 $(function() {
-  return $(".click").click(function() {
+  $(".click").click(function() {
     return openTab($(this).attr("data-url"));
   });
+  return $('[data-toggle="tooltip"]').tooltip();
 });
 
 searchParams = new Object();

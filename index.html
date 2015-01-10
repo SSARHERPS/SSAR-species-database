@@ -38,16 +38,16 @@
       <div class="col-md-12">
         <paper-input label="Search" id="search" name="search" disabled required autofocus floatingLabel></paper-input>
         <paper-fab id="do-search" icon="search" raisedButton class="materialblue"></paper-fab>
-        <paper-fab id="do-search-all" icon="unfold-more" raisedButton class="materialblue"></paper-fab>
+        <paper-fab id="do-search-all" icon="unfold-more" raisedButton class="materialblue" data-toggle="tooltip" title="Show all results" data-placement="right"></paper-fab>
       </div>
       <fieldset class="col-md-12">
         <legend>Options</legend>
         <core-label class="col-md-4">
-          Loose
+          Loose <super><a href="#" data-toggle="tooltip" title="Check this to do a partial-string search, rather than a strict exact match.">?</a></super>
           <paper-toggle-button id="loose" checked></paper-toggle-button>
         </core-label>
         <core-label class="col-md-4">
-          Fuzzy
+          Fuzzy  <super><a href="#" data-toggle="tooltip" title="Check this to do a 'close match' search. Check this if you're unsure of your spelling, for example.">?</a></super>
           <paper-toggle-button id="fuzzy"></paper-toggle-button>
         </core-label>
         <core-label class="col-md-4">

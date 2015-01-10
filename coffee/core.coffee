@@ -299,3 +299,4 @@ prepURI = (string) ->
 $ ->
   $(".click").click ->    
     openTab($(this).attr("data-url"))
+  $('[data-toggle="tooltip"]').tooltip()
