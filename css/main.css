@@ -84,7 +84,7 @@ html /deep/ .genus, html /deep/ .species, html /deep/ .subspecies {
 }
 #search {
     position:relative;
-    top:-3em;
+    /* top:-3em; */
 }
 #search_form {
     position:relative;
@@ -110,7 +110,12 @@ paper-toggle-button {
 paper-icon-button {
     vertical-align:middle;
 }
-
+core-label.col-xs-6 {
+    padding-left:0;
+}
+.fullwidth {
+    width:100%;
+}
 /************
  * Lightbox
  ***************/
