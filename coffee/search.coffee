@@ -9,7 +9,7 @@ performSearch = (stateArgs = undefined) ->
     # Store a version before we do any search modifiers
     sOrig = s
     s = s.toLowerCase()
-    if isNull(s)
+    if isNull(s) or not s?
       $("#search-status").attr("text","Please enter a search term.")
       $("#search-status")[0].show()
       return false
@@ -20,10 +20,14 @@ performSearch = (stateArgs = undefined) ->
       s = "#{s}&fuzzy=true"
     args = "q=#{s}"
   else
-    args = "q=#{stateArgs}"
+    if stateArgs is true
+      args = "q="
+      sOrig = "(all items)"
+    else
+      args = "q=#{stateArgs}"
+      sOrig = stateArgs.split("&")[0]
     console.log("Searching on #{stateArgs}")
-    sOrig = stateArgs.split("&")[0]
-  if s is "#" or (isNull(s) and isNull(args))
+  if s is "#" or (isNull(s) and isNull(args)) or (args is "q=" and stateArgs isnt true)
     return false
   animateLoad()
   console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
@@ -319,7 +323,7 @@ $ ->
   $("#do-search").click ->
     performSearch()
   $("#do-search-all").click ->
-    performSearch("")
+    performSearch(true)
   # Do a fill of the result container
   if isNull uri.query
     loadArgs = ""

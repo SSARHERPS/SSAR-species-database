@@ -534,7 +534,7 @@ performSearch = function(stateArgs) {
     s = $("#search").val();
     sOrig = s;
     s = s.toLowerCase();
-    if (isNull(s)) {
+    if (isNull(s) || (s == null)) {
       $("#search-status").attr("text", "Please enter a search term.");
       $("#search-status")[0].show();
       return false;
@@ -548,11 +548,16 @@ performSearch = function(stateArgs) {
     }
     args = "q=" + s;
   } else {
-    args = "q=" + stateArgs;
+    if (stateArgs === true) {
+      args = "q=";
+      sOrig = "(all items)";
+    } else {
+      args = "q=" + stateArgs;
+      sOrig = stateArgs.split("&")[0];
+    }
     console.log("Searching on " + stateArgs);
-    sOrig = stateArgs.split("&")[0];
   }
-  if (s === "#" || (isNull(s) && isNull(args))) {
+  if (s === "#" || (isNull(s) && isNull(args)) || (args === "q=" && stateArgs !== true)) {
     return false;
   }
   animateLoad();
@@ -909,7 +914,7 @@ $(function() {
     return performSearch();
   });
   $("#do-search-all").click(function() {
-    return performSearch("");
+    return performSearch(true);
   });
   if (isNull(uri.query)) {
     loadArgs = "";

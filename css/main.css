@@ -65,10 +65,10 @@ body {
     padding:1em;
 }
 
-html /deep/ .genus,html /deep/ .genus_authority,html /deep/ .species_authority,html /deep/ .common_name,html /deep/ .linnean_order,.cndb-row-headers th {
+html /deep/ .genus,html /deep/ .genus_authority,html /deep/ .species_authority,html /deep/ .common_name,html /deep/ .linnean_order,.cndb-row-headers th,.genus,.genus_authority,.species_authority,.common_name,.linnean_order,.cndb-row-headers th {
     text-transform:capitalize;
 }
-html /deep/ .genus, html /deep/ .species, html /deep/ .subspecies {
+html /deep/ .genus, html /deep/ .species, html /deep/ .subspecies,.genus, .species, .subspecies{
     font-style:italic;
 }
 /* .cndb-result-entry:nth-child(2n) { */
