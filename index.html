@@ -6,8 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <meta name="theme-color" content="#445e14"/>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" type="text/css" media="screen" href="css/main.css"/>
-    <link rel="stylesheet" type="text/css" media="screen" href="css/main.css"/>
+    <link rel="stylesheet" type="text/css" media="screen" href="css/main.min.css"/>
     <link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" type="text/css" href="bower_components/octicons/octicons/octicons.css"/>
 
@@ -55,7 +54,7 @@
           AND/OR, and then to walk through the filters and append the object to the query. -->
           <span class="sr-only">Clade Restriction</span>
           <paper-dropdown-menu label="Clade Restriction" data-column="major_type"  for>
-            <paper-dropdown id="type" name="type" valueattr="data-type" class="dropdown">
+            <paper-dropdown id="type" name="type" valueattr="data-type" class="dropdown cndb-filter">
               <core-menu class="menu">
                 <paper-item data-type="any">All</paper-item>
                 <paper-item data-type="squamata">Non-Snake Lizards</paper-item>

@@ -3,6 +3,16 @@ SSAR Species Name Database
 
 You can find the most current version at http://ssarherps.org/cndb/
 
+## Grunt
+
+Tasks are managed here by [Grunt](http://gruntjs.com/). The most important tasks also have a `Cakefile` to run it directly via `cake` at the command line (for the CoffeeScript). This is the reason for `yuicompressor.jar` in the root directory, which requires the [Java JRE](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
+
+You can install Grunt from the command line by running `npm install -g grunt-cli`.
+
+## Updating
+
+You can update the whole application, with dependencies, by running `grunt build` at the root directory.
+
 ## Installation
 
 Install this in the `cndb` folder below the root directory of the site. **If this is to be located elsewhere**, change the variable `searchParams.targetApi` in `/coffee/search.coffee` and recompile the coffeescript.
