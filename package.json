@@ -17,11 +17,12 @@
   },
   "homepage": "https://github.com/tigerhawkvok/SSAR-species-database",
   "devDependencies": {
-    "grunt": "^0.4.5",
     "coffee-script": "^1.8.0",
-    "grunt-contrib-uglify": "^0.6.0",
-    "grunt-shell": "^1.1.1",
+    "grunt": "^0.4.5",
     "grunt-contrib-coffee": "^0.12.0",
-    "grunt-contrib-watch": "^0.6.1"
+    "grunt-contrib-uglify": "^0.6.0",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-shell": "^1.1.1",
+    "grunt-yui-compressor": "^0.3.3"
   }
 }

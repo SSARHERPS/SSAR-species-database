@@ -379,3 +379,4 @@ $ ->
     stopLoad()
     $("#search").attr("disabled",false)
     $("#loose").prop("checked",true)
+
