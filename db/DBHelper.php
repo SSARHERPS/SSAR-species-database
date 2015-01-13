@@ -172,7 +172,7 @@ class DBHelper {
     return $output;
   }
 
-  protected function mysql_escape_mimic($inp)
+  protected static function mysql_escape_mimic($inp)
   {
     if(is_array($inp))
       {
@@ -230,7 +230,7 @@ class DBHelper {
     if(preg_match($preg,$input) === 1)
       {
         # It's an email, let's escape it and be done with it
-        $output = mysql_escape_mimic($input);
+        $output = self::mysql_escape_mimic($input);
         return $output;
       }
     if (is_array($input))
@@ -251,7 +251,7 @@ class DBHelper {
         $input=str_replace("%","&#37;",$input); // Fix % potential wildcard
         $input=str_replace("'","&#39;",$input);
         $input=str_replace('"',"&#34;",$input);
-        $output = mysql_escape_mimic($input);
+        $output = self::mysql_escape_mimic($input);
       }
     return $output;
   }
