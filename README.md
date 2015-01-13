@@ -57,7 +57,6 @@ major_type # eg, squamata
 major_common_type # eg, lizard, turtle.
 major_subtype # eg, snake v. non-snake, aquatic vs. tortoise. Only common, public use -- match "expectation"
 minor_type # eg, lacertid, boa, pleurodire, dendrobatid; roughly a ranked "family", scientific only
-linnean_class # Deprecated, included for compatibility
 linnean_order # Deprecated, included for compatibility
 genus_authority #  eg, "Linnaeus"
 species_authority # eg, "Attenborough"
