@@ -98,6 +98,7 @@ if(isset($_REQUEST['filter']))
     $params = smart_decode64($_REQUEST['filter']);
     if(empty($params))
       {
+        # Not base 64 encoded
         $params_temp = json_decode($_REQUEST['filter'],true);
         if(!empty($params_temp))
           {
