@@ -92,6 +92,7 @@ $order_by = isset($_REQUEST['order']) ? $_REQUEST['order']:"genus,species,subspe
 
 $params = array();
 $boolean_type = false;
+$filter_params = null;
 if(isset($_REQUEST['filter']))
   {
     $params = smart_decode64($_REQUEST['filter']);
@@ -109,6 +110,7 @@ if(isset($_REQUEST['filter']))
       }
     if(!empty($params))
       {
+        $filter_params = $params;
         # Does the "BOOLEAN_TYPE" key exist?
         if(!array_key_exists("BOOLEAN_TYPE",$params)) returnAjax(array("status"=>false,"error"=>"Missing required parameter","human_error"=>"The key 'BOOLEAN_TYPE' must exist and be either 'AND' or 'OR'.","given"=>$params));
         # Is it valid?
@@ -477,7 +479,25 @@ if(isset($error))
   {
     returnAjax(array("status"=>false,"error"=>$error,"human_error"=>"There was a problem performing this query. Please try again.","method"=>$method));
   }
-else returnAjax(array("status"=>true,"result"=>$result_vector,"count"=>sizeof($result_vector),"method"=>$method,"query"=>$search,"params"=>$params,"query_params"=>array("bool"=>$boolean_type,"loose"=>$loose,"order_by"=>$order_by)));
+else returnAjax(array(
+  "status"=>true,
+  "result"=>$result_vector,
+  "count"=>sizeof($result_vector),
+  "method"=>$method,
+  "query"=>$search,
+  "params"=>$params,
+  "query_params"=>array(
+    "bool"=>$boolean_type,
+    "loose"=>$loose,
+    "order_by"=>$order_by,
+    "filter"=>array(
+      "had_filter"=>isset($_REQUEST['filter']),
+      "filter_params"=>$filter_params,
+      "filter_literal"=>$_REQUEST["filter"],
+      "filter_parsed"=>smart_decode64($_REQUEST["filter"])
+    )
+  )
+));
 
 
 ?>

@@ -4,7 +4,11 @@ searchParams.targetContainer = "#result_container"
 searchParams.apiPath = uri.urlString + searchParams.targetApi
 
 performSearch = (stateArgs = undefined) ->
+  ###
+  # Check the fields and filters and do the async search
+  ###
   if not stateArgs?
+    # No arguments have been passed in
     s = $("#search").val()
     # Store a version before we do any search modifiers
     sOrig = s
@@ -19,11 +23,20 @@ performSearch = (stateArgs = undefined) ->
     if $("#fuzzy").polymerChecked()
       s = "#{s}&fuzzy=true"
     args = "q=#{s}"
+    # Add on the filters
+    filters = getFilters()
+    if not isNull(filters)
+      console.log("Got filters - #{filters}")
+      args = "#{args}&filter=#{filters}"
   else
+    # An argument has been passed in
     if stateArgs is true
+      # Special case -- do a search on everything
       args = "q="
       sOrig = "(all items)"
     else
+      # Do the search exactly as passed. The fragment should ALREADY
+      # be decoded at this point.
       args = "q=#{stateArgs}"
       sOrig = stateArgs.split("&")[0]
     console.log("Searching on #{stateArgs}")
@@ -60,6 +73,43 @@ performSearch = (stateArgs = undefined) ->
     b64s = Base64.encodeURI(s)
     if s? then setHistory("#{uri.urlString}##{b64s}")
     false
+
+getFilters = (selector = ".cndb-filter",booleanType = "AND") ->
+  ###
+  # Look at $(selector) and apply the filters as per
+  # https://github.com/tigerhawkvok/SSAR-species-database#search-flags
+  # It's meant to work with Polymer dropdowns, but it'll fall back to <select><option>
+  ###
+  filterList = new Object()
+  $(selector).each ->
+    col = $(this).attr("data-column")
+    if not col?
+      # Skip this iteration
+      return true
+    val = $(this).polymerSelected()
+    if val is "any" or val is "all" or val is "*"
+      # Wildcard filter -- just don't give anything
+      # Go to the next iteration
+      return true
+    if isNull(val)
+      val = $(this).val()
+      if isNull(val)
+        # Skip this iteration
+        return true
+    filterList[col] = val
+  if Object.size(filterList) is 0
+    # Pass back an empty string
+    console.log("Got back an empty filter list.")
+    return ""
+  try
+    filterList["BOOLEAN_TYPE"] = booleanType
+    jsonString = JSON.stringify(filterList)
+    encodedFilter = Base64.encodeURI(jsonString)
+    console.log("Returning #{encodedFilter} from",filterList)
+    return encodedFilter
+  catch e
+    return false
+
 
 formatSearchResults = (result,container = searchParams.targetContainer) ->
   data = result.result

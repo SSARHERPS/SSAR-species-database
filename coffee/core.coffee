@@ -79,13 +79,10 @@ jQuery.fn.polymerSelected = (setSelected = undefined) ->
   else
     val = undefined
     try
-      # val = jQuery(this)[0].selected
       childDropdown = $(this).find("[valueattr]")
       if isNull(childDropdown)
         childDropdown = $(this)
       prop = childDropdown.attr("valueattr")
-      console.log("Looking at  prop #{prop}")
-      # selectedItem = 
       val = $(this).find(".core-selected").attr(prop)
     catch e
       return false

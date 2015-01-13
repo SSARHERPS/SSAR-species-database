@@ -3,7 +3,7 @@ body {
     padding:1rem;
 }
 
-.materialblue {
+.materialblue, html /deep/ .materialblue {
     background:#5677fc;
     color:#fff;
 }

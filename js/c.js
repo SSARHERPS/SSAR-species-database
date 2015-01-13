@@ -2,7 +2,7 @@
 /*
  * The main coffeescript file for administrative stuff
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, byteCount, deferCalPhotos, delay, formatScientificNames, formatSearchResults, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, byteCount, deferCalPhotos, delay, formatScientificNames, formatSearchResults, getFilters, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
   __slice = [].slice;
 
 adminParams = new Object();
@@ -166,7 +166,6 @@ jQuery.fn.polymerSelected = function(setSelected) {
         childDropdown = $(this);
       }
       prop = childDropdown.attr("valueattr");
-      console.log("Looking at  prop " + prop);
       val = $(this).find(".core-selected").attr(prop);
     } catch (_error) {
       e = _error;
@@ -526,10 +525,14 @@ searchParams.targetContainer = "#result_container";
 searchParams.apiPath = uri.urlString + searchParams.targetApi;
 
 performSearch = function(stateArgs) {
-  var args, s, sOrig;
+  var args, filters, s, sOrig;
   if (stateArgs == null) {
     stateArgs = void 0;
   }
+
+  /*
+   * Check the fields and filters and do the async search
+   */
   if (stateArgs == null) {
     s = $("#search").val();
     sOrig = s;
@@ -547,6 +550,11 @@ performSearch = function(stateArgs) {
       s = "" + s + "&fuzzy=true";
     }
     args = "q=" + s;
+    filters = getFilters();
+    if (!isNull(filters)) {
+      console.log("Got filters - " + filters);
+      args = "" + args + "&filter=" + filters;
+    }
   } else {
     if (stateArgs === true) {
       args = "q=";
@@ -594,6 +602,55 @@ performSearch = function(stateArgs) {
     }
     return false;
   });
+};
+
+getFilters = function(selector, booleanType) {
+  var e, encodedFilter, filterList, jsonString;
+  if (selector == null) {
+    selector = ".cndb-filter";
+  }
+  if (booleanType == null) {
+    booleanType = "AND";
+  }
+
+  /*
+   * Look at $(selector) and apply the filters as per
+   * https://github.com/tigerhawkvok/SSAR-species-database#search-flags
+   * It's meant to work with Polymer dropdowns, but it'll fall back to <select><option>
+   */
+  filterList = new Object();
+  $(selector).each(function() {
+    var col, val;
+    col = $(this).attr("data-column");
+    if (col == null) {
+      return true;
+    }
+    val = $(this).polymerSelected();
+    if (val === "any" || val === "all" || val === "*") {
+      return true;
+    }
+    if (isNull(val)) {
+      val = $(this).val();
+      if (isNull(val)) {
+        return true;
+      }
+    }
+    return filterList[col] = val;
+  });
+  if (Object.size(filterList) === 0) {
+    console.log("Got back an empty filter list.");
+    return "";
+  }
+  try {
+    filterList["BOOLEAN_TYPE"] = booleanType;
+    jsonString = JSON.stringify(filterList);
+    encodedFilter = Base64.encodeURI(jsonString);
+    console.log("Returning " + encodedFilter + " from", filterList);
+    return encodedFilter;
+  } catch (_error) {
+    e = _error;
+    return false;
+  }
 };
 
 formatSearchResults = function(result, container) {
