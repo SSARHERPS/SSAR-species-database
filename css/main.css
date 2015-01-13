@@ -116,6 +116,9 @@ core-label.col-xs-6 {
 .fullwidth {
     width:100%;
 }
+#collapse-advanced {
+    margin-top:1rem;
+}
 /************
  * Lightbox
  ***************/

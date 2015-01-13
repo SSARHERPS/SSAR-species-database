@@ -141,22 +141,35 @@ jQuery.fn.exists = function() {
 };
 
 jQuery.fn.polymerSelected = function(setSelected) {
-  var childDropdown, e, prop, val;
+  var childDropdown, e, index, item, prop, val;
   if (setSelected == null) {
     setSelected = void 0;
   }
   if (setSelected != null) {
-    try {
-      jQuery(this).prop("selected", setSelected);
-      jQuery(this).prop("active", setSelected);
-      if (setSelected === true) {
-        return jQuery(this).addClass("core-selected");
-      } else {
-        return jQuery(this).removeClass("core-selected");
+    if (!isBool(setSelected)) {
+      try {
+        childDropdown = $(this).find("[valueattr]");
+        if (isNull(childDropdown)) {
+          childDropdown = $(this);
+        }
+        prop = childDropdown.attr("valueattr");
+        item = $(this).find("[" + prop + "=" + setSelected + "]");
+        index = item.index();
+        return item.parent().prop("selected", index);
+      } catch (_error) {
+        e = _error;
+        return false;
       }
-    } catch (_error) {
-      e = _error;
-      return false;
+    } else {
+      console.log("setSelected " + setSelected + " is boolean");
+      $(this).parent().children().removeAttribute("selected");
+      $(this).parent().children().removeAttribute("active");
+      $(this).parent().children().removeClass("core-selected");
+      $(this).prop("selected", setSelected);
+      $(this).prop("active", setSelected);
+      if (setSelected === true) {
+        return $(this).addClass("core-selected");
+      }
     }
   } else {
     val = void 0;
@@ -574,20 +587,24 @@ performSearch = function(stateArgs) {
     var filterText, i, text;
     console.log("Search executed by " + result.method + " with " + result.count + " results.");
     if (toInt(result.count) === 0) {
-      if (result.query_params.filter.had_filter === true) {
-        filterText = "";
-        i = 0;
-        $.each(result.query_params.filter.filter_params, function(col, val) {
-          if (col !== "BOOLEAN_TYPE") {
-            if (i !== 0) {
-              filterText = "" + filter_text + " " + result.filter.filter_params.BOOLEAN_TYPE;
+      if (result.status === true) {
+        if (result.query_params.filter.had_filter === true) {
+          filterText = "";
+          i = 0;
+          $.each(result.query_params.filter.filter_params, function(col, val) {
+            if (col !== "BOOLEAN_TYPE") {
+              if (i !== 0) {
+                filterText = "" + filter_text + " " + result.filter.filter_params.BOOLEAN_TYPE;
+              }
+              return filterText = "" + filterText + " " + (col.replace(/_/g, " ")) + " is " + val;
             }
-            return filterText = "" + filterText + " " + (col.replace(/_/g, " ")) + " is " + val;
-          }
-        });
-        text = "\"" + sOrig + "\" where " + filterText + " returned no results.";
+          });
+          text = "\"" + sOrig + "\" where " + filterText + " returned no results.";
+        } else {
+          text = "\"" + sOrig + "\" returned no results.";
+        }
       } else {
-        text = "\"" + sOrig + "\" returned no results.";
+        text = result.human_error;
       }
       $("#search-status").attr("text", text);
       $("#search-status")[0].show();
@@ -645,13 +662,15 @@ getFilters = function(selector, booleanType) {
     if (val === "any" || val === "all" || val === "*") {
       return true;
     }
-    if (isNull(val)) {
+    if (isNull(val) || val === false) {
       val = $(this).val();
       if (isNull(val)) {
         return true;
+      } else {
+
       }
     }
-    return filterList[col] = val;
+    return filterList[col] = val.toLowerCase();
   });
   if (Object.size(filterList) === 0) {
     console.log("Got back an empty filter list.");
@@ -962,7 +981,7 @@ setHistory = function(url, state, title) {
 };
 
 $(function() {
-  var e, fuzzyState, loadArgs, looseState, queryUrl, temp;
+  var e, f64, filterObj, fuzzyState, loadArgs, looseState, queryUrl, temp;
   console.log("Doing onloads ...");
   animateLoad();
   window.addEventListener("popstate", function(e) {
@@ -977,6 +996,12 @@ $(function() {
   $("#search_form").submit(function(e) {
     e.preventDefault();
     return performSearch();
+  });
+  $("#collapse-advanced").on("shown.bs.collapse", function() {
+    return $("#collapse-icon").attr("icon", "unfold-less");
+  });
+  $("#collapse-advanced").on("hidden.bs.collapse", function() {
+    return $("#collapse-icon").attr("icon", "unfold-more");
   });
   $("#search_form").keypress(function(e) {
     if (e.which === 13) {
@@ -1011,6 +1036,23 @@ $(function() {
       $("#fuzzy").prop("checked", fuzzyState);
       temp = loadArgs.split("&")[0];
       $("#search").attr("value", temp);
+      try {
+        f64 = queryUrl.param("filter");
+        filterObj = JSON.parse(Base64.decode(f64));
+        $.each(filterObj, function(col, val) {
+          var selector;
+          col = col.replace(/_/g, "-");
+          selector = "#" + col + "-filter";
+          if (col !== "type") {
+            return $(selector).attr("value", val);
+          } else {
+            return $("#linnean-order").polymerSelected(val);
+          }
+        });
+      } catch (_error) {
+        e = _error;
+        f64 = false;
+      }
     } catch (_error) {
       e = _error;
       console.error("Bad argument " + uri.query + " => " + loadArgs + ", looseState, fuzzyState", looseState, fuzzyState, "" + searchParams.apiPath + "?q=" + loadArgs);

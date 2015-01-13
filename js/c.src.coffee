@@ -86,15 +86,27 @@ jQuery.fn.polymerSelected = (setSelected = undefined) ->
   # See
   # https://www.polymer-project.org/docs/elements/paper-elements.html#paper-dropdown-menu
   if setSelected?
-    try
-      jQuery(this).prop("selected",setSelected)
-      jQuery(this).prop("active",setSelected)
+    if not isBool(setSelected)
+      try
+        childDropdown = $(this).find("[valueattr]")
+        if isNull(childDropdown)
+          childDropdown = $(this)
+        prop = childDropdown.attr("valueattr")
+        # Find the element where the prop matches the selected
+        item = $(this).find("[#{prop}=#{setSelected}]")
+        index = item.index()
+        item.parent().prop("selected",index)
+      catch e
+        return false
+    else
+      console.log("setSelected #{setSelected} is boolean")
+      $(this).parent().children().removeAttribute("selected")
+      $(this).parent().children().removeAttribute("active")
+      $(this).parent().children().removeClass("core-selected")
+      $(this).prop("selected",setSelected)
+      $(this).prop("active",setSelected)
       if setSelected is true
-        jQuery(this).addClass("core-selected")
-      else
-        jQuery(this).removeClass("core-selected")
-    catch e
-      return false
+        $(this).addClass("core-selected")
   else
     val = undefined
     try
@@ -313,7 +325,7 @@ prepURI = (string) ->
   string.replace(/%20/g,"+")
 
 $ ->
-  $(".click").click ->    
+  $(".click").click ->
     openTab($(this).attr("data-url"))
   $('[data-toggle="tooltip"]').tooltip()
 
@@ -368,17 +380,20 @@ performSearch = (stateArgs = undefined) ->
     # Populate the result container
     console.log("Search executed by #{result.method} with #{result.count} results.")
     if toInt(result.count) is 0
-      if result.query_params.filter.had_filter is true
-        filterText = ""
-        i = 0
-        $.each result.query_params.filter.filter_params, (col,val) ->
-          if col isnt "BOOLEAN_TYPE"
-            if i isnt 0
-              filterText = "#{filter_text} #{result.filter.filter_params.BOOLEAN_TYPE}"
-            filterText = "#{filterText} #{col.replace(/_/g," ")} is #{val}"
-        text = "\"#{sOrig}\" where #{filterText} returned no results."
+      if result.status is true
+        if result.query_params.filter.had_filter is true
+          filterText = ""
+          i = 0
+          $.each result.query_params.filter.filter_params, (col,val) ->
+            if col isnt "BOOLEAN_TYPE"
+              if i isnt 0
+                filterText = "#{filter_text} #{result.filter.filter_params.BOOLEAN_TYPE}"
+              filterText = "#{filterText} #{col.replace(/_/g," ")} is #{val}"
+          text = "\"#{sOrig}\" where #{filterText} returned no results."
+        else
+          text = "\"#{sOrig}\" returned no results."
       else
-        text = "\"#{sOrig}\" returned no results."
+        text = result.human_error
       $("#search-status").attr("text",text)
       $("#search-status")[0].show()
       stopLoadError()
@@ -421,12 +436,13 @@ getFilters = (selector = ".cndb-filter",booleanType = "AND") ->
       # Wildcard filter -- just don't give anything
       # Go to the next iteration
       return true
-    if isNull(val)
+    if isNull(val) or val is false
       val = $(this).val()
       if isNull(val)
         # Skip this iteration
         return true
-    filterList[col] = val
+      else
+    filterList[col] = val.toLowerCase()
   if Object.size(filterList) is 0
     # Pass back an empty string
     console.log("Got back an empty filter list.")
@@ -697,9 +713,14 @@ $ ->
   $("#search_form").submit (e) ->
     e.preventDefault()
     performSearch()
+  $("#collapse-advanced").on "shown.bs.collapse", ->
+    $("#collapse-icon").attr("icon","unfold-less")
+  $("#collapse-advanced").on "hidden.bs.collapse", ->
+    $("#collapse-icon").attr("icon","unfold-more")
   # Bind enter keydown
   $("#search_form").keypress (e) ->
     if e.which is 13 then performSearch()
+  # Bind clicks
   $("#do-search").click ->
     performSearch()
   $("#do-search-all").click ->
@@ -723,6 +744,20 @@ $ ->
       $("#fuzzy").prop("checked",fuzzyState)
       temp = loadArgs.split("&")[0]
       $("#search").attr("value",temp)
+      # Filters
+      try
+        f64 = queryUrl.param("filter")
+        filterObj = JSON.parse(Base64.decode(f64))
+        $.each filterObj, (col,val) ->
+          col = col.replace(/_/g,"-")
+          selector = "##{col}-filter"
+          if col isnt "type"
+            $(selector).attr("value",val)
+          else
+            $("#linnean-order").polymerSelected(val)
+      catch e
+        # Do nothing
+        f64 = false
     catch e
       console.error("Bad argument #{uri.query} => #{loadArgs}, looseState, fuzzyState",looseState,fuzzyState,"#{searchParams.apiPath}?q=#{loadArgs}")
       console.warn(e.message)

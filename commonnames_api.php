@@ -298,7 +298,7 @@ if(empty($params) || !empty($search))
               }
             foreach($extra_params as $col => $search)
               {
-                $extra_params[$col] = "`".$col."`='".$search."'";
+                $extra_params[$col] = $loose ? "`".$col."` LIKE '%".$search."%'":"`".$col."`='".$search."'";
               }
             $extra_filter = implode($extra_boolean_type,$extra_params);
             $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);

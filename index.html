@@ -37,7 +37,7 @@
       <div>
         <paper-input label="Search" id="search" name="search" disabled required autofocus floatingLabel class="col-xs-7 col-sm-8"></paper-input>
         <paper-fab id="do-search" icon="search" raisedButton class="materialblue"></paper-fab>
-        <paper-fab id="do-search-all" icon="unfold-more" raisedButton class="materialblue" data-toggle="tooltip" title="Show all results" data-placement="right"></paper-fab>
+        <paper-fab id="do-search-all" icon="list" raisedButton class="materialblue" data-toggle="tooltip" title="Show all results" data-placement="right"></paper-fab>
       </div>
       <fieldset class="fullwidth">
         <legend>Options</legend>
@@ -53,7 +53,7 @@
           <!-- This is a filter column. We need a radio button for
           AND/OR, and then to walk through the filters and append the object to the query. -->
           <span class="sr-only">Clade Restriction</span>
-          <paper-dropdown-menu label="Clade Restriction" data-column="major_type" class="cndb-filter" for>
+          <paper-dropdown-menu label="Group" data-column="linnean_order" class="cndb-filter" id="linnean-order" for>
             <paper-dropdown id="type" name="type" valueattr="data-type" class="dropdown">
               <core-menu class="menu">
                 <paper-item data-type="any">All</paper-item>
@@ -69,6 +69,20 @@
             </paper-dropdown>
           </paper-dropdown-menu>
         </core-label>
+        <!-- Now, elements that are hidden by default -->
+        <paper-button data-toggle="collapse" data-target="#collapse-advanced" aria-expanded="false" aria-controls="collapse-advanced" class="materialbluegrey" id="collapse-button" raised>Advanced Options <core-icon icon="unfold-more" id="collapse-icon"></core-icon></paper-button>
+        <div class="collapse" id="collapse-advanced">
+          <!-- Clade -->
+          <paper-input label="Clade" id="major-type-filter" name="major-type-filter" class="cndb-filter" data-column="major_type" floatingLabel></paper-input>
+          <!-- Subtype -->
+          <paper-input label="Subtype" id="major-subtype-filter" name="major-subtype-filter" class="cndb-filter" data-column="major_subtype" floatingLabel></paper-input>
+          <!-- Family -->
+          <paper-input label="Minor Type / Family" id="minor-type-filter" name="minor-type-filter" class="cndb-filter" data-column="minor_type" floatingLabel></paper-input>
+          <!-- Genus authority -->
+          <paper-input label="Genus Authority" id="genus-authority-filter" name="species-authority-filter" class="cndb-filter" data-column="genus_authority" floatingLabel></paper-input>
+          <!-- Species authority -->
+          <paper-input label="Species Authority" id="species-authority-filter" name="species-authority-filter" class="cndb-filter" data-column="species_authority" floatingLabel></paper-input>
+        </div>
       </fieldset>
       <input type="submit" style="display:none;" value="Search"/>
     </form>
@@ -82,7 +96,7 @@
     </div>
     <footer class="row">
       <div class="col-md-8 col-s-12 col-xs-12">
-        <copyright-statement copyrightStart="2015" name="Society for the Study of Amphibians and Reptiles"></copyright-statement> 
+        <copyright-statement copyrightStart="2015" name="Society for the Study of Amphibians and Reptiles"></copyright-statement>
       </div>
       <div class="col-md-1 col-sm-3 col-xs-3">
         <!-- <span class="octicon octicon-mark-github click med-octicon" data-url="https://github.com/tigerhawkvok/SSAR-species-database"></span> -->

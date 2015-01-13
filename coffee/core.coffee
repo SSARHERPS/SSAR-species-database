@@ -67,15 +67,27 @@ jQuery.fn.polymerSelected = (setSelected = undefined) ->
   # See
   # https://www.polymer-project.org/docs/elements/paper-elements.html#paper-dropdown-menu
   if setSelected?
-    try
-      jQuery(this).prop("selected",setSelected)
-      jQuery(this).prop("active",setSelected)
+    if not isBool(setSelected)
+      try
+        childDropdown = $(this).find("[valueattr]")
+        if isNull(childDropdown)
+          childDropdown = $(this)
+        prop = childDropdown.attr("valueattr")
+        # Find the element where the prop matches the selected
+        item = $(this).find("[#{prop}=#{setSelected}]")
+        index = item.index()
+        item.parent().prop("selected",index)
+      catch e
+        return false
+    else
+      console.log("setSelected #{setSelected} is boolean")
+      $(this).parent().children().removeAttribute("selected")
+      $(this).parent().children().removeAttribute("active")
+      $(this).parent().children().removeClass("core-selected")
+      $(this).prop("selected",setSelected)
+      $(this).prop("active",setSelected)
       if setSelected is true
-        jQuery(this).addClass("core-selected")
-      else
-        jQuery(this).removeClass("core-selected")
-    catch e
-      return false
+        $(this).addClass("core-selected")
   else
     val = undefined
     try
@@ -294,6 +306,6 @@ prepURI = (string) ->
   string.replace(/%20/g,"+")
 
 $ ->
-  $(".click").click ->    
+  $(".click").click ->
     openTab($(this).attr("data-url"))
   $('[data-toggle="tooltip"]').tooltip()
