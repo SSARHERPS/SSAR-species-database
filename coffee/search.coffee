@@ -417,13 +417,18 @@ $ ->
       try
         f64 = queryUrl.param("filter")
         filterObj = JSON.parse(Base64.decode(f64))
+        openFilters = false
         $.each filterObj, (col,val) ->
           col = col.replace(/_/g,"-")
           selector = "##{col}-filter"
           if col isnt "type"
             $(selector).attr("value",val)
+            openFilters = true
           else
             $("#linnean-order").polymerSelected(val)
+        if openFilters
+          # Open up #collapse-advanced
+          $("#collapse-advanced").collapse("show")
       catch e
         # Do nothing
         f64 = false

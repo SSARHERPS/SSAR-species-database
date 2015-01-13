@@ -981,7 +981,7 @@ setHistory = function(url, state, title) {
 };
 
 $(function() {
-  var e, f64, filterObj, fuzzyState, loadArgs, looseState, queryUrl, temp;
+  var e, f64, filterObj, fuzzyState, loadArgs, looseState, openFilters, queryUrl, temp;
   console.log("Doing onloads ...");
   animateLoad();
   window.addEventListener("popstate", function(e) {
@@ -1039,16 +1039,21 @@ $(function() {
       try {
         f64 = queryUrl.param("filter");
         filterObj = JSON.parse(Base64.decode(f64));
+        openFilters = false;
         $.each(filterObj, function(col, val) {
           var selector;
           col = col.replace(/_/g, "-");
           selector = "#" + col + "-filter";
           if (col !== "type") {
-            return $(selector).attr("value", val);
+            $(selector).attr("value", val);
+            return openFilters = true;
           } else {
             return $("#linnean-order").polymerSelected(val);
           }
         });
+        if (openFilters) {
+          $("#collapse-advanced").collapse("show");
+        }
       } catch (_error) {
         e = _error;
         f64 = false;
