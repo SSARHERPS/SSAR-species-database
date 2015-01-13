@@ -13,7 +13,8 @@ performSearch = (stateArgs = undefined) ->
     # Store a version before we do any search modifiers
     sOrig = s
     s = s.toLowerCase()
-    if isNull(s) or not s?
+    filters = getFilters()
+    if (isNull(s) or not s?) and isNull(filters)
       $("#search-status").attr("text","Please enter a search term.")
       $("#search-status")[0].show()
       return false
@@ -22,12 +23,11 @@ performSearch = (stateArgs = undefined) ->
       s = "#{s}&loose=true"
     if $("#fuzzy").polymerChecked()
       s = "#{s}&fuzzy=true"
-    args = "q=#{s}"
     # Add on the filters
-    filters = getFilters()
     if not isNull(filters)
       console.log("Got filters - #{filters}")
-      args = "#{args}&filter=#{filters}"
+      s = "#{s}&filter=#{filters}"
+    args = "q=#{s}"
   else
     # An argument has been passed in
     if stateArgs is true
@@ -49,7 +49,18 @@ performSearch = (stateArgs = undefined) ->
     # Populate the result container
     console.log("Search executed by #{result.method} with #{result.count} results.")
     if toInt(result.count) is 0
-      $("#search-status").attr("text","\"#{sOrig}\" returned no results.")
+      if result.query_params.filter.had_filter is true
+        filterText = ""
+        i = 0
+        $.each result.query_params.filter.filter_params, (col,val) ->
+          if col isnt "BOOLEAN_TYPE"
+            if i isnt 0
+              filterText = "#{filter_text} #{result.filter.filter_params.BOOLEAN_TYPE}"
+            filterText = "#{filterText} #{col.replace(/_/g," ")} is #{val}"
+        text = "\"#{sOrig}\" where #{filterText} returned no results."
+      else
+        text = "\"#{sOrig}\" returned no results."
+      $("#search-status").attr("text",text)
       $("#search-status")[0].show()
       stopLoadError()
       return false
@@ -429,4 +440,3 @@ $ ->
     stopLoad()
     $("#search").attr("disabled",false)
     $("#loose").prop("checked",true)
-

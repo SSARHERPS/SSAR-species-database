@@ -111,11 +111,24 @@ if(isset($_REQUEST['filter']))
       }
     if(!empty($params))
       {
+        # De-escape the columns, since they'll be checked for
+        # existence anyway
+        $params_temp = $params;
+        $params = array();
+        foreach($params_temp as $col=>$lookup)
+          {
+            $params[deEscape($col)] = $lookup;
+          }
         $filter_params = $params;
         # Does the "BOOLEAN_TYPE" key exist?
-        if(!array_key_exists("BOOLEAN_TYPE",$params)) returnAjax(array("status"=>false,"error"=>"Missing required parameter","human_error"=>"The key 'BOOLEAN_TYPE' must exist and be either 'AND' or 'OR'.","given"=>$params));
+        if(isset($params["boolean_type"]))
+          {
+            $params["BOOLEAN_TYPE"] = $params["boolean_type"];
+            unset($params["boolean_type"]);
+          }
+        if(!array_key_exists("BOOLEAN_TYPE",$params)) returnAjax(array("status"=>false,"error"=>"Missing required parameter","human_error"=>"The key 'BOOLEAN_TYPE' must exist and be either 'AND' or 'OR' when the \"filter\" parameter is specified.","given"=>$params));
         # Is it valid?
-        if($params['BOOLEAN_TYPE'] != "AND" || $params['BOOLEAN_TYPE'] != "OR") returnAjax(array("status"=>false,"error"=>"Missing required parameter","human_error"=>"The key 'BOOLEAN_TYPE' must exist and be either 'AND' or 'OR'.","given"=>$params));
+        if(strtoupper($params['BOOLEAN_TYPE']) != "AND" && strtoupper($params['BOOLEAN_TYPE']) != "OR") returnAjax(array("status"=>false,"error"=>"Missing required parameter","human_error"=>"The key 'BOOLEAN_TYPE' must be either 'AND' or 'OR'.","given"=>$params));
         $boolean_type = $params['BOOLEAN_TYPE'];
         unset($params['BOOLEAN_TYPE']);
         # Do all the columns exist?
@@ -164,6 +177,7 @@ function handleParamSearch($filter_params,$loose = false,$boolean_type = "AND", 
    * @param extra_params a literal query
    * @return array the result vector
    ***/
+  global $db;
   $query = "SELECT * FROM `".$db->getTable()."` WHERE ";
   $where_arr = array();
   foreach($filter_params as $col=>$crit)
@@ -185,14 +199,15 @@ function handleParamSearch($filter_params,$loose = false,$boolean_type = "AND", 
   $r = mysqli_query($l,$query);
   if($r === false)
     {
-      returnAjax(array("status"=>false,"error"=>mysqli_error($l),"human_error"=>"There was an error executing this query"));
+      global $method;
+      returnAjax(array("status"=>false,"error"=>mysqli_error($l),"human_error"=>"There was an error executing this query","query"=>$query,"method"=>$method));
     }
   $result_vector = array();
   while($row = mysqli_fetch_assoc($r))
     {
       $result_vector[] = $row;
     }
-  $result_vector["query"] = $query;
+  # $result_vector["query"] = $query;
   return $result_vector;
 }
 
@@ -280,6 +295,10 @@ if(empty($params) || !empty($search))
                   {
                     $extra_params[$db->sanitize($column)] = $search;
                   }
+              }
+            foreach($extra_params as $col => $search)
+              {
+                $extra_params[$col] = "`".$col."`='".$search."'";
               }
             $extra_filter = implode($extra_boolean_type,$extra_params);
             $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);
@@ -494,8 +513,7 @@ else returnAjax(array(
     "filter"=>array(
       "had_filter"=>isset($_REQUEST['filter']),
       "filter_params"=>$filter_params,
-      "filter_literal"=>$_REQUEST["filter"],
-      "filter_parsed"=>smart_decode64($_REQUEST["filter"])
+      "filter_literal"=>$_REQUEST["filter"]
     )
   )
 ));

@@ -537,7 +537,8 @@ performSearch = function(stateArgs) {
     s = $("#search").val();
     sOrig = s;
     s = s.toLowerCase();
-    if (isNull(s) || (s == null)) {
+    filters = getFilters();
+    if ((isNull(s) || (s == null)) && isNull(filters)) {
       $("#search-status").attr("text", "Please enter a search term.");
       $("#search-status")[0].show();
       return false;
@@ -549,12 +550,11 @@ performSearch = function(stateArgs) {
     if ($("#fuzzy").polymerChecked()) {
       s = "" + s + "&fuzzy=true";
     }
-    args = "q=" + s;
-    filters = getFilters();
     if (!isNull(filters)) {
       console.log("Got filters - " + filters);
-      args = "" + args + "&filter=" + filters;
+      s = "" + s + "&filter=" + filters;
     }
+    args = "q=" + s;
   } else {
     if (stateArgs === true) {
       args = "q=";
@@ -571,9 +571,25 @@ performSearch = function(stateArgs) {
   animateLoad();
   console.log("Got search value " + s + ", hitting", "" + searchParams.apiPath + "?" + args);
   return $.get(searchParams.targetApi, args, "json").done(function(result) {
+    var filterText, i, text;
     console.log("Search executed by " + result.method + " with " + result.count + " results.");
     if (toInt(result.count) === 0) {
-      $("#search-status").attr("text", "\"" + sOrig + "\" returned no results.");
+      if (result.query_params.filter.had_filter === true) {
+        filterText = "";
+        i = 0;
+        $.each(result.query_params.filter.filter_params, function(col, val) {
+          if (col !== "BOOLEAN_TYPE") {
+            if (i !== 0) {
+              filterText = "" + filter_text + " " + result.filter.filter_params.BOOLEAN_TYPE;
+            }
+            return filterText = "" + filterText + " " + (col.replace(/_/g, " ")) + " is " + val;
+          }
+        });
+        text = "\"" + sOrig + "\" where " + filterText + " returned no results.";
+      } else {
+        text = "\"" + sOrig + "\" returned no results.";
+      }
+      $("#search-status").attr("text", text);
       $("#search-status")[0].show();
       stopLoadError();
       return false;
