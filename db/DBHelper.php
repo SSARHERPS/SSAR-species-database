@@ -4,8 +4,6 @@
  * Uses MySQLi as the main interface
  ***/
 
-require_once(dirname(__FILE__).'/functions.inc');
-
 class DBHelper {
 
   public function __construct($database,$user,$pw,$url = "localhost",$table = null,$cols = null)
