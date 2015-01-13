@@ -120,17 +120,16 @@ if(!function_exists('smart_decode64'))
           try
             {
               // clean
-              require_once(dirname(__FILE__).'/db_hook.inc');
               if(is_array($working))
                 {
                   foreach($working as $k=>$v)
                     {
-                      $ck=sanitize($k);
-                      $cv=sanitize($v);
+                      $ck=DBHelper::staticSanitize($k);
+                      $cv=DBHelper::staticSanitize($v);
                       $prepped_data[$ck]=$cv;
                     }
                 }
-              else $prepped_data=sanitize($working);
+              else $prepped_data=DBHelper::staticSanitize($working);
             }
           catch (Exception $e)
             {
