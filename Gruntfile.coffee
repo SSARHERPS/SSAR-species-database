@@ -41,7 +41,7 @@ module.exports = (grunt) ->
         options:
           bare: true
           join: true
-          sourceMapDir: "coffee/maps"
+          sourceMapDir: "js/maps"
           sourceMap: true
         files:
           "js/c.js":"coffee/*.coffee"
