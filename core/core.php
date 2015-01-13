@@ -97,6 +97,7 @@ if(!function_exists('encode64'))
     function encode64($data) { return base64_encode($data); }
     function decode64($data) 
     {
+      # This is STRICT decoding
       if(@base64_encode(@base64_decode($data,true))==$data) return urldecode(@base64_decode($data));
       return false;
     }
@@ -111,7 +112,7 @@ if(!function_exists('smart_decode64'))
        * if it's a JSON, and sanitize the elements in any case.
        */
       if(is_null($data)) return null; // in case emptyness of data is meaningful
-      $r=decode64($data);
+      $r = urldecode(base64_decode($data));
       if($r===false) return false;
       $jd=json_decode($r,true);
       $working= is_null($jd) ? $r:$jd;
@@ -233,6 +234,43 @@ if(!function_exists("do_post_request"))
         throw new Exception("Problem reading data from $url, $php_errormsg");
       }
       return $response;
+    }
+  }
+
+if(!function_exists('deEscape'))
+  {
+    function deEscape($input) {
+      return htmlspecialchars_decode(html_entity_decode(urldecode($input)));
+    }
+  }
+
+
+if(!function_exists('curPageURL'))
+  {
+
+    function curPageURL() {
+      $pageURL = 'http';
+      if ($_SERVER["HTTPS"] == "on") {$pageURL .= "s";}
+      $pageURL .= "://";
+      if ($_SERVER["SERVER_PORT"] != "80") {
+        $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
+      } else {
+        $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
+      }
+      require_once(dirname(__FILE__).'/DBHelper.php');
+      return DBHelper::cleanInput($pageURL);
+    }
+  }
+
+if(!function_exists('appendQuery'))
+  {
+
+    function appendQuery($query) {
+      $url = curPageURL();
+      $url=str_replace("&","&amp;",$url);
+      if(strpos($url,"?")!==FALSE) $url .= "&amp;" . $query;
+      else $url .= "?" . $query;
+      return $url;
     }
   }
 
