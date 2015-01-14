@@ -9,6 +9,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks("grunt-contrib-coffee")
   # https://github.com/gruntjs/grunt-contrib-watch
   grunt.loadNpmTasks("grunt-contrib-watch")
+  grunt.loadNpmTasks("grunt-contrib-uglify")
   # https://github.com/mathiasbynens/grunt-yui-compressor
   # May end up porting to https://github.com/gruntjs/grunt-contrib-uglify
   grunt.loadNpmTasks('grunt-yui-compressor')
@@ -19,19 +20,38 @@ module.exports = (grunt) ->
         stderr: false
       bower:
         command: ["bower update"].join("&&")
-    min:
+    uglify:
+      options:
+        mangle:
+          except:['jQuery']
       combine:
-        src:["js/c.js","bower_components/purl/purl.js","bower_components/xmlToJSON/lib/xmlToJSON.js"]
-        dest:"js/combined.min.js"
+        options:
+          sourceMap:true
+          sourceMapName:"js/maps/combined.map"
+          sourceMapIncludeSources:true
+          sourceMapIn:"js/maps/c.js.map"
+        files:
+          "js/combined.min.js":["js/c.js","bower_components/purl/purl.js","bower_components/xmlToJSON/lib/xmlToJSON.js"]
       dist:
-        src:["js/c.js"]
-        dest:"js/c.min.js"
+        options:
+          sourceMap:true
+          sourceMapName:"js/maps/c.map"
+          sourceMapIncludeSources:true
+          sourceMapIn:"js/maps/c.js.map"
+        files:
+          "js/c.min.js":["js/c.js"]
       minpurl:
-        src: ["bower_components/purl/purl.js"]
-        dest: "js/purl.min.js"
+        options:
+          sourceMap:true
+          sourceMapName:"js/maps/purl.map"
+        files:
+          "js/purl.min.js": ["bower_components/purl/purl.js"]
       minxmljson:
-        src: ["bower_components/xmlToJSON/lib/xmlToJSON.js"]
-        dest: "js/xmlToJSON.min.js"
+        options:
+          sourceMap:true
+          sourceMapName:"js/maps/xmlToJSON.map"
+        files:
+          "js/xmlToJSON.min.js": ["bower_components/xmlToJSON/lib/xmlToJSON.js"]
     cssmin:
       dist:
         src:["css/main.css"]
@@ -54,12 +74,12 @@ module.exports = (grunt) ->
         tasks: ["cssmin"]
   ## Now the tasks
   grunt.registerTask("default",["watch"])
-  grunt.registerTask("compile","Compile coffeescript",["coffee:compile","min:dist"])
+  grunt.registerTask("compile","Compile coffeescript",["coffee:compile","uglify:dist"])
   ## The minification tasks
   # Part 1
-  grunt.registerTask("minifyIndependent","Minify Bower components that aren't distributed min'd",["min:minpurl","min:minxmljson"])
+  grunt.registerTask("minifyIndependent","Minify Bower components that aren't distributed min'd",["uglify:minpurl","uglify:minxmljson"])
   # Part 2
-  grunt.registerTask("minifyBulk","Minify all the things",["min:combine","min:dist","cssmin:dist"])
+  grunt.registerTask("minifyBulk","Minify all the things",["uglify:combine","uglify:dist","cssmin:dist"])
   # Main call
   grunt.registerTask "minify","Minify all the things",->
     grunt.task.run("minifyIndependent","minifyBulk")
@@ -71,4 +91,4 @@ module.exports = (grunt) ->
     grunt.task.run("updateBower","minify")
   ## Deploy
   grunt.registerTask "build","Compile and update, then watch", ->
-    grunt.task.run("update","compile","default")
+    grunt.task.run("update","compile","minify","default")
