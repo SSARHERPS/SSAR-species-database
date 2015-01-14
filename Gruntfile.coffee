@@ -20,6 +20,8 @@ module.exports = (grunt) ->
         stderr: false
       bower:
         command: ["bower update"].join("&&")
+      movesrc:
+        command: ["mv js/c.src.coffee js/maps/c.src.coffee"].join("&&")
     uglify:
       options:
         mangle:
@@ -68,13 +70,13 @@ module.exports = (grunt) ->
     watch:
       scripts:
         files: ["coffee/*.coffee"]
-        tasks: ["coffee:compile","min:dist"]
+        tasks: ["coffee:compile","min:dist","shell:movesrc"]
       styles:
         files: ["css/main.css"]
         tasks: ["cssmin"]
   ## Now the tasks
   grunt.registerTask("default",["watch"])
-  grunt.registerTask("compile","Compile coffeescript",["coffee:compile","uglify:dist"])
+  grunt.registerTask("compile","Compile coffeescript",["coffee:compile","uglify:dist","shell:movesrc"])
   ## The minification tasks
   # Part 1
   grunt.registerTask("minifyIndependent","Minify Bower components that aren't distributed min'd",["uglify:minpurl","uglify:minxmljson"])
