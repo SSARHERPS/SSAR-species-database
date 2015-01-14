@@ -119,6 +119,23 @@ core-label.col-xs-6 {
 #collapse-advanced {
     margin-top:1rem;
 }
+.bs-callout {
+  padding: 20px;
+  margin: 20px 0;
+  border: 1px solid #eee;
+  border-left-width: 5px;
+  border-radius: 3px;
+  width:80%;
+}
+.bs-callout-info {
+  border-left-color: #5bc0de;
+}
+.bs-callout p:last-child {
+  margin-bottom: 0;
+}
+.bs-callout-info h4 {
+  color: #5bc0de;
+}
 /************
  * Lightbox
  ***************/

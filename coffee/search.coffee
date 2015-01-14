@@ -18,6 +18,9 @@ performSearch = (stateArgs = undefined) ->
       $("#search-status").attr("text","Please enter a search term.")
       $("#search-status")[0].show()
       return false
+    $("#search").blur()
+    # Remove periods from the search
+    s = s.replace(/\./g,"")
     s = prepURI(s)
     if $("#loose").polymerChecked()
       s = "#{s}&loose=true"
@@ -412,6 +415,8 @@ $ ->
       $("#loose").prop("checked",looseState)
       $("#fuzzy").prop("checked",fuzzyState)
       temp = loadArgs.split("&")[0]
+      # Remove any plus signs in the query
+      temp = temp.replace(/\+/," ")
       $("#search").attr("value",temp)
       # Filters
       try

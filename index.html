@@ -33,6 +33,9 @@
     <script type="text/javascript" src="js/c.min.js"></script>
   </head>
   <body>
+    <h1>
+      SSAR North American Species Database
+    </h1>
     <form id="search_form" onsubmit="event.preventDefault()">
       <div>
         <paper-input label="Search" id="search" name="search" disabled required autofocus floatingLabel class="col-xs-7 col-sm-8"></paper-input>
@@ -88,11 +91,12 @@
     </form>
     <paper-toast id="search-status"></paper-toast>
     <br/>
-    <h1>Results<span id="result-count"></span></h1>
+    <h2>Results<span id="result-count"></span></h2>
+    <p>Click on an entry for more information.</p>
     <div id="result_container" class="table-responsive row">
-      <p>
-        Search for a common or scientific name above to begin.
-      </p>
+      <div class="bs-callout bs-callout-info center-block">
+          Search for a common or scientific name above to begin.
+      </div>
     </div>
     <footer class="row">
       <div class="col-md-8 col-s-12 col-xs-12">

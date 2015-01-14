@@ -556,6 +556,8 @@ performSearch = function(stateArgs) {
       $("#search-status")[0].show();
       return false;
     }
+    $("#search").blur();
+    s = s.replace(/\./g, "");
     s = prepURI(s);
     if ($("#loose").polymerChecked()) {
       s = "" + s + "&loose=true";
@@ -1035,6 +1037,7 @@ $(function() {
       $("#loose").prop("checked", looseState);
       $("#fuzzy").prop("checked", fuzzyState);
       temp = loadArgs.split("&")[0];
+      temp = temp.replace(/\+/, " ");
       $("#search").attr("value", temp);
       try {
         f64 = queryUrl.param("filter");
