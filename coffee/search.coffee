@@ -256,6 +256,39 @@ parseTaxonYear = (taxonYearString,strict = true) ->
   year.species = species
   return year
 
+checkTaxonNear = (taxonQuery = undefined, selector = "html /deep/ #near-me-container") ->
+  ###
+  # Check the iNaturalist API to see if the taxon is in your county
+  # See https://github.com/tigerhawkvok/SSAR-species-database/issues/7
+  ###
+  if not taxonQuery?
+    console.warn("Please specify a taxon.")
+    return false;
+  if not locationData.last?
+    getLocation()
+  elapsed = (Date.now() - locationData.last)/1000
+  if elapsed > 15*60 # 15 minutes
+    getLocation()
+  # Now actually check
+  apiUrl = "http://www.inaturalist.org/places.json"
+  args = "taxon=#{taxonQuery}&latitude=#{locationData.lat}&longitude=#{locationData.lng}&place_type=county"
+  $.get(apiUrl,args,"json")
+  .done (result) ->
+    if Object.size(result) > 0
+      geoIcon = "communication:location-on"
+      cssClass = "good-location"
+    else
+      geoIcon = "communication:location-off"
+      cssClass = "bad-location"
+  .fail (result,status) ->
+    cssClass = "bad-location"
+    geoIcon = "warning"
+  .always ->
+    $(selector).html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}'></core-icon>")
+  false
+
+  
+
 deferCalPhotos = (selector = ".calphoto") ->
   ###
   # Defer renders of calphoto linkouts
@@ -306,7 +339,7 @@ modalTaxon = (taxon = undefined) ->
     year = parseTaxonYear(data.authority_year)
     yearHtml = ""
     if year isnt false
-      yearHtml = "<p><span class='genus'>#{data.genus}</span>, <span class='genus_authority'>#{data.genus_authority}</span> #{year.genus}; <span class='species'>#{data.species}</span>, <span class='species_authority'>#{data.species_authority}</span> #{year.species}</p>"
+      yearHtml = "<div id='near-me-container'></div><p><span class='genus'>#{data.genus}</span>, <span class='genus_authority'>#{data.genus_authority}</span> #{year.genus}; <span class='species'>#{data.species}</span>, <span class='species_authority'>#{data.species_authority}</span> #{year.species}</p>"
     deprecatedHtml = ""
     if not isNull(data.deprecated_scientific)
       deprecatedHtml = "<p>Deprecated names:"

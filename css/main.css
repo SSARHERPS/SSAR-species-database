@@ -52,6 +52,12 @@ body {
     color: #607d8b;
 
 }
+.good-location {
+    color: #4CAF50;
+}
+.bad-location {
+    color: #F44336;
+}
 .italic {
     font-style:italic;
 }

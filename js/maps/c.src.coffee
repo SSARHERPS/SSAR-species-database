@@ -25,6 +25,11 @@ uri.o = $.url()
 uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host')  + uri.o.attr("directory")
 uri.query = uri.o.attr("fragment")
 
+window.locationData = new Object()
+locationData.params =
+  enableHighAccuracy: true
+locationData.last = undefined
+
 isBool = (str) -> str is true or str is false
 
 isEmpty = (str) -> not str or str.length is 0
@@ -324,10 +329,38 @@ prepURI = (string) ->
   string = encodeURIComponent(string)
   string.replace(/%20/g,"+")
 
+
+getLocation = (callback = undefined) ->
+  geoSuccess = (pos,callback) ->
+    window.locationData.lat = pos.coords.latitude
+    window.locationData.lng = pos.coords.longitude
+    window.locationData.acc = pos.coords.accuracy
+    window.locationData.last = Date.now() # ms, unix time
+    callback(window.locationData)
+    false
+  geoFail = (error,callback) ->
+    locationError = switch error.code
+      when 0 then "There was an error while retrieving your location: #{error.message}"
+      when 1 then "The user prevented this page from retrieving a location"
+      when 2 then "The browser was unable to determine your location: #{error.message}"
+      when 3 then "The browser timed out retrieving your location."
+    console.error(locationError)
+    if callback?
+      callback(false)
+    false
+  if navigator.geolocation
+    navigator.geolocation.getCurrentPosition(geoSuccess,geoFail,window.locationData.params)
+  else
+    console.warn("This browser doesn't support geolocation!")
+    if callback?
+      callback(false)
+
+
 $ ->
   $(".click").click ->
     openTab($(this).attr("data-url"))
   $('[data-toggle="tooltip"]').tooltip()
+  getLocation()
 
 searchParams = new Object()
 searchParams.targetApi = "commonnames_api.php"
@@ -587,6 +620,39 @@ parseTaxonYear = (taxonYearString,strict = true) ->
   year.species = species
   return year
 
+checkTaxonNear = (taxonQuery = undefined, selector = "html /deep/ #near-me-container") ->
+  ###
+  # Check the iNaturalist API to see if the taxon is in your county
+  # See https://github.com/tigerhawkvok/SSAR-species-database/issues/7
+  ###
+  if not taxonQuery?
+    console.warn("Please specify a taxon.")
+    return false;
+  if not locationData.last?
+    getLocation()
+  elapsed = (Date.now() - locationData.last)/1000
+  if elapsed > 15*60 # 15 minutes
+    getLocation()
+  # Now actually check
+  apiUrl = "http://www.inaturalist.org/places.json"
+  args = "taxon=#{taxonQuery}&latitude=#{locationData.lat}&longitude=#{locationData.lng}&place_type=county"
+  $.get(apiUrl,args,"json")
+  .done (result) ->
+    if Object.size(result) > 0
+      geoIcon = "communication:location-on"
+      cssClass = "good-location"
+    else
+      geoIcon = "communication:location-off"
+      cssClass = "bad-location"
+  .fail (result,status) ->
+    cssClass = "bad-location"
+    geoIcon = "warning"
+  .always ->
+    $(selector).html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}'></core-icon>")
+  false
+
+  
+
 deferCalPhotos = (selector = ".calphoto") ->
   ###
   # Defer renders of calphoto linkouts
@@ -637,7 +703,7 @@ modalTaxon = (taxon = undefined) ->
     year = parseTaxonYear(data.authority_year)
     yearHtml = ""
     if year isnt false
-      yearHtml = "<p><span class='genus'>#{data.genus}</span>, <span class='genus_authority'>#{data.genus_authority}</span> #{year.genus}; <span class='species'>#{data.species}</span>, <span class='species_authority'>#{data.species_authority}</span> #{year.species}</p>"
+      yearHtml = "<div id='near-me-container'></div><p><span class='genus'>#{data.genus}</span>, <span class='genus_authority'>#{data.genus_authority}</span> #{year.genus}; <span class='species'>#{data.species}</span>, <span class='species_authority'>#{data.species_authority}</span> #{year.species}</p>"
     deprecatedHtml = ""
     if not isNull(data.deprecated_scientific)
       deprecatedHtml = "<p>Deprecated names:"

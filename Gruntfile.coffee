@@ -70,7 +70,7 @@ module.exports = (grunt) ->
     watch:
       scripts:
         files: ["coffee/*.coffee"]
-        tasks: ["coffee:compile","min:dist","shell:movesrc"]
+        tasks: ["coffee:compile","uglify:dist","shell:movesrc"]
       styles:
         files: ["css/main.css"]
         tasks: ["cssmin"]

@@ -2,7 +2,7 @@
 /*
  * The main coffeescript file for administrative stuff
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, byteCount, deferCalPhotos, delay, formatScientificNames, formatSearchResults, getFilters, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, byteCount, checkTaxonNear, deferCalPhotos, delay, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
   __slice = [].slice;
 
 adminParams = new Object();
@@ -36,6 +36,14 @@ uri.o = $.url();
 uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host') + uri.o.attr("directory");
 
 uri.query = uri.o.attr("fragment");
+
+window.locationData = new Object();
+
+locationData.params = {
+  enableHighAccuracy: true
+};
+
+locationData.last = void 0;
 
 isBool = function(str) {
   return str === true || str === false;
@@ -522,11 +530,55 @@ prepURI = function(string) {
   return string.replace(/%20/g, "+");
 };
 
+getLocation = function(callback) {
+  var geoFail, geoSuccess;
+  if (callback == null) {
+    callback = void 0;
+  }
+  geoSuccess = function(pos, callback) {
+    window.locationData.lat = pos.coords.latitude;
+    window.locationData.lng = pos.coords.longitude;
+    window.locationData.acc = pos.coords.accuracy;
+    window.locationData.last = Date.now();
+    callback(window.locationData);
+    return false;
+  };
+  geoFail = function(error, callback) {
+    var locationError;
+    locationError = (function() {
+      switch (error.code) {
+        case 0:
+          return "There was an error while retrieving your location: " + error.message;
+        case 1:
+          return "The user prevented this page from retrieving a location";
+        case 2:
+          return "The browser was unable to determine your location: " + error.message;
+        case 3:
+          return "The browser timed out retrieving your location.";
+      }
+    })();
+    console.error(locationError);
+    if (callback != null) {
+      callback(false);
+    }
+    return false;
+  };
+  if (navigator.geolocation) {
+    return navigator.geolocation.getCurrentPosition(geoSuccess, geoFail, window.locationData.params);
+  } else {
+    console.warn("This browser doesn't support geolocation!");
+    if (callback != null) {
+      return callback(false);
+    }
+  }
+};
+
 $(function() {
   $(".click").click(function() {
     return openTab($(this).attr("data-url"));
   });
-  return $('[data-toggle="tooltip"]').tooltip();
+  $('[data-toggle="tooltip"]').tooltip();
+  return getLocation();
 });
 
 searchParams = new Object();
@@ -843,6 +895,51 @@ parseTaxonYear = function(taxonYearString, strict) {
   return year;
 };
 
+checkTaxonNear = function(taxonQuery, selector) {
+  var apiUrl, args, elapsed;
+  if (taxonQuery == null) {
+    taxonQuery = void 0;
+  }
+  if (selector == null) {
+    selector = "html /deep/ #near-me-container";
+  }
+
+  /*
+   * Check the iNaturalist API to see if the taxon is in your county
+   * See https://github.com/tigerhawkvok/SSAR-species-database/issues/7
+   */
+  if (taxonQuery == null) {
+    console.warn("Please specify a taxon.");
+    return false;
+  }
+  if (locationData.last == null) {
+    getLocation();
+  }
+  elapsed = (Date.now() - locationData.last) / 1000;
+  if (elapsed > 15 * 60) {
+    getLocation();
+  }
+  apiUrl = "http://www.inaturalist.org/places.json";
+  args = "taxon=" + taxonQuery + "&latitude=" + locationData.lat + "&longitude=" + locationData.lng + "&place_type=county";
+  $.get(apiUrl, args, "json").done(function(result) {
+    var cssClass, geoIcon;
+    if (Object.size(result) > 0) {
+      geoIcon = "communication:location-on";
+      return cssClass = "good-location";
+    } else {
+      geoIcon = "communication:location-off";
+      return cssClass = "bad-location";
+    }
+  }).fail(function(result, status) {
+    var cssClass, geoIcon;
+    cssClass = "bad-location";
+    return geoIcon = "warning";
+  }).always(function() {
+    return $(selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + "'></core-icon>");
+  });
+  return false;
+};
+
 deferCalPhotos = function(selector) {
   var count, cpUrl, i;
   if (selector == null) {
@@ -907,7 +1004,7 @@ modalTaxon = function(taxon) {
     year = parseTaxonYear(data.authority_year);
     yearHtml = "";
     if (year !== false) {
-      yearHtml = "<p><span class='genus'>" + data.genus + "</span>, <span class='genus_authority'>" + data.genus_authority + "</span> " + year.genus + "; <span class='species'>" + data.species + "</span>, <span class='species_authority'>" + data.species_authority + "</span> " + year.species + "</p>";
+      yearHtml = "<div id='near-me-container'></div><p><span class='genus'>" + data.genus + "</span>, <span class='genus_authority'>" + data.genus_authority + "</span> " + year.genus + "; <span class='species'>" + data.species + "</span>, <span class='species_authority'>" + data.species_authority + "</span> " + year.species + "</p>";
     }
     deprecatedHtml = "";
     if (!isNull(data.deprecated_scientific)) {
