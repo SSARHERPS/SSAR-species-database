@@ -128,7 +128,8 @@ class Stronghash {
                               }
                             catch (Exception $e)
                               {
-                                return array("status"=>false,"error"=>$e->getMessage());
+                                return array("status"=>false,"error" => "selfpbkdf2 error","use"=>$use);
+                                #$e->getMessage());
                               }
                             return array("status"=>true,'hash'=>$hash,"salt"=>$salt,"algo"=>$use."pbkdf2-nn","rounds"=>$rounds);
                           }
