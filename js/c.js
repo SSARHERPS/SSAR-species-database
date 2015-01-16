@@ -1,8 +1,9 @@
 
 /*
  * The main coffeescript file for administrative stuff
+ * Triggered from admin-page.html
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, byteCount, checkTaxonNear, deferCalPhotos, delay, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, byteCount, checkTaxonNear, deferCalPhotos, delay, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
   __slice = [].slice;
 
 adminParams = new Object();
@@ -17,6 +18,38 @@ loadAdminUi = function() {
    * Main wrapper function. Checks for a valid login state, then
    * fetches/draws the page contents if it's OK. Otherwise, boots the
    * user back to the login page.
+   */
+  verifyLoginCredentials(function() {
+    return false;
+  });
+  return false;
+};
+
+verifyLoginCredentials = function(callback) {
+
+  /*
+   * Checks the login credentials against the server.
+   * This should not be used in place of sending authentication
+   * information alongside a restricted action, as a malicious party
+   * could force the local JS check to succeed.
+   * SECURE AUTHENTICATION MUST BE WHOLLY SERVER SIDE.
+   */
+  return false;
+};
+
+lookupEditorSpecies = function() {
+
+  /*
+   * Lookup a given species and load it for editing
+   */
+  return false;
+};
+
+saveEditorEntry = function() {
+
+  /*
+   * Send an editor state along with login credentials,
+   * and report the save result back to the user
    */
   return false;
 };
