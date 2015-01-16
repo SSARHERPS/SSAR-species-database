@@ -8,9 +8,11 @@ var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, byteCou
 
 adminParams = new Object();
 
-adminParams.loginPage = "admin-login.php";
-
 adminParams.apiTarget = "admin_api.php";
+
+adminParams.dir = "admin/";
+
+adminParams.apiUrl = "" + adminParams.dir + adminParams.apiTarget;
 
 loadAdminUi = function() {
 
@@ -35,6 +37,12 @@ verifyLoginCredentials = function(callback) {
    * could force the local JS check to succeed.
    * SECURE AUTHENTICATION MUST BE WHOLLY SERVER SIDE.
    */
+  var args, hash, link, secret;
+  hash = $.cookie("ssarherps_auth");
+  secret = $.cookie("ssarherps_secret");
+  link = $.cookie("ssarherps_link");
+  args = "hash=" + hash + "&secret=" + secret + "&dblink=" + link;
+  $.post(adminParams.apiUrl, args, "json");
   return false;
 };
 
@@ -56,8 +64,15 @@ saveEditorEntry = function() {
 };
 
 $(function() {
-  if (window.loadAdminUi === true) {
-    return loadAdminUi();
+  var e;
+  try {
+    checkAdmin();
+    if (adminParams.loadAdminUi === true) {
+      return loadAdminUi();
+    }
+  } catch (_error) {
+    e = _error;
+    return console.warn("This page does not have the criteria to check administration");
   }
 });
 

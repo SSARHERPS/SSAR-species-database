@@ -3,8 +3,9 @@
 # Triggered from admin-page.html
 ###
 adminParams = new Object()
-adminParams.loginPage = "admin-login.php"
 adminParams.apiTarget = "admin_api.php"
+adminParams.dir = "admin/"
+adminParams.apiUrl = "#{adminParams.dir}#{adminParams.apiTarget}"
 
 loadAdminUi = ->
   ###
@@ -27,6 +28,11 @@ verifyLoginCredentials = (callback) ->
   # could force the local JS check to succeed.
   # SECURE AUTHENTICATION MUST BE WHOLLY SERVER SIDE.
   ###
+  hash = $.cookie("ssarherps_auth")
+  secret = $.cookie("ssarherps_secret")
+  link = $.cookie("ssarherps_link")
+  args = "hash=#{hash}&secret=#{secret}&dblink=#{link}"
+  $.post(adminParams.apiUrl,args,"json")
   false
 
 
@@ -44,5 +50,9 @@ saveEditorEntry = ->
   false
 
 $ ->
-  if window.loadAdminUi is true
-    loadAdminUi()
+  try
+    checkAdmin()
+    if adminParams.loadAdminUi is true
+      loadAdminUi()
+  catch e
+    console.warn("This page does not have the criteria to check administration")
