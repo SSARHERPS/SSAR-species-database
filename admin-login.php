@@ -28,6 +28,7 @@
   </head>
   <body>
     <?php
+       require_once("CONFIG.php");
        require_once("admin/login.php");
        echo $login_output;
        ?>
