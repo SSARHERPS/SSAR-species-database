@@ -4,11 +4,9 @@
  * Uses MySQLi as the main interface
  ***/
 
-require_once(dirname(__FILE__).'/functions.inc');
-
 class DBHelper {
 
-  public function __construct($database,$user,$pw,$url = "localhost",$table = null)
+  public function __construct($database,$user,$pw,$url = "localhost",$table = null,$cols = null)
   {
     /***
      * @param string $database the database to connect to
@@ -16,12 +14,18 @@ class DBHelper {
      * @param string $pw the password for $user in $database
      * @param string $url the URL of the SQL server
      * @param string $table the default table
+     * @param array $cols the column information. Note that it must be
+     * specified here in the constructor!!
      ***/
     $this->db = $database;
     $this->SQLuser = $user;
     $this->pw = $pw;
     $this->url = $url;
     $this->table = $table;
+    if(is_array($cols))
+      {
+        $this->setCols($cols);
+      }
   }
 
   public function getDB()
@@ -168,7 +172,7 @@ class DBHelper {
     return $output;
   }
 
-  protected function mysql_escape_mimic($inp)
+  protected static function mysql_escape_mimic($inp)
   {
     if(is_array($inp))
       {
@@ -226,7 +230,7 @@ class DBHelper {
     if(preg_match($preg,$input) === 1)
       {
         # It's an email, let's escape it and be done with it
-        $output = mysql_escape_mimic($input);
+        $output = self::mysql_escape_mimic($input);
         return $output;
       }
     if (is_array($input))
@@ -247,7 +251,7 @@ class DBHelper {
         $input=str_replace("%","&#37;",$input); // Fix % potential wildcard
         $input=str_replace("'","&#39;",$input);
         $input=str_replace('"',"&#34;",$input);
-        $output = mysql_escape_mimic($input);
+        $output = self::mysql_escape_mimic($input);
       }
     return $output;
   }
@@ -481,7 +485,7 @@ public function doQuery($search,$cols = "*",$boolean_type = "AND", $loose = fals
     }
   if($cols != "*") $col_selector = is_array($cols) ? "`".implode("`,`",$cols)."`":"`".$cols."`";
   else $col_selector = $cols;
-  if(strtolower($boolean_type) != "and" || strtolower($boolean_type) != "or") return false;
+  if(strtolower($boolean_type) != "and" && strtolower($boolean_type) != "or") return false;
   $where_arr = array();
   foreach($search as $col=>$crit)
     {

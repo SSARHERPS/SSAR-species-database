@@ -14,8 +14,8 @@ function parseBlock($block,$sanitize=true,$strip=true,$paragraph=true)
   if(!is_string($block)) return array(false,'error'=>'A string wasn\'t provided.');
   if($sanitize)
     {
-      require_once('/var/www/modular/db_hook.inc');
-      $parsed=sanitize($block);
+      # Requires DBHelper -- make sure it's included earlier!            
+      $parsed=DBHelper::statisSanitize($block);
     }
   else $parsed=$block;
   /***
@@ -315,7 +315,7 @@ function deparseBlock($block)
           $length=strpos($parsed,"</a>",$pos)+4-$pos;
           $search=substr($parsed,$pos,$length);
           $tag="[link:";
-          $md = "["
+          $md = "[";
           $begin=$pos+9;
           $end=strpos($parsed,"'",$begin);
           $length=$end-$begin;
@@ -325,7 +325,7 @@ function deparseBlock($block)
           $end=strpos($parsed,"</a>",$begin);
           $length=$end-$begin;
           $text = substr($parsed,$begin,$length);
-          $md .= $text."](".$href.")"
+          $md .= $text."](".$href.")";
           $tag.="," . $text . "]";
           $parsed=str_replace($search,$md,$parsed);
           $pos=strpos($parsed,"<a href='");
