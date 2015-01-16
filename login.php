@@ -209,16 +209,16 @@ $loginform = "
             <fieldset>
               <legend>Login</legend>
 <div class='form-group'>
-	      <label for='username'>
+	      <label for='username' class='col-sm-3'>
 		Email:
 	      </label>
-	      <input type='email' name='username' id='username' placeholder='user@domain.com' autofocus='autofocus' required='required'/>
+	      <input class='col-sm-5' type='email' name='username' id='username' placeholder='user@domain.com' autofocus='autofocus' required='required'/>
 	      </div>
 <div class='form-group'>
-	      <label for='password'>
+	      <label for='password' class='col-sm-3'>
 		Password:
 	      </label>
-	      <input type='password' name='password' id='password' placeholder='Password' required='required'/>
+	      <input class='col-sm-5' type='password' name='password' id='password' placeholder='Password' required='required'/>
 </div>
 </fieldset>";
 $loginform_close="	      <br/>
@@ -455,46 +455,46 @@ else if($_REQUEST['q']=='create')
 	    <form id='login' method='post' action='?q=create&amp;s=next' class='form-horizontal'>
               <div class='left'>
 <div class='form-group'>
-	      <label for='username'>
+	      <label class='col-sm-3' for='username'>
 		Email:
 	      </label>
-	      <input type='email' name='username' id='username' value='$prefill_email' autofocus='autofocus' placeholder='user@domain.com' required='required'/>
+	      <input class='col-sm-5' type='email' name='username' id='username' value='$prefill_email' autofocus='autofocus' placeholder='user@domain.com' required='required'/>
 	      </div>
 <div class='form-group'>
-	      <label for='password'>
+	      <label class='col-sm-3' for='password'>
 		Password:
 	      </label>
-	      <input type='password' name='password' id='password' placeholder='Password' class='create' required='required'/>
+	      <input class='col-sm-5' type='password' name='password' id='password' placeholder='Password' class='create' required='required'/>
 	      </div>
 <div class='form-group'>
-	      <label for='password2'>
+	      <label class='col-sm-3' for='password2'>
 		Confirm Password:
 	      </label>
-	      <input type='password' name='password2' id='password2' class='create' placeholder='Confirm password' required='required'/>
+	      <input class='col-sm-5' type='password' name='password2' id='password2' class='create' placeholder='Confirm password' required='required'/>
 	      </div>
 <div class='form-group'>
-              <label for='fname'>
+              <label class='col-sm-3' for='fname'>
                 First Name:
               </label>
-	      <input type='text' name='fname' id='fname' value='$prefill_fname' placeholder='Leslie' required='required'/>
+	      <input class='col-sm-5' type='text' name='fname' id='fname' value='$prefill_fname' placeholder='Leslie' required='required'/>
 	      </div>
 <div class='form-group'>
-              <label for='lname'>
+              <label class='col-sm-3' for='lname'>
                 Last Name:
               </label>
-	      <input type='text' name='lname' id='lname' value='$prefill_lname' placeholder='Smith' required='required'/>
+	      <input class='col-sm-5' type='text' name='lname' id='lname' value='$prefill_lname' placeholder='Smith' required='required'/>
 	      </div>
 <div class='form-group'>
-              <label for='dname'>
+              <label class='col-sm-3' for='dname'>
                 Display Name:
               </label>
-	      <input type='text' name='dname' id='dname' placeholder='ThatUser1337' required='required'/>
+	      <input class='col-sm-5' type='text' name='dname' id='dname' placeholder='ThatUser1337' required='required'/>
 	      </div>
 <div class='form-group'>
-              <label for='phone'>
+              <label class='col-sm-3' for='phone'>
                 Phone:
               </label>
-	      <input type='tel' name='phone' id='phone' placeholder='555 123-4567'/>
+	      <input class='col-sm-5' type='tel' name='phone' id='phone' placeholder='555 123-4567'/>
 	      </div>
 <div class='form-group'>
               <label for='honey' class='hide' >
