@@ -146,6 +146,9 @@ core-label.col-xs-6 {
 .bs-callout-info h4 {
   color: #5bc0de;
 }
+form {
+    margin-left:2rem;
+}
 /************
  * Lightbox
  ***************/
