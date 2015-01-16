@@ -203,20 +203,23 @@ $alt_forms="<div id='alt_logins'>
 </div>";
 $login_preamble = "
 	    <h2>User Login</h2>";
-if($_REQUEST['m']=='login_error') $login_preamble.="<h3 class='error'>There was a problem setting your login credentials. Please try again.</h3>";
+if($_REQUEST['m']=='login_error') $login_preamble.="<h3 class='bg-warning'>There was a problem setting your login credentials. Please try again.</h3>";
 $loginform = "
-	    <form id='login' method='post' action='?q=submitlogin'>
+	    <form id='login' method='post' action='?q=submitlogin' class='form-horizontal'>
             <fieldset>
               <legend>Login</legend>
+<div class='form-group'>
 	      <label for='username'>
 		Email:
 	      </label>
 	      <input type='email' name='username' id='username' placeholder='user@domain.com' autofocus='autofocus' required='required'/>
-	      <br/>
+	      </div>
+<div class='form-group'>
 	      <label for='password'>
 		Password:
 	      </label>
 	      <input type='password' name='password' id='password' placeholder='Password' required='required'/>
+</div>
 </fieldset>";
 $loginform_close="	      <br/>
 	      <button id='login_button' class='btn btn-primary'>Login</button>
@@ -238,7 +241,7 @@ if($_REQUEST['q']=='submitlogin')
             $secret =  $is_encrypted ? $_COOKIE[$cookiekey]:$res["encrypted_secret"];
             $totp_buffer = "<section id='totp_prompt'>
   <p class='$totp_class' id='totp_message'>".$res["human_error"]."</p>
-  <form id='totp_submit' onsubmit='event.preventDefault();'>
+  <form id='totp_submit' onsubmit='event.preventDefault();' class='form-horizontal'>
     <fieldset>
       <legend>Two-Factor Authentication</legend>
       <input type='number' id='totp_code' name='totp_code' placeholder='Code' pattern='[0-9]{6}' size='6' maxlength='6'/>
@@ -278,7 +281,7 @@ if($_REQUEST['q']=='submitlogin')
               }
             if(!$cookie_result['status'])
               {
-                echo "<div class='error'>".$cookie_result['error']."</div>";
+                echo "<div class='bg-warning'>".$cookie_result['error']."</div>";
                 if($debug) echo "<p>Got a cookie error, see above cookie result</p>";
               }
             else
@@ -393,7 +396,7 @@ if($_REQUEST['q']=='submitlogin')
           {
             ob_end_flush();
             $login_output.=$login_preamble;
-            $login_output.="<div class='error'><p>Sorry! <br/>" . $res['message'] . "</p><aside class='ssmall'>Did you mean to <a href='?q=create'>create a new account instead?</a></aside></div>";
+            $login_output.="<div class='bg-warning'><p>Sorry! <br/>" . $res['message'] . "</p><aside class='ssmall'>Did you mean to <a href='?q=create'>create a new account instead?</a></aside></div>";
             $failcount=intval($_POST['failcount'])+1;
             $loginform_whole = $loginform."
               <input type='hidden' name='failcount' id='failcount' value='$fail'/>".$loginform_close;
@@ -412,11 +415,11 @@ if($_REQUEST['q']=='submitlogin')
                 $query2="UPDATE `$default_user_table` SET disabled=true WHERE id=$id";
                 $l=openDB();
                 $result1=mysqli_query($l,$query);
-                if(!$result1) echo "<p class='error'>".mysqli_error($l)."</p>";
+                if(!$result1) echo "<p class='bg-warning'>".mysqli_error($l)."</p>";
                 else
                   {
                     $result2=execAndCloseDB($l,$query2);
-                    if(!$result2) echo "<p class='error'>".mysqli_error($l)."</p>";
+                    if(!$result2) echo "<p class='bg-warning'>".mysqli_error($l)."</p>";
                     else
                       {
                         $login_output.="<p>Sorry, you've had ten failed login attempts. Your account has been disabled for 1 hour.</p>";
@@ -449,47 +452,56 @@ else if($_REQUEST['q']=='create')
               <div id='password_security'>
 
               </div>
-	    <form id='login' method='post' action='?q=create&amp;s=next'>
+	    <form id='login' method='post' action='?q=create&amp;s=next' class='form-horizontal'>
               <div class='left'>
+<div class='form-group'>
 	      <label for='username'>
 		Email:
 	      </label>
 	      <input type='email' name='username' id='username' value='$prefill_email' autofocus='autofocus' placeholder='user@domain.com' required='required'/>
-	      <br/>
+	      </div>
+<div class='form-group'>
 	      <label for='password'>
 		Password:
 	      </label>
 	      <input type='password' name='password' id='password' placeholder='Password' class='create' required='required'/>
-	      <br/>
+	      </div>
+<div class='form-group'>
 	      <label for='password2'>
 		Confirm Password:
 	      </label>
 	      <input type='password' name='password2' id='password2' class='create' placeholder='Confirm password' required='required'/>
-	      <br/>
+	      </div>
+<div class='form-group'>
               <label for='fname'>
                 First Name:
               </label>
 	      <input type='text' name='fname' id='fname' value='$prefill_fname' placeholder='Leslie' required='required'/>
-	      <br/>
+	      </div>
+<div class='form-group'>
               <label for='lname'>
                 Last Name:
               </label>
 	      <input type='text' name='lname' id='lname' value='$prefill_lname' placeholder='Smith' required='required'/>
-	      <br/>
+	      </div>
+<div class='form-group'>
               <label for='dname'>
                 Display Name:
               </label>
 	      <input type='text' name='dname' id='dname' placeholder='ThatUser1337' required='required'/>
-	      <br/>
+	      </div>
+<div class='form-group'>
               <label for='phone'>
                 Phone:
               </label>
 	      <input type='tel' name='phone' id='phone' placeholder='555 123-4567'/>
-	      <br/>
+	      </div>
+<div class='form-group'>
               <label for='honey' class='hide' >
                 Do not fill this field
               </label>
 	      <input type='text' name='honey' id='honey' class='hide'/>
+</div>
         <p>Please enter both words shown in the prompt below</p>
         <script src='https://www.google.com/recaptcha/api.js'></script>
         <div class=\"g-recaptcha\" data-sitekey=\"".$recaptcha_public_key."\"></div>
@@ -510,7 +522,7 @@ else if($_REQUEST['q']=='create')
             $email_preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
             if(!empty($_POST['honey']))
               {
-                $login_ouptut.="<p class='error'>Whoops! You tripped one of our bot tests. If you are not a bot, please go back and try again. Read your fields carefully!</p>";
+                $login_ouptut.="<p class='bg-warning'>Whoops! You tripped one of our bot tests. If you are not a bot, please go back and try again. Read your fields carefully!</p>";
                 $_POST['email']='bob';
               }
             # https://developers.google.com/recaptcha/docs/verify
@@ -617,24 +629,24 @@ else if($_REQUEST['q']=='create')
                             else
                               {
                                 if($debug) $login_output.=displayDebug($res);
-                                $login_output.="<p class='error'>".$res["error"]."</p><p>Use your browser's back button to try again.</p>";
+                                $login_output.="<p class='bg-warning'>".$res["error"]."</p><p>Use your browser's back button to try again.</p>";
                                 $deferredJS = "console.error('Got response',".json_encode($res).")";
                               }
                             ob_end_flush();
                           }
                         else
                           {
-                            $login_output.="<p class='error'>Your password was not long enough ($minimum_password_length characters) or did not match minimum complexity levels (one upper case letter, one lower case letter, one digit or special character). You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png' id='any_long_pass'>any long password</a> of at least $password_threshold_length characters. Please go back and try again.</p>";
+                            $login_output.="<p class='bg-warning'>Your password was not long enough ($minimum_password_length characters) or did not match minimum complexity levels (one upper case letter, one lower case letter, one digit or special character). You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png' id='any_long_pass'>any long password</a> of at least $password_threshold_length characters. Please go back and try again.</p>";
                           }
                       }
-                    else $login_output.="<p class='error'>Your passwords did not match. Please go back and try again.</p>";
+                    else $login_output.="<p class='bg-warning'>Your passwords did not match. Please go back and try again.</p>";
                   }
-                else $login_output.="<p class='error'>Error: Your email address was invalid. Please enter a valid email.</p>";
+                else $login_output.="<p class='bg-warning'>Error: Your email address was invalid. Please enter a valid email.</p>";
               }
           }
         else $login_output.=$createform;
       }
-    else $login_output.="<p class='error'>This site's ReCAPTCHA library hasn't been set up. Please contact the site administrator.</p>";
+    else $login_output.="<p class='bg-warning'>This site's ReCAPTCHA library hasn't been set up. Please contact the site administrator.</p>";
   }
 else if($_REQUEST['q'] == "verify")
   {
@@ -648,7 +660,7 @@ else if(isset($_REQUEST['confirm']))
     $result = $user->verifyUserAuth($encoded_key,$token,$userToActivate);
     if($result['status'] === false)
       {
-        $login_output .= "<h1 class='error'>Could not verify user</h1><p>".$result['message']."</p>";
+        $login_output .= "<h1 class='bg-warning'>Could not verify user</h1><p>".$result['message']."</p>";
       }
     else
       {
@@ -681,8 +693,8 @@ else if(isset($_REQUEST['2fa']))
       {
         # Remove 2FA from the user
         $totp_remove_form = "<section id='totp_remove_section'>
-  <p id='totp_message' class='error'>Are you sure you want to disable two-factor authentication?</p>
-  <form id='totp_remove' onsubmit='event.preventDefault();'>
+  <p id='totp_message' class='bg-warning'>Are you sure you want to disable two-factor authentication?</p>
+  <form id='totp_remove' onsubmit='event.preventDefault();' class='form-horizontal'>
     <fieldset>
       <legend>Remove Two-Factor Authentication</legend>
       <input type='email' value='".$user->getUsername()."' readonly='readonly' id='username' name='username'/><br/>
@@ -696,7 +708,7 @@ else if(isset($_REQUEST['2fa']))
       }
     else if (!$logged_in)
       {
-        $login_output .= "<p class='error'>You have to be logged in to set up two factor authentication.<br/><a href='?q=login'>Click here to log in</a></p>";
+        $login_output .= "<p class='bg-warning'>You have to be logged in to set up two factor authentication.<br/><a href='?q=login'>Click here to log in</a></p>";
       }
     else
       {
