@@ -745,6 +745,8 @@ $ ->
   catch e
     delay 300, ->
       if $.url().param("showhelp")? then showInstructions()
+  $("#next.continue").click ->
+    window.location.href = window.totpParams.home
   # Load stylesheets
   $("<link/>",{
     rel:"stylesheet"

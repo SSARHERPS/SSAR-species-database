@@ -2,8 +2,8 @@
 
 if(!isset($print_login_state)) $print_login_state = true;
 
-require_once(dirname(__FILE__).'/handlers/login_functions.php');
 require_once(dirname(__FILE__).'/core/core.php');
+require_once(dirname(__FILE__).'/handlers/login_functions.php');
 #require_once(dirname(__FILE__).'/handlers/db_hook.inc');
 
 function returnAjax($data)
@@ -70,7 +70,7 @@ function getLoginState($get,$default=false)
   $s=$get['secret'];
   $id=$get['dblink'];
   $u=new UserFunctions();
-  return array("status"=>$u->validateUser($id,$conf,$s),'defaulted'=>$default);
+  return array("status"=>$u->validateUser($id,$conf,$s),'defaulted'=>$default,"login_url"=>$login_url);
 }
 
 function hasTOTP($get)
