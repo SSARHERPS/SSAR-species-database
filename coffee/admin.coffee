@@ -15,6 +15,7 @@ loadAdminUi = ->
   verifyLoginCredentials ->
     # Post verification
     false
+  $("article").html("<h1>Script loaded</h1>")
   false
 
 

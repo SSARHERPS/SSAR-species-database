@@ -22,6 +22,7 @@ loadAdminUi = function() {
   verifyLoginCredentials(function() {
     return false;
   });
+  $("article").html("<h1>Script loaded</h1>");
   return false;
 };
 
