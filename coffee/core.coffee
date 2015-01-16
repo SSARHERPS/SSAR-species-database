@@ -317,7 +317,8 @@ getLocation = (callback = undefined) ->
     window.locationData.lng = pos.coords.longitude
     window.locationData.acc = pos.coords.accuracy
     window.locationData.last = Date.now() # ms, unix time
-    callback(window.locationData)
+    if callback?
+      callback(window.locationData)
     false
   geoFail = (error,callback) ->
     locationError = switch error.code

@@ -540,7 +540,9 @@ getLocation = function(callback) {
     window.locationData.lng = pos.coords.longitude;
     window.locationData.acc = pos.coords.accuracy;
     window.locationData.last = Date.now();
-    callback(window.locationData);
+    if (callback != null) {
+      callback(window.locationData);
+    }
     return false;
   };
   geoFail = function(error, callback) {
@@ -895,10 +897,13 @@ parseTaxonYear = function(taxonYearString, strict) {
   return year;
 };
 
-checkTaxonNear = function(taxonQuery, selector) {
-  var apiUrl, args, elapsed;
+checkTaxonNear = function(taxonQuery, callback, selector) {
+  var apiUrl, args, cssClass, elapsed, geoIcon, tooltipHint;
   if (taxonQuery == null) {
     taxonQuery = void 0;
+  }
+  if (callback == null) {
+    callback = void 0;
   }
   if (selector == null) {
     selector = "html /deep/ #near-me-container";
@@ -921,21 +926,30 @@ checkTaxonNear = function(taxonQuery, selector) {
   }
   apiUrl = "http://www.inaturalist.org/places.json";
   args = "taxon=" + taxonQuery + "&latitude=" + locationData.lat + "&longitude=" + locationData.lng + "&place_type=county";
+  geoIcon = "";
+  cssClass = "";
+  tooltipHint = "";
   $.get(apiUrl, args, "json").done(function(result) {
-    var cssClass, geoIcon;
     if (Object.size(result) > 0) {
       geoIcon = "communication:location-on";
-      return cssClass = "good-location";
+      cssClass = "good-location";
+      return tooltipHint = "This species occurs in your county";
     } else {
       geoIcon = "communication:location-off";
-      return cssClass = "bad-location";
+      cssClass = "bad-location";
+      return tooltipHint = "This species does not occur in your county";
     }
   }).fail(function(result, status) {
-    var cssClass, geoIcon;
     cssClass = "bad-location";
-    return geoIcon = "warning";
+    geoIcon = "warning";
+    return tooltipHint = "We couldn't determine your location";
   }).always(function() {
-    return $(selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + "'></core-icon>");
+    $(selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + "' data-toggle='tooltip' id='near-me-icon'></core-icon>");
+    $("html /deep/ #near-me-icon").attr("title", tooltipHint);
+    $("html /deep/ #near-me-icon").tooltip();
+    if (callback != null) {
+      return callback();
+    }
   });
   return false;
 };
@@ -1048,7 +1062,9 @@ modalTaxon = function(taxon) {
     humanTaxon = humanTaxon.replace(/\+/g, " ");
     $("#modal-taxon").attr("heading", humanTaxon);
     stopLoad();
-    return $("#modal-taxon")[0].open();
+    return checkTaxonNear(taxon, function() {
+      return $("#modal-taxon")[0].open();
+    });
   }).fail(function(result, status) {
     return stopLoadError();
   });

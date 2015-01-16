@@ -52,11 +52,15 @@ body {
     color: #607d8b;
 
 }
-.good-location {
+html /deep/ .good-location {
     color: #4CAF50;
 }
-.bad-location {
+html /deep/ .bad-location {
     color: #F44336;
+}
+html /deep/ #near-me-container {
+    float:left;
+    display:inline-block;
 }
 .italic {
     font-style:italic;

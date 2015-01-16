@@ -256,7 +256,7 @@ parseTaxonYear = (taxonYearString,strict = true) ->
   year.species = species
   return year
 
-checkTaxonNear = (taxonQuery = undefined, selector = "html /deep/ #near-me-container") ->
+checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "html /deep/ #near-me-container") ->
   ###
   # Check the iNaturalist API to see if the taxon is in your county
   # See https://github.com/tigerhawkvok/SSAR-species-database/issues/7
@@ -272,19 +272,29 @@ checkTaxonNear = (taxonQuery = undefined, selector = "html /deep/ #near-me-conta
   # Now actually check
   apiUrl = "http://www.inaturalist.org/places.json"
   args = "taxon=#{taxonQuery}&latitude=#{locationData.lat}&longitude=#{locationData.lng}&place_type=county"
+  geoIcon = ""
+  cssClass = ""
+  tooltipHint = ""
   $.get(apiUrl,args,"json")
   .done (result) ->
     if Object.size(result) > 0
       geoIcon = "communication:location-on"
       cssClass = "good-location"
+      tooltipHint = "This species occurs in your county"
     else
       geoIcon = "communication:location-off"
       cssClass = "bad-location"
+      tooltipHint = "This species does not occur in your county"
   .fail (result,status) ->
     cssClass = "bad-location"
     geoIcon = "warning"
+    tooltipHint = "We couldn't determine your location"
   .always ->
-    $(selector).html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}'></core-icon>")
+    $(selector).html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}' data-toggle='tooltip' id='near-me-icon'></core-icon>")
+    $("html /deep/ #near-me-icon").attr("title",tooltipHint)
+    $("html /deep/ #near-me-icon").tooltip()
+    if callback?
+      callback()
   false
 
   
@@ -380,7 +390,8 @@ modalTaxon = (taxon = undefined) ->
     $("#modal-taxon").attr("heading",humanTaxon)
     # Open it
     stopLoad()
-    $("#modal-taxon")[0].open()
+    checkTaxonNear taxon, ->
+      $("#modal-taxon")[0].open()
   .fail (result,status) ->
     stopLoadError()
   false
