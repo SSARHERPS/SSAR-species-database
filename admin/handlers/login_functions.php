@@ -910,6 +910,7 @@ class UserFunctions extends DBHelper
                 if($auth_result['mailer']['emails_sent'] != $auth_result['mailer']['attempts_made'])
                   {
                     $message .= "<br/><small>Not all authentication validation emails could be sent, so please be sure to notify <a href='mailto:".$this->getSupportEmail()."?subject=Manual%20Validation'>email support with a description of this error</a> from the same email address you used to sign up.</small>";
+                    unset($auth_result["status"]);
                   }
               }
             $cookies=$this->createCookieTokens();
@@ -1424,7 +1425,7 @@ class UserFunctions extends DBHelper
         if($this>canSMS() && $method == null)
           {
         $callback = array("status"=>false,"action"=>"NEED_METHOD");
-        return $callback;        
+        return $callback;
         }
         # If the user has SMS and email, check $method
         }
