@@ -21,8 +21,9 @@ $post_create_redirect = false;
 
 $baseurl = ""; # define if other than the hosted URL
 $redirect_url = ""; # define if other than the hosted URL
+$login_url = ""; # define if other than the hosted URL
 # Usually only have to change this on strange configurations
-$self_referential = $_SERVER['PHP_SELF']; 
+$self_referential = $_SERVER['PHP_SELF'];
 
 # Path to this library from callers, relative to the top level.
 # Used mostly for AJAX calls.
