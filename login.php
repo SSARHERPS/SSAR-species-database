@@ -67,8 +67,8 @@ $cookielink=$domain."_link";
  * Required inclusions
  */
 
-require_once(dirname(__FILE__).'/handlers/login_functions.php');
 require_once(dirname(__FILE__).'/core/core.php');
+require_once(dirname(__FILE__).'/handlers/login_functions.php');
 
 
 $xml=new Xml;
@@ -82,9 +82,9 @@ if($debug === true)
       else echo "<p>(Database Error - ' $r ')</p>";*/
     echo "<p>Visiting $baseurl on '$shorturl' with a human domain '$domain'</p>";
     echo displayDebug($_REQUEST);
-    echo "<p>".displayDebug(sanitize('tigerhawk_vok-goes.special@gmail.com'))."</p>";
+    echo "<p>".displayDebug(DBHelper::staticSanitize('tigerhawk_vok-goes.special@gmail.com'))."</p>";
     $xkcd_check="Robert'); DROP TABLE Students;--"; // https://xkcd.com/327/
-    echo "<p>".displayDebug(sanitize($xkcd_check))."</p>"; // This should have escaped code
+    echo "<p>".displayDebug(DBHelper::staticSanitize($xkcd_check))."</p>"; // This should have escaped code
     echo "<p>User Validation:</p>";
     echo displayDebug($user->validateUser($_COOKIE[$cookielink],null,null,true));
   }
@@ -149,7 +149,7 @@ try
   try
     {
   $needPhone = !$user->canSMS();
-  $deferredJS .= "console.log('Needs phone? ',".strbool($needPhone).",".sanitize($user->getPhone()).");\n";
+  $deferredJS .= "console.log('Needs phone? ',".strbool($needPhone).",".DBHelper::staticSanitize($user->getPhone()).");\n";
   $altPhone = "<p>Congratulations! Your phone number is verified.</p>";
 }
   catch(Exception $e)
