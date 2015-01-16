@@ -26,7 +26,8 @@
     "picturefill": "~2.2.0",
     "js-base64": "~2.1.5",
     "octicons": "~2.1.2",
-    "zeroclipboard": "~2.2.0"
+    "zeroclipboard": "~2.2.0",
+    "jquery-cookie": "~1.4.1"
   },
   "resolutions": {
     "polymer": "^0.5.0",

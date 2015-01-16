@@ -33,7 +33,7 @@ module.exports = (grunt) ->
           sourceMapIncludeSources:true
           sourceMapIn:"js/maps/c.js.map"
         files:
-          "js/combined.min.js":["js/c.js","bower_components/purl/purl.js","bower_components/xmlToJSON/lib/xmlToJSON.js"]
+          "js/combined.min.js":["js/c.js","bower_components/purl/purl.js","bower_components/xmlToJSON/lib/xmlToJSON.js","bower_components/jquery-cookie/jquery.cookie.js"]
       dist:
         options:
           sourceMap:true
@@ -54,6 +54,12 @@ module.exports = (grunt) ->
           sourceMapName:"js/maps/xmlToJSON.map"
         files:
           "js/xmlToJSON.min.js": ["bower_components/xmlToJSON/lib/xmlToJSON.js"]
+      minjcookie:
+        options:
+          sourceMap:true
+          sourceMapName:"js/maps/jquery.cookie.map"
+        files:
+          "js/jquery.cookie.min.js": ["bower_components/jquery-cookie/jquery.cookie.js"]
     cssmin:
       dist:
         src:["css/main.css"]
@@ -79,7 +85,7 @@ module.exports = (grunt) ->
   grunt.registerTask("compile","Compile coffeescript",["coffee:compile","uglify:dist","shell:movesrc"])
   ## The minification tasks
   # Part 1
-  grunt.registerTask("minifyIndependent","Minify Bower components that aren't distributed min'd",["uglify:minpurl","uglify:minxmljson"])
+  grunt.registerTask("minifyIndependent","Minify Bower components that aren't distributed min'd",["uglify:minpurl","uglify:minxmljson","uglify:minjcookie"])
   # Part 2
   grunt.registerTask("minifyBulk","Minify all the things",["uglify:combine","uglify:dist","cssmin:dist"])
   # Main call
