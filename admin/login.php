@@ -370,7 +370,11 @@ if($_REQUEST['q']=='submitlogin')
                         $cancel_redirects = true;
                         $login_output .= "<h1>You must set up two-factor authentication to continue.</h1><p>You'll be redirected in less than 10 seconds ...</p>";
                       }
-                    else $login_output.="<p>Logging in from another device or browser will end your session here. You will be redirected in 3 seconds...</p>";
+                    else
+                      {
+                        $login_output.="<p>Logging in from another device or browser will end your session here. You will be redirected in 3 seconds...</p>";
+                        $deferredJS .= "\nsetTimeout(function(){window.location.href=\"".$durl."\";},3000);";
+                      }
                   }
                 else
                   {
