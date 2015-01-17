@@ -192,7 +192,6 @@ saveEditorEntry = ->
     "species"
     "subspecies"
     "common-name"
-    "deprecated-scientific"
     "major-type"
     "major-subtype"
     "minor-type"
@@ -202,6 +201,8 @@ saveEditorEntry = ->
     "notes"
     "image"
     ]
+  saveObject = new Object()
+  ## Manual parses
   try
     # Authority year
     gYear = $("#edit-gauthyear").val()
@@ -212,9 +213,9 @@ saveEditorEntry = ->
   catch e
     # Didn't work
     console.log("Failed to parase the authority year")
+    authYearString = ""
+  saveObject["authority_year"] = authYearString
   try
-    saveObject = new Object()
-    saveObject["authority_year"] = authYearString
     dep = new Object()
     depS = $("#edit-deprecated-scientific").val()
     depA = depS.split(",")
@@ -224,6 +225,8 @@ saveEditorEntry = ->
     depString = JSON.stringify(dep)
   catch e
     console.log("Failed to parse the deprecated scientifics")
+    depString = ""
+  saveObject["deprecated_scientific"] = depString
   foo()
   $.post(adminParams.apiTarget,args,"json")
   .done (result) ->

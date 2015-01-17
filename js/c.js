@@ -238,7 +238,8 @@ saveEditorEntry = function() {
    * and report the save result back to the user
    */
   var auth, authYearString, dep, depA, depS, depString, e, examineIds, gYear, sYear, saveObject;
-  examineIds = ["genus", "species", "subspecies", "common-name", "deprecated-scientific", "major-type", "major-subtype", "minor-type", "linnean-order", "genus-authority", "species-authority", "notes", "image"];
+  examineIds = ["genus", "species", "subspecies", "common-name", "major-type", "major-subtype", "minor-type", "linnean-order", "genus-authority", "species-authority", "notes", "image"];
+  saveObject = new Object();
   try {
     gYear = $("#edit-gauthyear").val();
     sYear = $("#edit-sauthyear").val();
@@ -248,10 +249,10 @@ saveEditorEntry = function() {
   } catch (_error) {
     e = _error;
     console.log("Failed to parase the authority year");
+    authYearString = "";
   }
+  saveObject["authority_year"] = authYearString;
   try {
-    saveObject = new Object();
-    saveObject["authority_year"] = authYearString;
     dep = new Object();
     depS = $("#edit-deprecated-scientific").val();
     depA = depS.split(",");
@@ -264,7 +265,9 @@ saveEditorEntry = function() {
   } catch (_error) {
     e = _error;
     console.log("Failed to parse the deprecated scientifics");
+    depString = "";
   }
+  saveObject["deprecated_scientific"] = depString;
   foo();
   return $.post(adminParams.apiTarget, args, "json").done(function(result) {
     return foo();
