@@ -2,6 +2,7 @@
 
 if(!isset($print_login_state)) $print_login_state = true;
 
+require_once(dirname(__FILE__).'/CONFIG.php');
 require_once(dirname(__FILE__).'/core/core.php');
 require_once(dirname(__FILE__).'/handlers/login_functions.php');
 #require_once(dirname(__FILE__).'/handlers/db_hook.inc');
