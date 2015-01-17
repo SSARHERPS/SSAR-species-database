@@ -187,7 +187,49 @@ saveEditorEntry = ->
   ###
   # Make all the entries lowercase EXCEPT notes.
   # Close it on a successful save
+  examineIds = [
+    "genus"
+    "species"
+    "subspecies"
+    "common-name"
+    "deprecated-scientific"
+    "major-type"
+    "major-subtype"
+    "minor-type"
+    "linnean-order"
+    "genus-authority"
+    "species-authority"
+    "notes"
+    "image"
+    ]
+  try
+    # Authority year
+    gYear = $("#edit-gauthyear").val()
+    sYear = $("#edit-sauthyear").val()
+    auth = new Object()
+    auth[gYear] = sYear
+    authYearString = JSON.stringify(auth)
+  catch e
+    # Didn't work
+    console.log("Failed to parase the authority year")
+  try
+    saveObject = new Object()
+    saveObject["authority_year"] = authYearString
+    dep = new Object()
+    depS = $("#edit-deprecated-scientific").val()
+    depA = depS.split(",")
+    $.each depA, (k) ->
+      item = k.split(":")
+      dep[item[0]] = item[1]
+    depString = JSON.stringify(dep)
+  catch e
+    console.log("Failed to parse the deprecated scientifics")
   foo()
+  $.post(adminParams.apiTarget,args,"json")
+  .done (result) ->
+    foo()
+  .fail (result,status) ->
+    false
 
 handleDragDropImage = ->
   ###

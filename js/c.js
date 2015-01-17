@@ -237,7 +237,40 @@ saveEditorEntry = function() {
    * Send an editor state along with login credentials,
    * and report the save result back to the user
    */
-  return foo();
+  var auth, authYearString, dep, depA, depS, depString, e, examineIds, gYear, sYear, saveObject;
+  examineIds = ["genus", "species", "subspecies", "common-name", "deprecated-scientific", "major-type", "major-subtype", "minor-type", "linnean-order", "genus-authority", "species-authority", "notes", "image"];
+  try {
+    gYear = $("#edit-gauthyear").val();
+    sYear = $("#edit-sauthyear").val();
+    auth = new Object();
+    auth[gYear] = sYear;
+    authYearString = JSON.stringify(auth);
+  } catch (_error) {
+    e = _error;
+    console.log("Failed to parase the authority year");
+  }
+  try {
+    saveObject = new Object();
+    saveObject["authority_year"] = authYearString;
+    dep = new Object();
+    depS = $("#edit-deprecated-scientific").val();
+    depA = depS.split(",");
+    $.each(depA, function(k) {
+      var item;
+      item = k.split(":");
+      return dep[item[0]] = item[1];
+    });
+    depString = JSON.stringify(dep);
+  } catch (_error) {
+    e = _error;
+    console.log("Failed to parse the deprecated scientifics");
+  }
+  foo();
+  return $.post(adminParams.apiTarget, args, "json").done(function(result) {
+    return foo();
+  }).fail(function(result, status) {
+    return false;
+  });
 };
 
 handleDragDropImage = function() {
