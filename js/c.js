@@ -10,9 +10,9 @@ adminParams = new Object();
 
 adminParams.apiTarget = "admin_api.php";
 
-adminParams.dir = "admin/";
+adminParams.loginDir = "admin/";
 
-adminParams.apiUrl = "" + adminParams.dir + adminParams.apiTarget;
+adminParams.loginApiTarget = "" + adminParams.loginDir + "async_login_handler.php";
 
 loadAdminUi = function() {
 
@@ -22,6 +22,7 @@ loadAdminUi = function() {
    * user back to the login page.
    */
   verifyLoginCredentials(function() {
+    $("article").html("<h1>SSAR CNDB Administration</h1><h3>Welcome, " + ($.cookie("ssarherps_name")) + "</h3><div id='admin-actions-block'></div>");
     return false;
   });
   $("article").html("<h1>Script loaded</h1>");
@@ -42,7 +43,15 @@ verifyLoginCredentials = function(callback) {
   secret = $.cookie("ssarherps_secret");
   link = $.cookie("ssarherps_link");
   args = "hash=" + hash + "&secret=" + secret + "&dblink=" + link;
-  $.post(adminParams.apiUrl, args, "json");
+  $.post(adminParams.loginApiTarget, args, "json").done(function(result) {
+    if (result.status === true) {
+      return callback();
+    } else {
+      return goTo(result.login_url);
+    }
+  }).fail(function(result, status) {
+    return false;
+  });
   return false;
 };
 

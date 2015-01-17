@@ -4,8 +4,8 @@
 ###
 adminParams = new Object()
 adminParams.apiTarget = "admin_api.php"
-adminParams.dir = "admin/"
-adminParams.apiUrl = "#{adminParams.dir}#{adminParams.apiTarget}"
+adminParams.loginDir = "admin/"
+adminParams.loginApiTarget = "#{adminParams.loginDir}async_login_handler.php"
 
 loadAdminUi = ->
   ###
@@ -15,6 +15,7 @@ loadAdminUi = ->
   ###
   verifyLoginCredentials ->
     # Post verification
+    $("article").html("<h1>SSAR CNDB Administration</h1><h3>Welcome, #{$.cookie("ssarherps_name")}</h3><div id='admin-actions-block'></div>")
     false
   $("article").html("<h1>Script loaded</h1>")
   false
@@ -32,7 +33,15 @@ verifyLoginCredentials = (callback) ->
   secret = $.cookie("ssarherps_secret")
   link = $.cookie("ssarherps_link")
   args = "hash=#{hash}&secret=#{secret}&dblink=#{link}"
-  $.post(adminParams.apiUrl,args,"json")
+  $.post(adminParams.loginApiTarget,args,"json")
+  .done (result) ->
+    if result.status is true
+      callback()
+    else
+      goTo(result.login_url)
+  .fail (result,status) ->
+    # Throw up some warning here
+    false
   false
 
 
