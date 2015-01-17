@@ -50,3 +50,5 @@ errors/
 *.M
 *.out
 *.aux
+
+bower_components/bootstrap/node_modules/
