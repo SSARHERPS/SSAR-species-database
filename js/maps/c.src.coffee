@@ -16,7 +16,20 @@ loadAdminUi = ->
   try
     verifyLoginCredentials (data) ->
       # Post verification
-      $("article").html("<h3>Welcome, #{$.cookie("ssarherps_name")} <paper-icon-button icon='settings-applications' class='click' data-url='#{data.login_url}'></paper-icon-button></h3><div id='admin-actions-block'></div>")
+      $("article").html("<h3>Welcome, #{$.cookie("ssarherps_name")} <paper-icon-button icon='settings-applications' class='click' data-url='#{data.login_url}'></paper-icon-button></h3><div id='admin-actions-block'><div class='bs-callout bs-callout-info'><p>Please be patient while the administrative interface loads.</p></div></div>")
+      ###
+      # Render out the admin UI
+      # We want a search box that we pipe through the API
+      # and display the table out for editing
+      ###
+      searchForm = "<form id=\"admin-search-form\" onsubmit=\"event.preventDefault()\">\n\t<div>\n\t\t<paper-input label=\"Search for species\" id=\"admin-search\" name=\"admin-search\" required autofocus floatingLabel class=\"col-xs-7 col-sm-8\"></paper-input>\n\t\t<paper-fab id=\"do-admin-search\" icon=\"search\" raisedButton class=\"materialblue\"></paper-fab>\n\t</div>\n</form>"
+      $("#admin-actions-block").html(searchForm)
+      $("#admin-search-form").submit (e) ->
+        e.preventDefault()
+      $("#admin-search").keypress (e) ->
+        if e.which is 13 then renderAdminSearchResults()
+      $("#do-admin-search").click ->
+        renderAdminSearchResults()
       false
   catch e
     $("article").html("<div class='bs-callout bs-callout-danger'><h4>Application Error</h4><p>There was an error in the application. Please refresh and try again. If this persists, please contact administration.</p></div>")
@@ -49,17 +62,29 @@ verifyLoginCredentials = (callback) ->
   false
 
 
+renderAdminSearchResults = ->
+  ###
+  # Takes parts of performSearch() but only in the admin context
+  ###
+  animateLoad()
+  foo()
+
 lookupEditorSpecies = ->
   ###
   # Lookup a given species and load it for editing
   ###
-  false
+  foo()
 
 saveEditorEntry = ->
   ###
   # Send an editor state along with login credentials,
   # and report the save result back to the user
   ###
+  foo()
+
+foo = ->
+  toastStatusMessage("Sorry, this feature is not yet finished")
+  stopLoad()
   false
 
 $ ->
@@ -263,7 +288,7 @@ mapNewWindows = ->
 
 # Animations
 
-toastStatusMessage = (message, className = "error", duration = 3000, selector = "#status-message") ->
+toastStatusMessage = (message, className = "", duration = 3000, selector = "#search-status") ->
   ###
   # Pop up a status message
   ###
@@ -409,10 +434,15 @@ getLocation = (callback = undefined) ->
     if callback?
       callback(false)
 
+bindClickTargets = ->
+  $(".click")
+  .unbind()
+  .click ->
+    openTab($(this).attr("data-url"))
+  
 
 $ ->
-  $(".click").click ->
-    openTab($(this).attr("data-url"))
+  bindClickTargets()
   $('[data-toggle="tooltip"]').tooltip()
   getLocation()
 

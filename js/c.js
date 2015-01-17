@@ -3,7 +3,7 @@
  * The main coffeescript file for administrative stuff
  * Triggered from admin-page.html
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, byteCount, checkTaxonNear, deferCalPhotos, delay, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, byteCount, checkTaxonNear, deferCalPhotos, delay, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
   __slice = [].slice;
 
 adminParams = new Object();
@@ -24,7 +24,27 @@ loadAdminUi = function() {
   var e;
   try {
     verifyLoginCredentials(function(data) {
-      $("article").html("<h3>Welcome, " + ($.cookie("ssarherps_name")) + " <paper-icon-button icon='settings-applications' class='click' data-url='" + data.login_url + "'></paper-icon-button></h3><div id='admin-actions-block'></div>");
+      var searchForm;
+      $("article").html("<h3>Welcome, " + ($.cookie("ssarherps_name")) + " <paper-icon-button icon='settings-applications' class='click' data-url='" + data.login_url + "'></paper-icon-button></h3><div id='admin-actions-block'><div class='bs-callout bs-callout-info'><p>Please be patient while the administrative interface loads.</p></div></div>");
+
+      /*
+       * Render out the admin UI
+       * We want a search box that we pipe through the API
+       * and display the table out for editing
+       */
+      searchForm = "<form id=\"admin-search-form\" onsubmit=\"event.preventDefault()\">\n\t<div>\n\t\t<paper-input label=\"Search for species\" id=\"admin-search\" name=\"admin-search\" required autofocus floatingLabel class=\"col-xs-7 col-sm-8\"></paper-input>\n\t\t<paper-fab id=\"do-admin-search\" icon=\"search\" raisedButton class=\"materialblue\"></paper-fab>\n\t</div>\n</form>";
+      $("#admin-actions-block").html(searchForm);
+      $("#admin-search-form").submit(function(e) {
+        return e.preventDefault();
+      });
+      $("#admin-search").keypress(function(e) {
+        if (e.which === 13) {
+          return renderAdminSearchResults();
+        }
+      });
+      $("#do-admin-search").click(function() {
+        return renderAdminSearchResults();
+      });
       return false;
     });
   } catch (_error) {
@@ -62,12 +82,21 @@ verifyLoginCredentials = function(callback) {
   return false;
 };
 
+renderAdminSearchResults = function() {
+
+  /*
+   * Takes parts of performSearch() but only in the admin context
+   */
+  animateLoad();
+  return foo();
+};
+
 lookupEditorSpecies = function() {
 
   /*
    * Lookup a given species and load it for editing
    */
-  return false;
+  return foo();
 };
 
 saveEditorEntry = function() {
@@ -76,6 +105,12 @@ saveEditorEntry = function() {
    * Send an editor state along with login credentials,
    * and report the save result back to the user
    */
+  return foo();
+};
+
+foo = function() {
+  toastStatusMessage("Sorry, this feature is not yet finished");
+  stopLoad();
   return false;
 };
 
@@ -404,13 +439,13 @@ mapNewWindows = function() {
 toastStatusMessage = function(message, className, duration, selector) {
   var html;
   if (className == null) {
-    className = "error";
+    className = "";
   }
   if (duration == null) {
     duration = 3000;
   }
   if (selector == null) {
-    selector = "#status-message";
+    selector = "#search-status";
   }
 
   /*
@@ -640,10 +675,14 @@ getLocation = function(callback) {
   }
 };
 
-$(function() {
-  $(".click").click(function() {
+bindClickTargets = function() {
+  return $(".click").unbind().click(function() {
     return openTab($(this).attr("data-url"));
   });
+};
+
+$(function() {
+  bindClickTargets();
   $('[data-toggle="tooltip"]').tooltip();
   return getLocation();
 });

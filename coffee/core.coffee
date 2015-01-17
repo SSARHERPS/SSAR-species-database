@@ -191,7 +191,7 @@ mapNewWindows = ->
 
 # Animations
 
-toastStatusMessage = (message, className = "error", duration = 3000, selector = "#status-message") ->
+toastStatusMessage = (message, className = "", duration = 3000, selector = "#search-status") ->
   ###
   # Pop up a status message
   ###
@@ -337,9 +337,14 @@ getLocation = (callback = undefined) ->
     if callback?
       callback(false)
 
+bindClickTargets = ->
+  $(".click")
+  .unbind()
+  .click ->
+    openTab($(this).attr("data-url"))
+  
 
 $ ->
-  $(".click").click ->
-    openTab($(this).attr("data-url"))
+  bindClickTargets()
   $('[data-toggle="tooltip"]').tooltip()
   getLocation()
