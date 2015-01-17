@@ -66,6 +66,7 @@ if($print_login_state === true)
 
 function getLoginState($get,$default=false)
 {
+  global $login_url;
   $conf=$get['hash'];
   $s=$get['secret'];
   $id=$get['dblink'];
