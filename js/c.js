@@ -32,7 +32,7 @@ loadAdminUi = function() {
        * We want a search box that we pipe through the API
        * and display the table out for editing
        */
-      searchForm = "<form id=\"admin-search-form\" onsubmit=\"event.preventDefault()\">\n\t<div>\n\t\t<paper-input label=\"Search for species\" id=\"admin-search\" name=\"admin-search\" required autofocus floatingLabel class=\"col-xs-7 col-sm-8\"></paper-input>\n\t\t<paper-fab id=\"do-admin-search\" icon=\"search\" raisedButton class=\"materialblue\"></paper-fab>\n\t</div>\n</form>";
+      searchForm = "<form id=\"admin-search-form\" onsubmit=\"event.preventDefault()\">\n\t<div>\n\t\t<paper-input label=\"Search for species\" id=\"admin-search\" name=\"admin-search\" required autofocus floatingLabel class=\"col-xs-7 col-sm-8\"></paper-input>\n\t\t<paper-fab id=\"do-admin-search\" icon=\"search\" raisedButton class=\"materialblue\"></paper-fab>\n\t</div>\n</form><div id='search-results'></div>";
       $("#admin-actions-block").html(searchForm);
       $("#admin-search-form").submit(function(e) {
         return e.preventDefault();
@@ -82,20 +82,118 @@ verifyLoginCredentials = function(callback) {
   return false;
 };
 
-renderAdminSearchResults = function() {
+renderAdminSearchResults = function(containerSelector) {
+  var args, s;
+  if (containerSelector == null) {
+    containerSelector = "#search-results";
+  }
 
   /*
    * Takes parts of performSearch() but only in the admin context
    */
+  s = $("#admin-search").val();
+  if (isNull(s)) {
+    toastStatusMessage("Please enter a search term");
+    return false;
+  }
   animateLoad();
-  return foo();
+  $("#admin-search").blur();
+  s = s.replace(/\./g, "");
+  s = prepURI(s);
+  args = "q=" + s + "&loose=true";
+  return $.get(searchParams.targetApi, args, "json").done(function(result) {
+    var bootstrapColCount, colClass, data, html, htmlClose, htmlHead, targetCount;
+    if (result.status !== true) {
+      toastStatusMessage(result.human_error);
+      return false;
+    }
+    data = result.result;
+    html = "";
+    htmlHead = "<table id='cndb-result-list' class='table table-striped table-hover'>\n\t<tr class='cndb-row-headers'>";
+    htmlClose = "</table>";
+    targetCount = toInt(result.count) - 1;
+    colClass = null;
+    bootstrapColCount = 0;
+    return $.each(data, function(i, row) {
+      var htmlRow, j, l, taxonQuery;
+      if (toInt(i) === 0) {
+        j = 0;
+        htmlHead += "\n<!-- Table Headers - " + (Object.size(row)) + " entries -->";
+        $.each(row, function(k, v) {
+          var bootstrapColSize, niceKey;
+          niceKey = k.replace(/_/g, " ");
+          if (k === "genus" || k === "species" || k === "subspecies") {
+            htmlHead += "\n\t\t<th class='text-center'>" + niceKey + "</th>";
+            bootstrapColCount++;
+          }
+          j++;
+          if (j === Object.size(row)) {
+            htmlHead += "\n\t\t<th class='text-center'>Edit</th>\n\t</tr>";
+            bootstrapColCount++;
+            htmlHead += "\n<!-- End Table Headers -->";
+            console.log("Got " + bootstrapColCount + " display columns.");
+            bootstrapColSize = roundNumber(12 / bootstrapColCount, 0);
+            return colClass = "col-md-" + bootstrapColSize;
+          }
+        });
+      }
+      taxonQuery = "" + row.genus + "+" + row.species;
+      if (!isNull(row.subspecies)) {
+        taxonQuery = "" + taxonQuery + "+" + row.subspecies;
+      }
+      htmlRow = "\n\t<tr id='cndb-row" + i + "' class='cndb-result-entry' data-taxon=\"" + taxonQuery + "\">";
+      l = 0;
+      $.each(row, function(k, col) {
+        if (isNull(row.genus)) {
+          return true;
+        }
+        if (k === "genus" || k === "species" || k === "subspecies") {
+          htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='" + k + " " + colClass + "'>" + col + "</td>";
+        }
+        l++;
+        if (l === Object.size(row)) {
+          htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='edit-taxon " + colClass + " text-center'><paper-icon-button icon='image:edit' class='edit' data-taxon='" + taxonQuery + "'></paper-icon-button></td>";
+          htmlRow += "\n\t</tr>";
+          return html += htmlRow;
+        }
+      });
+      if (toInt(i) === targetCount) {
+        html = htmlHead + html + htmlClose;
+        $(containerSelector).html(html);
+        console.log("Processed " + (toInt(i) + 1) + " rows");
+        $(".edit").click(function() {
+          var taxon;
+          taxon = $(this).attr('data-taxon');
+          return lookupEditorSpecies(taxon);
+        });
+        return stopLoad();
+      }
+    });
+  }).fail(function(result, status) {
+    var error;
+    console.error("There was an error performing the search");
+    console.warn(result, error, result.statusText);
+    error = "" + result.status + " - " + result.statusText;
+    $("#search-status").attr("text", "Couldn't execute the search - " + error);
+    $("#search-status")[0].show();
+    return stopLoadError();
+  });
 };
 
-lookupEditorSpecies = function() {
+lookupEditorSpecies = function(taxon) {
+  var html;
+  if (taxon == null) {
+    taxon = void 0;
+  }
 
   /*
    * Lookup a given species and load it for editing
    */
+  animateLoad();
+  if (!$("#modal-taxon-edit").exists()) {
+    html = "<paper-action-dialog backdrop layered closeSelector=\"[dismissive]\" id='modal-taxon-edit'><div id='modal-taxon-editor'></div><paper-button dismissive>Cancel</paper-button><paper-button affirmative>Save</paper-button></paper-action-dialog>";
+    $("#search-results").after(html);
+  }
   return foo();
 };
 
