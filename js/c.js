@@ -181,7 +181,7 @@ renderAdminSearchResults = function(containerSelector) {
 };
 
 lookupEditorSpecies = function(taxon) {
-  var html;
+  var editHtml, html;
   if (taxon == null) {
     taxon = void 0;
   }
@@ -189,11 +189,16 @@ lookupEditorSpecies = function(taxon) {
   /*
    * Lookup a given species and load it for editing
    */
+  if (taxon == null) {
+    return false;
+  }
   animateLoad();
   if (!$("#modal-taxon-edit").exists()) {
-    html = "<paper-action-dialog backdrop layered closeSelector=\"[dismissive]\" id='modal-taxon-edit'><div id='modal-taxon-editor'></div><paper-button dismissive>Cancel</paper-button><paper-button affirmative>Save</paper-button></paper-action-dialog>";
+    editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" floatingLabel></paper-input> <paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" floatingLabel></paper-input> <paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" floatingLabel></paper-input> <paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\" floatingLabel></paper-input> <paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input> <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",...</span></span> <paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input> <paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input> <paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input> <paper-input label=\"Linnean Order\" id=\"edit-\" name=\"edit-linnean-order\" floatingLabel></paper-input> <paper-input label=\"Genus authority\" id=\"edit-\" name=\"edit-genus-authority\" floatingLabel></paper-input> <paper-input label=\"Genus authority year\" id=\"edit-\" name=\"edit-gauthyear\" floatingLabel></paper-input> <paper-input label=\"Species authority\" id=\"edit-\" name=\"edit-species-authority\" floatingLabel></paper-input> <paper-input label=\"Species authority year\" id=\"edit-\" name=\"edit-sauthyear\" floatingLabel></paper-input> <paper-autogrow-textarea target=\"edit-notes\" id=\"edit-notes-autogrow\"> <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\"></textarea> </paper-autogrow-textarea> <paper-input label=\"Image\" id=\"edit-imagepath\" name=\"edit-imagepath\" floatingLabel aria-describedby=\"imagehelp\"></paper-input> <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>";
+    html = "<paper-action-dialog backdrop layered closeSelector=\"[dismissive]\" id='modal-taxon-edit'><div id='modal-taxon-editor'>" + editHtml + "</div><paper-button dismissive>Cancel</paper-button><paper-button affirmative>Save</paper-button></paper-action-dialog>";
     $("#search-results").after(html);
   }
+  $("#modal-taxon-edit")[0].open();
   return foo();
 };
 
