@@ -161,6 +161,9 @@ core-label.col-xs-6 {
 form {
     margin-left:2rem;
 }
+#modal-taxon-editor paper-input {
+    display:block;
+}
 /************
  * Lightbox
  ***************/
