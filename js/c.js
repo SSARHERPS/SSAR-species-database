@@ -21,11 +21,16 @@ loadAdminUi = function() {
    * fetches/draws the page contents if it's OK. Otherwise, boots the
    * user back to the login page.
    */
-  verifyLoginCredentials(function() {
-    $("article").html("<h1>SSAR CNDB Administration</h1><h3>Welcome, " + ($.cookie("ssarherps_name")) + "</h3><div id='admin-actions-block'></div>");
-    return false;
-  });
-  $("article").html("<h1>Script loaded</h1>");
+  var e;
+  try {
+    verifyLoginCredentials(function(data) {
+      $("article").html("<h3>Welcome, " + ($.cookie("ssarherps_name")) + " <paper-icon-button icon='settings-applications' class='click' data-url='" + data.login_url + "'></paper-icon-button></h3><div id='admin-actions-block'></div>");
+      return false;
+    });
+  } catch (_error) {
+    e = _error;
+    $("article").html("<div class='bs-callout bs-callout-danger'><h4>Application Error</h4><p>There was an error in the application. Please refresh and try again. If this persists, please contact administration.</p></div>");
+  }
   return false;
 };
 
@@ -45,11 +50,13 @@ verifyLoginCredentials = function(callback) {
   args = "hash=" + hash + "&secret=" + secret + "&dblink=" + link;
   $.post(adminParams.loginApiTarget, args, "json").done(function(result) {
     if (result.status === true) {
-      return callback();
+      return callback(result);
     } else {
       return goTo(result.login_url);
     }
   }).fail(function(result, status) {
+    $("article").html("<div class='bs-callout-danger bs-callout'><h4>Couldn't verify login</h4><p>There's currently a server problem. Try back again soon.</p>'</div>");
+    console.log(result, status);
     return false;
   });
   return false;

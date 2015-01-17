@@ -140,11 +140,23 @@ core-label.col-xs-6 {
 .bs-callout-info {
   border-left-color: #5bc0de;
 }
-.bs-callout p:last-child {
-  margin-bottom: 0;
-}
 .bs-callout-info h4 {
   color: #5bc0de;
+}
+.bs-callout-danger {
+  border-left-color: #d9534f;
+}
+.bs-callout-danger h4 {
+  color: #d9534f;
+}
+.bs-callout-warning {
+  border-left-color: #f0ad4e;
+}
+.bs-callout-warning h4 {
+  color: #f0ad4e;
+}
+.bs-callout p:last-child {
+  margin-bottom: 0;
 }
 form {
     margin-left:2rem;
