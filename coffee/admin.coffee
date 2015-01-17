@@ -147,17 +147,52 @@ lookupEditorSpecies = (taxon = undefined) ->
     return false
   animateLoad()
   if not $("#modal-taxon-edit").exists()
-    editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" floatingLabel></paper-input> <paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" floatingLabel></paper-input> <paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" floatingLabel></paper-input> <paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\" floatingLabel></paper-input> <paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input> <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",...</span></span> <paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input> <paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input> <paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input> <paper-input label=\"Linnean Order\" id=\"edit-\" name=\"edit-linnean-order\" floatingLabel></paper-input> <paper-input label=\"Genus authority\" id=\"edit-\" name=\"edit-genus-authority\" floatingLabel></paper-input> <paper-input label=\"Genus authority year\" id=\"edit-\" name=\"edit-gauthyear\" floatingLabel></paper-input> <paper-input label=\"Species authority\" id=\"edit-\" name=\"edit-species-authority\" floatingLabel></paper-input> <paper-input label=\"Species authority year\" id=\"edit-\" name=\"edit-sauthyear\" floatingLabel></paper-input> <paper-autogrow-textarea target=\"edit-notes\" id=\"edit-notes-autogrow\"> <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\"></textarea> </paper-autogrow-textarea> <paper-input label=\"Image\" id=\"edit-imagepath\" name=\"edit-imagepath\" floatingLabel aria-describedby=\"imagehelp\"></paper-input> <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>"
-    html = "<paper-action-dialog backdrop layered closeSelector=\"[dismissive]\" id='modal-taxon-edit'><div id='modal-taxon-editor'>#{editHtml}</div><paper-button dismissive>Cancel</paper-button><paper-button affirmative>Save</paper-button></paper-action-dialog>"
+    editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" floatingLabel></paper-input> <paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" floatingLabel></paper-input> <paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" floatingLabel></paper-input> <paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\" floatingLabel></paper-input> <paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input> <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",...</span></span> <paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input> <paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input> <paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input> <paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" floatingLabel></paper-input> <paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" floatingLabel></paper-input> <paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input> <paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" floatingLabel></paper-input> <paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input> <paper-autogrow-textarea target=\"edit-notes\" id=\"edit-notes-autogrow\"> <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\"></textarea> </paper-autogrow-textarea> <paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input> <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>"
+    html = "<paper-action-dialog backdrop layered closeSelector=\"[dismissive]\" id='modal-taxon-edit'><div id='modal-taxon-editor'>#{editHtml}</div><paper-button id='close-editor' dismissive>Cancel</paper-button><paper-button id='save-editor' affirmative>Save</paper-button></paper-action-dialog>"
     $("#search-results").after(html)
+    # Bind the save button
+    $("html /deep/ #save-editor")
+    .click ->
+      saveEditorEntry()
   # Look up the taxon, take the first result, and populate
-  $("#modal-taxon-edit")[0].open()
-  foo()
+  $.get(searchParams.targetApi,"q=#{taxon}","json")
+  .done (result) ->
+    try
+      data = result.result[0]
+      console.log("Populating from",data)
+      $.each data, (col,d) ->
+        # For each column, replace _ with - and prepend "edit"
+        # This should be the selector
+        if col is "authority_year"
+          # Parse it out
+          year = parseTaxonYear(d)
+          $("#edit-gauthyear").attr("value",year.genus)
+          $("#edit-sauthyear").attr("value",year.species)
+        else
+          fieldSelector = "#edit-#{col.replace(/_/g,"-")}"
+          if col is "deprecated_scientific"
+            d = JSON.stringify(d).slice(1,-1)
+          $(fieldSelector).attr("value",d)
+      $("#modal-taxon-edit")[0].open()
+    catch e
+      toastStatusMessage("Unable to populate the editor for this taxon - #{e.message}")
+  .fail (result,status) ->
+    toastStatusMessage("There was a server error populating this taxon. Please try again.")
+  false
 
 saveEditorEntry = ->
   ###
   # Send an editor state along with login credentials,
   # and report the save result back to the user
+  ###
+  # Make all the entries lowercase EXCEPT notes.
+  # Close it on a successful save
+  foo()
+
+handleDragDropImage = ->
+  ###
+  # Take a drag-and-dropped image, and save it out to the database.
+  # If we trigger this, we need to disable #edit-image
   ###
   foo()
 

@@ -161,9 +161,32 @@ core-label.col-xs-6 {
 form {
     margin-left:2rem;
 }
-#modal-taxon-editor paper-input {
+html /deep/ #modal-taxon-editor paper-input {
     display:block;
 }
+html /deep/ .help-block {
+  display: block;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  color: #737373;
+}
+html /deep/ paper-autogrow-textarea textarea {
+    width:90%;
+}
+/***
+ * Force the scollbar to show on the #modal-taxon-editor
+ ***/
+
+html /deep/ #modal-taxon-editor::-webkit-scrollbar, .showScroll::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
+}
+
+html /deep/ #modal-taxon-editor::-webkit-scrollbar-thumb, .showScroll::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,.5);
+    box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
 /************
  * Lightbox
  ***************/
