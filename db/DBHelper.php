@@ -295,7 +295,15 @@ class DBHelper {
         $field_name = $this->sanitize($field_name);
       }
     $l=$this->openDB();
-    $query="SELECT * FROM `".$this->getTable()."` WHERE `field_name`='$item'";
+    if(is_numeric($item))
+      {
+        $item_string = $item;
+      }
+    else
+      {
+        $item_string = "'$item'";
+      }
+    $query="SELECT * FROM `".$this->getTable()."` WHERE `field_name`=".$item_string;
     try {
       $result=mysqli_query($l,$query);
       if($result===false) return false;
