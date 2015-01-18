@@ -208,7 +208,7 @@ class DBHelper {
         if (get_magic_quotes_gpc())
           {
             $input = stripslashes($input);
-          } 
+          }
         if(!$dirty_entities)
           {
             $input  = htmlentities(self::cleanInput($input));
@@ -636,8 +636,9 @@ public function doSoundex($search,$cols = "*",$precleaned = false,$order_by = fa
       }
     else
       {
+        $error = mysqli_error($l) . " - for $query";
         mysqli_query($l,"ROLLBACK");
-        return mysqli_error($l);
+        return $error;
       }
   }
 
