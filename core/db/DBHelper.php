@@ -612,7 +612,13 @@ public function doSoundex($search,$cols = "*",$precleaned = false,$order_by = fa
         # Make sure that $value is an array
         if(is_array($value) && is_string(key($value)))
           {
-            $values = $value;
+            $values = array();
+            foreach($value as $key=>$value)
+              {
+                $key = $precleaned ? mysqli_real_escape_string($l,$key) : $this->sanitize($key);
+                $key = str_replace("&#95;","_",$key);
+                $values[$key] = $precleaned ? mysqli_real_escape_string($l,$value) : $this->sanitize($value);
+              }
           }
         else
           {
