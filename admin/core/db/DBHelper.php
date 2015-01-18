@@ -208,7 +208,7 @@ class DBHelper {
         if (get_magic_quotes_gpc())
           {
             $input = stripslashes($input);
-          } 
+          }
         if(!$dirty_entities)
           {
             $input  = htmlentities(self::cleanInput($input));
@@ -285,30 +285,42 @@ class DBHelper {
       }
   }
 
-
-  public function is_entry($item,$field_name=null,$precleaned=false,$test=false)
-  {
-    if($field_name==null) $field_name = "id";
-    if($precleaned!==true)
+public function is_entry($item,$field_name=null,$precleaned=false,$test=false)
+{
+  if($field_name==null) $field_name = "id";
+  if($precleaned!==true)
+    {
+      $item = $this->sanitize($item);
+      $field_name = $this->sanitize($field_name);
+    }
+  $l=$this->openDB();
+  if(false) #is_numeric($item))
+    {
+      $item_string = $item;
+    }
+  else
+    {
+      $item_string = "'$item'";
+    }
+  $query="SELECT * FROM `".$this->getTable()."` WHERE `$field_name`=".$item_string;
+  try {
+    $result=mysqli_query($l,$query);
+    if($result===false)
       {
-        $item = $this->sanitize($item);
-        $field_name = $this->sanitize($field_name);
+        if($test) return array("status"=>false,"query"=>$query,"error"=>"false result");
+        return false;
       }
-    $l=$this->openDB();
-    $query="SELECT * FROM `".$this->getTable()."` WHERE `field_name`='$item'";
-    try {
-      $result=mysqli_query($l,$query);
-      if($result===false) return false;
-      $row=mysqli_fetch_row($result);
-      mysqli_close($l);
-      if($test) return array('query'=>$query,'row'=>$row);
-      if(!empty($row[0])) return true;
-      else return false;
-    }
-    catch(Exception $e) {
-      return false;
-    }
+    $row=mysqli_fetch_row($result);
+    mysqli_close($l);
+    if($test) return array('query'=>$query,'row'=>$row);
+    if(!empty($row[0])) return true;
+    else return false;
   }
+  catch(Exception $e) {
+    if($test) return array("status"=>"exception thrown","error"=>$e->getMessage());
+    return false;
+  }
+}
 
 
   public function lookupItem($item,$field_name=null,$throw=false,$precleaned=false)
@@ -600,7 +612,13 @@ public function doSoundex($search,$cols = "*",$precleaned = false,$order_by = fa
         # Make sure that $value is an array
         if(is_array($value) && is_string(key($value)))
           {
-            $values = $value;
+            $values = array();
+            foreach($value as $key=>$value)
+              {
+                $key = $precleaned ? mysqli_real_escape_string($l,$key) : $this->sanitize($key);
+                $key = str_replace("&#95;","_",$key);
+                $values[$key] = $precleaned ? mysqli_real_escape_string($l,$value) : $this->sanitize($value);
+              }
           }
         else
           {
@@ -624,8 +642,9 @@ public function doSoundex($search,$cols = "*",$precleaned = false,$order_by = fa
       }
     else
       {
+        $error = mysqli_error($l) . " - for $query";
         mysqli_query($l,"ROLLBACK");
-        return mysqli_error($l);
+        return $error;
       }
   }
 
