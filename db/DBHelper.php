@@ -563,7 +563,7 @@ public function doSoundex($search,$cols = "*",$precleaned = false,$order_by = fa
 
     if(!$this->is_entry($uval,$column,$precleaned))
       {
-        throw(new Exception("No item '$uval' exists for column '$column'"));
+        throw(new Exception("No item '$uval' exists for column '$column' in ".$this->getTable()));
       }
     $l = $this->openDB();
     if(!empty($field_name))
