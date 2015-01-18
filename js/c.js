@@ -194,7 +194,7 @@ lookupEditorSpecies = function(taxon) {
   }
   animateLoad();
   if (!$("#modal-taxon-edit").exists()) {
-    editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" floatingLabel></paper-input> <paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" floatingLabel></paper-input> <paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" floatingLabel></paper-input> <paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\" floatingLabel></paper-input> <paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input> <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",...</span></span> <paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input> <paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input> <paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input> <paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" floatingLabel></paper-input> <paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" floatingLabel></paper-input> <paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input> <paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" floatingLabel></paper-input> <paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input> <paper-autogrow-textarea target=\"edit-notes\" id=\"edit-notes-autogrow\"> <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\"></textarea> </paper-autogrow-textarea> <paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input> <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>";
+    editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" floatingLabel></paper-input> <paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" floatingLabel></paper-input> <paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" floatingLabel></paper-input> <paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\" floatingLabel></paper-input> <paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input> <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",...</span></span> <paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input> <paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input> <paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input> <paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" floatingLabel></paper-input> <paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" floatingLabel></paper-input> <paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input> <paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" floatingLabel></paper-input> <paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input> <paper-autogrow-textarea target=\"edit-notes\" id=\"edit-notes-autogrow\"> <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\"></textarea> </paper-autogrow-textarea> <paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input> <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span><input type='hidden' name='taxon-id' id='taxon-id'/>";
     html = "<paper-action-dialog backdrop layered closeSelector=\"[dismissive]\" id='modal-taxon-edit'><div id='modal-taxon-editor'>" + editHtml + "</div><paper-button id='close-editor' dismissive>Cancel</paper-button><paper-button id='save-editor' affirmative>Save</paper-button></paper-action-dialog>";
     $("#search-results").after(html);
     $("html /deep/ #save-editor").click(function() {
@@ -208,6 +208,9 @@ lookupEditorSpecies = function(taxon) {
       console.log("Populating from", data);
       $.each(data, function(col, d) {
         var fieldSelector, year;
+        if (col === "id") {
+          $("#taxon-id").attr("value", d);
+        }
         if (col === "authority_year") {
           year = parseTaxonYear(d);
           $("#edit-gauthyear").attr("value", year.genus);
@@ -237,7 +240,7 @@ saveEditorEntry = function() {
    * Send an editor state along with login credentials,
    * and report the save result back to the user
    */
-  var auth, authYearString, dep, depA, depS, depString, e, examineIds, gYear, sYear, saveObject;
+  var args, auth, authYearString, dep, depA, depS, depString, e, examineIds, gYear, hash, link, s64, sYear, saveObject, saveString, secret, userVerification;
   examineIds = ["genus", "species", "subspecies", "common-name", "major-type", "major-subtype", "minor-type", "linnean-order", "genus-authority", "species-authority", "notes", "image"];
   saveObject = new Object();
   try {
@@ -268,7 +271,26 @@ saveEditorEntry = function() {
     depString = "";
   }
   saveObject["deprecated_scientific"] = depString;
+  $.each(examineIds, function(k, id) {
+    var col, thisSelector, val;
+    console.log(k, id);
+    thisSelector = "html /deep/ #edit-" + id;
+    col = id.replace(/-/g, "_");
+    val = $(thisSelector).val();
+    if (col !== "notes") {
+      val = val.toLowerCase();
+    }
+    return saveObject[col] = val;
+  });
+  console.log("Going to save", saveObject);
   foo();
+  saveString = JSON.stringify(saveObject);
+  s64 = Base64.encodeURI(saveString);
+  hash = $.cookie("ssarherps_auth");
+  secret = $.cookie("ssarherps_secret");
+  link = $.cookie("ssarherps_link");
+  userVerification = "hash=" + hash + "&secret=" + secret + "&dblink=" + link;
+  args = "perform=save&" + userVerification + "&data=" + s64;
   return $.post(adminParams.apiTarget, args, "json").done(function(result) {
     return foo();
   }).fail(function(result, status) {
