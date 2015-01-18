@@ -282,8 +282,7 @@ saveEditorEntry = function() {
     }
     return saveObject[col] = val;
   });
-  console.log("Going to save", saveObject);
-  foo();
+  saveObject["id"] = $("html /deep/ #taxon-id").val();
   saveString = JSON.stringify(saveObject);
   s64 = Base64.encodeURI(saveString);
   hash = $.cookie("ssarherps_auth");
@@ -291,6 +290,10 @@ saveEditorEntry = function() {
   link = $.cookie("ssarherps_link");
   userVerification = "hash=" + hash + "&secret=" + secret + "&dblink=" + link;
   args = "perform=save&" + userVerification + "&data=" + s64;
+  console.log("Going to save", saveObject);
+  console.log("Encoded object", s64);
+  console.log("Would send", "http://ssarherps.org/cndb/" + adminParams.apiTarget + "?" + args);
+  foo();
   return $.post(adminParams.apiTarget, args, "json").done(function(result) {
     return foo();
   }).fail(function(result, status) {

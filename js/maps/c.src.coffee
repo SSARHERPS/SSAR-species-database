@@ -238,8 +238,7 @@ saveEditorEntry = ->
     if col isnt "notes"
       val = val.toLowerCase()
     saveObject[col] = val
-  console.log("Going to save",saveObject)
-  foo()
+  saveObject["id"] = $("html /deep/ #taxon-id").val()
   saveString = JSON.stringify(saveObject)
   s64 = Base64.encodeURI(saveString)
   hash = $.cookie("ssarherps_auth")
@@ -247,6 +246,10 @@ saveEditorEntry = ->
   link = $.cookie("ssarherps_link")
   userVerification = "hash=#{hash}&secret=#{secret}&dblink=#{link}"
   args = "perform=save&#{userVerification}&data=#{s64}"
+  console.log("Going to save",saveObject)
+  console.log("Encoded object",s64)
+  console.log("Would send","http://ssarherps.org/cndb/#{adminParams.apiTarget}?#{args}")
+  foo()
   $.post(adminParams.apiTarget,args,"json")
   .done (result) ->
     foo()

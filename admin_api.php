@@ -5,6 +5,11 @@
  ***/
 
 $print_login_state = false;
+require_once("CONFIG.php");
+require_once(dirname(__FILE__)."/core/core.php");
+
+$db = new DBHelper($default_database,$default_sql_user,$default_sql_password,$default_sql_url,$default_table,$db_cols);
+
 
 require_once(dirname(__FILE__)."/admin/async_login_handler.php");
 
@@ -39,7 +44,7 @@ switch($admin_req)
   {
     # Stuff
   case "save":
-    returnAjax()
+    returnAjax(saveEntry($_REQUEST));
     break;
   default:
     returnAjax(getLoginState($_REQUEST,true));
@@ -61,6 +66,17 @@ function saveEntry($get)
       # The required attribute is missing
       return array("status"=>false,"error"=>"POST data attribute \"id\" is missing","human_error"=>"The request to the server was malformed. Please try again.");
     }
+  # Add the perform key
+  global $db;
+  $ref = array();
+  $ref["id"] = $data["id"];
+  unset($data["id"]);
+  $result = $db->updateEntry($data,$ref);
+  if($result !== true)
+    {
+      return array("status"=>false,"error"=>$result,"human_error"=>"Database error saving");
+    }
+  return array("status"=>true,"perform"=>"save","data"=>$data);
 }
 
 ?>
