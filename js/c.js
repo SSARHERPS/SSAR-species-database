@@ -220,10 +220,15 @@ lookupEditorSpecies = function(taxon) {
           if (col === "deprecated_scientific") {
             d = JSON.stringify(d).slice(1, -1);
           }
-          return $(fieldSelector).attr("value", d);
+          if (col !== "notes") {
+            return $(fieldSelector).attr("value", d);
+          } else {
+            return $("html /deep/ " + fieldSelector).text(d);
+          }
         }
       });
-      return $("#modal-taxon-edit")[0].open();
+      $("#modal-taxon-edit")[0].open();
+      return stopLoad();
     } catch (_error) {
       e = _error;
       return toastStatusMessage("Unable to populate the editor for this taxon - " + e.message);
@@ -291,12 +296,18 @@ saveEditorEntry = function() {
   userVerification = "hash=" + hash + "&secret=" + secret + "&dblink=" + link;
   args = "perform=save&" + userVerification + "&data=" + s64;
   console.log("Going to save", saveObject);
-  console.log("Encoded object", s64);
-  console.log("Would send", "http://ssarherps.org/cndb/" + adminParams.apiTarget + "?" + args);
-  foo();
+  animateLoad();
   return $.post(adminParams.apiTarget, args, "json").done(function(result) {
-    return foo();
+    if (result.status === true) {
+      $("html /deep/ #modal-taxon-edit")[0].close();
+      stopLoad();
+      return false;
+    }
+    toastStatusMessage(result.human_error);
+    console.error(result.error);
+    return false;
   }).fail(function(result, status) {
+    toastStatusMessage("Failed to send the data to the server.");
     return false;
   });
 };

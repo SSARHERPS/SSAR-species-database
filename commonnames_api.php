@@ -57,7 +57,8 @@ function returnAjax($data)
   header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
   header('Content-type: application/json');
   $json = json_encode($data,JSON_FORCE_OBJECT);
-  print str_replace("&#34;","\"",$json);
+  $replace_array = array("&quot;","&#34;");
+  print str_replace($replace_array,"\\\"",$json);
   exit();
 }
 

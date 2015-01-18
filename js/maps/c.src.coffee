@@ -174,8 +174,12 @@ lookupEditorSpecies = (taxon = undefined) ->
           fieldSelector = "#edit-#{col.replace(/_/g,"-")}"
           if col is "deprecated_scientific"
             d = JSON.stringify(d).slice(1,-1)
-          $(fieldSelector).attr("value",d)
+          if col isnt "notes"
+            $(fieldSelector).attr("value",d)
+          else
+            $("html /deep/ #{fieldSelector}").text(d)
       $("#modal-taxon-edit")[0].open()
+      stopLoad()
     catch e
       toastStatusMessage("Unable to populate the editor for this taxon - #{e.message}")
   .fail (result,status) ->
@@ -247,13 +251,18 @@ saveEditorEntry = ->
   userVerification = "hash=#{hash}&secret=#{secret}&dblink=#{link}"
   args = "perform=save&#{userVerification}&data=#{s64}"
   console.log("Going to save",saveObject)
-  console.log("Encoded object",s64)
-  console.log("Would send","http://ssarherps.org/cndb/#{adminParams.apiTarget}?#{args}")
-  foo()
+  animateLoad()
   $.post(adminParams.apiTarget,args,"json")
   .done (result) ->
-    foo()
+    if result.status is true
+      $("html /deep/ #modal-taxon-edit")[0].close()
+      stopLoad()
+      return false
+    toastStatusMessage(result.human_error)
+    console.error(result.error)
+    return false
   .fail (result,status) ->
+    toastStatusMessage("Failed to send the data to the server.")
     false
 
 handleDragDropImage = ->
