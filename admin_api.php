@@ -10,8 +10,9 @@ require_once(dirname(__FILE__)."/core/core.php");
 
 $db = new DBHelper($default_database,$default_sql_user,$default_sql_password,$default_sql_url,$default_table,$db_cols);
 
-
 require_once(dirname(__FILE__)."/admin/async_login_handler.php");
+
+returnAjax($db->is_entry(972,"id",false,true));
 
 $start_script_timer = microtime_float();
 
