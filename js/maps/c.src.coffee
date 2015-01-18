@@ -633,7 +633,10 @@ bindClickTargets = ->
 
 $ ->
   bindClickTargets()
-  $('[data-toggle="tooltip"]').tooltip()
+  try
+    $('[data-toggle="tooltip"]').tooltip()
+  catch e
+    console.warn("Tooltips were attempted to be set up, but do not exist")
   getLocation()
 
 searchParams = new Object()
