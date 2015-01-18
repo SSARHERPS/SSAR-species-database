@@ -244,8 +244,8 @@ saveEditorEntry = function() {
   examineIds = ["genus", "species", "subspecies", "common-name", "major-type", "major-subtype", "minor-type", "linnean-order", "genus-authority", "species-authority", "notes", "image"];
   saveObject = new Object();
   try {
-    gYear = $("#edit-gauthyear").val();
-    sYear = $("#edit-sauthyear").val();
+    gYear = $("html /deep/ #edit-gauthyear").val();
+    sYear = $("html /deep/ #edit-sauthyear").val();
     auth = new Object();
     auth[gYear] = sYear;
     authYearString = JSON.stringify(auth);

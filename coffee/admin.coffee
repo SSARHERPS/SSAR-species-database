@@ -207,8 +207,8 @@ saveEditorEntry = ->
   ## Manual parses
   try
     # Authority year
-    gYear = $("#edit-gauthyear").val()
-    sYear = $("#edit-sauthyear").val()
+    gYear = $("html /deep/ #edit-gauthyear").val()
+    sYear = $("html /deep/ #edit-sauthyear").val()
     auth = new Object()
     auth[gYear] = sYear
     authYearString = JSON.stringify(auth)

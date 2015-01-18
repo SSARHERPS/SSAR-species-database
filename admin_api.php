@@ -12,8 +12,6 @@ $db = new DBHelper($default_database,$default_sql_user,$default_sql_password,$de
 
 require_once(dirname(__FILE__)."/admin/async_login_handler.php");
 
-returnAjax($db->is_entry(972,"id",false,true));
-
 $start_script_timer = microtime_float();
 
 if(!function_exists('elapsed'))
@@ -72,10 +70,17 @@ function saveEntry($get)
   $ref = array();
   $ref["id"] = $data["id"];
   unset($data["id"]);
-  $result = $db->updateEntry($data,$ref);
+  try
+    {
+      $result = $db->updateEntry($data,$ref);
+    }
+  catch(Exception $e)
+    {
+      return array("status"=>false,"error"=>$e->getMessage(),"humman_error"=>"Database error saving","data"=>$data,"ref"=>$ref,"perform"=>"save");
+    }
   if($result !== true)
     {
-      return array("status"=>false,"error"=>$result,"human_error"=>"Database error saving");
+      return array("status"=>false,"error"=>$result,"human_error"=>"Database error saving","data"=>$data,"ref"=>$ref,"perform"=>"save");
     }
   return array("status"=>true,"perform"=>"save","data"=>$data);
 }
