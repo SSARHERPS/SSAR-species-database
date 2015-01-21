@@ -173,6 +173,10 @@ html /deep/ .help-block {
 html /deep/ paper-autogrow-textarea textarea {
     width:90%;
 }
+#password_security + #login {
+    float:left;
+    min-width:60%;
+}
 /***
  * Force the scollbar to show on the #modal-taxon-editor
  ***/
