@@ -12,7 +12,7 @@
     'use strict';
     // existing version for noConflict()
     var _Base64 = global.Base64;
-    var version = "2.1.5";
+    var version = "2.1.6";
     // if node.js, we use Buffer
     var buffer;
     if (typeof module !== 'undefined' && module.exports) {
@@ -75,8 +75,8 @@
     ;
     var encode = function(u, urisafe) {
         return !urisafe 
-            ? _encode(u)
-            : _encode(u).replace(/[+\/]/g, function(m0) {
+            ? _encode(String(u))
+            : _encode(String(u)).replace(/[+\/]/g, function(m0) {
                 return m0 == '+' ? '-' : '_';
             }).replace(/=/g, '');
     };
@@ -138,7 +138,7 @@
     : function(a) { return btou(atob(a)) };
     var decode = function(a){
         return _decode(
-            a.replace(/[-_]/g, function(m0) { return m0 == '-' ? '+' : '/' })
+            String(a).replace(/[-_]/g, function(m0) { return m0 == '-' ? '+' : '/' })
                 .replace(/[^A-Za-z0-9\+\/]/g, '')
         );
     };

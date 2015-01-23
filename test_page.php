@@ -6,14 +6,13 @@
 if($_REQUEST['t']=='hash')
   {
     // decode the JSON
-    require_once('handlers/db_hook.inc');
+    require_once('core/core.php');
     $l=openDB();
     $r=mysqli_query($l,"SELECT password FROM `userdata` WHERE username='".sanitize($_POST['user'])."'");
     $hba=mysqli_fetch_array($r);
     $hb=$hba[0];
     $a=json_decode($hb,true);
     print_r($a);
-    require_once('stronghash/php-stronghash.php');
     require_once('handlers/login_functions.php');
     $h=new Stronghash();
     $u=new UserFunctions();

@@ -142,7 +142,7 @@ class UserFunctions extends DBHelper
 
     $this->domain = $domain;
     $this->shortUrl = $shorturl;
-    $this->qualDomain = $proto . "://" . $shorturl;
+    $this->qualDomain = $proto . "://" . $shorturl . "/";
 
     # Let's be nice and try to set up a user
     try
@@ -501,7 +501,7 @@ class UserFunctions extends DBHelper
       }
     try
       {
-        require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
+        require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
         $salt = Stronghash::createSalt();
         require_once(dirname(__FILE__).'/../base32/src/Base32/Base32.php');
         $secret = Base32::encode($salt);
@@ -581,7 +581,7 @@ class UserFunctions extends DBHelper
         $userdata = $this->getUser();
         $secret = $userdata[$this->tmpcol];
         $query = "UPDATE `".$this->getTable()."` SET `".$this->totpcol."`='$secret', `".$this->tmpcol."`=''  WHERE `".$this->usercol."`='".$this->username."'";
-        require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
+        require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
         $backup = Stronghash::createSalt();
         $backup_store = hash("sha512",$backup);
         $query2 = "UPDATE `".$this->getTable()."` SET `".$this->totpbackup."`='$backup_store' WHERE `".$this->usercol."`='".$this->username."'";
@@ -727,7 +727,7 @@ class UserFunctions extends DBHelper
     try
       {
         require_once(dirname(__FILE__)."/../qr/qrlib.php");
-        require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
+        require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
         $salt = Stronghash::createSalt();
         $persistent = !empty($data_path);
         if(!$persistent)
@@ -827,7 +827,7 @@ class UserFunctions extends DBHelper
       }
     if(strlen($pw_in) < $this->getMinPasswordLength()) return array("status"=>false,"error"=>'Your password is too short. Please try again.');
     // Complexity checks here, if not relegated to JS ...
-    require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
+    require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
     $hash=new Stronghash;
     $creation=self::microtime_float();
     $pw1=$hash->hasher($pw_in);
@@ -955,7 +955,7 @@ class UserFunctions extends DBHelper
             if(is_numeric($userdata['id']))
               {
                 # check password
-                require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
+                require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
                 $hash=new Stronghash;
                 $data=json_decode($userdata[$this->pwcol],true);
                 # Decrypt the password if totp_code is_numeric()
@@ -1210,7 +1210,7 @@ class UserFunctions extends DBHelper
         $expire_days=7;
         $expire=time()+3600*24*$expire_days;
         # Create a one-time key, store serverside
-        require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
+        require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
         $otsalt=Stronghash::createSalt();
         $cookie_secret=Stronghash::createSalt();
         $pw_characters=json_decode($userdata[$this->pwcol],true);
@@ -1465,7 +1465,7 @@ class UserFunctions extends DBHelper
     $l = $this->openDB();
     if(is_numeric($totp))
       {
-        require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
+        require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
         $key = Stronghash::createSalt();
         $query = "UPDATE `".$this->getTable()."` SET `".$this->tmpcol."`='$key' WHERE `".$this->usercol."`='".$this->username."'";
         $r = mysqli_query($l,$query);
@@ -1507,7 +1507,7 @@ class UserFunctions extends DBHelper
     # We'll use a secret key that is never kept on the server
     if(empty($secret_key))
       {
-        require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
+        require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
         $secret_key = Stronghash::createSalt(strlen($userString));
       }
     $return['secret'] = $secret_key;
@@ -1763,7 +1763,7 @@ class UserFunctions extends DBHelper
      *
      * @return array with the twilio object in key "twilio"
      ***/
-    require_once(dirname(__FILE__).'/../stronghash/php-stronghash.php');
+    require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
     $auth = Stronghash::createSalt(8);
     # Write auth to tmpcol
     $query = "UPDATE `".$this->getTable()."` SET `".$this->tmpcol."`='$auth' WHERE `".$this->usercol."`='".$this->getUsername()."'";
