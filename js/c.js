@@ -339,7 +339,7 @@ if ((_base = window.passwords).minLength == null) {
 }
 
 if ((_base1 = window.passwords).overrideLength == null) {
-  _base1.overrideLength = 21;
+  _base1.overrideLength = 20;
 }
 
 if (typeof window.totpParams !== 'object') {
@@ -364,6 +364,8 @@ if (window.totpParams.subdirectory == null) {
 window.totpParams.mainStylesheetPath = window.totpParams.relative + "css/otp_styles.css";
 
 window.totpParams.popStylesheetPath = window.totpParams.relative + "css/otp_panels.css";
+
+window.totpParams.combinedStylesheetPath = window.totpParams.relative + "css/otp.min.css";
 
 checkPasswordLive = function(selector) {
   var pass, re;
@@ -1098,6 +1100,9 @@ $(function() {
     }).keyup(function() {
       return checkMatchPassword();
     });
+    $("input").blur(function() {
+      return checkPasswordLive();
+    });
   }
   $("#totp_submit").submit(function() {
     return doTOTPSubmit();
@@ -1158,7 +1163,7 @@ $(function() {
     rel: "stylesheet",
     type: "text/css",
     media: "screen",
-    href: window.totpParams.mainStylesheetPath
+    href: window.totpParams.combinedStylesheetPath
   }).appendTo("head");
 });
 
