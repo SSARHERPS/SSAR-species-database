@@ -218,7 +218,7 @@ $loginform = "
 	      <label for='password' class='col-sm-3 col-md-2'>
 		Password:
 	      </label>
-	      <input class='col-sm-5 col-md-3' type='password' name='password' id='password' placeholder='Password' required='required'/>
+	      <input class='col-sm-5 col-md-3' type='password' name='password' id='password' placeholder='Password' class='password-input' required='required'/>
 </div>
 </fieldset>";
 $loginform_close="	      <br/>
@@ -246,7 +246,7 @@ if($_REQUEST['q']=='submitlogin')
       <legend>Two-Factor Authentication</legend>
       <input type='number' id='totp_code' name='totp_code' placeholder='Code' pattern='[0-9]{6}' size='6' maxlength='6'/>
       <input type='hidden' id='username' name='username' value='".$_POST['username']."'/>
-      <input type='hidden' id='password' name='password' value='".$res["encrypted_password"]."'/>
+      <input type='hidden' id='password' name='password' value='".$res["encrypted_password"]."'  class='password-input'/>
       <input type='hidden' id='secret' name='secret' value='".$secret."'/>
       <input type='hidden' id='hash' name='hash' value='".$hash."'/>
       <input type='hidden' id='remote' name='remote' value='".$_SERVER['REMOTE_ADDR']."'/>
@@ -468,13 +468,13 @@ else if($_REQUEST['q']=='create')
 	      <label class='col-sm-3 col-md-2' for='password'>
 		Password:
 	      </label>
-	      <input class='col-sm-5 col-md-3 create' type='password' name='password' id='password' placeholder='Password' class='create' required='required'/>
+	      <input class='col-sm-5 col-md-3 create' type='password' name='password' id='password' placeholder='Password' class='create' required='required'  class='password-input' />
 	      </div>
 <div class='form-group'>
 	      <label class='col-sm-3 col-md-2' for='password2'>
 		Confirm Password:
 	      </label>
-	      <input class='col-sm-5 col-md-3 create' type='password' name='password2' id='password2' class='create' placeholder='Confirm password' required='required'/>
+	      <input class='col-sm-5 col-md-3 create' type='password' name='password2' id='password2' class='create' placeholder='Confirm password' required='required'  class='password-input' />
 	      </div>
 <div class='form-group'>
               <label class='col-sm-3 col-md-2' for='fname'>

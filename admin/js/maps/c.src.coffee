@@ -205,7 +205,7 @@ window.passwords.badbg = "#e5786d"
 # Password lengths can be overriden in CONFIG.php,
 # which then defines the values for these before the script loads.
 window.passwords.minLength ?= 8
-window.passwords.overrideLength ?= 21
+window.passwords.overrideLength ?= 20
 
 if typeof window.totpParams isnt 'object' then window.totpParams = new Object()
 window.totpParams.popClass = "pop-panel"
@@ -219,6 +219,7 @@ if not window.totpParams.subdirectory?
   window.totpParams.subdirectory = ""
 window.totpParams.mainStylesheetPath = window.totpParams.relative+"css/otp_styles.css"
 window.totpParams.popStylesheetPath = window.totpParams.relative+"css/otp_panels.css"
+window.totpParams.combinedStylesheetPath = window.totpParams.relative+"css/otp.min.css"
 
 checkPasswordLive = (selector = "#createUser_submit") ->
   pass = $("#password").val()
@@ -912,6 +913,8 @@ $ ->
       checkMatchPassword()
     .keyup ->
       checkMatchPassword()
+    $("input").blur ->
+      checkPasswordLive()
   $("#totp_submit").submit ->
     doTOTPSubmit()
   $("#verify_totp_button").click ->
@@ -951,5 +954,5 @@ $ ->
     rel:"stylesheet"
     type:"text/css"
     media:"screen"
-    href:window.totpParams.mainStylesheetPath
+    href:window.totpParams.combinedStylesheetPath
     }).appendTo("head")
