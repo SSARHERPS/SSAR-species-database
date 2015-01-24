@@ -375,11 +375,11 @@ checkPasswordLive = function(selector) {
   pass = $("#password").val();
   re = new RegExp("^(?:(?=^.{" + window.passwords.minLength + ",}$)((?=.*\\d)|(?=.*\\W+))(?![.\\n])(?=.*[A-Z])(?=.*[a-z]).*$)$");
   if (pass.length > window.passwords.overrideLength || pass.match(re)) {
-    $("#password").css("background", window.passwords.goodbg).parent().removeClass("has-error").parent().addClass("has-success");
+    $("#password").css("background", window.passwords.goodbg).parent().removeClass("has-error").addClass("has-success");
     $("#feedback-status-1").replaceWith("<span id='feedback-status-1' class='glyphicon glyphicon-ok form-control-feedback' aria-hidden='true'></span>");
     window.passwords.basepwgood = true;
   } else {
-    $("#password").css("background", window.passwords.badbg).parent().removeClass("has-success").parent().addClass("has-error");
+    $("#password").css("background", window.passwords.badbg).parent().removeClass("has-success").addClass("has-error");
     $("#feedback-status-1").replaceWith("<span id='feedback-status-1' class='glyphicon glyphicon-remove form-control-feedback' aria-hidden='true'></span>");
     window.passwords.basepwgood = false;
   }
@@ -396,11 +396,11 @@ checkMatchPassword = function(selector) {
     selector = "#createUser_submit";
   }
   if ($("#password").val() === $("#password2").val()) {
-    $('#password2').css('background', window.passwords.goodbg).parent().removeClass("has-error").parent().addClass("has-success");
+    $('#password2').css('background', window.passwords.goodbg).parent().removeClass("has-error").addClass("has-success");
     $("#feedback-status-2").replaceWith("<span id='feedback-status-2' class='glyphicon glyphicon-ok form-control-feedback' aria-hidden='true'></span>");
     window.passwords.passmatch = true;
   } else {
-    $('#password2').css('background', window.passwords.badbg).parent().removeClass("has-success").parent().addClass("has-error");
+    $('#password2').css('background', window.passwords.badbg).parent().removeClass("has-success").addClass("has-error");
     $("#feedback-status-2").replaceWith("<span id='feedback-status-2' class='glyphicon glyphicon-remove form-control-feedback' aria-hidden='true'></span>");
     window.passwords.passmatch = false;
   }
@@ -1104,7 +1104,7 @@ $(function() {
     }).keyup(function() {
       return checkMatchPassword();
     });
-    $("input").addClass("form-control").blur(function() {
+    $("input").addClass("form-control").parent().addClass("form-inline").blur(function() {
       return checkPasswordLive();
     });
     $("#password").after("<span id='feedback-status-1'></span>").parent().addClass("has-feedback form-inline");
