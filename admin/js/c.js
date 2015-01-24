@@ -1107,8 +1107,8 @@ $(function() {
     $("input").addClass("form-control").parent().addClass("form-inline").blur(function() {
       return checkPasswordLive();
     });
-    $("#password").after("<span id='feedback-status-1'></span>").parent().addClass("has-feedback form-inline");
-    $("#password2").after("<span id='feedback-status-2'></span>").parent().addClass("has-feedback form-inline");
+    $("#password").after("<span id='feedback-status-1'></span>").parent().addClass("has-feedback").removeClass("form-inline").parent().addClass("form-inline");
+    $("#password2").after("<span id='feedback-status-2'></span>").parent().addClass("has-feedback").removeClass("form-inline").parent().addClass("form-inline");
   }
   $("#totp_submit").submit(function() {
     return doTOTPSubmit();
