@@ -225,10 +225,18 @@ checkPasswordLive = (selector = "#createUser_submit") ->
   pass = $("#password").val()
   re = new RegExp("^(?:(?=^.{#{window.passwords.minLength},}$)((?=.*\\d)|(?=.*\\W+))(?![.\\n])(?=.*[A-Z])(?=.*[a-z]).*$)$")
   if pass.length >window.passwords.overrideLength or pass.match(re)
-    $("#password").css("background",window.passwords.goodbg)
+    $("#password")
+    .css("background",window.passwords.goodbg)
+    .parent().removeClass("has-error")
+    .parent().addClass("has-success")
+    $("#feedback-status-1").replace("<span id='feedback-status-1' class='glyphicon glyphicon-ok form-control-feedback' aria-hidden='true'></span>")
     window.passwords.basepwgood = true
   else
-    $("#password").css("background",window.passwords.badbg)
+    $("#password")
+    .css("background",window.passwords.badbg)
+    .parent().removeClass("has-success")
+    .parent().addClass("has-error")
+    $("#feedback-status-1").replace("<span id='feedback-status-1' class='glyphicon glyphicon-warning-sign form-control-feedback' aria-hidden='true'></span>")
     window.passwords.basepwgood = false
   evalRequirements()
   if not isNull($("#password2").val())
@@ -238,10 +246,18 @@ checkPasswordLive = (selector = "#createUser_submit") ->
 
 checkMatchPassword = (selector = "#createUser_submit") ->
   if $("#password").val() is $("#password2").val()
-    $('#password2').css('background', window.passwords.goodbg)
+    $('#password2')
+    .css('background', window.passwords.goodbg)
+    .parent().removeClass("has-error")
+    .parent().addClass("has-success")
+    $("#feedback-status-2").replace("<span id='feedback-status-2' class='glyphicon glyphicon-ok form-control-feedback' aria-hidden='true'></span>")
     window.passwords.passmatch = true
   else
-    $('#password2').css('background', window.passwords.badbg)
+    $('#password2')
+    .css('background', window.passwords.badbg)
+    .parent().removeClass("has-success")
+    .parent().addClass("has-error")
+    $("#feedback-status-2").replace("<span id='feedback-status-2' class='glyphicon glyphicon-warning-sign form-control-feedback' aria-hidden='true'></span>")
     window.passwords.passmatch = false
   toggleNewUserSubmit(selector)
   return false
@@ -915,6 +931,12 @@ $ ->
       checkMatchPassword()
     $("input").blur ->
       checkPasswordLive()
+    $("#password")
+    .after("<span id='feedback-status-1'></span>")
+    .parent().addClass("has-feedback")
+    $("#password2")
+    .after("<span id='feedback-status-2'></span>")
+    .parent().addClass("has-feedback")
   $("#totp_submit").submit ->
     doTOTPSubmit()
   $("#verify_totp_button").click ->

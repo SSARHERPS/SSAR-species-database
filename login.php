@@ -468,13 +468,13 @@ else if($_REQUEST['q']=='create')
 	      <label class='col-sm-3 col-md-2' for='password'>
 		Password:
 	      </label>
-	      <input class='col-sm-5 col-md-3 create' type='password' name='password' id='password' placeholder='Password' class='create' required='required'  class='password-input' />
+	      <input class='col-sm-5 col-md-3 create' type='password' name='password' id='password' placeholder='Password' class='create form-control' required='required'  class='password-input' />
 	      </div>
 <div class='form-group'>
 	      <label class='col-sm-3 col-md-2' for='password2'>
 		Confirm Password:
 	      </label>
-	      <input class='col-sm-5 col-md-3 create' type='password' name='password2' id='password2' class='create' placeholder='Confirm password' required='required'  class='password-input' />
+	      <input class='col-sm-5 col-md-3 create' type='password' name='password2' id='password2' class='create form-control' placeholder='Confirm password' required='required'  class='password-input' />
 	      </div>
 <div class='form-group'>
               <label class='col-sm-3 col-md-2' for='fname'>
