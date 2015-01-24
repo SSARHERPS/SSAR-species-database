@@ -27,9 +27,9 @@ $self_referential = $_SERVER['PHP_SELF'];
 
 # Path to this library from callers, relative to the top level.
 # Used mostly for AJAX calls.
-$working_subdirectory = "";
+$working_subdirectory = "/";
 # Relative path from the pages it's embedded in. Often the same as above.
-$relative_path = "";
+$relative_path = "/";
 
 $site_name = "";
 

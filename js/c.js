@@ -380,7 +380,7 @@ checkPasswordLive = function(selector) {
     window.passwords.basepwgood = true;
   } else {
     $("#password").css("background", window.passwords.badbg).parent().removeClass("has-success").parent().addClass("has-error");
-    $("#feedback-status-1").replaceWith("<span id='feedback-status-1' class='glyphicon glyphicon-warning-sign form-control-feedback' aria-hidden='true'></span>");
+    $("#feedback-status-1").replaceWith("<span id='feedback-status-1' class='glyphicon glyphicon-remove form-control-feedback' aria-hidden='true'></span>");
     window.passwords.basepwgood = false;
   }
   evalRequirements();
@@ -401,7 +401,7 @@ checkMatchPassword = function(selector) {
     window.passwords.passmatch = true;
   } else {
     $('#password2').css('background', window.passwords.badbg).parent().removeClass("has-success").parent().addClass("has-error");
-    $("#feedback-status-2").replaceWith("<span id='feedback-status-2' class='glyphicon glyphicon-warning-sign form-control-feedback' aria-hidden='true'></span>");
+    $("#feedback-status-2").replaceWith("<span id='feedback-status-2' class='glyphicon glyphicon-remove form-control-feedback' aria-hidden='true'></span>");
     window.passwords.passmatch = false;
   }
   toggleNewUserSubmit(selector);
@@ -1104,11 +1104,11 @@ $(function() {
     }).keyup(function() {
       return checkMatchPassword();
     });
-    $("input").blur(function() {
+    $("input").addClass("form-control").blur(function() {
       return checkPasswordLive();
     });
-    $("#password").after("<span id='feedback-status-1'></span>").parent().addClass("has-feedback");
-    $("#password2").after("<span id='feedback-status-2'></span>").parent().addClass("has-feedback");
+    $("#password").after("<span id='feedback-status-1'></span>").parent().addClass("has-feedback form-inline");
+    $("#password2").after("<span id='feedback-status-2'></span>").parent().addClass("has-feedback form-inline");
   }
   $("#totp_submit").submit(function() {
     return doTOTPSubmit();
