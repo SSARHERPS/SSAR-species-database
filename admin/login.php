@@ -670,6 +670,10 @@ else if(isset($_REQUEST['confirm']))
       {
         $login_output .= "<p>The user was successfully activated. Check your inbox for a confirmation.</p>";
       }
+    if($debug)
+      {
+        echo displayDebug($result);
+      }
   }
 else if(isset($_REQUEST['2fa']))
   {

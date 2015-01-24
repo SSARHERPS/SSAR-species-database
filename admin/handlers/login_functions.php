@@ -1498,23 +1498,25 @@ class UserFunctions extends DBHelper
      * @return array with the used secret key in "secret", and result
      * in "auth"
      ***/
-
-    $userdata = $this->getUser($target_user);
-    if(!$userdata['flag']) return false;
+    $this->setUser($target_user);
+    $target_userdata = $this->getUser($target_user);
+    if($target_userdata['flag'] != false) return array("status"=>false,"message"=>"Already activated","target_user"=>$target_user,"target_userdata"=>$target_userdata);
     # The user needs it, let's make one
     $return = array();
-    $userString = $userdata['creation'] . $this->getUsername();
+    $userString = $target_userdata['creation'] . $this->getUsername();
     # We'll use a secret key that is never kept on the server
     if(empty($secret_key))
       {
         require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
-        $secret_key = Stronghash::createSalt(strlen($userString));
+        $secret_key = base64_encode(Stronghash::createSalt(strlen($userString)));
       }
     $return['secret'] = $secret_key;
     $auth_code = $secret_key ^ $userString;
     $auth_result = sha1($auth_code);
     $return['auth'] = $auth_result;
-    $return['user'] = $userdata[$this->linkcol];
+    $return['user'] = $target_userdata[$this->linkcol];
+    $return['target_user'] = $target_user;
+    $return['status'] = true;
     return $return;
 
   }
@@ -1533,9 +1535,11 @@ class UserFunctions extends DBHelper
      * @return array
      ***/
     # Look at the 'flag' item
-    $components = $this->getAuthTokens();
-    $require_once(dirname(__FILE__)."/../CONFIG.php");
-    $link = $this->getQualifiedDomain() . $working_subdirectory . "login.php?confirm=true&token=".$components['auth']."&user=".$components['user']."&key=";
+    $target_user = $this->getUser(array($this->usercol=>$user_email));
+    $components = $this->getAuthTokens($target_user[$this->linkcol]);
+    require_once(dirname(__FILE__)."/../CONFIG.php");
+    $url = empty($login_url) ? "login.php":$login_url;
+    $link = $this->getQualifiedDomain() . $working_subdirectory . $url ."?confirm=true&token=".$components['auth']."&user=".$components['user']."&key=";
     # get all the administrative users, and encrypt the key with their
     # user DB link
 
@@ -1563,12 +1567,13 @@ class UserFunctions extends DBHelper
             # whether or not it did
             $success = true;
           }
-        $destinations[] = $to;
         $dblink = $row[1];
-        $encoded_key = urlencode(self::encryptThis($dblink,$components['secret']));
+        $cryptkey = self::encryptThis($dblink,$components['secret']);
+        $encoded_key = urlencode(base64_encode($cryptkey));
         $admin_link = $link . $encoded_key;
+        $destinations[] = array("to"=>$to,"key"=>$encoded_key,"crypted"=>$cryptkey,"encrypted_with"=>$dblink,"emailed_link"=>$admin_link);
         $mailcopy = $mail;
-        $body="<p>".$user_email." is requesting access to ".$this->getDomain().".</p><p>To authorize them, clik this link:</p><p><a href='".$admin_link."'>Click here to authorize ".$user_email."</a></p><p>Thank you.</p>";
+        $body="<p>".$user_email." is requesting access to ".$this->getDomain().".</p><p>To authorize them, clik this link:</p><p><a href='".$admin_link."'>Click here to authorize ".$user_email."</a></p><p>Thank you. This message will only work for ".$to.".</p>";
         $mailcopy->Body = $body;
         $mailcopy->addAddress($to);
         # If this works even once, we want to tell the user it worked
@@ -1588,7 +1593,7 @@ class UserFunctions extends DBHelper
       {
         $errors = array("message"=>"No valid destinations","rows"=>mysqli_num_rows($r));
       }
-    return array("status"=>$success,"mailer"=>array("emails_sent"=>$i,"attempts_made"=>$j,"errors"=>$errors,"destinations"=>$destinations,"last_error"=>$lasterror));
+    return array("status"=>$success,"mailer"=>array("emails_sent"=>$i,"attempts_made"=>$j,"errors"=>$errors,"destinations"=>$destinations,"last_error"=>$lasterror),"config_meta"=>array("ref_config"=>dirname(__FILE__)."/../CONFIG.php","working_dir"=>$working_subdirectory,"url"=>$url),"user"=>array("user_email"=>$user_email,"target_user"=>$target_user[$this->linkcol],"user_set_params"=>array($this->usercol=>$user_email)),"components"=>$components);
 
   }
 
@@ -1602,23 +1607,45 @@ class UserFunctions extends DBHelper
      *
      ***/
     $ret = array();
-    $thisUserdata = $this->getUser();
+    try
+      {
+        $thisUserdata = $this->getUser();
+      }
+    catch(Exception $e)
+      {
+        return array("status"=>false,"error"=>$e->getMessage(),"message"=>"Please log in before attempting to authenticate a user.","cookie"=>$this->domain."_link","value"=>$_COOKIE[$this->domain."_link"]);
+      }
     $thisUserEmail = $thisUserdata[$this->usercol];
     $target_user = array($this->linkcol => $target_user);
-    $userdata = $this->getUser($target_user);
+    try
+      {
+        $userdata = $this->getUser($target_user);
+      }
+    catch (Exception $e)
+      {
+        return array("status"=>false,"error"=>$e->getMessage(),"message"=>"Bad target user","target"=>$target_user);
+      }
     # Is the user already authorized?
     if($userdata['flag'])
       {
         $ret['status'] = true;
         $ret['message'] = "Already authenticated";
       }
-    $key = self::decryptThis($userdata[$this->linkcol],urldecode($encoded_key));
+    $working_key = base64_decode(urldecode($encoded_key));
+    $key = self::decryptThis($thisUserdata[$this->linkcol],$working_key);
     $components = $this->getAuthTokens($target_user,$key);
     $primary_token = $components['auth'];
     if ($primary_token != $token)
       {
         $ret['status'] = false;
         $ret['message'] = "Bad token";
+        $ret['provided_token'] = $token;
+        $ret['encoded_key'] = urldecode($encoded_key);
+        $ret['key_to_decrypt'] = $working_key;
+        $ret['decryption_user'] = $userdata[$this->linkcol];
+        $ret['decrypted_key'] = $key;
+        $ret['components'] = $components;
+        return $ret;
       }
     $l = $this->openDB();
     $query = "UPDATE `".$this->getTable()."` SET `flag`=TRUE WHERE `".$this->linkcol."`='".$target_user."'";
