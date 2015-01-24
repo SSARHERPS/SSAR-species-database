@@ -1534,7 +1534,8 @@ class UserFunctions extends DBHelper
      ***/
     # Look at the 'flag' item
     $components = $this->getAuthTokens();
-    $link = $this->getQualifiedDomain() . "login.php?confirm=true&token=".$components['auth']."&user=".$components['user']."&key=";
+    $require_once(dirname(__FILE__)."/../CONFIG.php");
+    $link = $this->getQualifiedDomain() . $working_subdirectory . "login.php?confirm=true&token=".$components['auth']."&user=".$components['user']."&key=";
     # get all the administrative users, and encrypt the key with their
     # user DB link
 
