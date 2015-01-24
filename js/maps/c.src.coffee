@@ -936,10 +936,14 @@ $ ->
       checkPasswordLive()
     $("#password")
     .after("<span id='feedback-status-1'></span>")
-    .parent().addClass("has-feedback form-inline")
+    .parent().addClass("has-feedback")
+    .removeClass("form-inline")
+    .parent().addClass("form-inline")
     $("#password2")
     .after("<span id='feedback-status-2'></span>")
-    .parent().addClass("has-feedback form-inline")
+    .parent().addClass("has-feedback")
+    .removeClass("form-inline")
+    .parent().addClass("form-inline")
   $("#totp_submit").submit ->
     doTOTPSubmit()
   $("#verify_totp_button").click ->
