@@ -228,14 +228,14 @@ checkPasswordLive = (selector = "#createUser_submit") ->
     $("#password")
     .css("background",window.passwords.goodbg)
     .parent().removeClass("has-error")
-    .parent().addClass("has-success")
+    .addClass("has-success")
     $("#feedback-status-1").replaceWith("<span id='feedback-status-1' class='glyphicon glyphicon-ok form-control-feedback' aria-hidden='true'></span>")
     window.passwords.basepwgood = true
   else
     $("#password")
     .css("background",window.passwords.badbg)
     .parent().removeClass("has-success")
-    .parent().addClass("has-error")
+    .addClass("has-error")
     $("#feedback-status-1").replaceWith("<span id='feedback-status-1' class='glyphicon glyphicon-remove form-control-feedback' aria-hidden='true'></span>")
     window.passwords.basepwgood = false
   evalRequirements()
@@ -249,14 +249,14 @@ checkMatchPassword = (selector = "#createUser_submit") ->
     $('#password2')
     .css('background', window.passwords.goodbg)
     .parent().removeClass("has-error")
-    .parent().addClass("has-success")
+    .addClass("has-success")
     $("#feedback-status-2").replaceWith("<span id='feedback-status-2' class='glyphicon glyphicon-ok form-control-feedback' aria-hidden='true'></span>")
     window.passwords.passmatch = true
   else
     $('#password2')
     .css('background', window.passwords.badbg)
     .parent().removeClass("has-success")
-    .parent().addClass("has-error")
+    .addClass("has-error")
     $("#feedback-status-2").replaceWith("<span id='feedback-status-2' class='glyphicon glyphicon-remove form-control-feedback' aria-hidden='true'></span>")
     window.passwords.passmatch = false
   toggleNewUserSubmit(selector)
@@ -931,6 +931,7 @@ $ ->
       checkMatchPassword()
     $("input")
     .addClass("form-control")
+    .parent().addClass("form-inline")
     .blur ->
       checkPasswordLive()
     $("#password")
