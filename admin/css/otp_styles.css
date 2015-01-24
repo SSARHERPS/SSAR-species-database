@@ -23,8 +23,12 @@ progress,progress::progress-value {
 progress::-webkit-progress-bar {
     background-color:#eee;
 }
-.label {
+#strength-meter .label {
     text-align:center;
+    color:#000;
+}
+#strength-bar {
+    clear:both;
 }
 .strength-eval {
     border:1px solid black;
