@@ -1630,6 +1630,7 @@ class UserFunctions extends DBHelper
       {
         $ret['status'] = true;
         $ret['message'] = "Already authenticated";
+        return $ret;
       }
     $working_key = base64_decode(urldecode($encoded_key));
     $key = self::decryptThis($thisUserdata[$this->linkcol],$working_key);
@@ -1669,7 +1670,7 @@ class UserFunctions extends DBHelper
     $query = "SELECT `".$this->usercol."` FROM ".$this->getTable()." WHERE `admin_flag`=TRUE";
     $r = mysqli_query($l,$query);
     $mail->Subject = "[".$this->getDomain()."] New User Authenticated";
-    $mail->Body = "<p>".$user_email." was granted access to ".$this->getDomain()." by ".$thisUserEmail.".</p><p>No further action is required, and you can disregard emails asking to grant this user access.</p><p><strong>If you believe this to be in error, immediately take steps to take your site offline</strong></p>";
+    $mail->Body = "<p>".$userdata[$this->usercol]." was granted access to ".$this->getDomain()." by ".$thisUserEmail.".</p><p>No further action is required, and you can disregard emails asking to grant this user access.</p><p><strong>If you believe this to be in error, immediately take steps to take your site offline</strong></p>";
     while ($row=mysqli_fetch_row($r))
       {
         $to = $row[0];
