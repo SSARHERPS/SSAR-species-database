@@ -444,7 +444,7 @@ else if($_REQUEST['q']=='create')
     // Create a new user
     // display login form
     // include a captcha and honeypot
-    $login_output .= "<link rel='stylesheet' type='text/css' href='".$relative_path."css/otp_styles.css'/>";
+    $login_output .= "<link rel='stylesheet' type='text/css' href='".$relative_path."css/otp.min.css'/>";
     if(!empty($recaptcha_public_key) && !empty($recaptcha_private_key))
       {
 
