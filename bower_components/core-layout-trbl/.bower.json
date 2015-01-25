@@ -4,13 +4,13 @@
   "dependencies": {
     "polymer": "Polymer/polymer#^0.5"
   },
-  "version": "0.5.3",
+  "version": "0.5.4",
   "homepage": "https://github.com/Polymer/core-layout-trbl",
-  "_release": "0.5.3",
+  "_release": "0.5.4",
   "_resolution": {
     "type": "version",
-    "tag": "0.5.3",
-    "commit": "6dfbba12f4d0a2310e6d624fa20ab293df73f195"
+    "tag": "0.5.4",
+    "commit": "2247c9bf56cb031e5fb1b0eff5cc1ec0e22ba157"
   },
   "_source": "git://github.com/Polymer/core-layout-trbl.git",
   "_target": "^0.5",

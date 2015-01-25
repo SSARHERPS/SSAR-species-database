@@ -5,13 +5,13 @@
     "marked": "*",
     "polymer": "Polymer/polymer#^0.5"
   },
-  "version": "0.5.3",
+  "version": "0.5.4",
   "homepage": "https://github.com/PolymerLabs/marked-element",
-  "_release": "0.5.3",
+  "_release": "0.5.4",
   "_resolution": {
     "type": "version",
-    "tag": "0.5.3",
-    "commit": "0b63bf3288900e9949126a98f7949fb7592f1cdb"
+    "tag": "0.5.4",
+    "commit": "8c8829e82ee3023fb280c789febbc871260f9720"
   },
   "_source": "git://github.com/PolymerLabs/marked-element.git",
   "_target": "^0.5",

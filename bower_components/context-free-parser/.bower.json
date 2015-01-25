@@ -4,13 +4,13 @@
   "dependencies": {
     "polymer": "Polymer/polymer#^0.5"
   },
-  "version": "0.5.3",
+  "version": "0.5.4",
   "homepage": "https://github.com/Polymer/context-free-parser",
-  "_release": "0.5.3",
+  "_release": "0.5.4",
   "_resolution": {
     "type": "version",
-    "tag": "0.5.3",
-    "commit": "9ea1a7b189af08815621fd5b98c26a973d912975"
+    "tag": "0.5.4",
+    "commit": "541994b5efaeaa4dfe04582f58220f9185e91d56"
   },
   "_source": "git://github.com/Polymer/context-free-parser.git",
   "_target": "^0.5",

@@ -9,5 +9,5 @@
     "paper-fab": "Polymer/paper-fab#^0.5",
     "core-resizable": "Polymer/core-resizable#^0.5"
   },
-  "version": "0.5.3"
+  "version": "0.5.4"
 }

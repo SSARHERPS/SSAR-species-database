@@ -20,6 +20,8 @@ module.exports = (grunt) ->
         stderr: false
       bower:
         command: ["bower update"].join("&&")
+      npm:
+        command: ["npm update"].join("&&")
       movesrc:
         command: ["mv js/c.src.coffee js/maps/c.src.coffee"].join("&&")
     uglify:
@@ -94,9 +96,10 @@ module.exports = (grunt) ->
   ## Global update
   # Bower
   grunt.registerTask("updateBower","Update bower dependencies",["shell:bower"])
+  grunt.registerTask("updateNPM","Update Node dependencies",["shell:npm"])
   # Minify the bower stuff in case it changed
   grunt.registerTask "update","Update dependencies", ->
-    grunt.task.run("updateBower","minify")
+    grunt.task.run("updateNPM","updateBower","minify")
   ## Deploy
   grunt.registerTask "build","Compile and update, then watch", ->
-    grunt.task.run("update","compile","minify","default")
+    grunt.task.run("updateNPM","updateBower","compile","minify")

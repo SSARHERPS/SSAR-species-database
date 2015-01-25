@@ -4,13 +4,13 @@
   "dependencies": {
     "polymer-test-tools": "Polymer/polymer-test-tools#^0.5"
   },
-  "version": "0.5.3",
+  "version": "0.5.4",
   "homepage": "https://github.com/Polymer/core-tests",
-  "_release": "0.5.3",
+  "_release": "0.5.4",
   "_resolution": {
     "type": "version",
-    "tag": "0.5.3",
-    "commit": "a8faa20209a9c312b753254b2c2800795d354a64"
+    "tag": "0.5.4",
+    "commit": "144c8a1b342551e2fcc50e4e809d0138f0790878"
   },
   "_source": "git://github.com/Polymer/core-tests.git",
   "_target": "^0.5",
