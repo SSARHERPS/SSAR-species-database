@@ -14,7 +14,7 @@ The adminstrative page can be accessed by going to http://ssarherps.org/cndb/adm
 3. `only`: restrict search to this csv column list. Return an error if invalid column specified.
 4. `include`: Include additional search columns in this csv list. Return an error if invalid column specified.
 5. `type`: restrict search to this `major_type`. Literal scientific match only. Return an error if the type does not exist. **Default none**
-6. `filter`: restrict search by this list of {"`column`":"value"} object list. Requires key "BOOLEAN_TYPE" set to either "AND" or "OR". Return an error if the key does not exist, or if an unknown column is specified. This should be supplied as a URL-encoded JSON string (eg, `%7B"species_authority":"neill","boolean_type":"and"%7D`) or a Base64-encoded string (eg, `eyJzcGVjaWVzX2F1dGhvcml0eSI6Im5laWxsIiwiYm9vbGVhbl90eXBlIjoiYW5kIn0`). **Default none**
+6. `filter`: restrict search by this list of {"`column`":"value"} object list. Requires key "BOOLEAN_TYPE" set to either "AND" or "OR". Return an error if the key does not exist, or if an unknown column is specified. This should be supplied as a URL-encoded JSON string (eg, `%7B%22species_authority%22:%22neill%22,%22boolean_type%22:%22and%22%7D`) or a Base64-encoded string (eg, `eyJzcGVjaWVzX2F1dGhvcml0eSI6Im5laWxsIiwiYm9vbGVhbl90eXBlIjoiYW5kIn0`), where both examples represent `{"species_authority":"neill","boolean_type":"and"}`. **Default none**
 7. `limit`: Search result return limit. **Default unlimited**
 8. `order`: A csv list of columns to order by. **Defaults to genus, species, subspecies**
 
