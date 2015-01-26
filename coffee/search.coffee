@@ -256,7 +256,7 @@ parseTaxonYear = (taxonYearString,strict = true) ->
   year.species = species
   return year
 
-checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "html /deep/ #near-me-container") ->
+checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "#near-me-container") ->
   ###
   # Check the iNaturalist API to see if the taxon is in your county
   # See https://github.com/tigerhawkvok/SSAR-species-database/issues/7
@@ -290,14 +290,24 @@ checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "html
     geoIcon = "warning"
     tooltipHint = "We couldn't determine your location"
   .always ->
-    $(selector).html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}' data-toggle='tooltip' id='near-me-icon'></core-icon>")
-    $("html /deep/ #near-me-icon").attr("title",tooltipHint)
-    $("html /deep/ #near-me-icon").tooltip()
+    try
+      $("html /deep/ #{selector}").html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}' data-toggle='tooltip' id='near-me-icon'></core-icon>")
+      $("html /deep/ #near-me-icon").attr("title",tooltipHint)
+      $("html /deep/ #near-me-icon").tooltip()
+    catch e
+      console.warn("Your browser doesn't support the /deep/ syntax for shadow DOMs.")
+      try
+        # Attempt to do this without looking through the shadow DOM
+        $(selector).html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}' data-toggle='tooltip' id='near-me-icon'></core-icon>")
+        $("#near-me-icon").attr("title",tooltipHint)
+        $("#near-me-icon").tooltip()
+      catch e
+        console.warn("Fallback failed to draw contents on the <paper-action-dialog>")
     if callback?
       callback()
   false
 
-  
+
 
 deferCalPhotos = (selector = ".calphoto") ->
   ###
@@ -460,7 +470,7 @@ $ ->
       $("#fuzzy").prop("checked",fuzzyState)
       temp = loadArgs.split("&")[0]
       # Remove any plus signs in the query
-      temp = temp.replace(/\+/," ")
+      temp = temp.replace(/\+/g," ").trim()
       $("#search").attr("value",temp)
       # Filters
       try

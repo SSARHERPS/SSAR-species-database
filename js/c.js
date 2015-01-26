@@ -1227,7 +1227,7 @@ checkTaxonNear = function(taxonQuery, callback, selector) {
     callback = void 0;
   }
   if (selector == null) {
-    selector = "html /deep/ #near-me-container";
+    selector = "#near-me-container";
   }
 
   /*
@@ -1265,9 +1265,23 @@ checkTaxonNear = function(taxonQuery, callback, selector) {
     geoIcon = "warning";
     return tooltipHint = "We couldn't determine your location";
   }).always(function() {
-    $(selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + "' data-toggle='tooltip' id='near-me-icon'></core-icon>");
-    $("html /deep/ #near-me-icon").attr("title", tooltipHint);
-    $("html /deep/ #near-me-icon").tooltip();
+    var e;
+    try {
+      $("html /deep/ " + selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + "' data-toggle='tooltip' id='near-me-icon'></core-icon>");
+      $("html /deep/ #near-me-icon").attr("title", tooltipHint);
+      $("html /deep/ #near-me-icon").tooltip();
+    } catch (_error) {
+      e = _error;
+      console.warn("Your browser doesn't support the /deep/ syntax for shadow DOMs.");
+      try {
+        $(selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + "' data-toggle='tooltip' id='near-me-icon'></core-icon>");
+        $("#near-me-icon").attr("title", tooltipHint);
+        $("#near-me-icon").tooltip();
+      } catch (_error) {
+        e = _error;
+        console.warn("Fallback failed to draw contents on the <paper-action-dialog>");
+      }
+    }
     if (callback != null) {
       return callback();
     }
@@ -1471,7 +1485,7 @@ $(function() {
       $("#loose").prop("checked", looseState);
       $("#fuzzy").prop("checked", fuzzyState);
       temp = loadArgs.split("&")[0];
-      temp = temp.replace(/\+/, " ");
+      temp = temp.replace(/\+/g, " ").trim();
       $("#search").attr("value", temp);
       try {
         f64 = queryUrl.param("filter");
