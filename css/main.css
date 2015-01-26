@@ -182,7 +182,7 @@ core-label.col-xs-6 {
   margin-bottom: 0;
 }
 form {
-    margin-left:2rem;
+    /* margin-left:2rem; */
 }
 html /deep/ #modal-taxon-editor paper-input {
     display:block;
