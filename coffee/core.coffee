@@ -350,4 +350,10 @@ $ ->
     $('[data-toggle="tooltip"]').tooltip()
   catch e
     console.warn("Tooltips were attempted to be set up, but do not exist")
-  getLocation()
+  try
+    checkAdmin()
+    if adminParams.loadAdminUi is true
+      loadAdminUi()
+  catch e
+    # If we're not in admin, get the location
+    getLocation()
