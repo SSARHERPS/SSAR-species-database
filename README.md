@@ -27,6 +27,51 @@ The adminstrative page can be accessed by going to http://ssarherps.org/cndb/adm
 7. `limit`: Search result return limit. **Default unlimited**
 8. `order`: A csv list of columns to order by. **Defaults to genus, species, subspecies**
 
+
+### API return
+
+The JSON result gives the following parameters:
+
+1. `status`: boolean `true` or `false`. `true` is returned on an good search, regardless of hits.
+2. (false status only) `error`: A technical error message
+3. (false status only) `human_error`: A message to display to users.
+3. (bad parameters only) `given`: The provided parameters.
+3. (bad filter only) `columns`: The provided column list.
+3. (bad filter only) `bad_coulmn`: The invalid column.
+4. `result`: An object containing one taxon per numeric key, which itself contains:
+
+    ```php
+    id # internal counter
+    common_name
+    genus
+    species
+    subspecies
+    deprecated_scientific # Object, eg {"Genus species":"Authority:Year"}
+    major_type # eg, squamata
+    major_common_type # eg, lizard, turtle.
+    major_subtype # eg, snake v. non-snake, aquatic vs. tortoise.
+    minor_type # eg, lacertid, boa, pleurodire, dendrobatid; roughly a ranked "family", scientific only
+    linnean_order # Deprecated, included for compatibility
+    genus_authority #  eg, "Linnaeus"
+    species_authority # eg, "Attenborough"
+    authority_year # eg, {2013:2014} in the format {"Genus Authority Year":"Species Authority Year"}
+    notes # Miscellaneous notes
+    image # Path to an image, if it exists
+    ```
+5. `count`: The number of results
+6. `method`: The way the search was executed
+7. `query`: The requested search
+8. `params`: The checked matches
+9. `query_params`: A breakdown of your computed query
+   1. `bool`: The used `boolean_type`
+   2. `loose`: boolean `true` or `false`
+   3. `fuzzy`: boolean `true` or `false`
+   4. `order_by`: The way the results are sorted
+   5. `filter`: An object representing any applied filters
+      1. `had_filter`: boolean `true` or `false`
+      2. `filter_params`: The used filter parameters
+      3. `filter_literal`: The provided filter in the query
+
 ### Search behaviour
 
 The search algorithm behaves as follows:

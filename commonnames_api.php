@@ -182,7 +182,7 @@ function handleParamSearch($filter_params,$loose = false,$boolean_type = "AND", 
    if(!is_array($filter_params) || sizeof($filter_params) === 0)
      {
        global $method;
-       returnAjax(array("status"=>false,"error"=>"Invalid filter","human_error"=>"You cannot perform a parameter/filter search without setting the primary filters.","method"=>$method,"params"=>$filter_params));
+       returnAjax(array("status"=>false,"error"=>"Invalid filter","human_error"=>"You cannot perform a parameter/filter search without setting the primary filters.","method"=>$method,"given"=>$filter_params));
      }
   global $db;
   $query = "SELECT * FROM `".$db->getTable()."` WHERE ";
@@ -207,7 +207,7 @@ function handleParamSearch($filter_params,$loose = false,$boolean_type = "AND", 
   if($r === false)
     {
       global $method;
-      returnAjax(array("status"=>false,"error"=>mysqli_error($l),"human_error"=>"There was an error executing this query","query"=>$query,"method"=>$method,"params"=>$filter_params));
+      returnAjax(array("status"=>false,"error"=>mysqli_error($l),"human_error"=>"There was an error executing this query","query"=>$query,"method"=>$method,"given"=>$filter_params));
     }
   $result_vector = array();
   while($row = mysqli_fetch_assoc($r))
