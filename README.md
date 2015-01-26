@@ -3,6 +3,8 @@ SSAR Species Name Database
 
 You can find the most current version at http://ssarherps.org/cndb/
 
+The adminstrative page can be accessed by going to http://ssarherps.org/cndb/admin-page.html
+
 ## Grunt
 
 Tasks are managed here by [Grunt](http://gruntjs.com/). The most important tasks also have a `Cakefile` to run it directly via `cake` at the command line (for the CoffeeScript). This is the reason for `yuicompressor.jar` in the root directory, which requires the [Java JRE](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
