@@ -45,6 +45,7 @@ loadAdminUi = function() {
       $("#do-admin-search").click(function() {
         return renderAdminSearchResults();
       });
+      bindClickTargets();
       return false;
     });
   } catch (_error) {

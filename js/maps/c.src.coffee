@@ -30,6 +30,7 @@ loadAdminUi = ->
         if e.which is 13 then renderAdminSearchResults()
       $("#do-admin-search").click ->
         renderAdminSearchResults()
+      bindClickTargets()
       false
   catch e
     $("article").html("<div class='bs-callout bs-callout-danger'><h4>Application Error</h4><p>There was an error in the application. Please refresh and try again. If this persists, please contact administration.</p></div>")
