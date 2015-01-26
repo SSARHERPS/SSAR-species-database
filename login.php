@@ -454,11 +454,13 @@ else if($_REQUEST['q']=='create')
         $prefill_fname = $_POST['fname'];
         $createform = "<style type='text/css'>.hide { display:none !important; }</style>
 <link rel='stylesheet' type='text/css' href='".$relative_path."bower_components/bootstrap/dist/css/bootstrap.min.css'/>
-              <div id='password_security' class='bs-callout bs-callout-info invisible'>
+              <div id='password_security' class='bs-callout bs-callout-info invisible col-sm-4 hidden-xs'>
 
               </div>
-	    <form id='login' method='post' action='?q=create&amp;s=next' class='form-horizontal'>
-              <div class='left'>
+	    <form id='login' method='post' action='?q=create&amp;s=next' class='form-horizontal pull-left col-sm-8'>
+<h1>Welcome to $shorturl</h1>
+<fieldset>
+<legend>Create a new account</legend>
 <div class='form-group'>
 	      <label class='col-sm-3 col-md-2' for='username'>
 		Email:
@@ -473,7 +475,7 @@ else if($_REQUEST['q']=='create')
 	      <input class='create form-control password-input' type='password' name='password' id='password' placeholder='Password' required='required' aria-describedby='passText'/>
 </div>
 	      </div></div>
-<span id='helpText' class='help-block invisible'>Check the sidebar to the right for the password requirements and your current password's status.</span>
+<span id='helpText' class='help-block invisible'><span class='hidden-xs'>Check the sidebar to the right for the password requirements and your current password's status.</span><span class='visible-xs-inline-block'>We require a password of at least $minimum_password_length characters with at least <strong>one upper case</strong> letter, at least <strong>one lower case</strong> letter, and at least <strong>one digit or special character</strong>.You can also use any long password of at least $password_threshold_length characters, with no security requirements.</span></span>
 <div><div class='form-group'>
 	      <label class='col-sm-3 col-md-2 control-label' for='password2'>
 		Confirm Password:
@@ -516,15 +518,15 @@ else if($_REQUEST['q']=='create')
         <script src='https://www.google.com/recaptcha/api.js'></script>
         <div class=\"g-recaptcha\" data-sitekey=\"".$recaptcha_public_key."\"></div>
 
-              </div>
-              <br class='clear'/>
+              <br class='clearfix'/>
 	      <button id='createUser_submit' class='btn btn-success' disabled='disabled'>Create</button>
+</fieldset>
 	    </form><br class='clear'/>";
-        $secnotice="<p><small>Remember your security best practices! Do not use the same password you use for other sites. While your information is <a href='http://en.wikipedia.org/wiki/Cryptographic_hash_function' $newwindow>hashed</a> with a multiple-round hash function, <a href='http://arstechnica.com/security/2013/05/how-crackers-make-minced-meat-out-of-your-passwords/' $newwindow>passwords are easy to crack!</a></small></p>";
+        $secnotice="<br/><p><small>Remember your security best practices! Do not use the same password you use for other sites. While your information is <a href='http://en.wikipedia.org/wiki/Cryptographic_hash_function' $newwindow>hashed</a> with a multiple-round hash function, <a href='http://arstechnica.com/security/2013/05/how-crackers-make-minced-meat-out-of-your-passwords/' $newwindow>passwords are easy to crack!</a></small></p>";
         $createform.=$secnotice; # Password security notice
         if($_SERVER["HTTPS"] != "on" && $displaywarnings === true)
           {
-            $createform.="<div class='error danger'><p>Warning: This form is insecure</p></div>";
+            $createform.="<p class='bg-danger text-center'>Warning: This form is insecure.</p>";
           }
 
         if($_REQUEST['s']=='next')
