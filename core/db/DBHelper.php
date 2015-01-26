@@ -471,7 +471,7 @@ public function is_entry($item,$field_name=null,$precleaned=false,$test=false)
   }
 
 
-public function doQuery($search,$cols = "*",$boolean_type = "AND", $loose = false, $precleaned = false, $order_by = false)
+public function doQuery($search,$cols = "*",$boolean_type = "AND", $loose = false, $precleaned = false, $order_by = false, $debug_query = false)
 {
   /***
    *
@@ -511,6 +511,7 @@ public function doQuery($search,$cols = "*",$boolean_type = "AND", $loose = fals
       $order = " ORDER BY "."`".implode("`,`",$ordering)."`";
       $query .= $order;
     }
+  if ($debug_query === true) return $query;
   $l = $this->openDB();
   $r = mysqli_query($l,$query);
   return $r === false ? mysqli_error($l):$r;
