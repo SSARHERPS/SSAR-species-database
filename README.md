@@ -35,7 +35,7 @@ You can re-prepare the files by running `grunt compile` at the root directory.
 
 1. You can SSH into the database and paste the contents of the `sql` file generated above.
 2. Otherwise, you can upload the file, then SSH into the database, and run `source FILENAME.sql` when visiting the database in the `mysql` prompt:
-  
+
   ```
   mysql> \r DATABASE_NAME
   mysql> source FILENAME.sql
@@ -88,3 +88,63 @@ image # hit calphotos api if this field is empty
 6. `limit`: Search result return limit.
 7. `loose`: Truthy. Don't check for strict matches, allow partials and case-insensitivity **Default `true`**
 8. `order`: A csv list of columns to order by. **Defaults to genus, species, subspecies**
+
+### Search behaviour
+
+The search algorithm behaves as follows:
+
+1. If the search `is_numeric()`, a `loose` search is done against the
+   `authority_year` column in the database. The returned `method` with
+   the JSON is `authority_year`. [Example](http://ssarherps.org/cndb/commonnames_api.php?q=2014&loose=true):
+
+    ```json
+    {"status":true,"result":{"0":{"id":"562","genus":"eurycea","species":"subfluvicola","subspecies":"","common_name":"ouachita streambed salamander","image":"","major_type":"caudata","major_common_type":"salamanders","major_subtype":"brook salamanders","minor_type":"","linnean_order":"caudata","genus_authority":"rafinesque","species_authority":"steffen, irwin, blair, and bonett","authority_year":"{\"1822\": \"2014\"}","deprecated_scientific":"","notes":""},"1":{"id":"70","genus":"macrochelys","species":"appalachicolae","subspecies":"","common_name":"suwannee alligator snapping turtle","image":"","major_type":"testudines","major_common_type":"turtles","major_subtype":"alligator snapping turtles","minor_type":"","linnean_order":"testudines","genus_authority":"gray","species_authority":"thomas, granatosky, bourque, krysko, moler, gamble, suarez, leone, enge, and roman","authority_year":"{\"1855\": \"2014\"}","deprecated_scientific":"","notes":""}},"count":2,"method":"year_search","query":"2014","params":{"authority_year":"2014"},"query_params":{"bool":false,"loose":true,"order_by":"genus,species,subspecies","filter":{"had_filter":false,"filter_params":null,"filter_literal":null}},"execution_time":1.98006629944}
+    ```
+
+2. The search is then checked for the absence of the space
+   character. If no overrides are set, `common_name`, `genus`,
+   `species`, `subspecies`, `major_common_type`, `major_subtype`, and
+   `deprecated_scientific` are all searched. The returned `method` is
+   `spaceless_search`. [Example](http://ssarherps.org/cndb/commonnames_api.php?q=arboreal&loose=true):
+
+    ```json
+    {"status":true,"result":{"0":{"id":"484","genus":"aneides","species":"lugubris","subspecies":"","common_name":"arboreal salamander","image":"","major_type":"caudata","major_common_type":"salamanders","major_subtype":"climbing salamanders","minor_type":"","linnean_order":"caudata","genus_authority":"baird","species_authority":"hallowell","authority_year":"{\"1851\": \"1849\"}","deprecated_scientific":"","notes":""}},"count":1,"method":"spaceless_search","query":"arboreal","params":{"common_name":"arboreal","genus":"arboreal","species":"arboreal","subspecies":"arboreal","major_common_type":"arboreal","major_subtype":"arboreal","deprecated_scientific":"arboreal"},"query_params":{"bool":"OR","loose":true,"order_by":"genus,species,subspecies","filter":{"had_filter":false,"filter_params":null,"filter_literal":null}},"execution_time":3.57890129089}
+    ```
+
+3. The search is then checked for spaces.
+   1. If a `filter` is set (with the required `boolean_type` parameter):
+      1. If there is two or three words, the first word is checked
+         against the `genus` column, second against the `species` column,
+         and third against the `subspecies` column. The returned `method` is `scientific`. [Example](http://ssarherps.org/cndb/commonnames_api.php?q=farancia+erytrogramma&loose=true&filter={%22species_authority%22:%22neill%22,%22boolean_type%22:%22and%22})
+
+          ```json
+          {"status":true,"result":{"0":{"id":"235","genus":"farancia","species":"erytrogramma","subspecies":"seminola","common_name":"southern florida rainbow snake","image":"","major_type":"squamata","major_common_type":"snakes","major_subtype":"mudsnakes and rainbow snakes","minor_type":"","linnean_order":"serpentes","genus_authority":"gray","species_authority":"neill","authority_year":"{\"1842\": \"1964\"}","deprecated_scientific":"","notes":""}},"count":1,"method":"scientific","query":"farancia erytrogramma","params":{"species_authority":"neill"},"query_params":{"bool":"and","loose":true,"order_by":"genus,species,subspecies","filter":{"had_filter":true,"filter_params":{"species_authority":"neill","boolean_type":"and"},"filter_literal":"{\"species_authority\":\"neill\",\"boolean_type\":\"and\"}"}},"execution_time":2.66885757446}
+          ```
+      2. If the above returns no results, the `deprecated_scientific`
+         column is checked. At the time of this writing, there are no
+         entries in this column and this check will always fail. The
+         returned method is `deprecated_scientific`.
+
+      3. If the above returns no results, the `common_name` column is
+         checked. The returned method is `no_scientific_common`. [Example](http://ssarherps.org/cndb/commonnames_api.php?q=rainbow+snake&loose=true&filter={%22species_authority%22:%22neill%22,%22boolean_type%22:%22and%22}):
+
+         ```json
+         {"status":true,"result":{"0":{"id":"235","genus":"farancia","species":"erytrogramma","subspecies":"seminola","common_name":"southern florida rainbow snake","image":"","major_type":"squamata","major_common_type":"snakes","major_subtype":"mudsnakes and rainbow snakes","minor_type":"","linnean_order":"serpentes","genus_authority":"gray","species_authority":"neill","authority_year":"{\"1842\": \"1964\"}","deprecated_scientific":"","notes":""}},"count":1,"method":"no_scientific_common","query":"rainbow snake","params":{"species_authority":"neill"},"query_params":{"bool":"and","loose":true,"order_by":"genus,species,subspecies","filter":{"had_filter":true,"filter_params":{"species_authority":"neill","boolean_type":"and"},"filter_literal":"{\"species_authority\":\"neill\",\"boolean_type\":\"and\"}"}},"execution_time":1.58905982971}
+         ```
+
+    2. If the `filter` parameter isn't specified, the above scientific
+       and deprecated scientific searches are executed with
+       "best-guess" boolean types (with returned `method`s
+       `scientific_raw` and `deprecated_scientific_raw`). [Example](http://ssarherps.org/cndb/commonnames_api.php?q=taricha+torosa&loose=true):
+
+       ```json
+       {"status":true,"result":{"0":{"id":"683","genus":"taricha","species":"torosa","subspecies":"","common_name":"california newt","image":"","major_type":"caudata","major_common_type":"salamanders","major_subtype":"pacific newts","minor_type":"","linnean_order":"caudata","genus_authority":"gray","species_authority":"rathke, in eschscholtz","authority_year":"{\"1850\": \"1833\"}","deprecated_scientific":"","notes":""}},"count":1,"method":"scientific_raw","query":"taricha torosa","params":{"genus":"taricha","species":"torosa"},"query_params":{"bool":"and","loose":true,"order_by":"genus,species,subspecies","filter":{"had_filter":false,"filter_params":null,"filter_literal":null}},"execution_time":0.568151473999}
+       ```
+
+       1. If all these fail, the `fallback` flag is set and a search
+       is done against `common_name`. The returned `method` is
+       `space_common_fallback`. [Example](http://ssarherps.org/cndb/commonnames_api.php?q=rainbow+snake&loose=true):
+
+       ```json
+       {"status":true,"result":{"0":{"id":"233","genus":"farancia","species":"erytrogramma","subspecies":"","common_name":"rainbow snake","image":"","major_type":"squamata","major_common_type":"snakes","major_subtype":"mudsnakes and rainbow snakes","minor_type":"","linnean_order":"serpentes","genus_authority":"gray","species_authority":"palisot de beauvois in sonnini and latreille","authority_year":"{\"1842\": \"1801\"}","deprecated_scientific":"","notes":""},"1":{"id":"234","genus":"farancia","species":"erytrogramma","subspecies":"erytrogramma","common_name":"common rainbow snake","image":"","major_type":"squamata","major_common_type":"snakes","major_subtype":"mudsnakes and rainbow snakes","minor_type":"","linnean_order":"serpentes","genus_authority":"gray","species_authority":"palisot de beauvois in sonnini and latreille","authority_year":"{\"1842\": \"1801\"}","deprecated_scientific":"","notes":""},"2":{"id":"235","genus":"farancia","species":"erytrogramma","subspecies":"seminola","common_name":"southern florida rainbow snake","image":"","major_type":"squamata","major_common_type":"snakes","major_subtype":"mudsnakes and rainbow snakes","minor_type":"","linnean_order":"serpentes","genus_authority":"gray","species_authority":"neill","authority_year":"{\"1842\": \"1964\"}","deprecated_scientific":"","notes":""}},"count":3,"method":"space_common_fallback","query":"rainbow snake","params":{"genus":"rainbow","species":"snake","common_name":"rainbow snake"},"query_params":{"bool":"or","loose":true,"order_by":"genus,species,subspecies","filter":{"had_filter":false,"filter_params":null,"filter_literal":null}},"execution_time":0.930070877075}
+       ```
