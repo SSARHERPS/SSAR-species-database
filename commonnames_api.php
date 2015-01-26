@@ -487,21 +487,94 @@ if(empty($params) || !empty($search))
               }
             if($fallback)
               {
-                $method = "space_common_fallback";
-                $params["common_name"] = $search;
-                if($boolean_type === false)
+                if(!$flag_fuzzy)
                   {
-                    # If it hasn't been assigned already, use the
-                    # loose "or" search
-                    $boolean_type = "or";
+                    /*
+                     * If we're doing a fuzzy search, we'll just fall
+                     * straight back to the grabby/loose fallback and
+                     * skip this block.
+                     */
+                    $method = "space_common_fallback";
+                    $params["common_name"] = $search;
+                    if($boolean_type === false)
+                      {
+                        # If it hasn't been assigned already, use the
+                        # loose "or" search
+                        $boolean_type = "or";
+                      }
+                    $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
+                    #if($show_debug === true) $result_vector["debug"] =
+                    $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by,true);
                   }
-                $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
-                #if($show_debug === true) $result_vector["debug"] = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by,true);
+                else $r = false;
                 try
                   {
                     while($row = mysqli_fetch_assoc($r))
                       {
                         $result_vector[] = $row;
+                      }
+                    if((sizeof($result_vector) == 0 && $loose) || $flag_fuzzy)
+                      {
+                        /*
+                         * At this point, we've exhausted all literal
+                         * search combinations for specific
+                         * animals. Now, we'll split up the spaces and
+                         * look for all common names and common types
+                         * that have all the individual words in them.
+                         *
+                         * If we're not loose, we just fail.
+                         * We always hit this condition if we're fuzzy.
+                         */
+                        $method = "space_loose_fallback";
+                        $where = array();
+                        $search_cols = array("common_name","major_common_type","major_subtype");
+                        $search_words = explode(" ",$search);
+                        $where_glue = " or ";
+                        $match_glue = " and ";
+                        foreach($search_cols as $col)
+                          {
+                            # Reset params
+                            $params = array();
+                            $fuzzy_params = array();
+                            foreach($search_words as $word)
+                              {
+                                if($flag_fuzzy)
+                                  {
+                                    $fuzzy_params[] = "STRCMP(SUBSTR(SOUNDEX(".$col."),1,LENGTH(SOUNDEX('".$word."'))),SOUNDEX('".$word."'))=0";
+                                  }
+                                $params[] = "(`".$col."` LIKE '%".$word."%')";
+                              }
+                            $where[] = "(".implode($match_glue,$params).")";
+                            if($flag_fuzzy)
+                              {
+                                /*
+                                 * @note this isn't doing much right
+                                 * now - substring soundex matches
+                                 * just don't behave nicely. It's here
+                                 * for edge cases, but I need to write
+                                 * something smarter.
+                                 */
+                                $where[] = "(".implode($match_glue,$fuzzy_params).")";
+                              }
+                          }
+                        $params = null; # Clear it out for the return
+                        $where_statement = implode($where_glue,$where);
+                        $l = $db->openDB();
+                        $query = "SELECT * FROM `".$db->getTable()."` WHERE ";
+                        $query .= $where_statement . " ORDER BY ".$order_by;
+                        $r = mysqli_query($l,$query);
+                        try
+                          {
+                            while($row = mysqli_fetch_assoc($r))
+                              {
+                                $result_vector[] = $row;
+                              }
+                          }
+                        catch(Exception $e)
+                          {
+                            if(is_string($r)) $error = $r;
+                            else $error = $e;
+                          }
                       }
                   }
                 catch(Exception $e)
@@ -531,6 +604,7 @@ else returnAjax(array(
   "query_params"=>array(
     "bool"=>$boolean_type,
     "loose"=>$loose,
+    "fuzzy"=>$flag_fuzzy,
     "order_by"=>$order_by,
     "filter"=>array(
       "had_filter"=>isset($_REQUEST['filter']),
