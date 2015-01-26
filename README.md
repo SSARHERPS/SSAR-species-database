@@ -7,15 +7,6 @@ The adminstrative page can be accessed by going to http://ssarherps.org/cndb/adm
 
 ## API
 
-### Default search
-
-1. Case 1: No space:
-  Lookup columns `common_name`,`genus`,`species`,`major_common_type`,`major_subtype`, and `deprecated_scientific` in that order. Filter types if specified.
-2. Case 2: 1 or 2 spaces:
-  Lookup matched pair for exploded string in `genus`,`species`,`subspecies`; if this returns a hit, stop. Otherwise, look at whole string in `common name`
-3. Case 3: Numeric:
-  Lookup by `authority_year` only.
-
 ### Search flags
 
 1. `fuzzy`: if truthy, use a similar sounding search for results, like SOUNDEX. Note this won't work for authority years or deprecated scientific names. **Default `false`**
