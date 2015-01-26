@@ -18,7 +18,24 @@ input[type='number'] {
     text-align:left;
 }
 #login .has-feedback .control-label {
-    width:auto;
+  
+}
+.form-horizontal .has-feedback div {
+    padding-left:0;
+}
+.bs-callout {
+  padding: 20px;
+  margin: 20px 0;
+  border: 1px solid #eee;
+  border-left-width: 5px;
+  border-radius: 3px;
+  width:80%;
+}
+.bs-callout-info {
+  border-left-color: #5bc0de;
+}
+.bs-callout-info h4 {
+  color: #5bc0de;
 }
 /* Progress bar */
 progress,progress::progress-value {
@@ -31,6 +48,9 @@ progress::-webkit-progress-bar {
 #strength-meter .label {
     text-align:center;
     color:#000;
+    display:block;
+    margin-left:auto;
+    margin-right:auto;
 }
 #strength-bar {
     clear:both;
