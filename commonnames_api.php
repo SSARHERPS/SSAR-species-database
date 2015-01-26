@@ -93,7 +93,7 @@ checkColumnExists($_REQUEST['order']);
 $order_by = isset($_REQUEST['order']) ? $_REQUEST['order']:"genus,species,subspecies";
 
 $params = array();
-$boolean_type = false;
+$boolean_type = false; # This is always set by the filter
 $filter_params = null;
 if(isset($_REQUEST['filter']))
   {
@@ -179,6 +179,11 @@ function handleParamSearch($filter_params,$loose = false,$boolean_type = "AND", 
    * @param extra_params a literal query
    * @return array the result vector
    ***/
+   if(!is_array($filter_params) || sizeof($filter_params) === 0)
+     {
+       global $method;
+       returnAjax(array("status"=>false,"error"=>"Invalid filter","human_error"=>"You cannot perform a parameter/filter search without setting the primary filters.","method"=>$method,"params"=>$filter_params));
+     }
   global $db;
   $query = "SELECT * FROM `".$db->getTable()."` WHERE ";
   $where_arr = array();
@@ -202,7 +207,7 @@ function handleParamSearch($filter_params,$loose = false,$boolean_type = "AND", 
   if($r === false)
     {
       global $method;
-      returnAjax(array("status"=>false,"error"=>mysqli_error($l),"human_error"=>"There was an error executing this query","query"=>$query,"method"=>$method));
+      returnAjax(array("status"=>false,"error"=>mysqli_error($l),"human_error"=>"There was an error executing this query","query"=>$query,"method"=>$method,"params"=>$filter_params));
     }
   $result_vector = array();
   while($row = mysqli_fetch_assoc($r))
@@ -438,7 +443,7 @@ if(empty($params) || !empty($search))
                 $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
                 try
                   {
-                    $method = "scientific";
+                    $method = "scientific_raw";
                     $fallback = false;
                     if(mysqli_num_rows($r) > 0)
                       {
@@ -450,7 +455,7 @@ if(empty($params) || !empty($search))
                     else
                       {
                         # Always has to be a loose query
-                        $method = "deprecated_scientific";
+                        $method = "deprecated_scientific_raw";
                         $fallback = false;
                         $r = $db->doQuery(array("deprecated_scientific"=>$search),"*",$boolean_type,true,true,$order_by);
                         try
@@ -482,7 +487,7 @@ if(empty($params) || !empty($search))
               }
             if($fallback)
               {
-                $method = "space_fallback";
+                $method = "space_common_fallback";
                 $params["common_name"] = $search;
                 if($boolean_type === false)
                   {
