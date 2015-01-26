@@ -72,6 +72,8 @@ The JSON result gives the following parameters:
       2. `filter_params`: The used filter parameters
       3. `filter_literal`: The provided filter in the query
 
+**Please note** that all entries are returned in lower case, except for `result->taxon->notes`. As the data has strict formatting requirements, this is left up to the application to correctly apply CSS styles to generate the desired case.
+
 ### Search behaviour
 
 The search algorithm behaves as follows:
