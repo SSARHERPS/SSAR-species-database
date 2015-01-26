@@ -3,33 +3,55 @@ SSAR Species Name Database
 
 You can find the most current version at http://ssarherps.org/cndb/
 
-The adminstrative page can be accessed by going to http://ssarherps.org/cndb/admin-page.html
+The adminstrative page can be accessed by going to
+http://ssarherps.org/cndb/admin-page.html
 
 ## API
 
 ### Search query parameters
 
-1. `fuzzy`: if truthy, use a similar sounding search for results, like SOUNDEX. Note this won't work for authority years or deprecated scientific names. **Default `false`**
-2. `loose`: Truthy. Don't check for strict matches, allow partials and case-insensitivity **Application default `true`; API default `false`**
-3. `only`: restrict search to this csv column list. Return an error if invalid column specified.
-4. `include`: Include additional search columns in this csv list. Return an error if invalid column specified.
-5. `type`: restrict search to this `major_type`. Literal scientific match only. Return an error if the type does not exist. **Default none**
-6. `filter`: restrict search by this list of {"`column`":"value"} object list. Requires key "BOOLEAN_TYPE" set to either "AND" or "OR". Return an error if the key does not exist, or if an unknown column is specified. This should be supplied as a URL-encoded JSON string (eg, `%7B%22species_authority%22:%22neill%22,%22boolean_type%22:%22and%22%7D`) or a Base64-encoded string (eg, `eyJzcGVjaWVzX2F1dGhvcml0eSI6Im5laWxsIiwiYm9vbGVhbl90eXBlIjoiYW5kIn0`), where both examples represent `{"species_authority":"neill","boolean_type":"and"}`. **Default none**
+1. `fuzzy`: if truthy, use a similar sounding search for results, like
+   SOUNDEX. Note this won't work for authority years or deprecated
+   scientific names. **Default `false`**
+2. `loose`: Truthy. Don't check for strict matches, allow partials and
+   case-insensitivity **Application default `true`; API default
+   `false`**
+3. `only`: restrict search to this csv column list. Return an error if
+   invalid column specified.
+4. `include`: Include additional search columns in this csv
+   list. Return an error if invalid column specified.
+5. `type`: restrict search to this `major_type`. Literal scientific
+   match only. Return an error if the type does not exist. **Default
+   none**
+6. `filter`: restrict search by this list of {"`column`":"value"}
+   object list. Requires key "BOOLEAN_TYPE" set to either "AND" or
+   "OR". Return an error if the key does not exist, or if an unknown
+   column is specified. This should be supplied as a URL-encoded JSON
+   string (eg,
+   `%7B%22species_authority%22:%22neill%22,%22boolean_type%22:%22and%22%7D`)
+   or a Base64-encoded string (eg,
+   `eyJzcGVjaWVzX2F1dGhvcml0eSI6Im5laWxsIiwiYm9vbGVhbl90eXBlIjoiYW5kIn0`),
+   where both examples represent
+   `{"species_authority":"neill","boolean_type":"and"}`. **Default
+   none**
 7. `limit`: Search result return limit. **Default unlimited**
-8. `order`: A csv list of columns to order by. **Defaults to genus, species, subspecies**
+8. `order`: A csv list of columns to order by. **Defaults to genus,
+   species, subspecies**
 
 
 ### API return
 
 The JSON result gives the following parameters:
 
-1. `status`: boolean `true` or `false`. `true` is returned on an good search, regardless of hits.
+1. `status`: boolean `true` or `false`. `true` is returned on an good
+   search, regardless of hits.
 2. (false status only) `error`: A technical error message
 3. (false status only) `human_error`: A message to display to users.
 3. (bad parameters only) `given`: The provided parameters.
 3. (bad filter only) `columns`: The provided column list.
 3. (bad filter only) `bad_coulmn`: The invalid column.
-4. `result`: An object containing one taxon per numeric key, which itself contains:
+4. `result`: An object containing one taxon per numeric key, which
+   itself contains:
 
     ```php
     id # internal counter
@@ -64,9 +86,13 @@ The JSON result gives the following parameters:
       3. `filter_literal`: The provided filter in the query
 10. `execution_time`: The time to execute your query and return your result, in ms.
 
-**Please note** that all entries are returned in lower case, except for `result.[taxon].notes` and `result.[taxon].image` (where an image exists and the path includes mixed case).
+**Please note** that all entries are returned in lower case, except
+for `result.[taxon].notes` and `result.[taxon].image` (where an
+image exists and the path includes mixed case).
 
-As the rest of the data have strict formatting requirements, all other formatting is left up to the application to correctly apply CSS styles to generate the desired case.
+As the rest of the data have strict formatting requirements, all other
+formatting is left up to the application to correctly apply CSS styles
+to generate the desired case.
 
 ### Search behaviour
 
@@ -144,17 +170,25 @@ The search algorithm behaves as follows:
 
 ### Grunt
 
-Tasks are managed here by [Grunt](http://gruntjs.com/). The most important tasks also have a `Cakefile` to run it directly via `cake` at the command line (for the CoffeeScript). This is the reason for `yuicompressor.jar` in the root directory, which requires the [Java JRE](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
+Tasks are managed here by [Grunt](http://gruntjs.com/). The most
+important tasks also have a `Cakefile` to run it directly via `cake`
+at the command line (for the CoffeeScript). This is the reason for
+`yuicompressor.jar` in the root directory, which requires the
+[Java JRE](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
 
 You can install Grunt from the command line by running `npm install -g grunt-cli`.
 
 ### Updating
 
-You can update the whole application, with dependencies, by running `grunt build` at the root directory.
+You can update the whole application, with dependencies, by running
+`grunt build` at the root directory.
 
 ### Installation
 
-Install this in the `cndb` folder below the root directory of the site. **If this is to be located elsewhere**, change the variable `searchParams.targetApi` in `/coffee/search.coffee` and recompile the coffeescript.
+Install this in the `cndb` folder below the root directory of the
+site. **If this is to be located elsewhere**, change the variable
+`searchParams.targetApi` in `/coffee/search.coffee` and recompile the
+coffeescript.
 
 You can re-prepare the files by running `grunt compile` at the root directory.
 
@@ -163,15 +197,20 @@ You can re-prepare the files by running `grunt compile` at the root directory.
 #### Manually preparing the database
 
 1. Take your root Excel file and save it as a CSV
-2. Run the file [`parsers/db/clean_and_parse_to_sql.py`](https://github.com/tigerhawkvok/SSAR-species-database/blob/master/parsers/db/clean_and_parse_to_sql.py)
-3. The resulting file in the directory root is ready to be imported into the database
+2. Run the file
+   [`parsers/db/clean_and_parse_to_sql.py`](https://github.com/tigerhawkvok/SSAR-species-database/blob/master/parsers/db/clean_and_parse_to_sql.py)
+3. The resulting file in the directory root is ready to be imported
+   into the database
 
 #### Manually importing into the database
 
 **NOTE: This will delete the existing table**
 
-1. You can SSH into the database and paste the contents of the `sql` file generated above.
-2. Otherwise, you can upload the file, then SSH into the database, and run `source FILENAME.sql` when visiting the database in the `mysql` prompt:
+1. You can SSH into the database and paste the contents of the `sql`
+   file generated above.
+2. Otherwise, you can upload the file, then SSH into the database, and
+   run `source FILENAME.sql` when visiting the database in the `mysql`
+   prompt:
 
   ```
   mysql> \r DATABASE_NAME
@@ -182,7 +221,9 @@ You can re-prepare the files by running `grunt compile` at the root directory.
 
 #### Manually updating the database
 
-1. Run the file [`parsers/db/update_sql_from_csv.py`](https://github.com/tigerhawkvok/SSAR-species-database/blob/master/parsers/db/update_sql_from_csv.py) and do as above.
+1. Run the file
+   [`parsers/db/update_sql_from_csv.py`](https://github.com/tigerhawkvok/SSAR-species-database/blob/master/parsers/db/update_sql_from_csv.py)
+   and do as above.
 
 #### Columns
 
