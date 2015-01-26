@@ -474,10 +474,19 @@ public function is_entry($item,$field_name=null,$precleaned=false,$test=false)
 public function doQuery($search,$cols = "*",$boolean_type = "AND", $loose = false, $precleaned = false, $order_by = false, $debug_query = false)
 {
   /***
+   * Do a query.
    *
+   * @param $search
+   * @param $cols
+   * @param $boolean_type
+   * @param $loose
+   * @param $precleaned
+   * @param $order_by
+   * @param $debug_query
    ***/
   if(!is_array($search))
     {
+      if ($debug_query === true) return array("status"=>false,"debug"=>true,"error"=>"Bad search array","search"=>$search,"is_array"=>is_array($search));
       return false;
     }
   if($precleaned !== true)
@@ -497,7 +506,11 @@ public function doQuery($search,$cols = "*",$boolean_type = "AND", $loose = fals
     }
   if($cols != "*") $col_selector = is_array($cols) ? "`".implode("`,`",$cols)."`":"`".$cols."`";
   else $col_selector = $cols;
-  if(strtolower($boolean_type) != "and" && strtolower($boolean_type) != "or") return false;
+  if(strtolower($boolean_type) != "and" && strtolower($boolean_type) != "or")
+    {
+      if ($debug_query === true) return array("status"=>false,"debug"=>true,"error"=>"Bad boolean type","provided_type"=>$boolean_type);
+      return false;
+    }
   $where_arr = array();
   foreach($search as $col=>$crit)
     {
@@ -511,7 +524,7 @@ public function doQuery($search,$cols = "*",$boolean_type = "AND", $loose = fals
       $order = " ORDER BY "."`".implode("`,`",$ordering)."`";
       $query .= $order;
     }
-  if ($debug_query === true) return $query;
+  if ($debug_query === true) return array("status"=>false,"debug"=>true,"query"=>$query,"col_selector"=>$col_selector,"boolean_type"=>$boolean_type,"ordering"=>$order);
   $l = $this->openDB();
   $r = mysqli_query($l,$query);
   return $r === false ? mysqli_error($l):$r;
