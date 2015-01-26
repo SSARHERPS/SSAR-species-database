@@ -5,68 +5,6 @@ You can find the most current version at http://ssarherps.org/cndb/
 
 The adminstrative page can be accessed by going to http://ssarherps.org/cndb/admin-page.html
 
-## Grunt
-
-Tasks are managed here by [Grunt](http://gruntjs.com/). The most important tasks also have a `Cakefile` to run it directly via `cake` at the command line (for the CoffeeScript). This is the reason for `yuicompressor.jar` in the root directory, which requires the [Java JRE](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
-
-You can install Grunt from the command line by running `npm install -g grunt-cli`.
-
-## Updating
-
-You can update the whole application, with dependencies, by running `grunt build` at the root directory.
-
-## Installation
-
-Install this in the `cndb` folder below the root directory of the site. **If this is to be located elsewhere**, change the variable `searchParams.targetApi` in `/coffee/search.coffee` and recompile the coffeescript.
-
-You can re-prepare the files by running `grunt compile` at the root directory.
-
-## Setting up the database
-
-### Manually preparing the database
-
-1. Take your root Excel file and save it as a CSV
-2. Run the file [`parsers/db/clean_and_parse_to_sql.py`](https://github.com/tigerhawkvok/SSAR-species-database/blob/master/parsers/db/clean_and_parse_to_sql.py)
-3. The resulting file in the directory root is ready to be imported into the database
-
-### Manually importing into the database
-
-**NOTE: This will delete the existing table**
-
-1. You can SSH into the database and paste the contents of the `sql` file generated above.
-2. Otherwise, you can upload the file, then SSH into the database, and run `source FILENAME.sql` when visiting the database in the `mysql` prompt:
-
-  ```
-  mysql> \r DATABASE_NAME
-  mysql> source FILENAME.sql
-  ```
-
-  This is the most reliable way to do it.
-
-### Manually updating the database
-
-1. Run the file [`parsers/db/update_sql_from_csv.py`](https://github.com/tigerhawkvok/SSAR-species-database/blob/master/parsers/db/update_sql_from_csv.py) and do as above.
-
-### Columns
-
-```php
-common_name
-genus
-species
-subspecies
-deprecated_scientific # Stored as JSON object, eg {"Genus species":"Authority:Year"}
-major_type # eg, squamata
-major_common_type # eg, lizard, turtle.
-major_subtype # eg, snake v. non-snake, aquatic vs. tortoise. Only common, public use -- match "expectation"
-minor_type # eg, lacertid, boa, pleurodire, dendrobatid; roughly a ranked "family", scientific only
-linnean_order # Deprecated, included for compatibility
-genus_authority #  eg, "Linnaeus"
-species_authority # eg, "Attenborough"
-authority_year # eg, {2013:2014} in the format {"Genus Authority Year":"Species Authority Year"}
-notes # Miscellaneous notes
-image # hit calphotos api if this field is empty
-```
-
 ## API
 
 ### Default search
@@ -80,13 +18,13 @@ image # hit calphotos api if this field is empty
 
 ### Search flags
 
-1. `fuzzy`: if truthy, use a similar sounding search for results, like SOUNDEX. Note this won't work for authority years or deprecated scientific names.
-2. `only`: restrict search to this csv column list. Return an error if invalid column specified.
-3. `include`: Include the additional columns in this csv list. Return an error if invalid column specified.
-4. `type`: restrict search to this `major_type`. Literal scientific match only. Return an error if the type does not exist.
-5. `filter`: restrict search by this list of {"`column`":"value"} object list. Requires key "BOOLEAN_TYPE" set to either "AND" or "OR". Return an error if the key does not exist, or if an unknown column is specified.
-6. `limit`: Search result return limit.
-7. `loose`: Truthy. Don't check for strict matches, allow partials and case-insensitivity **Default `true`**
+1. `fuzzy`: if truthy, use a similar sounding search for results, like SOUNDEX. Note this won't work for authority years or deprecated scientific names. **Default `false`**
+2. `loose`: Truthy. Don't check for strict matches, allow partials and case-insensitivity **Application default `true`; API default `false`**
+3. `only`: restrict search to this csv column list. Return an error if invalid column specified.
+4. `include`: Include additional search columns in this csv list. Return an error if invalid column specified.
+5. `type`: restrict search to this `major_type`. Literal scientific match only. Return an error if the type does not exist. **Default none**
+6. `filter`: restrict search by this list of {"`column`":"value"} object list. Requires key "BOOLEAN_TYPE" set to either "AND" or "OR". Return an error if the key does not exist, or if an unknown column is specified. **Default none**
+7. `limit`: Search result return limit. **Default unlimited**
 8. `order`: A csv list of columns to order by. **Defaults to genus, species, subspecies**
 
 ### Search behaviour
@@ -104,7 +42,7 @@ The search algorithm behaves as follows:
 2. The search is then checked for the absence of the space
    character. If no overrides are set, `common_name`, `genus`,
    `species`, `subspecies`, `major_common_type`, `major_subtype`, and
-   `deprecated_scientific` are all searched. The returned `method` is
+   `deprecated_scientific` columns are all searched. The returned `method` is
    `spaceless_search`. [Example](http://ssarherps.org/cndb/commonnames_api.php?q=arboreal&loose=true):
 
     ```json
@@ -145,6 +83,70 @@ The search algorithm behaves as follows:
        is done against `common_name`. The returned `method` is
        `space_common_fallback`. [Example](http://ssarherps.org/cndb/commonnames_api.php?q=rainbow+snake&loose=true):
 
-       ```json
-       {"status":true,"result":{"0":{"id":"233","genus":"farancia","species":"erytrogramma","subspecies":"","common_name":"rainbow snake","image":"","major_type":"squamata","major_common_type":"snakes","major_subtype":"mudsnakes and rainbow snakes","minor_type":"","linnean_order":"serpentes","genus_authority":"gray","species_authority":"palisot de beauvois in sonnini and latreille","authority_year":"{\"1842\": \"1801\"}","deprecated_scientific":"","notes":""},"1":{"id":"234","genus":"farancia","species":"erytrogramma","subspecies":"erytrogramma","common_name":"common rainbow snake","image":"","major_type":"squamata","major_common_type":"snakes","major_subtype":"mudsnakes and rainbow snakes","minor_type":"","linnean_order":"serpentes","genus_authority":"gray","species_authority":"palisot de beauvois in sonnini and latreille","authority_year":"{\"1842\": \"1801\"}","deprecated_scientific":"","notes":""},"2":{"id":"235","genus":"farancia","species":"erytrogramma","subspecies":"seminola","common_name":"southern florida rainbow snake","image":"","major_type":"squamata","major_common_type":"snakes","major_subtype":"mudsnakes and rainbow snakes","minor_type":"","linnean_order":"serpentes","genus_authority":"gray","species_authority":"neill","authority_year":"{\"1842\": \"1964\"}","deprecated_scientific":"","notes":""}},"count":3,"method":"space_common_fallback","query":"rainbow snake","params":{"genus":"rainbow","species":"snake","common_name":"rainbow snake"},"query_params":{"bool":"or","loose":true,"order_by":"genus,species,subspecies","filter":{"had_filter":false,"filter_params":null,"filter_literal":null}},"execution_time":0.930070877075}
-       ```
+          ```json
+          {"status":true,"result":{"0":{"id":"233","genus":"farancia","species":"erytrogramma","subspecies":"","common_name":"rainbow snake","image":"","major_type":"squamata","major_common_type":"snakes","major_subtype":"mudsnakes and rainbow snakes","minor_type":"","linnean_order":"serpentes","genus_authority":"gray","species_authority":"palisot de beauvois in sonnini and latreille","authority_year":"{\"1842\": \"1801\"}","deprecated_scientific":"","notes":""},"1":{"id":"234","genus":"farancia","species":"erytrogramma","subspecies":"erytrogramma","common_name":"common rainbow snake","image":"","major_type":"squamata","major_common_type":"snakes","major_subtype":"mudsnakes and rainbow snakes","minor_type":"","linnean_order":"serpentes","genus_authority":"gray","species_authority":"palisot de beauvois in sonnini and latreille","authority_year":"{\"1842\": \"1801\"}","deprecated_scientific":"","notes":""},"2":{"id":"235","genus":"farancia","species":"erytrogramma","subspecies":"seminola","common_name":"southern florida rainbow snake","image":"","major_type":"squamata","major_common_type":"snakes","major_subtype":"mudsnakes and rainbow snakes","minor_type":"","linnean_order":"serpentes","genus_authority":"gray","species_authority":"neill","authority_year":"{\"1842\": \"1964\"}","deprecated_scientific":"","notes":""}},"count":3,"method":"space_common_fallback","query":"rainbow snake","params":{"genus":"rainbow","species":"snake","common_name":"rainbow snake"},"query_params":{"bool":"or","loose":true,"order_by":"genus,species,subspecies","filter":{"had_filter":false,"filter_params":null,"filter_literal":null}},"execution_time":0.930070877075}
+          ```
+
+## Building the application
+
+### Grunt
+
+Tasks are managed here by [Grunt](http://gruntjs.com/). The most important tasks also have a `Cakefile` to run it directly via `cake` at the command line (for the CoffeeScript). This is the reason for `yuicompressor.jar` in the root directory, which requires the [Java JRE](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
+
+You can install Grunt from the command line by running `npm install -g grunt-cli`.
+
+### Updating
+
+You can update the whole application, with dependencies, by running `grunt build` at the root directory.
+
+### Installation
+
+Install this in the `cndb` folder below the root directory of the site. **If this is to be located elsewhere**, change the variable `searchParams.targetApi` in `/coffee/search.coffee` and recompile the coffeescript.
+
+You can re-prepare the files by running `grunt compile` at the root directory.
+
+### Setting up the database
+
+#### Manually preparing the database
+
+1. Take your root Excel file and save it as a CSV
+2. Run the file [`parsers/db/clean_and_parse_to_sql.py`](https://github.com/tigerhawkvok/SSAR-species-database/blob/master/parsers/db/clean_and_parse_to_sql.py)
+3. The resulting file in the directory root is ready to be imported into the database
+
+#### Manually importing into the database
+
+**NOTE: This will delete the existing table**
+
+1. You can SSH into the database and paste the contents of the `sql` file generated above.
+2. Otherwise, you can upload the file, then SSH into the database, and run `source FILENAME.sql` when visiting the database in the `mysql` prompt:
+
+  ```
+  mysql> \r DATABASE_NAME
+  mysql> source FILENAME.sql
+  ```
+
+  This is the most reliable way to do it.
+
+#### Manually updating the database
+
+1. Run the file [`parsers/db/update_sql_from_csv.py`](https://github.com/tigerhawkvok/SSAR-species-database/blob/master/parsers/db/update_sql_from_csv.py) and do as above.
+
+#### Columns
+
+```php
+common_name
+genus
+species
+subspecies
+deprecated_scientific # Stored as JSON object, eg {"Genus species":"Authority:Year"}
+major_type # eg, squamata
+major_common_type # eg, lizard, turtle.
+major_subtype # eg, snake v. non-snake, aquatic vs. tortoise. Only common, public use -- match "expectation"
+minor_type # eg, lacertid, boa, pleurodire, dendrobatid; roughly a ranked "family", scientific only
+linnean_order # Deprecated, included for compatibility
+genus_authority #  eg, "Linnaeus"
+species_authority # eg, "Attenborough"
+authority_year # eg, {2013:2014} in the format {"Genus Authority Year":"Species Authority Year"}
+notes # Miscellaneous notes
+image # hit calphotos api if this field is empty
+```
