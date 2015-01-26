@@ -78,7 +78,7 @@ module.exports = (grunt) ->
         files: ["coffee/*.coffee"]
         tasks: ["coffee:compile","uglify:dist","shell:movesrc"]
       styles:
-        files: ["css/main.css"]
+        files: ["css/otp_styles.css","css/otp_panels.css"]
         tasks: ["cssmin"]
   ## Now the tasks
   grunt.registerTask("default",["watch"])

@@ -227,14 +227,14 @@ checkPasswordLive = (selector = "#createUser_submit") ->
   if pass.length >window.passwords.overrideLength or pass.match(re)
     $("#password")
     .css("background",window.passwords.goodbg)
-    .parent().removeClass("has-error")
+    .parent().parent().removeClass("has-error")
     .addClass("has-success")
     $("#feedback-status-1").replaceWith("<span id='feedback-status-1' class='glyphicon glyphicon-ok form-control-feedback' aria-hidden='true'></span>")
     window.passwords.basepwgood = true
   else
     $("#password")
     .css("background",window.passwords.badbg)
-    .parent().removeClass("has-success")
+    .parent().parent().removeClass("has-success")
     .addClass("has-error")
     $("#feedback-status-1").replaceWith("<span id='feedback-status-1' class='glyphicon glyphicon-remove form-control-feedback' aria-hidden='true'></span>")
     window.passwords.basepwgood = false
@@ -248,14 +248,14 @@ checkMatchPassword = (selector = "#createUser_submit") ->
   if $("#password").val() is $("#password2").val()
     $('#password2')
     .css('background', window.passwords.goodbg)
-    .parent().removeClass("has-error")
+    .parent().parent().removeClass("has-error")
     .addClass("has-success")
     $("#feedback-status-2").replaceWith("<span id='feedback-status-2' class='glyphicon glyphicon-ok form-control-feedback' aria-hidden='true'></span>")
     window.passwords.passmatch = true
   else
     $('#password2')
     .css('background', window.passwords.badbg)
-    .parent().removeClass("has-success")
+    .parent().parent().removeClass("has-success")
     .addClass("has-error")
     $("#feedback-status-2").replaceWith("<span id='feedback-status-2' class='glyphicon glyphicon-remove form-control-feedback' aria-hidden='true'></span>")
     window.passwords.passmatch = false
@@ -272,9 +272,12 @@ toggleNewUserSubmit = (selector = "#createUser_submit") ->
 
 evalRequirements = ->
   unless $("#strength-meter").exists()
-    html = "<div id='strength-meter'><div id='strength-requirements'><p style='float:left;margin-top:2em'>Character Classes:</p><div id='strength-alpha'><p class='label'>a</p><div class='strength-eval'></div></div><div id='strength-alphacap'><p class='label'>A</p><div class='strength-eval'></div></div><div id='strength-numspecial'><p class='label'>1/!</p><div class='strength-eval'></div></div></div><div id='strength-bar'><label for='password-strength'>Strength: </label><progress id='password-strength' max='5'></progress><p>Time to crack: <span id='crack-time'></span></p></div></div>"
-    notice = "<p><small>We require a password of at least #{window.passwords.minLength} characters with at least one upper case letter, at least one lower case letter, and at least one digit or special character. You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least #{window.passwords.overrideLength} characters, with no security requirements.</small></p>"
-    $("#password_security").html(html + notice)
+    html = "<h4>Password Requirements</h4><div id='strength-meter'><div id='strength-requirements'><p style='float:left;margin-top:2em;font-weight:700;'>Character Classes:</p><div id='strength-alpha'><p class='label'>a</p><div class='strength-eval'></div></div><div id='strength-alphacap'><p class='label'>A</p><div class='strength-eval'></div></div><div id='strength-numspecial'><p class='label'>1/!</p><div class='strength-eval'></div></div></div><div id='strength-bar'><label for='password-strength'>Strength: </label><progress id='password-strength' max='5'></progress><p>Time to crack: <span id='crack-time'></span></p></div></div>"
+    notice = "<br/><br/><p>We require a password of at least #{window.passwords.minLength} characters with at least one upper case letter, at least one lower case letter, and at least one digit or special character.</p><p>You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least #{window.passwords.overrideLength} characters, with no security requirements.</p>"
+    $("#password_security")
+    .html(html + notice)
+    .removeClass('invisible')
+    $("#helpText").removeClass("invisible")
   pass = $("#password").val()
   pstrength = zxcvbn(pass)
   green_channel = (toInt(pstrength.score)+1) * 51
@@ -936,14 +939,14 @@ $ ->
       checkPasswordLive()
     $("#password")
     .after("<span id='feedback-status-1'></span>")
+    .parent().removeClass("form-inline")
     .parent().addClass("has-feedback")
-    .removeClass("form-inline")
-    .parent().addClass("form-inline")
+    .parent().addClass("form-horizontal")
     $("#password2")
     .after("<span id='feedback-status-2'></span>")
+    .parent().removeClass("form-inline")
     .parent().addClass("has-feedback")
-    .removeClass("form-inline")
-    .parent().addClass("form-inline")
+    .parent().addClass("form-horizontal")
   $("#totp_submit").submit ->
     doTOTPSubmit()
   $("#verify_totp_button").click ->
