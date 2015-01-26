@@ -200,6 +200,15 @@ html /deep/ paper-autogrow-textarea textarea {
     float:left;
     min-width:60%;
 }
+
+#login .form-inline .form-group {
+    margin-bottom:15px;
+}
+
+.form-inline .has-feedback div {
+    margin-left:0;
+}
+
 /***
  * Force the scollbar to show on the #modal-taxon-editor
  ***/
