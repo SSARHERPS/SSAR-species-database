@@ -346,7 +346,7 @@ if(empty($params) || !empty($search))
                     if(is_string($r)) $error = $r;
                     else $error = $e;
                   }
-                # $result_vector["debug"] = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by,true);
+                #if($show_debug === true) $result_vector["debug"] = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by,true);
               }
             else
               {
@@ -419,6 +419,7 @@ if(empty($params) || !empty($search))
                 if(sizeof($result_vector) == 0)
                   {
                     $col = "common_name";
+                    $method = "no_scientific_common";
                     $extra_filter = $loose ? "`".$col."` LIKE '%".$search."%'":"`".$col."`='".$search."'";
                     $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);
                   }
@@ -458,6 +459,13 @@ if(empty($params) || !empty($search))
                               {
                                 $result_vector[] = $row;
                               }
+                            if(sizeof($result_vector) == 0)
+                              {
+                                # Fall back one last time to a common
+                                # name search
+                                $fallback = true;
+                                $boolean_type = "or";
+                              }
                           }
                         catch(Exception $e)
                           {
@@ -476,7 +484,14 @@ if(empty($params) || !empty($search))
               {
                 $method = "space_fallback";
                 $params["common_name"] = $search;
+                if($boolean_type === false)
+                  {
+                    # If it hasn't been assigned already, use the
+                    # loose "or" search
+                    $boolean_type = "or";
+                  }
                 $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
+                #if($show_debug === true) $result_vector["debug"] = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by,true);
                 try
                   {
                     while($row = mysqli_fetch_assoc($r))
