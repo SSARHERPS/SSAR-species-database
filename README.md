@@ -66,7 +66,7 @@ The JSON result gives the following parameters:
 
 **Please note** that all entries are returned in lower case, except for `result.[taxon].notes` and `result.[taxon].image` (where an image exists and the path includes mixed case).
 
-As the data has strict formatting requirements, this is left up to the application to correctly apply CSS styles to generate the desired case.
+As the rest of the data have strict formatting requirements, all other formatting is left up to the application to correctly apply CSS styles to generate the desired case.
 
 ### Search behaviour
 
