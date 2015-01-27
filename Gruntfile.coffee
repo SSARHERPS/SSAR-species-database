@@ -13,6 +13,9 @@ module.exports = (grunt) ->
   # https://github.com/mathiasbynens/grunt-yui-compressor
   # May end up porting to https://github.com/gruntjs/grunt-contrib-uglify
   grunt.loadNpmTasks('grunt-yui-compressor')
+  # Validators
+  grunt.loadNpmTasks('grunt-bootlint')
+  grunt.loadNpmTasks('grunt-html')
   grunt.initConfig
     pkg: grunt.file.readJSON('package.json')
     shell:
@@ -82,6 +85,13 @@ module.exports = (grunt) ->
       styles:
         files: ["css/main.css"]
         tasks: ["cssmin"]
+    bootlint:
+      options:
+        stoponerror: false
+        relaxerror: ['W009']
+      files: ["index.html"]
+    htmllint:
+      all: ["index.html"]
   ## Now the tasks
   grunt.registerTask("default",["watch"])
   grunt.registerTask("compile","Compile coffeescript",["coffee:compile","uglify:dist","shell:movesrc"])
