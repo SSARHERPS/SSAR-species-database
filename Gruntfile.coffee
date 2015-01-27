@@ -91,7 +91,9 @@ module.exports = (grunt) ->
         relaxerror: ['W009']
       files: ["index.html"]
     htmllint:
-      all: ["index.html"]
+      all:
+        src: ["index.html"]
+        ignore: [/XHTML element “[a-z-]+” not allowed as child of XHTML element.*/]
   ## Now the tasks
   grunt.registerTask("default",["watch"])
   grunt.registerTask("compile","Compile coffeescript",["coffee:compile","uglify:dist","shell:movesrc"])
