@@ -709,6 +709,7 @@ performSearch = (stateArgs = undefined) ->
           text = "\"#{sOrig}\" returned no results."
       else
         text = result.human_error
+      clearSearch(true)
       $("#search-status").attr("text",text)
       $("#search-status")[0].show()
       stopLoadError()
@@ -716,6 +717,7 @@ performSearch = (stateArgs = undefined) ->
     if result.status is true
       formatSearchResults(result)
       return false
+    clearSearch(true)
     $("#search-status").attr("text",result.human_error)
     $("#search-status")[0].show()
     console.error(result.error)
@@ -725,6 +727,9 @@ performSearch = (stateArgs = undefined) ->
     console.error("There was an error performing the search")
     console.warn(result,error,result.statusText)
     error = "#{result.status} - #{result.statusText}"
+    # It probably doesn't make sense to clear the search on a bad
+    # server call ...
+    # clearSearch(true)
     $("#search-status").attr("text","Couldn't execute the search - #{error}")
     $("#search-status")[0].show()
     stopLoadError()
@@ -1066,6 +1071,24 @@ setHistory = (url = "#",state = null, title = null) ->
   uri.query = $.url(url).attr("fragment")
   false
 
+clearSearch = (partialReset = false) ->
+  ###
+  # Clear out the search and reset it to a "fresh" state.
+  ###
+  $("#result-count").text("")
+  calloutHtml = "<div class=\"bs-callout bs-callout-info center-block col-xs-12 col-sm-8 col-md-5\"> Search for a common or scientific name above to begin. </div>"
+  $("#result_container").html(calloutHtml)
+  if partialReset is true then return false
+  # Do a history breakpoint
+  setHistory()
+  # Reset the fields
+  $(".cndb-filter").attr("value","")
+  $("#collapse-advanced").collapse('hide')
+  $("#search").attr("value","")
+  $("#linnean-order").polymerSelected("any")
+  false
+
+  
 $ ->
   # Do bindings
   console.log("Doing onloads ...")
@@ -1079,6 +1102,8 @@ $ ->
     temp = loadArgs.split("&")[0]
     $("#search").attr("value",temp)
   ## Set events
+  $("#do-reset-search").click ->
+    clearSearch()
   $("#search_form").submit (e) ->
     e.preventDefault()
     performSearch()

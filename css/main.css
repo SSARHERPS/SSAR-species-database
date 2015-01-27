@@ -173,9 +173,6 @@ paper-toggle-button {
 paper-icon-button {
     vertical-align:middle;
 }
-core-label.col-xs-6 {
-    padding-left:0;
-}
 .fullwidth {
     width:100%;
 }
@@ -210,6 +207,9 @@ core-label.col-xs-6 {
 }
 .bs-callout p:last-child {
   margin-bottom: 0;
+}
+#result_container .bs-callout {
+    float:none;
 }
 form {
     /* margin-left:2rem; */

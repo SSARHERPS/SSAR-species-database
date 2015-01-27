@@ -3,7 +3,7 @@
  * The main coffeescript file for administrative stuff
  * Triggered from admin-page.html
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, byteCount, checkTaxonNear, deferCalPhotos, delay, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, byteCount, checkTaxonNear, clearSearch, deferCalPhotos, delay, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
   __slice = [].slice;
 
 adminParams = new Object();
@@ -983,6 +983,7 @@ performSearch = function(stateArgs) {
       } else {
         text = result.human_error;
       }
+      clearSearch(true);
       $("#search-status").attr("text", text);
       $("#search-status")[0].show();
       stopLoadError();
@@ -992,6 +993,7 @@ performSearch = function(stateArgs) {
       formatSearchResults(result);
       return false;
     }
+    clearSearch(true);
     $("#search-status").attr("text", result.human_error);
     $("#search-status")[0].show();
     console.error(result.error);
@@ -1430,6 +1432,29 @@ setHistory = function(url, state, title) {
   return false;
 };
 
+clearSearch = function(partialReset) {
+  var calloutHtml;
+  if (partialReset == null) {
+    partialReset = false;
+  }
+
+  /*
+   * Clear out the search and reset it to a "fresh" state.
+   */
+  $("#result-count").text("");
+  calloutHtml = "<div class=\"bs-callout bs-callout-info center-block col-xs-12 col-sm-8 col-md-5\"> Search for a common or scientific name above to begin. </div>";
+  $("#result_container").html(calloutHtml);
+  if (partialReset === true) {
+    return false;
+  }
+  setHistory();
+  $(".cndb-filter").attr("value", "");
+  $("#collapse-advanced").collapse('hide');
+  $("#search").attr("value", "");
+  $("#linnean-order").polymerSelected("any");
+  return false;
+};
+
 $(function() {
   var e, f64, filterObj, fuzzyState, loadArgs, looseState, openFilters, queryUrl, temp;
   console.log("Doing onloads ...");
@@ -1442,6 +1467,9 @@ $(function() {
     performSearch(loadArgs);
     temp = loadArgs.split("&")[0];
     return $("#search").attr("value", temp);
+  });
+  $("#do-reset-search").click(function() {
+    return clearSearch();
   });
   $("#search_form").submit(function(e) {
     e.preventDefault();

@@ -40,10 +40,11 @@
     </h1>
     <form id="search_form" onsubmit="event.preventDefault()">
       <div class="row">
-        <paper-input label="Search" id="search" name="search" disabled required autofocus floatingLabel class="col-xs-7 col-sm-8"></paper-input>
-        <div class="col-xs-5 col-sm-4">
+        <paper-input label="Search" id="search" name="search" disabled required autofocus floatingLabel class="col-xs-5 col-sm-8"></paper-input>
+        <div class="col-xs-7 col-sm-4">
           <paper-fab id="do-search" icon="search" raisedButton class="materialblue"></paper-fab>
-          <paper-fab id="do-search-all" icon="list" raisedButton class="materialblue" data-toggle="tooltip" title="Show all results" data-placement="right"></paper-fab>
+          <paper-fab id="do-search-all" icon="list" raisedButton class="materialblue" data-toggle="tooltip" title="Show all results" data-placement="bottom"></paper-fab>
+          <paper-fab id="do-reset-search" icon="cancel" raisedButton class="materialblue" data-toggle="tooltip" title="Reset search" data-placement="right"></paper-fab>
         </div>
       </div>
       <fieldset class="fullwidth">
