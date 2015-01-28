@@ -453,7 +453,10 @@ $ ->
   # Set up popstate
   window.addEventListener "popstate", (e) ->
     uri.query = $.url().attr("fragment")
-    loadArgs = Base64.decode(uri.query)
+    try
+      loadArgs = Base64.decode(uri.query)
+    catch e
+      loadArgs = ""
     console.log("Popping state to #{loadArgs}")
     performSearch(loadArgs)
     temp = loadArgs.split("&")[0]

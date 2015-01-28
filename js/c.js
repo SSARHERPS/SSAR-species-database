@@ -1462,7 +1462,12 @@ $(function() {
   window.addEventListener("popstate", function(e) {
     var loadArgs, temp;
     uri.query = $.url().attr("fragment");
-    loadArgs = Base64.decode(uri.query);
+    try {
+      loadArgs = Base64.decode(uri.query);
+    } catch (_error) {
+      e = _error;
+      loadArgs = "";
+    }
     console.log("Popping state to " + loadArgs);
     performSearch(loadArgs);
     temp = loadArgs.split("&")[0];
