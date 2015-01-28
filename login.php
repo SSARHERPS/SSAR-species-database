@@ -519,7 +519,7 @@ else if($_REQUEST['q']=='create')
         <div class=\"g-recaptcha\" data-sitekey=\"".$recaptcha_public_key."\"></div>
 
               <br class='clearfix'/>
-	      <button id='createUser_submit' class='btn btn-success' disabled='disabled'>Create</button>
+	      <button id='createUser_submit' class='btn btn-success btn-lg col-xs-12 col-lg-3' disabled='disabled'>Create</button>
 </fieldset>
 	    </form><br class='clear'/>";
         $secnotice="<br/><p><small>Remember your security best practices! Do not use the same password you use for other sites. While your information is <a href='http://en.wikipedia.org/wiki/Cryptographic_hash_function' $newwindow>hashed</a> with a multiple-round hash function, <a href='http://arstechnica.com/security/2013/05/how-crackers-make-minced-meat-out-of-your-passwords/' $newwindow>passwords are easy to crack!</a></small></p>";
