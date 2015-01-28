@@ -13,6 +13,8 @@ module.exports = (grunt) ->
   # https://github.com/mathiasbynens/grunt-yui-compressor
   # May end up porting to https://github.com/gruntjs/grunt-contrib-uglify
   grunt.loadNpmTasks('grunt-yui-compressor')
+  # https://www.npmjs.com/package/grunt-phplint
+  grunt.loadNpmTasks("grunt-phplint");
   grunt.initConfig
     pkg: grunt.file.readJSON('package.json')
     shell:
@@ -73,6 +75,8 @@ module.exports = (grunt) ->
           sourceMap: true
         files:
           "js/c.js":"coffee/*.coffee"
+    phplint:
+      scripts: ["handlers/login_functions.php","login.php"]
     watch:
       scripts:
         files: ["coffee/*.coffee"]
@@ -80,6 +84,9 @@ module.exports = (grunt) ->
       styles:
         files: ["css/otp_styles.css","css/otp_panels.css"]
         tasks: ["cssmin"]
+      php:
+        files: ["*.php","handlers/*.php"]
+        tasks: ["phplint"]
   ## Now the tasks
   grunt.registerTask("default",["watch"])
   grunt.registerTask("compile","Compile coffeescript",["coffee:compile","uglify:dist","shell:movesrc"])
