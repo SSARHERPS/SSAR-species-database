@@ -105,8 +105,8 @@ module.exports = (grunt) ->
         files: ["css/main.css"]
         tasks: ["cssmin"]
       html:
-        files: ["*.html"]
-        tasks: ["bootlint"]
+        files: ["app.html"]
+        tasks: ["bootlint","shell:vulcanize","uglify:vulcanize","string-replace:vulcanize"]
     bootlint:
       options:
         stoponerror: false
