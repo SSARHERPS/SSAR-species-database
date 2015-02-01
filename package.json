@@ -26,6 +26,7 @@
     "grunt-yui-compressor": "^0.3.3",
     "bootlint": "^0.10.0",
     "grunt-bootlint": "^0.7.0",
-    "grunt-html": "^1.6.0"
+    "grunt-html": "^1.6.0",
+    "vulcanize": "^0.7.6"
   }
 }
