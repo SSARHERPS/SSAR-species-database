@@ -85,6 +85,9 @@ module.exports = (grunt) ->
       styles:
         files: ["css/main.css"]
         tasks: ["cssmin"]
+      html:
+        files: ["*.html"]
+        tasks: ["bootlint"]
     bootlint:
       options:
         stoponerror: false
