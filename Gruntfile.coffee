@@ -89,10 +89,10 @@ module.exports = (grunt) ->
       options:
         stoponerror: false
         relaxerror: ['W009']
-      files: ["index.html"]
+      files: ["index.html","admin-page.html"]
     htmllint:
       all:
-        src: ["index.html"]
+        src: ["index.html","admin-page.html"]
         ignore: [/XHTML element “[a-z-]+” not allowed as child of XHTML element.*/]
   ## Now the tasks
   grunt.registerTask("default",["watch"])
