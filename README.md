@@ -183,7 +183,7 @@ You can install Grunt from the command line by running `npm install -g grunt-cli
 You can update the whole application, with dependencies, by running
 `grunt build` at the root directory.
 
-The main page is written with app.html. The grunt task `vulcanize` will use the [Vulcanize tool](https://github.com/polymer/vulcanize) to build a flattened version that minimizes network calls. Running the `grunt watch` command will trigger this on every saved edit of `app.html`.
+<!-- The main page is written with app.html. The grunt task `vulcanize` will use the [Vulcanize tool](https://github.com/polymer/vulcanize) to build a flattened version that minimizes network calls. Running the `grunt watch` command will trigger this on every saved edit of `app.html`. -->
 
 ### Installation
 
