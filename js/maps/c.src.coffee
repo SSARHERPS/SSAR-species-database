@@ -1122,6 +1122,10 @@ $ ->
     performSearch()
   $("#do-search-all").click ->
     performSearch(true)
+  $("#linnean-order").on "core-select", ->
+    # We do want to auto-trigger this when there's a search value,
+    # but not when it's empty (even though this is valid)
+    if not isNull($("#search").val()) then performSearch()
   # Do a fill of the result container
   if isNull uri.query
     loadArgs = ""

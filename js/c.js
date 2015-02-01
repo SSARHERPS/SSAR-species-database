@@ -1497,6 +1497,11 @@ $(function() {
   $("#do-search-all").click(function() {
     return performSearch(true);
   });
+  $("#linnean-order").on("core-select", function() {
+    if (!isNull($("#search").val())) {
+      return performSearch();
+    }
+  });
   if (isNull(uri.query)) {
     loadArgs = "";
   } else {
