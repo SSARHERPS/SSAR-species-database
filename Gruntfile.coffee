@@ -27,10 +27,18 @@ module.exports = (grunt) ->
         command: ["npm update"].join("&&")
       movesrc:
         command: ["mv js/c.src.coffee js/maps/c.src.coffee"].join("&&")
+      vulcanize:
+        command: ["vulcanize --csp -o app.html --strip index.html","mv app.html polymer-elements/app.html","mv app.js polymer-elements/app.js"].join("&&")
     uglify:
       options:
         mangle:
           except:['jQuery']
+      vulcanize:
+        options:
+          sourceMap:true
+          sourceMapName:"js/maps/app.js.map"
+        files:
+          "polymer-elements/app.min.js":["polymer-elements/app.js"]
       combine:
         options:
           sourceMap:true
@@ -99,6 +107,7 @@ module.exports = (grunt) ->
         ignore: [/XHTML element “[a-z-]+” not allowed as child of XHTML element.*/]
   ## Now the tasks
   grunt.registerTask("default",["watch"])
+  grunt.registerTask("vulcanize","Vulcanize web components",["shell:vulcanize","uglify:vulcanize"])
   grunt.registerTask("compile","Compile coffeescript",["coffee:compile","uglify:dist","shell:movesrc"])
   ## The minification tasks
   # Part 1
@@ -117,4 +126,4 @@ module.exports = (grunt) ->
     grunt.task.run("updateNPM","updateBower","minify")
   ## Deploy
   grunt.registerTask "build","Compile and update, then watch", ->
-    grunt.task.run("updateNPM","updateBower","compile","minify")
+    grunt.task.run("updateNPM","updateBower","compile","minify","vulcanize")
