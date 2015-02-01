@@ -16,6 +16,7 @@ module.exports = (grunt) ->
   # Validators
   grunt.loadNpmTasks('grunt-bootlint')
   grunt.loadNpmTasks('grunt-html')
+  grunt.loadNpmTasks('grunt-string-replace')
   grunt.initConfig
     pkg: grunt.file.readJSON('package.json')
     shell:
@@ -29,7 +30,14 @@ module.exports = (grunt) ->
         command: ["mv js/c.src.coffee js/maps/c.src.coffee"].join("&&")
       vulcanize:
         # Should also use a command to replace js as per uglify:vulcanize
-        command: ["vulcanize --csp -o index.html --strip app.html"].join("&&")
+        command: ["vulcanize --csp -o app-prerelease.html --strip app.html"].join("&&")
+    'string-replace':
+      vulcanize:
+        options:
+          pattern: "index.js"
+          replacement: "js/app.min.js"
+        files:
+          "index.html":"app-prerelease.html"
     uglify:
       options:
         mangle:
@@ -108,7 +116,7 @@ module.exports = (grunt) ->
         ignore: [/XHTML element “[a-z-]+” not allowed as child of XHTML element.*/]
   ## Now the tasks
   grunt.registerTask("default",["watch"])
-  grunt.registerTask("vulcanize","Vulcanize web components",["shell:vulcanize","uglify:vulcanize"])
+  grunt.registerTask("vulcanize","Vulcanize web components",["shell:vulcanize","uglify:vulcanize","string-replace:vulcanize"])
   grunt.registerTask("compile","Compile coffeescript",["coffee:compile","uglify:dist","shell:movesrc"])
   ## The minification tasks
   # Part 1
