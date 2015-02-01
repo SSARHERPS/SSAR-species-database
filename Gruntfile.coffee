@@ -28,7 +28,8 @@ module.exports = (grunt) ->
       movesrc:
         command: ["mv js/c.src.coffee js/maps/c.src.coffee"].join("&&")
       vulcanize:
-        command: ["vulcanize --csp -o app.html --strip index.html","mv app.html polymer-elements/app.html","mv app.js polymer-elements/app.js"].join("&&")
+        # Should also use a command to replace js as per uglify:vulcanize
+        command: ["vulcanize --csp -o index.html --strip app.html"].join("&&")
     uglify:
       options:
         mangle:
@@ -38,7 +39,7 @@ module.exports = (grunt) ->
           sourceMap:true
           sourceMapName:"js/maps/app.js.map"
         files:
-          "polymer-elements/app.min.js":["polymer-elements/app.js"]
+          "js/app.min.js":["index.js"]
       combine:
         options:
           sourceMap:true
