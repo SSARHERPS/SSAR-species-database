@@ -34,8 +34,10 @@ module.exports = (grunt) ->
     'string-replace':
       vulcanize:
         options:
-          pattern: "index.js"
-          replacement: "js/app.min.js"
+          replacements: [
+            pattern: "app-prerelease.js",
+            replacement: "js/app.min.js"
+            ]
         files:
           "index.html":"app-prerelease.html"
     uglify:
@@ -47,7 +49,7 @@ module.exports = (grunt) ->
           sourceMap:true
           sourceMapName:"js/maps/app.js.map"
         files:
-          "js/app.min.js":["index.js"]
+          "js/app.min.js":["app-prerelease.js"]
       combine:
         options:
           sourceMap:true
