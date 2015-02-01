@@ -3,10 +3,18 @@
 /***********************************************************
  * SSAR Common names database API target
  *
- * API DESCRIPTION HERE
+ * Find the full API description here:
  *
- * API MODES HERE
+ * https://github.com/tigerhawkvok/SSAR-species-database/blob/master/README.md
  *
+ * @param boolean fuzzy
+ * @param boolean loose
+ * @param int limit
+ * @param string order (comma-seperated values)
+ * @param string only (comma-seperated values)
+ * @param string include (comma-seperated values)
+ * @param string type 
+ * @param JSON filter
  *
  * Initial version by Philip Kahn
  * Started July 2014
@@ -51,6 +59,12 @@ if(!function_exists('elapsed'))
 
 function returnAjax($data)
 {
+  /***
+   * Return the data as a JSON object
+   * 
+   * @param array $data
+   *
+   ***/
   if(!is_array($data)) $data=array($data);
   $data["execution_time"] = elapsed();
   header('Cache-Control: no-cache, must-revalidate');
@@ -64,6 +78,12 @@ function returnAjax($data)
 
 function checkColumnExists($column_list)
 {
+  /***
+   * Check if a comma-seperated list of columns exists in the
+   * database.
+   * @param string $column_list (comma-sep)
+   * @return array
+   ***/
   if(empty($column_list)) return true;
   global $db;
   $cols = $db->getCols();
@@ -228,13 +248,14 @@ if(empty($params) || !empty($search))
     # There was either a parsing failure, or no filter set.
     if(empty($search))
       {
-        $search = "*"; # Wildcard it. Be greedy.
+        # For the full list, just return scientific data
+        $search_list = $order_by; 
         $col = "species";
         $params[$col] = $search;
         $loose = true;
         $method = "full_simple_list";
         $l = $db->openDB();
-        $query = "SELECT ".$order_by." FROM `".$db->getTable()."` ORDER BY ".$order_by;
+        $query = "SELECT ".$search_list." FROM `".$db->getTable()."` ORDER BY ".$order_by;
         $r = mysqli_query($l,$query);
         try
           {
