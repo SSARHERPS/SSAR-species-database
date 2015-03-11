@@ -856,7 +856,8 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       htmlHead += "\n<!-- Table Headers - #{Object.size(row)} entries -->"
       $.each row, (k,v) ->
         niceKey = k.replace(/_/g," ")
-        if k isnt "id"  and k isnt "minor_type" and k isnt "notes" #and niceKey isnt "image"
+        unless k is "id" or k is "minor_type" or k is "notes" or k is "major_type"
+          # or niceKey is "image" ...
           if $("#show-deprecated").polymerSelected() isnt true
             alt = "deprecated_scientific"
           else

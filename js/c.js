@@ -1159,7 +1159,7 @@ formatSearchResults = function(result, container) {
       $.each(row, function(k, v) {
         var alt, bootstrapColSize, niceKey;
         niceKey = k.replace(/_/g, " ");
-        if (k !== "id" && k !== "minor_type" && k !== "notes") {
+        if (!(k === "id" || k === "minor_type" || k === "notes" || k === "major_type")) {
           if ($("#show-deprecated").polymerSelected() !== true) {
             alt = "deprecated_scientific";
           } else {
