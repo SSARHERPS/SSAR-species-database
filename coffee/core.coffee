@@ -171,6 +171,51 @@ Function::debounce = (threshold = 300, execAsap = false, timeout = window.deboun
     console.log("Executed immediately")
   window.debounce_timer = setTimeout(delayed, threshold)
 
+`
+function loadJS(src, callback) {
+    console.log("Entering loadjs for",src);
+    var s = document.createElement('script');
+    s.setAttribute('src',src);
+    s.setAttribute('async','async');
+    s.setAttribute('type','text/javascript');
+    s.src = src;
+    s.async = true;
+    var onloadfunction = function() {
+        console.log("Entering readystate function");
+        var state = s.readyState;
+        try {
+            console.log("Loaded",src);
+            if (!callback.done && (!state || /loaded|complete/.test(state))) {
+                callback.done = true;
+                callback();
+            }
+        } catch (e) {
+            // do nothing, no callback function passed
+            console.log("Callback error");
+        }
+    };
+    var errorfunction = function() {
+        try {
+            console.warn("There may have been a problem loading",src);
+            if (!callback.done) {
+                callback.done = true;
+                callback();
+            }
+        } catch (e) {
+            // do nothing, no callback function passed
+            console.log("Error and error");
+        }
+    };
+    s.setAttribute('onload',onloadfunction);
+    s.setAttribute('onreadystate',onloadfunction);
+    s.setAttribute('onerror',errorfunction);
+    s.onload = s.onreadystate = onloadfunction;
+    s.onerror = errorfunction;
+    document.getElementsByTagName('head')[0].appendChild(s);
+    console.log("Exiting with",s);
+}
+`
+
 mapNewWindows = ->
   # Do new windows
   $(".newwindow").each ->
@@ -225,7 +270,23 @@ goTo = (url) ->
   window.location.href = url
   false
 
-animateLoad = (d = 50,elId = "loader") ->
+animateLoad = (elId = "loader") ->
+  ###
+  # Suggested CSS to go with this:
+  #
+  # #loader {
+  #     position:fixed;
+  #     top:50%;
+  #     left:50%;
+  # }
+  # #loader.good::shadow .circle {
+  #     border-color: rgba(46,190,17,0.9);
+  # }
+  # #loader.bad::shadow .circle {
+  #     border-color:rgba(255,0,0,0.9);
+  # }
+  ###
+  if isNumber(elId) then elId = "loader"
   if elId.slice(0,1) is "#"
     selector = elId
     elId = elId.slice(1)
@@ -238,9 +299,9 @@ animateLoad = (d = 50,elId = "loader") ->
       $(selector).attr("active",true)
     false
   catch e
-    console.log('Could not animate loader', e.message);
+    console.log('Could not animate loader', e.message)
 
-stopLoad = (elId="loader") ->
+stopLoad = (elId = "loader", fadeOut = 1000) ->
   if elId.slice(0,1) is "#"
     selector = elId
     elId = elId.slice(1)
@@ -249,14 +310,14 @@ stopLoad = (elId="loader") ->
   try
     if $(selector).exists()
       $(selector).addClass("good")
-      delay 1000, ->
+      delay fadeOut, ->
         $(selector).removeClass("good")
         $(selector).attr("active",false)
   catch e
-    console.log('Could not stop load animation', e.message);
+    console.log('Could not stop load animation', e.message)
 
 
-stopLoadError = (elId="loader") ->
+stopLoadError = (message, elId = "loader", fadeOut = 5000) ->
   if elId.slice(0,1) is "#"
     selector = elId
     elId = elId.slice(1)
@@ -265,11 +326,12 @@ stopLoadError = (elId="loader") ->
   try
     if $(selector).exists()
       $(selector).addClass("bad")
-      delay 3000, ->
+      if message? then toastStatusMessage(message,"",fadeOut)
+      delay fadeOut, ->
         $(selector).removeClass("bad")
         $(selector).attr("active",false)
   catch e
-    console.log('Could not stop load error animation', e.message);
+    console.log('Could not stop load error animation', e.message)
 
 lightboxImages = (selector = ".lightboximage") ->
   options =
