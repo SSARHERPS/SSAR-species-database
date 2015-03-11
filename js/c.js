@@ -616,6 +616,51 @@ Function.prototype.debounce = function() {
   return window.debounce_timer = setTimeout(delayed, threshold);
 };
 
+
+function loadJS(src, callback) {
+    console.log("Entering loadjs for",src);
+    var s = document.createElement('script');
+    s.setAttribute('src',src);
+    s.setAttribute('async','async');
+    s.setAttribute('type','text/javascript');
+    s.src = src;
+    s.async = true;
+    var onloadfunction = function() {
+        console.log("Entering readystate function");
+        var state = s.readyState;
+        try {
+            console.log("Loaded",src);
+            if (!callback.done && (!state || /loaded|complete/.test(state))) {
+                callback.done = true;
+                callback();
+            }
+        } catch (e) {
+            // do nothing, no callback function passed
+            console.log("Callback error");
+        }
+    };
+    var errorfunction = function() {
+        try {
+            console.warn("There may have been a problem loading",src);
+            if (!callback.done) {
+                callback.done = true;
+                callback();
+            }
+        } catch (e) {
+            // do nothing, no callback function passed
+            console.log("Error and error");
+        }
+    };
+    s.setAttribute('onload',onloadfunction);
+    s.setAttribute('onreadystate',onloadfunction);
+    s.setAttribute('onerror',errorfunction);
+    s.onload = s.onreadystate = onloadfunction;
+    s.onerror = errorfunction;
+    document.getElementsByTagName('head')[0].appendChild(s);
+    console.log("Exiting with",s);
+}
+;
+
 mapNewWindows = function() {
   return $(".newwindow").each(function() {
     var curHref, openInNewWindow;
@@ -694,12 +739,28 @@ goTo = function(url) {
   return false;
 };
 
-animateLoad = function(d, elId) {
+animateLoad = function(elId) {
   var e, selector;
-  if (d == null) {
-    d = 50;
-  }
   if (elId == null) {
+    elId = "loader";
+  }
+
+  /*
+   * Suggested CSS to go with this:
+   *
+   * #loader {
+   *     position:fixed;
+   *     top:50%;
+   *     left:50%;
+   * }
+   * #loader.good::shadow .circle {
+   *     border-color: rgba(46,190,17,0.9);
+   * }
+   * #loader.bad::shadow .circle {
+   *     border-color:rgba(255,0,0,0.9);
+   * }
+   */
+  if (isNumber(elId)) {
     elId = "loader";
   }
   if (elId.slice(0, 1) === "#") {
@@ -721,10 +782,13 @@ animateLoad = function(d, elId) {
   }
 };
 
-stopLoad = function(elId) {
+stopLoad = function(elId, fadeOut) {
   var e, selector;
   if (elId == null) {
     elId = "loader";
+  }
+  if (fadeOut == null) {
+    fadeOut = 1000;
   }
   if (elId.slice(0, 1) === "#") {
     selector = elId;
@@ -735,7 +799,7 @@ stopLoad = function(elId) {
   try {
     if ($(selector).exists()) {
       $(selector).addClass("good");
-      return delay(1000, function() {
+      return delay(fadeOut, function() {
         $(selector).removeClass("good");
         return $(selector).attr("active", false);
       });
@@ -746,10 +810,13 @@ stopLoad = function(elId) {
   }
 };
 
-stopLoadError = function(elId) {
+stopLoadError = function(message, elId, fadeOut) {
   var e, selector;
   if (elId == null) {
     elId = "loader";
+  }
+  if (fadeOut == null) {
+    fadeOut = 5000;
   }
   if (elId.slice(0, 1) === "#") {
     selector = elId;
@@ -760,7 +827,10 @@ stopLoadError = function(elId) {
   try {
     if ($(selector).exists()) {
       $(selector).addClass("bad");
-      return delay(3000, function() {
+      if (message != null) {
+        toastStatusMessage(message, "", fadeOut);
+      }
+      return delay(fadeOut, function() {
         $(selector).removeClass("bad");
         return $(selector).attr("active", false);
       });
@@ -1096,6 +1166,9 @@ formatSearchResults = function(result, container) {
             alt = "";
           }
           if (k !== alt) {
+            if (niceKey === "common name") {
+              niceKey = "english name";
+            }
             htmlHead += "\n\t\t<th class='text-center'>" + niceKey + "</th>";
             bootstrapColCount++;
           }
@@ -1386,7 +1459,7 @@ modalTaxon = function(taxon) {
     if (isNull(data.notes)) {
       data.notes = "Sorry, we have no notes on this taxon yet.";
     }
-    html = "<div id='meta-taxon-info'>" + yearHtml + "<p>Common name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span></p><p>Type: <span id='taxon-type'>" + data.major_type + "</span> (<span id='taxon-common-type'>" + data.major_common_type + "</span>) <core-icon icon='arrow-forward'></core-icon> <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "</p>" + deprecatedHtml + "</div><h3>Taxon Notes</h3><p id='taxon-notes'>" + data.notes + "</p>";
+    html = "<div id='meta-taxon-info'>" + yearHtml + "<p>English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span></p><p>Type: <span id='taxon-type'>" + data.major_type + "</span> (<span id='taxon-common-type'>" + data.major_common_type + "</span>) <core-icon icon='arrow-forward'></core-icon> <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "</p>" + deprecatedHtml + "</div><h3>Taxon Notes</h3><p id='taxon-notes'>" + data.notes + "</p>";
     $("#modal-taxon-content").html(html);
     $("#modal-inat-linkout").unbind().click(function() {
       return openTab("http://www.inaturalist.org/taxa/search?q=" + taxon);

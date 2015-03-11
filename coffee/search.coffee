@@ -158,6 +158,8 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
             # Empty placeholder
             alt = ""
           if k isnt alt
+            if niceKey is "common name"
+              niceKey = "english name"
             htmlHead += "\n\t\t<th class='text-center'>#{niceKey}</th>"
             bootstrapColCount++
         j++
@@ -388,7 +390,7 @@ modalTaxon = (taxon = undefined) ->
     # Populate the taxon
     if isNull(data.notes)
       data.notes = "Sorry, we have no notes on this taxon yet."
-    html = "<div id='meta-taxon-info'>#{yearHtml}<p>Common name: <span id='taxon-common-name' class='common_name'>#{data.common_name}</span></p><p>Type: <span id='taxon-type'>#{data.major_type}</span> (<span id='taxon-common-type'>#{data.major_common_type}</span>) <core-icon icon='arrow-forward'></core-icon> <span id='taxon-subtype'>#{data.major_subtype}</span>#{minorTypeHtml}</p>#{deprecatedHtml}</div><h3>Taxon Notes</h3><p id='taxon-notes'>#{data.notes}</p>"
+    html = "<div id='meta-taxon-info'>#{yearHtml}<p>English name: <span id='taxon-common-name' class='common_name'>#{data.common_name}</span></p><p>Type: <span id='taxon-type'>#{data.major_type}</span> (<span id='taxon-common-type'>#{data.major_common_type}</span>) <core-icon icon='arrow-forward'></core-icon> <span id='taxon-subtype'>#{data.major_subtype}</span>#{minorTypeHtml}</p>#{deprecatedHtml}</div><h3>Taxon Notes</h3><p id='taxon-notes'>#{data.notes}</p>"
     $("#modal-taxon-content").html(html)
     $("#modal-inat-linkout")
     .unbind()
