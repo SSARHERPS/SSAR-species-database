@@ -863,8 +863,14 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
             # Empty placeholder
             alt = ""
           if k isnt alt
-            if niceKey is "common name"
-              niceKey = "english name"
+            # Remap names that were changed late into dev
+            # See
+            # https://github.com/tigerhawkvok/SSAR-species-database/issues/19
+            # as an example
+            niceKey = switch niceKey
+              when "common name" then "english name"
+              when "major subtype" then "english subtype"
+              else niceKey
             htmlHead += "\n\t\t<th class='text-center'>#{niceKey}</th>"
             bootstrapColCount++
         j++

@@ -1166,9 +1166,16 @@ formatSearchResults = function(result, container) {
             alt = "";
           }
           if (k !== alt) {
-            if (niceKey === "common name") {
-              niceKey = "english name";
-            }
+            niceKey = (function() {
+              switch (niceKey) {
+                case "common name":
+                  return "english name";
+                case "major subtype":
+                  return "english subtype";
+                default:
+                  return niceKey;
+              }
+            })();
             htmlHead += "\n\t\t<th class='text-center'>" + niceKey + "</th>";
             bootstrapColCount++;
           }

@@ -117,6 +117,7 @@ html /deep/ .linnean_order::shadow input {
 .genus_authority,
 .species_authority,
 .common_name,
+.major_subtype,
 .linnean_order,
 .cndb-row-headers th {
     text-transform:capitalize;
