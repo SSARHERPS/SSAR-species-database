@@ -182,7 +182,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
     htmlRow = "\n\t<tr id='cndb-row#{i}' class='cndb-result-entry' data-taxon=\"#{taxonQuery}\">"
     l = 0
     $.each row, (k,col) ->
-      if k isnt "id" and k isnt "minor_type" and k isnt "notes"
+      if k isnt "id" and k isnt "minor_type" and k isnt "notes" and k isnt "major_type"
         if k is "authority_year"
           try
             try

@@ -1198,7 +1198,7 @@ formatSearchResults = function(result, container) {
     l = 0;
     $.each(row, function(k, col) {
       var alt, d, e, genus, kClass, species, split, year;
-      if (k !== "id" && k !== "minor_type" && k !== "notes") {
+      if (k !== "id" && k !== "minor_type" && k !== "notes" && k !== "major_type") {
         if (k === "authority_year") {
           try {
             try {
