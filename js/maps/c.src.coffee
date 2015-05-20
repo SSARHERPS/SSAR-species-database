@@ -143,6 +143,8 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
 lookupEditorSpecies = (taxon = undefined) ->
   ###
   # Lookup a given species and load it for editing
+  #
+  # @param taxon a URL-encoded string for a taxon.
   ###
   if not taxon?
     return false
@@ -173,6 +175,8 @@ lookupEditorSpecies = (taxon = undefined) ->
     </paper-autogrow-textarea>
     <paper-input label="Image" id="edit-image" name="edit-image" floatingLabel aria-describedby="imagehelp"></paper-input>
       <span class="help-block" id="imagehelp">The image path here should be relative to the <span class="code">public_html/cndb/</span> directory.</span>
+    <paper-input label="Taxon Credit" id="edit-taxon-credit" name="edit-taxon-credit" floatingLabel aria-describedby="taxon-credit-help"></paper-input>
+      <span class="help-block" id="taxon-credit-help">This will be displayed as "Taxon information by [your entry]."</span>
     #{lastEdited}
     <input type='hidden' name='taxon-id' id='taxon-id'/>
     <input type="hidden" name="edit-taxon-author" id="edit-taxon-author" value="" />
@@ -263,7 +267,7 @@ saveEditorEntry = ->
   # Send an editor state along with login credentials,
   # and report the save result back to the user
   ###
-  # Make all the entries lowercase EXCEPT notes.
+  # Make all the entries lowercase EXCEPT notes and taxon_credit.
   # Close it on a successful save
   examineIds = [
     "genus"
@@ -279,6 +283,7 @@ saveEditorEntry = ->
     "notes"
     "image"
     "taxon-author"
+    "taxon-credit"
     ]
   saveObject = new Object()
   ## Manual parses
@@ -320,7 +325,8 @@ saveEditorEntry = ->
       thisSelector = "html >>> #edit-#{id}"
     col = id.replace(/-/g,"_")
     val = $(thisSelector).val()
-    if col isnt "notes"
+    if col isnt "notes" and col isnt "taxon_credit"
+      # We want these to be as literally typed, rather than smart-formatted.
       val = val.toLowerCase()
     saveObject[col] = val
   try
@@ -942,7 +948,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       htmlHead += "\n<!-- Table Headers - #{Object.size(row)} entries -->"
       $.each row, (k,v) ->
         niceKey = k.replace(/_/g," ")
-        unless k is "id" or k is "minor_type" or k is "notes" or k is "major_type" or k is "taxon_author"
+        unless k is "id" or k is "minor_type" or k is "notes" or k is "major_type" or k is "taxon_author" or k is "taxon_credit"
           # or niceKey is "image" ...
           if $("#show-deprecated").polymerSelected() isnt true
             alt = "deprecated_scientific"
@@ -973,7 +979,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
     htmlRow = "\n\t<tr id='cndb-row#{i}' class='cndb-result-entry' data-taxon=\"#{taxonQuery}\">"
     l = 0
     $.each row, (k,col) ->
-      if k isnt "id" and k isnt "minor_type" and k isnt "notes" and k isnt "major_type" and k isnt "taxon_author"
+      if k isnt "id" and k isnt "minor_type" and k isnt "notes" and k isnt "major_type" and k isnt "taxon_author" and k isnt "taxon_credit"
         if k is "authority_year"
           try
             try

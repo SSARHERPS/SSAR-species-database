@@ -151,7 +151,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       htmlHead += "\n<!-- Table Headers - #{Object.size(row)} entries -->"
       $.each row, (k,v) ->
         niceKey = k.replace(/_/g," ")
-        unless k is "id" or k is "minor_type" or k is "notes" or k is "major_type" or k is "taxon_author"
+        unless k is "id" or k is "minor_type" or k is "notes" or k is "major_type" or k is "taxon_author" or k is "taxon_credit"
           # or niceKey is "image" ...
           if $("#show-deprecated").polymerSelected() isnt true
             alt = "deprecated_scientific"
@@ -182,7 +182,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
     htmlRow = "\n\t<tr id='cndb-row#{i}' class='cndb-result-entry' data-taxon=\"#{taxonQuery}\">"
     l = 0
     $.each row, (k,col) ->
-      if k isnt "id" and k isnt "minor_type" and k isnt "notes" and k isnt "major_type" and k isnt "taxon_author"
+      if k isnt "id" and k isnt "minor_type" and k isnt "notes" and k isnt "major_type" and k isnt "taxon_author" and k isnt "taxon_credit"
         if k is "authority_year"
           try
             try

@@ -143,6 +143,8 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
 lookupEditorSpecies = (taxon = undefined) ->
   ###
   # Lookup a given species and load it for editing
+  #
+  # @param taxon a URL-encoded string for a taxon.
   ###
   if not taxon?
     return false
@@ -173,6 +175,8 @@ lookupEditorSpecies = (taxon = undefined) ->
     </paper-autogrow-textarea>
     <paper-input label="Image" id="edit-image" name="edit-image" floatingLabel aria-describedby="imagehelp"></paper-input>
       <span class="help-block" id="imagehelp">The image path here should be relative to the <span class="code">public_html/cndb/</span> directory.</span>
+    <paper-input label="Taxon Credit" id="edit-taxon-credit" name="edit-taxon-credit" floatingLabel aria-describedby="taxon-credit-help"></paper-input>
+      <span class="help-block" id="taxon-credit-help">This will be displayed as "Taxon information by [your entry]."</span>
     #{lastEdited}
     <input type='hidden' name='taxon-id' id='taxon-id'/>
     <input type="hidden" name="edit-taxon-author" id="edit-taxon-author" value="" />
@@ -263,7 +267,7 @@ saveEditorEntry = ->
   # Send an editor state along with login credentials,
   # and report the save result back to the user
   ###
-  # Make all the entries lowercase EXCEPT notes.
+  # Make all the entries lowercase EXCEPT notes and taxon_credit.
   # Close it on a successful save
   examineIds = [
     "genus"
@@ -279,6 +283,7 @@ saveEditorEntry = ->
     "notes"
     "image"
     "taxon-author"
+    "taxon-credit"
     ]
   saveObject = new Object()
   ## Manual parses
@@ -320,7 +325,8 @@ saveEditorEntry = ->
       thisSelector = "html >>> #edit-#{id}"
     col = id.replace(/-/g,"_")
     val = $(thisSelector).val()
-    if col isnt "notes"
+    if col isnt "notes" and col isnt "taxon_credit"
+      # We want these to be as literally typed, rather than smart-formatted.
       val = val.toLowerCase()
     saveObject[col] = val
   try

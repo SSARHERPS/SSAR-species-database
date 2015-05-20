@@ -189,6 +189,8 @@ lookupEditorSpecies = function(taxon) {
 
   /*
    * Lookup a given species and load it for editing
+   *
+   * @param taxon a URL-encoded string for a taxon.
    */
   if (taxon == null) {
     return false;
@@ -196,7 +198,7 @@ lookupEditorSpecies = function(taxon) {
   animateLoad();
   lastEdited = "<p id=\"last-edited-by\">\n  Last edited by <span id=\"taxon-author-last\" class=\"capitalize\"></span>\n</p>";
   if (!$("#modal-taxon-edit").exists()) {
-    editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" class=\"genus\" floatingLabel></paper-input>\n<paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" class=\"species\" floatingLabel></paper-input>\n<paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" class=\"subspecies\" floatingLabel></paper-input>\n<paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\"  class=\"common_name\" floatingLabel></paper-input>\n<paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input>\n  <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",...</span></span>\n<paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input>\n<paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input>\n<paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input>\n<paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" class=\"linnean_order\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" class=\"genus_authority\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input>\n<paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" class=\"species_authority\" floatingLabel></paper-input>\n<paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input>\n<paper-autogrow-textarea target=\"edit-notes\" id=\"edit-notes-autogrow\">\n  <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\"></textarea>\n</paper-autogrow-textarea>\n<paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input>\n  <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>\n" + lastEdited + "\n<input type='hidden' name='taxon-id' id='taxon-id'/>\n<input type=\"hidden\" name=\"edit-taxon-author\" id=\"edit-taxon-author\" value=\"\" />";
+    editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" class=\"genus\" floatingLabel></paper-input>\n<paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" class=\"species\" floatingLabel></paper-input>\n<paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" class=\"subspecies\" floatingLabel></paper-input>\n<paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\"  class=\"common_name\" floatingLabel></paper-input>\n<paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input>\n  <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",...</span></span>\n<paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input>\n<paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input>\n<paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input>\n<paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" class=\"linnean_order\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" class=\"genus_authority\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input>\n<paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" class=\"species_authority\" floatingLabel></paper-input>\n<paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input>\n<paper-autogrow-textarea target=\"edit-notes\" id=\"edit-notes-autogrow\">\n  <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\"></textarea>\n</paper-autogrow-textarea>\n<paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input>\n  <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>\n<paper-input label=\"Taxon Credit\" id=\"edit-taxon-credit\" name=\"edit-taxon-credit\" floatingLabel aria-describedby=\"taxon-credit-help\"></paper-input>\n  <span class=\"help-block\" id=\"taxon-credit-help\">This will be displayed as \"Taxon information by [your entry].\"</span>\n" + lastEdited + "\n<input type='hidden' name='taxon-id' id='taxon-id'/>\n<input type=\"hidden\" name=\"edit-taxon-author\" id=\"edit-taxon-author\" value=\"\" />";
     html = "<paper-action-dialog backdrop layered closeSelector=\"[dismissive]\" id='modal-taxon-edit'>\n  <div id='modal-taxon-editor'>\n    " + editHtml + "\n  </div>\n  <paper-button id='close-editor' dismissive>Cancel</paper-button>\n  <paper-button id='save-editor' affirmative>Save</paper-button></paper-action-dialog>";
     $("#search-results").after(html);
     try {
@@ -299,7 +301,7 @@ saveEditorEntry = function() {
    * and report the save result back to the user
    */
   var args, auth, authYearString, dep, depA, depS, depString, e, examineIds, gYear, hash, link, s64, sYear, saveObject, saveString, secret, userVerification;
-  examineIds = ["genus", "species", "subspecies", "common-name", "major-type", "major-subtype", "minor-type", "linnean-order", "genus-authority", "species-authority", "notes", "image", "taxon-author"];
+  examineIds = ["genus", "species", "subspecies", "common-name", "major-type", "major-subtype", "minor-type", "linnean-order", "genus-authority", "species-authority", "notes", "image", "taxon-author", "taxon-credit"];
   saveObject = new Object();
   try {
     try {
@@ -349,7 +351,7 @@ saveEditorEntry = function() {
     }
     col = id.replace(/-/g, "_");
     val = $(thisSelector).val();
-    if (col !== "notes") {
+    if (col !== "notes" && col !== "taxon_credit") {
       val = val.toLowerCase();
     }
     return saveObject[col] = val;
@@ -1235,7 +1237,7 @@ formatSearchResults = function(result, container) {
       $.each(row, function(k, v) {
         var alt, bootstrapColSize, niceKey;
         niceKey = k.replace(/_/g, " ");
-        if (!(k === "id" || k === "minor_type" || k === "notes" || k === "major_type" || k === "taxon_author")) {
+        if (!(k === "id" || k === "minor_type" || k === "notes" || k === "major_type" || k === "taxon_author" || k === "taxon_credit")) {
           if ($("#show-deprecated").polymerSelected() !== true) {
             alt = "deprecated_scientific";
           } else {
@@ -1274,7 +1276,7 @@ formatSearchResults = function(result, container) {
     l = 0;
     $.each(row, function(k, col) {
       var alt, d, e, genus, kClass, species, split, year;
-      if (k !== "id" && k !== "minor_type" && k !== "notes" && k !== "major_type" && k !== "taxon_author") {
+      if (k !== "id" && k !== "minor_type" && k !== "notes" && k !== "major_type" && k !== "taxon_author" && k !== "taxon_credit") {
         if (k === "authority_year") {
           try {
             try {
