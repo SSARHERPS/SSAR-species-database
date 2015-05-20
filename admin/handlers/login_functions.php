@@ -1529,7 +1529,8 @@ class UserFunctions extends DBHelper
         # Reset by email
         include(dirname(__FILE__)."/../CONFIG.php");
         $url = empty($login_url) ? "login.php":$login_url;
-        $rel_dir = str_replace($relative_path,$working_subdirectory,"") . "/";
+        $rel_dir = $working_subdirectory;
+        if(substr($rel_dir,-1) != "/") $rel_dir = $rel_dir . "/";
         $email_link = $this->getQualifiedDomain() . $rel_dir . $url ."?key=".urlencode($user_tokens["key"])."&verify=".urlencode($user_tokens["verify"]);
         $mail = $this->getMailObject();
         $mail->Subject = $this->getDomain() . " Account Reset";
@@ -1760,7 +1761,8 @@ class UserFunctions extends DBHelper
     # Pull in the configuration files
     include(dirname(__FILE__)."/../CONFIG.php");
     $url = empty($login_url) ? "login.php":$login_url;
-    $rel_dir = str_replace($relative_path,$working_subdirectory,"") . "/";
+    $rel_dir = $working_subdirectory;
+    if(substr($rel_dir,-1) != "/") $rel_dir = $rel_dir . "/";
     $link = $this->getQualifiedDomain() . $rel_dir . $url ."?confirm=true&token=".$components['auth']."&user=".$components['user']."&key=";
     # get all the administrative users, and encrypt the key with their
     # user DB link
