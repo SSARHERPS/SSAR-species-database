@@ -799,6 +799,7 @@ bindClickTargets = ->
 
 $ ->
   bindClickTargets()
+  formatScientificNames()
   try
     $('[data-toggle="tooltip"]').tooltip()
   catch e

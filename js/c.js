@@ -1044,6 +1044,7 @@ bindClickTargets = function() {
 $(function() {
   var e;
   bindClickTargets();
+  formatScientificNames();
   try {
     $('[data-toggle="tooltip"]').tooltip();
   } catch (_error) {
