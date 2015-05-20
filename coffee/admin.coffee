@@ -75,12 +75,16 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
   $("#admin-search").blur()
   # Remove periods from the search
   s = s.replace(/\./g,"")
-  s = prepURI(s)
+  s = prepURI(s.toLowerCase())
   args = "q=#{s}&loose=true"
   $.get(searchParams.targetApi,args,"json")
   .done (result) ->
-    if result.status isnt true
-      toastStatusMessage(result.human_error)
+    if result.status isnt true or result.count is 0
+      stopLoadError()
+      if isNull(result.human_error)
+        toastStatusMessage("Your search returned no results. Please try again.")
+      else
+        toastStatusMessage(result.human_error)
       return false
     # Now, take the results and format them
     data = result.result
@@ -257,8 +261,10 @@ lookupEditorSpecies = (taxon = undefined) ->
       $("#modal-taxon-edit")[0].open()
       stopLoad()
     catch e
+      stopLoadError()
       toastStatusMessage("Unable to populate the editor for this taxon - #{e.message}")
   .fail (result,status) ->
+    stopLoadError()
     toastStatusMessage("There was a server error populating this taxon. Please try again.")
   false
 
@@ -351,10 +357,12 @@ saveEditorEntry = ->
         $("html >>> #modal-taxon-edit")[0].close()
       stopLoad()
       return false
+    stopLoadError()
     toastStatusMessage(result.human_error)
     console.error(result.error)
     return false
   .fail (result,status) ->
+    stopLoadError()
     toastStatusMessage("Failed to send the data to the server.")
     false
 

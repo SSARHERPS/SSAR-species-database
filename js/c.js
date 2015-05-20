@@ -100,12 +100,17 @@ renderAdminSearchResults = function(containerSelector) {
   animateLoad();
   $("#admin-search").blur();
   s = s.replace(/\./g, "");
-  s = prepURI(s);
+  s = prepURI(s.toLowerCase());
   args = "q=" + s + "&loose=true";
   return $.get(searchParams.targetApi, args, "json").done(function(result) {
     var bootstrapColCount, colClass, data, html, htmlClose, htmlHead, targetCount;
-    if (result.status !== true) {
-      toastStatusMessage(result.human_error);
+    if (result.status !== true || result.count === 0) {
+      stopLoadError();
+      if (isNull(result.human_error)) {
+        toastStatusMessage("Your search returned no results. Please try again.");
+      } else {
+        toastStatusMessage(result.human_error);
+      }
       return false;
     }
     data = result.result;
@@ -286,9 +291,11 @@ lookupEditorSpecies = function(taxon) {
       return stopLoad();
     } catch (_error) {
       e = _error;
+      stopLoadError();
       return toastStatusMessage("Unable to populate the editor for this taxon - " + e.message);
     }
   }).fail(function(result, status) {
+    stopLoadError();
     return toastStatusMessage("There was a server error populating this taxon. Please try again.");
   });
   return false;
@@ -382,10 +389,12 @@ saveEditorEntry = function() {
       stopLoad();
       return false;
     }
+    stopLoadError();
     toastStatusMessage(result.human_error);
     console.error(result.error);
     return false;
   }).fail(function(result, status) {
+    stopLoadError();
     toastStatusMessage("Failed to send the data to the server.");
     return false;
   });
