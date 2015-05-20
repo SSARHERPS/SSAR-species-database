@@ -1543,13 +1543,15 @@ modalTaxon = function(taxon) {
     }
     if (isNull(data.notes)) {
       data.notes = "Sorry, we have no notes on this taxon yet.";
-    }
-    if (isNull(data.taxon_author) || data.taxon_author === "null") {
-      data.taxon_author = "";
+      data.taxon_credit = "";
     } else {
-      data.taxon_author = "Last edited by <span class='capitalize'>" + data.taxon_author + "</span>";
+      if (isNull(data.taxon_credit) || data.taxon_credit === "null") {
+        data.taxon_credit = "This taxon information is uncredited.";
+      } else {
+        data.taxon_credit = "Taxon information by " + data.taxon_credit + ".";
+      }
     }
-    html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type'>" + data.major_type + "</span> (<span id='taxon-common-type'>" + data.major_common_type + "</span>)\n    <core-icon icon='arrow-forward'></core-icon>\n    <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + data.notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_author + "</p>";
+    html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type'>" + data.major_type + "</span> (<span id='taxon-common-type'>" + data.major_common_type + "</span>)\n    <core-icon icon='arrow-forward'></core-icon>\n    <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + data.notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_credit + "</p>";
     $("#modal-taxon-content").html(html);
     $("#modal-inat-linkout").unbind().click(function() {
       return openTab("http://www.inaturalist.org/taxa/search?q=" + taxon);

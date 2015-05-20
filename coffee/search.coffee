@@ -406,10 +406,12 @@ modalTaxon = (taxon = undefined) ->
     # Populate the taxon
     if isNull(data.notes)
       data.notes = "Sorry, we have no notes on this taxon yet."
-    if isNull(data.taxon_author) or data.taxon_author is "null"
-      data.taxon_author = ""
+      data.taxon_credit = ""
     else
-      data.taxon_author = "Last edited by <span class='capitalize'>#{data.taxon_author}</span>"
+      if isNull(data.taxon_credit) or data.taxon_credit is "null"
+        data.taxon_credit = "This taxon information is uncredited."
+      else
+        data.taxon_credit = "Taxon information by #{data.taxon_credit}."
     html = """
     <div id='meta-taxon-info'>
       #{yearHtml}
@@ -425,7 +427,7 @@ modalTaxon = (taxon = undefined) ->
     </div>
     <h3>Taxon Notes</h3>
     <p id='taxon-notes'>#{data.notes}</p>
-    <p class="text-right small text-muted">#{data.taxon_author}</p>
+    <p class="text-right small text-muted">#{data.taxon_credit}</p>
     """
     $("#modal-taxon-content").html(html)
     $("#modal-inat-linkout")
