@@ -1535,7 +1535,7 @@ class UserFunctions extends DBHelper
         # Reset by email
         include(dirname(__FILE__)."/../CONFIG.php");
         $url = empty($login_url) ? "login.php":$login_url;
-        $rel_dir = $working_subdirectory;
+        $rel_dir = str_replace($relative_path,"",$working_subdirectory);
         if(substr($rel_dir,-1) != "/") $rel_dir = $rel_dir . "/";
         $email_link = $this->getQualifiedDomain() . $rel_dir . $url ."?key=".urlencode($user_tokens["key"])."&verify=".urlencode($user_tokens["verify"]);
         $mail = $this->getMailObject();
@@ -1767,7 +1767,7 @@ class UserFunctions extends DBHelper
     # Pull in the configuration files
     include(dirname(__FILE__)."/../CONFIG.php");
     $url = empty($login_url) ? "login.php":$login_url;
-    $rel_dir = $working_subdirectory;
+    $rel_dir = str_replace($relative_path,"",$working_subdirectory);
     if(substr($rel_dir,-1) != "/") $rel_dir = $rel_dir . "/";
     $link = $this->getQualifiedDomain() . $rel_dir . $url ."?confirm=true&token=".$components['auth']."&user=".$components['user']."&key=";
     # get all the administrative users, and encrypt the key with their
@@ -1839,21 +1839,22 @@ class UserFunctions extends DBHelper
     $ret = array();
     try
       {
-        $thisUserdata = $this->validateUser(true);
-        if($thisUserdata["status"] !== true)
+        $thisUserStatus = $this->validateUser(true);
+        $thisUserdata = $this->getUser();
+        $thisUserEmail = $thisUserdata[$this->usercol];
+        if($thisUserStatus["status"] !== true)
           {
-            throw(new Exception("User failed validation"));
+            throw(new Exception("You're not logged in as a valid user."));
           }
         if(boolstr($thisUserdata["admin_flag"]) !== true)
           {
-            throw(new Exception("You must be logged in with an administrative user account to authorize a new user."));
+            throw(new Exception("You must be logged in with an administrative user account to authorize a new user (logged in as '".$thisUserEmail."' )."));
           }
       }
     catch(Exception $e)
       {
-        return array("status"=>false,"error"=>$e->getMessage(),"message"=>"Please log in before attempting to authenticate a user.","cookie"=>$this->domain."_link","value"=>$_COOKIE[$this->domain."_link"]);
+        return array("status"=>false,"error"=>$e->getMessage(),"message"=>"Please log in before attempting to authenticate a user: ".$e->getMessage()."","cookie"=>$this->domain."_link","value"=>$_COOKIE[$this->domain."_link"],"userdata"=>$thisUserdata, "userstatus"=>$thisUserStatus);
       }
-    $thisUserEmail = $thisUserdata[$this->usercol];
     $target_user = array($this->linkcol => $target_user);
     try
       {

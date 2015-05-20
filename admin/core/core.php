@@ -152,14 +152,18 @@ if(!function_exists('strbool'))
       if(is_bool($bool)) return $bool ? 'true' : 'false';
       else return 'non_bool';
     }
-    function boolstr($string)
-    {
-      // returns the boolean of a string 'true' or 'false'
-      if(is_bool($string)) return $string;
-      if(is_string($string)) return strtolower($string)==='true' ? true:false;
-      if(preg_match("/[0-1]/",$string)) return $string=='1' ? true:false;
-      return false;
-    }
+      function boolstr($string)
+      {
+        // returns the boolean of a string 'true' or 'false'
+        if(is_bool($string)) return $string;
+        if(is_string($string))
+        {
+          if(preg_match("/[0-1]/",$string)) return intval($string) == 1 ? true:false;
+          return strtolower($string)==='true' ? true:false;
+        }
+        if(preg_match("/[0-1]/",$string)) return $string == 1 ? true:false;
+        return false;
+      }
   }
 
 if(!function_exists('shuffle_assoc'))

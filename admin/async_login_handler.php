@@ -60,6 +60,9 @@ if($print_login_state === true)
       case "removeaccount":
         returnAjax(removeAccount($_REQUEST));
         break;
+      case "verifynewuser":
+        returnAjax(verifyUserAuth($_REQUEST));
+        break;
       default:
         returnAjax(getLoginState($_REQUEST,true));
       }
@@ -322,6 +325,14 @@ function getFromUser($get) {
       else return array('status'=>false,'error'=>'Invalid user');
     }
   return array('status'=>false,'error'=>"One or more required fields were left blank");
+}
+
+function verifyUserAuth($get) {
+  $token = $get['token'];
+  $userToActivate = $get['user'];
+  $encoded_key = $get['key'];
+  $user = new UserFunctions();
+  return $user->verifyUserAuth($encoded_key,$token,$userToActivate);
 }
 
 ?>
