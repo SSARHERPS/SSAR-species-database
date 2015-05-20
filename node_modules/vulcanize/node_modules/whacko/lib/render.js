@@ -7,8 +7,6 @@ var utils = require('./utils');
 
 var encode = utils.encode;
 
-var serializer = new parse5.TreeSerializer(parse5.TreeAdapters.htmlparser2);
-
 /*
  Boolean Attributes
  */
@@ -75,6 +73,9 @@ var tagType = {
 
 var render = module.exports = function (dom, opts) {
     opts = opts || {};
+    var serializer = new parse5.TreeSerializer(parse5.TreeAdapters.htmlparser2, {
+        encodeHtmlEntities: opts.encodeEntities
+    });
 
     if (!Array.isArray(dom) && !dom.cheerio)
         dom = dom.type === 'root' ?  dom.children : [dom];

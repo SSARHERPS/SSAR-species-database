@@ -105,7 +105,7 @@ Cheerio.prototype.options = {
   withDomLvl1: true,
   normalizeWhitespace: false,
   xmlMode: false,
-  decodeEntities: true
+  encodeEntities: true
 };
 
 /*

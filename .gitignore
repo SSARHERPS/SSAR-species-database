@@ -52,3 +52,4 @@ errors/
 *.aux
 
 bower_components/bootstrap/node_modules/
+node_modules/
