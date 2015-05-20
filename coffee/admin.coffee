@@ -147,9 +147,44 @@ lookupEditorSpecies = (taxon = undefined) ->
   if not taxon?
     return false
   animateLoad()
+  lastEdited = """
+    <p id="last-edited-by">
+      Last edited by <span id="taxon-author-last" class="capitalize"></span>
+    </p>
+  """
   if not $("#modal-taxon-edit").exists()
-    editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" class=\"genus\" floatingLabel></paper-input> <paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" class=\"species\" floatingLabel></paper-input> <paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" class=\"subspecies\" floatingLabel></paper-input> <paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\"  class=\"common_name\" floatingLabel></paper-input> <paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input> <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",...</span></span> <paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input> <paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input> <paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input> <paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" class=\"linnean_order\" floatingLabel></paper-input> <paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" class=\"genus_authority\" floatingLabel></paper-input> <paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input> <paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" class=\"species_authority\" floatingLabel></paper-input> <paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input> <paper-autogrow-textarea target=\"edit-notes\" id=\"edit-notes-autogrow\"> <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\"></textarea> </paper-autogrow-textarea> <paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input> <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span><input type='hidden' name='taxon-id' id='taxon-id'/>"
-    html = "<paper-action-dialog backdrop layered closeSelector=\"[dismissive]\" id='modal-taxon-edit'><div id='modal-taxon-editor'>#{editHtml}</div><paper-button id='close-editor' dismissive>Cancel</paper-button><paper-button id='save-editor' affirmative>Save</paper-button></paper-action-dialog>"
+    editHtml = """
+    <paper-input label="Genus" id="edit-genus" name="edit-genus" class="genus" floatingLabel></paper-input>
+    <paper-input label="Species" id="edit-species" name="edit-species" class="species" floatingLabel></paper-input>
+    <paper-input label="Subspecies" id="edit-subspecies" name="edit-subspecies" class="subspecies" floatingLabel></paper-input>
+    <paper-input label="Common Name" id="edit-common-name" name="edit-common-name"  class="common_name" floatingLabel></paper-input>
+    <paper-input label="Deprecated Scientific Names" id="edit-deprecated-scientific" name="edit-depreated-scientific" floatingLabel aria-describedby="deprecatedHelp"></paper-input>
+      <span class="help-block" id="deprecatedHelp">List names here in the form <span class="code">"Genus species":"Authority: year","Genus species":"Authority: year",...</span></span>
+    <paper-input label="Clade" id="edit-major-type" name="edit-major-type" floatingLabel></paper-input>
+    <paper-input label="Subtype" id="edit-major-subtype" name="edit-major-subtype" floatingLabel></paper-input>
+    <paper-input label="Minor clade / 'Family'" id="edit-minor-type" name="edit-minor-type" floatingLabel></paper-input>
+    <paper-input label="Linnean Order" id="edit-linnean-order" name="edit-linnean-order" class="linnean_order" floatingLabel></paper-input>
+    <paper-input label="Genus authority" id="edit-genus-authority" name="edit-genus-authority" class="genus_authority" floatingLabel></paper-input>
+    <paper-input label="Genus authority year" id="edit-gauthyear" name="edit-gauthyear" floatingLabel></paper-input>
+    <paper-input label="Species authority" id="edit-species-authority" name="edit-species-authority" class="species_authority" floatingLabel></paper-input>
+    <paper-input label="Species authority year" id="edit-sauthyear" name="edit-sauthyear" floatingLabel></paper-input>
+    <paper-autogrow-textarea target="edit-notes" id="edit-notes-autogrow">
+      <textarea placeholder="Notes" id="edit-notes" name="edit-notes"></textarea>
+    </paper-autogrow-textarea>
+    <paper-input label="Image" id="edit-image" name="edit-image" floatingLabel aria-describedby="imagehelp"></paper-input>
+      <span class="help-block" id="imagehelp">The image path here should be relative to the <span class="code">public_html/cndb/</span> directory.</span>
+    #{lastEdited}
+    <input type='hidden' name='taxon-id' id='taxon-id'/>
+    <input type="hidden" name="edit-taxon-author" id="edit-taxon-author" value="" />
+    """
+    html = """
+    <paper-action-dialog backdrop layered closeSelector="[dismissive]" id='modal-taxon-edit'>
+      <div id='modal-taxon-editor'>
+        #{editHtml}
+      </div>
+      <paper-button id='close-editor' dismissive>Cancel</paper-button>
+      <paper-button id='save-editor' affirmative>Save</paper-button></paper-action-dialog>
+    """
     $("#search-results").after(html)
     # Bind the save button
     try
@@ -160,6 +195,17 @@ lookupEditorSpecies = (taxon = undefined) ->
       $("html >>> #save-editor")
       .click ->
         saveEditorEntry()
+  else
+    # Modal taxon exists, do we need to re-add the last edited?
+    try
+      existensial = $("html /deep/ #last-edited-by").exists()
+    catch e
+      existensial = $("html >>> #last-edited-by").exists()
+    unless existensial
+      try
+        $("html /deep/ #imagehelp").after(lastEdited)
+      catch e
+        $("html >>> #imagehelp").after(lastEdited)
   # Look up the taxon, take the first result, and populate
   $.get(searchParams.targetApi,"q=#{taxon}","json")
   .done (result) ->
@@ -176,12 +222,29 @@ lookupEditorSpecies = (taxon = undefined) ->
           year = parseTaxonYear(d)
           $("#edit-gauthyear").attr("value",year.genus)
           $("#edit-sauthyear").attr("value",year.species)
+        else if col is "taxon_author"
+          if d is "null" or isNull(d)
+            $("#last-edited-by").remove()
+            console.warn("Remove edited by! Didn't have an author provided for column '#{col}', giving '#{d}'")
+          else
+            try
+              $("html /deep/ #taxon-author-last").text(d)
+            catch e
+              $("html >>> #taxon-author-last").text(d)
+          whoEdited = if isNull($.cookie("ssarherps_fullname")) then $.cookie("ssarherps_user") else $.cookie("ssarherps_fullname")
+          try
+            $("html /deep/ #edit-taxon-author").attr("value",whoEdited)
+          catch e
+            $("html >>> #edit-taxon-author").attr("value",whoEdited)
         else
           fieldSelector = "#edit-#{col.replace(/_/g,"-")}"
           if col is "deprecated_scientific"
             d = JSON.stringify(d).slice(1,-1)
           if col isnt "notes"
-            $(fieldSelector).attr("value",d)
+            try
+              $("html /deep/ #{fieldSelector}").attr("value",d)
+            catch e
+              $("html >>> #{fieldSelector}").attr("value",d)
           else
             try
               $("html /deep/ #{fieldSelector}").text(d)
@@ -215,6 +278,7 @@ saveEditorEntry = ->
     "species-authority"
     "notes"
     "image"
+    "taxon-author"
     ]
   saveObject = new Object()
   ## Manual parses
@@ -251,7 +315,7 @@ saveEditorEntry = ->
     console.log(k,id)
     try
       thisSelector = "html /deep/ #edit-#{id}"
-      $(thisSelector)
+      if isNull($(thisSelector)) then throw("Invalid Selector")
     catch e
       thisSelector = "html >>> #edit-#{id}"
     col = id.replace(/-/g,"_")

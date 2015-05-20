@@ -1266,18 +1266,21 @@ class UserFunctions extends DBHelper
 
         $cookieuser=$this->domain."_user";
         $cookieperson=$this->domain."_name";
+        $cookiewholeperson=$this->domain."_fullname";
         $cookieauth=$this->domain."_auth";
         $cookiekey=$this->domain."_secret";
         $cookiepic=$this->domain."_pic";
         $cookielink=$this->domain."_link";
 
         $xml=new Xml;
-        $user_greet=$xml->getTagContents($userdata['name'],"<fname>"); // for now
+        $user_greet=$xml->getTagContents($userdata['name'],"<fname>");
+        $user_full_name=$xml->getTagContents($userdata['name'],"<name>"); // for now
 
         setcookie($cookieauth,$value,$expire);
         setcookie($cookiekey,$cookie_secret,$expire);
         setcookie($cookieuser,$username,$expire);
         setcookie($cookieperson,$user_greet,$expire);
+        setcookie($cookiewholeperson,$user_full_name,$expire);
         $path=$this->getUserPicture($userdata['id']);
         setcookie($cookiepic,$path,$expire);
         setcookie($cookielink,$dblink,$expire);
@@ -1287,6 +1290,7 @@ class UserFunctions extends DBHelper
         $jquerycookie.="$.cookie('$cookiekey','$cookie_secret'".$js_expires;
         $jquerycookie.="$.cookie('$cookieuser','$username'".$js_expires;
         $jquerycookie.="$.cookie('$cookieperson','$user_greet'".$js_expires;
+        $jquerycookie.="$.cookie('$cookiewholeperson','$user_full_name'".$js_expires;
         $jquerycookie.="$.cookie('$cookiepic','$path'".$js_expires;
         $jquerycookie.="$.cookie('$cookielink','$dblink'".$js_expires;
 
@@ -1296,6 +1300,7 @@ class UserFunctions extends DBHelper
           $cookiekey=>$cookie_secret,
           $cookiepic=>$path,
           $cookieperson=>$user_greet,
+          $cookiewholeperson => $user_full_name,
           $cookielink=>$dblink
         );
 
@@ -1306,6 +1311,7 @@ class UserFunctions extends DBHelper
           'secret'=>"{'$cookiekey':'$cookie_secret'}",
           'pic'=>"{'$cookiepic':'$path'}",
           'name'=>"{'$cookieperson':'$user_greet'}",
+          'full_name'=>"{'$cookiewholeperson':'$user_full_name'}",
           'link'=>"{'$cookielink':'$dblink'}",
           'js'=>$jquerycookie,
           'source'=>$value_create,

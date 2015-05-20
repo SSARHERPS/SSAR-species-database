@@ -182,7 +182,7 @@ renderAdminSearchResults = function(containerSelector) {
 };
 
 lookupEditorSpecies = function(taxon) {
-  var e, editHtml, html;
+  var e, editHtml, existensial, html, lastEdited;
   if (taxon == null) {
     taxon = void 0;
   }
@@ -194,9 +194,10 @@ lookupEditorSpecies = function(taxon) {
     return false;
   }
   animateLoad();
+  lastEdited = "<p id=\"last-edited-by\">\n  Last edited by <span id=\"taxon-author-last\" class=\"capitalize\"></span>\n</p>";
   if (!$("#modal-taxon-edit").exists()) {
-    editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" class=\"genus\" floatingLabel></paper-input> <paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" class=\"species\" floatingLabel></paper-input> <paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" class=\"subspecies\" floatingLabel></paper-input> <paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\"  class=\"common_name\" floatingLabel></paper-input> <paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input> <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",...</span></span> <paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input> <paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input> <paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input> <paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" class=\"linnean_order\" floatingLabel></paper-input> <paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" class=\"genus_authority\" floatingLabel></paper-input> <paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input> <paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" class=\"species_authority\" floatingLabel></paper-input> <paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input> <paper-autogrow-textarea target=\"edit-notes\" id=\"edit-notes-autogrow\"> <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\"></textarea> </paper-autogrow-textarea> <paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input> <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span><input type='hidden' name='taxon-id' id='taxon-id'/>";
-    html = "<paper-action-dialog backdrop layered closeSelector=\"[dismissive]\" id='modal-taxon-edit'><div id='modal-taxon-editor'>" + editHtml + "</div><paper-button id='close-editor' dismissive>Cancel</paper-button><paper-button id='save-editor' affirmative>Save</paper-button></paper-action-dialog>";
+    editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" class=\"genus\" floatingLabel></paper-input>\n<paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" class=\"species\" floatingLabel></paper-input>\n<paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" class=\"subspecies\" floatingLabel></paper-input>\n<paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\"  class=\"common_name\" floatingLabel></paper-input>\n<paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input>\n  <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",...</span></span>\n<paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input>\n<paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input>\n<paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input>\n<paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" class=\"linnean_order\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" class=\"genus_authority\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input>\n<paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" class=\"species_authority\" floatingLabel></paper-input>\n<paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input>\n<paper-autogrow-textarea target=\"edit-notes\" id=\"edit-notes-autogrow\">\n  <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\"></textarea>\n</paper-autogrow-textarea>\n<paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input>\n  <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>\n" + lastEdited + "\n<input type='hidden' name='taxon-id' id='taxon-id'/>\n<input type=\"hidden\" name=\"edit-taxon-author\" id=\"edit-taxon-author\" value=\"\" />";
+    html = "<paper-action-dialog backdrop layered closeSelector=\"[dismissive]\" id='modal-taxon-edit'>\n  <div id='modal-taxon-editor'>\n    " + editHtml + "\n  </div>\n  <paper-button id='close-editor' dismissive>Cancel</paper-button>\n  <paper-button id='save-editor' affirmative>Save</paper-button></paper-action-dialog>";
     $("#search-results").after(html);
     try {
       $("html /deep/ #save-editor").click(function() {
@@ -208,6 +209,21 @@ lookupEditorSpecies = function(taxon) {
         return saveEditorEntry();
       });
     }
+  } else {
+    try {
+      existensial = $("html /deep/ #last-edited-by").exists();
+    } catch (_error) {
+      e = _error;
+      existensial = $("html >>> #last-edited-by").exists();
+    }
+    if (!existensial) {
+      try {
+        $("html /deep/ #imagehelp").after(lastEdited);
+      } catch (_error) {
+        e = _error;
+        $("html >>> #imagehelp").after(lastEdited);
+      }
+    }
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
     var data;
@@ -215,7 +231,7 @@ lookupEditorSpecies = function(taxon) {
       data = result.result[0];
       console.log("Populating from", data);
       $.each(data, function(col, d) {
-        var fieldSelector, year;
+        var fieldSelector, whoEdited, year;
         if (col === "id") {
           $("#taxon-id").attr("value", d);
         }
@@ -223,13 +239,37 @@ lookupEditorSpecies = function(taxon) {
           year = parseTaxonYear(d);
           $("#edit-gauthyear").attr("value", year.genus);
           return $("#edit-sauthyear").attr("value", year.species);
+        } else if (col === "taxon_author") {
+          if (d === "null" || isNull(d)) {
+            $("#last-edited-by").remove();
+            console.warn("Remove edited by! Didn't have an author provided for column '" + col + "', giving '" + d + "'");
+          } else {
+            try {
+              $("html /deep/ #taxon-author-last").text(d);
+            } catch (_error) {
+              e = _error;
+              $("html >>> #taxon-author-last").text(d);
+            }
+          }
+          whoEdited = isNull($.cookie("ssarherps_fullname")) ? $.cookie("ssarherps_user") : $.cookie("ssarherps_fullname");
+          try {
+            return $("html /deep/ #edit-taxon-author").attr("value", whoEdited);
+          } catch (_error) {
+            e = _error;
+            return $("html >>> #edit-taxon-author").attr("value", whoEdited);
+          }
         } else {
           fieldSelector = "#edit-" + (col.replace(/_/g, "-"));
           if (col === "deprecated_scientific") {
             d = JSON.stringify(d).slice(1, -1);
           }
           if (col !== "notes") {
-            return $(fieldSelector).attr("value", d);
+            try {
+              return $("html /deep/ " + fieldSelector).attr("value", d);
+            } catch (_error) {
+              e = _error;
+              return $("html >>> " + fieldSelector).attr("value", d);
+            }
           } else {
             try {
               return $("html /deep/ " + fieldSelector).text(d);
@@ -259,7 +299,7 @@ saveEditorEntry = function() {
    * and report the save result back to the user
    */
   var args, auth, authYearString, dep, depA, depS, depString, e, examineIds, gYear, hash, link, s64, sYear, saveObject, saveString, secret, userVerification;
-  examineIds = ["genus", "species", "subspecies", "common-name", "major-type", "major-subtype", "minor-type", "linnean-order", "genus-authority", "species-authority", "notes", "image"];
+  examineIds = ["genus", "species", "subspecies", "common-name", "major-type", "major-subtype", "minor-type", "linnean-order", "genus-authority", "species-authority", "notes", "image", "taxon-author"];
   saveObject = new Object();
   try {
     try {
@@ -300,7 +340,9 @@ saveEditorEntry = function() {
     console.log(k, id);
     try {
       thisSelector = "html /deep/ #edit-" + id;
-      $(thisSelector);
+      if (isNull($(thisSelector))) {
+        throw "Invalid Selector";
+      }
     } catch (_error) {
       e = _error;
       thisSelector = "html >>> #edit-" + id;
@@ -1193,7 +1235,7 @@ formatSearchResults = function(result, container) {
       $.each(row, function(k, v) {
         var alt, bootstrapColSize, niceKey;
         niceKey = k.replace(/_/g, " ");
-        if (!(k === "id" || k === "minor_type" || k === "notes" || k === "major_type")) {
+        if (!(k === "id" || k === "minor_type" || k === "notes" || k === "major_type" || k === "taxon_author")) {
           if ($("#show-deprecated").polymerSelected() !== true) {
             alt = "deprecated_scientific";
           } else {
@@ -1232,7 +1274,7 @@ formatSearchResults = function(result, container) {
     l = 0;
     $.each(row, function(k, col) {
       var alt, d, e, genus, kClass, species, split, year;
-      if (k !== "id" && k !== "minor_type" && k !== "notes" && k !== "major_type") {
+      if (k !== "id" && k !== "minor_type" && k !== "notes" && k !== "major_type" && k !== "taxon_author") {
         if (k === "authority_year") {
           try {
             try {
@@ -1461,7 +1503,7 @@ modalTaxon = function(taxon) {
   }
   animateLoad();
   if (!$("#modal-taxon").exists()) {
-    html = "<paper-action-dialog backdrop layered closeSelector=\"[affirmative]\" id='modal-taxon'><div id='modal-taxon-content'></div><paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button><paper-button dismissive id='modal-calphotos-linkout'>CalPhotos</paper-button><paper-button affirmative autofocus>Close</paper-button></paper-action-dialog>";
+    html = "<paper-action-dialog backdrop layered closeSelector=\"[affirmative]\" id='modal-taxon'>\n  <div id='modal-taxon-content'></div>\n  <paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button>\n  <paper-button dismissive id='modal-calphotos-linkout'>CalPhotos</paper-button>\n  <paper-button affirmative autofocus>Close</paper-button>\n</paper-action-dialog>";
     $("#result_container").after(html);
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
@@ -1502,7 +1544,12 @@ modalTaxon = function(taxon) {
     if (isNull(data.notes)) {
       data.notes = "Sorry, we have no notes on this taxon yet.";
     }
-    html = "<div id='meta-taxon-info'>" + yearHtml + "<p>English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span></p><p>Type: <span id='taxon-type'>" + data.major_type + "</span> (<span id='taxon-common-type'>" + data.major_common_type + "</span>) <core-icon icon='arrow-forward'></core-icon> <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "</p>" + deprecatedHtml + "</div><h3>Taxon Notes</h3><p id='taxon-notes'>" + data.notes + "</p>";
+    if (isNull(data.taxon_author) || data.taxon_author === "null") {
+      data.taxon_author = "";
+    } else {
+      data.taxon_author = "Last edited by <span class='capitalize'>" + data.taxon_author + "</span>";
+    }
+    html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type'>" + data.major_type + "</span> (<span id='taxon-common-type'>" + data.major_common_type + "</span>)\n    <core-icon icon='arrow-forward'></core-icon>\n    <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + data.notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_author + "</p>";
     $("#modal-taxon-content").html(html);
     $("#modal-inat-linkout").unbind().click(function() {
       return openTab("http://www.inaturalist.org/taxa/search?q=" + taxon);

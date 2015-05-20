@@ -151,7 +151,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       htmlHead += "\n<!-- Table Headers - #{Object.size(row)} entries -->"
       $.each row, (k,v) ->
         niceKey = k.replace(/_/g," ")
-        unless k is "id" or k is "minor_type" or k is "notes" or k is "major_type"
+        unless k is "id" or k is "minor_type" or k is "notes" or k is "major_type" or k is "taxon_author"
           # or niceKey is "image" ...
           if $("#show-deprecated").polymerSelected() isnt true
             alt = "deprecated_scientific"
@@ -182,7 +182,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
     htmlRow = "\n\t<tr id='cndb-row#{i}' class='cndb-result-entry' data-taxon=\"#{taxonQuery}\">"
     l = 0
     $.each row, (k,col) ->
-      if k isnt "id" and k isnt "minor_type" and k isnt "notes" and k isnt "major_type"
+      if k isnt "id" and k isnt "minor_type" and k isnt "notes" and k isnt "major_type" and k isnt "taxon_author"
         if k is "authority_year"
           try
             try
@@ -366,7 +366,14 @@ modalTaxon = (taxon = undefined) ->
   # https://www.polymer-project.org/docs/elements/paper-elements.html#paper-action-dialog
   animateLoad()
   if not $("#modal-taxon").exists()
-    html = "<paper-action-dialog backdrop layered closeSelector=\"[affirmative]\" id='modal-taxon'><div id='modal-taxon-content'></div><paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button><paper-button dismissive id='modal-calphotos-linkout'>CalPhotos</paper-button><paper-button affirmative autofocus>Close</paper-button></paper-action-dialog>"
+    html = """
+    <paper-action-dialog backdrop layered closeSelector="[affirmative]" id='modal-taxon'>
+      <div id='modal-taxon-content'></div>
+      <paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button>
+      <paper-button dismissive id='modal-calphotos-linkout'>CalPhotos</paper-button>
+      <paper-button affirmative autofocus>Close</paper-button>
+    </paper-action-dialog>
+    """
     $("#result_container").after(html)
   $.get(searchParams.targetApi,"q=#{taxon}","json")
   .done (result) ->
@@ -399,7 +406,27 @@ modalTaxon = (taxon = undefined) ->
     # Populate the taxon
     if isNull(data.notes)
       data.notes = "Sorry, we have no notes on this taxon yet."
-    html = "<div id='meta-taxon-info'>#{yearHtml}<p>English name: <span id='taxon-common-name' class='common_name'>#{data.common_name}</span></p><p>Type: <span id='taxon-type'>#{data.major_type}</span> (<span id='taxon-common-type'>#{data.major_common_type}</span>) <core-icon icon='arrow-forward'></core-icon> <span id='taxon-subtype'>#{data.major_subtype}</span>#{minorTypeHtml}</p>#{deprecatedHtml}</div><h3>Taxon Notes</h3><p id='taxon-notes'>#{data.notes}</p>"
+    if isNull(data.taxon_author) or data.taxon_author is "null"
+      data.taxon_author = ""
+    else
+      data.taxon_author = "Last edited by <span class='capitalize'>#{data.taxon_author}</span>"
+    html = """
+    <div id='meta-taxon-info'>
+      #{yearHtml}
+      <p>
+        English name: <span id='taxon-common-name' class='common_name'>#{data.common_name}</span>
+      </p>
+      <p>
+        Type: <span id='taxon-type'>#{data.major_type}</span> (<span id='taxon-common-type'>#{data.major_common_type}</span>)
+        <core-icon icon='arrow-forward'></core-icon>
+        <span id='taxon-subtype'>#{data.major_subtype}</span>#{minorTypeHtml}
+      </p>
+      #{deprecatedHtml}
+    </div>
+    <h3>Taxon Notes</h3>
+    <p id='taxon-notes'>#{data.notes}</p>
+    <p class="text-right small text-muted">#{data.taxon_author}</p>
+    """
     $("#modal-taxon-content").html(html)
     $("#modal-inat-linkout")
     .unbind()
