@@ -207,7 +207,7 @@ class UserFunctions extends DBHelper
     return empty($userdata[$this->totpcol]) ? false:$userdata[$this->totpcol];
   }
 
-  private function setTempSecret($secret)
+  private function setTempSecret($secret = "")
   {
     $userdata = $this->getUser();
     $l = $this->openDB();
@@ -1437,6 +1437,38 @@ class UserFunctions extends DBHelper
     else return array('status'=>false,'error'=>'Bad validation','method'=>$method,"validated_meta"=>$vmeta);
   }
 
+  
+  
+  public static function createRandomUserPassword($newPasswordLength = 16)
+  {
+    /***
+     *
+     ***/
+    $sourcePasswordLength = 2 * $newPasswordLength;
+    require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
+    $passwordBase = Stronghash::createSalt($sourcePasswordLength);
+    $ambiguousCharacters = array(
+      "l",
+      "1",
+      "I",
+      "O",
+      "0",
+      "Q",
+      "D",
+      "B",
+      "8",
+      "G",
+      "6",
+      "S",
+      "5",
+      "Z",
+      "2"
+    );
+    $passwordNiceBase = str_replace($ambiguousCharacters,"",$passwordBase);
+    $passwordNice = substr($passwordNiceBase,0,$newPasswordLength);
+    return $passwordNice;
+  }
+
   public function resetUserPassword($method = null, $totp = null)
   {
     /***
@@ -1508,10 +1540,10 @@ class UserFunctions extends DBHelper
        * substr(hash('md5',salt.$rand_string),0,8) and the key
        *
        * We encrypt the $rand_string with $key and stash it in
-       * $this->tmpcol .
+       * $this->tmpColumn .
        *
        * When it comes time to verify the reset, we decrypt
-       * $this->tmpcol and compare the first 8 characters of the md5.
+       * $this->tmpColumn and compare the first 8 characters of the md5.
        *
        * Note that the use of md5 was mostly for speed an
        * convenience. While a stronger hash would be less prone to
@@ -1520,8 +1552,8 @@ class UserFunctions extends DBHelper
        */
       require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
       $rand_string = Stronghash::createSalt();
-      $key = Stronghash::createSalt(8);
-      $pw_data = json_decode($userdata[$this->pwcol],true);
+      $key = self::createRandomUserPassword(8);
+      $pw_data = json_decode($userdata[$this->pwColumn],true);
       $salt = $pw_data["salt"];
       $user_verify_token = substr(hash('md5',$salt.$rand_string),0,8);
       $encrypted_secret = self::encryptThis($key,$rand_string);
@@ -1537,11 +1569,11 @@ class UserFunctions extends DBHelper
         $url = empty($login_url) ? "login.php":$login_url;
         $rel_dir = str_replace($relative_path,"",$working_subdirectory);
         if(substr($rel_dir,-1) != "/") $rel_dir = $rel_dir . "/";
-        $email_link = $this->getQualifiedDomain() . $rel_dir . $url ."?key=".urlencode($user_tokens["key"])."&verify=".urlencode($user_tokens["verify"]);
+        $email_link = $this->getQualifiedDomain() . $rel_dir . $url ."?action=finishpasswordreset&key=".urlencode($user_tokens["key"])."&verify=".urlencode($user_tokens["verify"]) . "&user=".$this->getUsername();
         $mail = $this->getMailObject();
         $mail->Subject = $this->getDomain() . " Account Reset";
         $mail->Body = "<p>You've requested to reset the password to ".$this->getDomain().". Click or copy-paste the link below to reset your password.</p><pre><a href='".$email_link."'>".$email_link."</a></pre><p>If you didn't request a password change, you can ignore this email.</p>.";
-        $mail->addAddresses($this->getUsername());
+        $mail->addAddress($this->getUsername());
         $status = $mail->send();
         $callback = array("status"=>$status,"method"=>"email");
         if(!$status)
@@ -1570,18 +1602,52 @@ class UserFunctions extends DBHelper
     /***
      * If the user requested to update their password, do a check on their
      * authentication, then invoke changeUserPassword()
+     *
+     * @param string|array $passwordBlob If the password is being
+     *                                  reset, then $passwordBlob
+     *                                  should be an array with the
+     *                                  keys "key" and
+     *                                  "verify". Otherwise, it should
+     *                                  be an array with keys "old"
+     *                                  and "new".
      ***/
-    if($isResetPassword === true)
+    try
     {
-      try
+      if(!is_array($passwordBlob)) throw(new Exception("Invalid password object (should be array)"));
+      if($isResetPassword === true)
       {
-        return $this->changeUserPassword($passwordBlob,null,true);
-      }
-      catch(Exception $e)
-      {
-        # Handle the exception
-      }
+        try
+        {
+          return $this->changeUserPassword($passwordBlob,null,true);
+        }
+        catch(Exception $e)
+        {
+          # Handle the exception
+          return array("status"=>false, "error"=>$e->getMessage(),"human_error"=>"There was an error resetting your password (".$e->getMessage().").","app_error_code"=>150);
+        }
 
+      }
+      else
+      {
+        # We're updating, not restting the password.
+        try
+        {
+          if(!array_key_exists("old",$passwordBlob) or !array_key_exists("new",$passwordBlob)) throw(new Exception("Password object requires keys 'old' and 'new'"));
+          $oldPassword = $passwordBlob["old"];
+          $newPassword = $passwordBlob["new"];
+          return $this->changeUserPassword($oldPassword,$newPassword);
+        }
+        catch (Exception $e)
+        {
+          # Handle the exception
+          return array("status"=>false, "error"=>$e->getMessage(),"human_error"=>"There was a server error changing your password.","app_error_code"=>151);
+        }
+      }
+    }
+    catch(Exception $e)
+    {
+      # All top-level exceptions
+      return array("status"=>false,"error"=>$e->getMessage(),"given"=>$passwordBlob,"usingResetPassword"=>$isResetPassword);
     }
   }
 
@@ -1601,82 +1667,158 @@ class UserFunctions extends DBHelper
      *                                  be the plain-text string of
      *                                  the old password.
      * @param string $newPassword If $isResetPassword is true, this
-     *                            field is ignored.
+     *                            can be "true" to email the new password.
      * @param bool $isResetPassword Is the password being reset?
      ***/
-     try
-     {
-       if($isResetPassword === true)
-       {
-         $userdata = $this->getUser();
-         # We can't verify the old password, so we have to verify the
-         # reset token provided under $oldPassword instead
-         if(!is_array($oldPassword)) throw(new Exception("Bad credential format"));
-         $key = $oldPassword["key"];
-         $verify = $oldPassword["verify"];
-         if(empty($key) or empty($verify)) throw(new Exception("Not all required credentials were provided"));
-         # Now, we verify the supplied credentials
-         $pw_data = json_decode($userdata[$this->pwcol],true);
-         $salt = $pw_data["salt"];
-         # Pull the secret from the temp column
-         $secret = $this->getSecret(true);
-         $string = self::decryptThis($key,$secret);
-         $test_string = $salt.$string;
-         $match_token = substr(hash('md5',$test_string),0,8);
-         if ($match_token != $verify)
-         {
-           # The computed token doesn't match the provided one
-           throw(new Exception("Invalid reset credentials"));
-         }
-         # The token matches -- let's make them a new password and
-         # provide it.
-         require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
-         $newPassword = Stronghash::createSalt(16);
-         $hash=new Stronghash;
-         $pw1=$hash->hasher($newPassword);
-         $pw_store=json_encode($pw1);
-         # We don't need or want to recalculate a hardlink. The old
-         # salt isn't used anywhere where the old value is relevant.
-         $algo=$pw1['algo'];
-         $rounds=$pw1['rounds'];
-         # We need to update the "data" column with the $algo and
-         # $rounds data
-         $xml = new Xml;
-         $data = $userdata["data"];
-         $data = $xml->updateTag($data,"<rounds>",$this->sanitize($rounds));
-         $data = $xml->updateTag($data,"<algo>",$this->sanitize($algo));
+    try
+    {
+      if($isResetPassword === true)
+      {
 
-         /*
-          * We can't use writeToUser() since it requires user
-          * validation, which we don't have by definition, so we're
-          * going to manually construct the query here.
-          */
-         $query="UPDATE `".$this->getTable()."` SET `".$this->$pwcol."`=\"".$this->sanitize()."\", `data`=\"".$data."\" WHERE `".$this->usercol."`='".$this->getUsername()."'";
-         $l=$this->openDB();
-         mysqli_query($l,'BEGIN');
-         $r=mysqli_query($l,$query);
-         $finish_query= $r ? 'COMMIT':'ROLLBACK';
-         $callback = array('status'=>$r,'action'=>$finish_query,"new_password"=>$newPassword);
-         if($finish_query == 'ROLLBACK')
-         {
-           $callback["error"] = mysqli_error($l);
-         }
-         $r2=mysqli_query($l,$finish_query);
-         $callback["status"] = $r && $r2;
-         return $callback;
-       }
-       else
-       {
-         $currentUser = $this->lookupUser($this->getUsername(),$oldPassword);
-       }
-     }
-     catch(Exception $e)
-     {
-       # Bad user
-       throw(new Exception("Invalid user credentials"));
-     }
+        $userdata = $this->getUser();
+        $doEmailPassword = $newPassword === true;
+        # We can't verify the old password, so we have to verify the
+        # reset token provided under $oldPassword instead
+        if(!is_array($oldPassword)) throw(new Exception("Bad credential format"));
+        $key = $oldPassword["key"];
+        $verify = $oldPassword["verify"];
+        if(empty($key) or empty($verify)) throw(new Exception("Not all required credentials were provided"));
+        # Now, we verify the supplied credentials
+        $pw_data = json_decode($userdata[$this->pwColumn],true);
+        $salt = $pw_data["salt"];
+        # Pull the secret from the temp column
+        $secret = $this->getSecret(true);
+        $string = self::decryptThis($key,$secret);
+        $test_string = $salt.$string;
+        $match_token = substr(hash('md5',$test_string),0,8);
+        if ($match_token != $verify)
+        {
+          # The computed token doesn't match the provided one
+          throw(new Exception("Invalid reset tokens"));
+        }
+        # The token matches -- let's make them a new password and
+        # provide it.
+        require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
+        $newPassword = self::createRandomUserPassword();
+        $hash=new Stronghash;
+        $pw1=$hash->hasher($newPassword);
+        $pw_store=json_encode($pw1);
+        # We don't need or want to recalculate a hardlink. The old
+        # salt isn't used anywhere where the old value is relevant.
+        $algo=$pw1['algo'];
+        $rounds=$pw1['rounds'];
+        # We need to update the "data" column with the $algo and
+        # $rounds data
+        $xml = new Xml;
+        $data = $userdata["data"];
+        $data = $xml->updateTag($data,"<rounds>",$this->sanitize($rounds));
+        $data = $xml->updateTag($data,"<algo>",$this->sanitize($algo));
+
+        /*
+         * We can't use writeToUser() since it requires user
+         * validation, which we don't have by definition, so we're
+         * going to manually construct the query here.
+         */
+        $query="UPDATE `".$this->getTable()."` SET `".$this->pwcol."`=\"".$this->sanitize($pw_store)."\", `data`=\"".$data."\" WHERE `".$this->usercol."`='".$this->getUsername()."'";
+        $l=$this->openDB();
+        mysqli_query($l,'BEGIN');
+        $r=mysqli_query($l,$query);
+        $finish_query= $r ? 'COMMIT':'ROLLBACK';
+        $callback = array('status'=>$r,'action'=>$finish_query,"new_password"=>$newPassword);
+        if($finish_query == 'ROLLBACK')
+        {
+          $callback["error"] = mysqli_error($l);
+          $callback["new_password"] = null;
+        }
+        
+        $r2=mysqli_query($l,$finish_query);
+        $callback["status"] = $r && $r2;
+        if ($callback["status"] !== true)
+        {
+          $callback["error"] = "Unable to commit your password reset";
+        }
+        else
+        {
+          # It all worked, remove the secret
+          $this->setTempSecret();
+          if($doEmailPassword === true) 
+          {
+            $mail = $this->getMailObject();
+            $mail->Subject = $this->getDomain() . " New Password";
+            $mail->Body = "<p>You've successfully reset the password to ".$this->getDomain().". Here is your new password:.</p><pre>$newPassword</pre><p>If you didn't request a password change, please log in and change your password IMMEDIATELY, and we suggest adding two-factor authentication.</p>.";
+            $mail->addAddress($this->getUsername());
+            $status = $mail->send();
+            $mailDetail = array("status"=>$status,"method"=>"email");
+            if(!$status)
+            {
+              $mailDetail["error"] = $mail->ErrorInfo;
+            }
+            $callback["mail_details"] = $mailDetail;
+          }
+        }
+        $callback["mail_requested"] = $doEmailPassword;
+        return $callback;
+      }
+      else
+      {
+        # We want to look at the current user, and make sure it's OK
+        # before re-assigning the password
+        $userLookup = $this->lookupUser($this->getUsername(),$oldPassword);
+        # If this user checks out, now we can overwrite their old password
+        if ($userLookup["status"] === false)
+        {
+          # Bad user
+          throw(new Exception("Invalid original credentials"));
+        }
+        $currentUser = $userLookup["data"];
+        if(strlen($newPassword) < $this->getMinPasswordLength()) throw(new Exception("New password is too short. It should be at least " . $this->getMinPasswordLenght() . " characters"));
+        if(strlen($newPassword) > 8192) throw(new Exception("New password is too long. It should be less than 8192 characters"));
+        require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
+        $hash=new Stronghash;
+        $hashedPw = $hash->hasher($newPassword);
+        $pwStore = json_encode($hasedPw);
+        # We don't need or want to recalculate a hardlink. The old
+        # salt isn't used anywhere where the old value is relevant.
+        $algo=$pw1['algo'];
+        $rounds=$pw1['rounds'];
+        # We need to update the "data" column with the $algo and
+        # $rounds data
+        $xml = new Xml;
+        $data = $currentUser["data"];
+        $backupData = $data;
+        $data = $xml->updateTag($data,"<rounds>",$this->sanitize($rounds));
+        $data = $xml->updateTag($data,"<algo>",$this->sanitize($algo));
+
+        /*
+         * We can't use writeToUser() since it requires user
+         * validation, and the second part of the update will always fail.
+         * So, we're going to manually construct the query here.
+         */
+        $query="UPDATE `".$this->getTable()."` SET `".$this->$pwcol."`=\"".$this->sanitize($pwStore)."\", `data`=\"".$data."\" WHERE `".$this->userColumn."`='".$this->getUsername()."'";
+        $l=$this->openDB();
+        mysqli_query($l,'BEGIN');
+        $r=mysqli_query($l,$query);
+        $finish_query= $r ? 'COMMIT':'ROLLBACK';
+        $callback = array('status'=>$r,'action'=>$finish_query,"new_password"=>$newPassword);
+        if($finish_query == 'ROLLBACK')
+        {
+          $callback["error"] = mysqli_error($l);
+        }
+        $r2=mysqli_query($l,$finish_query);
+        $callback["status"] = $r && $r2;
+        return $callback;
+
+      }
+    }
+    catch(Exception $e)
+    {
+      # Bad user
+      throw(new Exception("Invalid credentials - " . $e->getMessage()));
+    }
   }
-
+  
+  
+  
   public function removeThisAccount($username,$password,$totp = false)
   {
     /***
