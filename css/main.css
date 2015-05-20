@@ -14,6 +14,12 @@ html /deep/ .materialblue {
     color:#fff;
 }
 
+html >>> .materialblue {
+    /* We need this seperate for Firefox */
+    background:#5677fc;
+    color:#fff;
+}
+
 .materialindigo {
     background: #3f51b5;
     color:#fff;
@@ -43,6 +49,11 @@ html /deep/ [affirmative] {
     color:#5677fc!important;
 
 }
+html >>> [affirmative] {
+    /* We need this seperate for Firefox */
+    color:#5677fc!important;
+
+}
 
 .materialindigotext {
     color: #3f51b5;
@@ -67,6 +78,10 @@ html /deep/ .good-location {
     /* We need this seperate for Firefox */
     color: #4CAF50;
 }
+html >>> .good-location {
+    /* We need this seperate for Firefox */
+    color: #4CAF50;
+}
 .good-location {
     color: #4CAF50;
 }
@@ -74,10 +89,19 @@ html /deep/ .bad-location {
     /* We need this seperate for Firefox */
     color: #F44336;
 }
+html >>> .bad-location {
+    /* We need this seperate for Firefox */
+    color: #F44336;
+}
 .bad-location {
     color: #F44336;
 }
 html /deep/ #near-me-container {
+    /* We need this seperate for Firefox */
+    float:left;
+    display:inline-block;
+}
+html >>> #near-me-container {
     /* We need this seperate for Firefox */
     float:left;
     display:inline-block;
@@ -112,6 +136,20 @@ html /deep/ .linnean_order::shadow input {
     /* We need this seperate for Firefox */
     text-transform:capitalize;
 }
+html >>> .genus,
+html >>> .genus::shadow input,
+html >>> .genus_authority,
+html >>> .genus_authority::shadow input,
+html >>> .species_authority,
+html >>> .species_authority::shadow input,
+html >>> .common_name,
+html >>> .common_name::shadow input,
+html >>> .linnean_order,
+html >>> .linnean_order::shadow input {
+    /* We need this seperate for Firefox */
+    text-transform:capitalize;
+}
+
 .cndb-row-headers th,
 .genus,
 .genus_authority,
@@ -132,6 +170,16 @@ html /deep/ .subspecies::shadow input {
     /* We need this seperate for Firefox */
     font-style:italic;
 }
+html >>> .genus,
+html >>> .genus::shadow input,
+html >>> .species,
+html >>> .species::shadow input,
+html >>> .subspecies,
+html >>> .subspecies::shadow input {
+    /* We need this seperate for Firefox */
+    font-style:italic;
+}
+
 .genus, .species, .subspecies{
     font-style:italic;
 }
@@ -224,9 +272,25 @@ html /deep/ .help-block {
   margin-bottom: 10px;
   color: #737373;
 }
+
 html /deep/ paper-autogrow-textarea textarea {
     width:90%;
 }
+
+html >>> #modal-taxon-editor paper-input {
+    display:block;
+}
+html >>> .help-block {
+  display: block;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  color: #737373;
+}
+
+html >>> paper-autogrow-textarea textarea {
+    width:90%;
+}
+
 #password_security + #login {
     float:left;
     min-width:60%;
@@ -250,6 +314,16 @@ html /deep/ #modal-taxon-editor::-webkit-scrollbar, .showScroll::-webkit-scrollb
 }
 
 html /deep/ #modal-taxon-editor::-webkit-scrollbar-thumb, .showScroll::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,.5);
+    box-shadow: 0 0 1px rgba(255,255,255,.5);
+}
+
+html >>> #modal-taxon-editor::-webkit-scrollbar, .showScroll::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 7px;
+}
+
+html >>> #modal-taxon-editor::-webkit-scrollbar-thumb, .showScroll::-webkit-scrollbar-thumb {
     background-color: rgba(0,0,0,.5);
     box-shadow: 0 0 1px rgba(255,255,255,.5);
 }

@@ -152,9 +152,14 @@ lookupEditorSpecies = (taxon = undefined) ->
     html = "<paper-action-dialog backdrop layered closeSelector=\"[dismissive]\" id='modal-taxon-edit'><div id='modal-taxon-editor'>#{editHtml}</div><paper-button id='close-editor' dismissive>Cancel</paper-button><paper-button id='save-editor' affirmative>Save</paper-button></paper-action-dialog>"
     $("#search-results").after(html)
     # Bind the save button
-    $("html /deep/ #save-editor")
-    .click ->
-      saveEditorEntry()
+    try
+      $("html /deep/ #save-editor")
+      .click ->
+        saveEditorEntry()
+    catch e
+      $("html >>> #save-editor")
+      .click ->
+        saveEditorEntry()
   # Look up the taxon, take the first result, and populate
   $.get(searchParams.targetApi,"q=#{taxon}","json")
   .done (result) ->
@@ -178,7 +183,10 @@ lookupEditorSpecies = (taxon = undefined) ->
           if col isnt "notes"
             $(fieldSelector).attr("value",d)
           else
-            $("html /deep/ #{fieldSelector}").text(d)
+            try
+              $("html /deep/ #{fieldSelector}").text(d)
+            catch e
+              $("html >>> #{fieldSelector}").text(d)
       $("#modal-taxon-edit")[0].open()
       stopLoad()
     catch e
@@ -212,8 +220,12 @@ saveEditorEntry = ->
   ## Manual parses
   try
     # Authority year
-    gYear = $("html /deep/ #edit-gauthyear").val()
-    sYear = $("html /deep/ #edit-sauthyear").val()
+    try
+      gYear = $("html /deep/ #edit-gauthyear").val()
+      sYear = $("html /deep/ #edit-sauthyear").val()
+    catch e
+      gYear = $("html >>> #edit-gauthyear").val()
+      sYear = $("html >>> #edit-sauthyear").val()
     auth = new Object()
     auth[gYear] = sYear
     authYearString = JSON.stringify(auth)
@@ -237,13 +249,20 @@ saveEditorEntry = ->
   # For the rest of the items, iterate over and put on saveObject
   $.each examineIds, (k,id) ->
     console.log(k,id)
-    thisSelector = "html /deep/ #edit-#{id}"
+    try
+      thisSelector = "html /deep/ #edit-#{id}"
+      $(thisSelector)
+    catch e
+      thisSelector = "html >>> #edit-#{id}"
     col = id.replace(/-/g,"_")
     val = $(thisSelector).val()
     if col isnt "notes"
       val = val.toLowerCase()
     saveObject[col] = val
-  saveObject["id"] = $("html /deep/ #taxon-id").val()
+  try
+    saveObject["id"] = $("html /deep/ #taxon-id").val()
+  catch e
+    saveObject["id"] = $("html >>> #taxon-id").val()
   saveString = JSON.stringify(saveObject)
   s64 = Base64.encodeURI(saveString)
   hash = $.cookie("ssarherps_auth")
@@ -256,7 +275,10 @@ saveEditorEntry = ->
   $.post(adminParams.apiTarget,args,"json")
   .done (result) ->
     if result.status is true
-      $("html /deep/ #modal-taxon-edit")[0].close()
+      try
+        $("html /deep/ #modal-taxon-edit")[0].close()
+      catch e
+        $("html >>> #modal-taxon-edit")[0].close()
       stopLoad()
       return false
     toastStatusMessage(result.human_error)
@@ -1014,7 +1036,9 @@ checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "#nea
       $("html /deep/ #near-me-icon").attr("title",tooltipHint)
       $("html /deep/ #near-me-icon").tooltip()
     catch e
-      console.warn("Your browser doesn't support the /deep/ syntax for shadow DOMs.")
+      $("html >>> #{selector}").html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}' data-toggle='tooltip' id='near-me-icon'></core-icon>")
+      $("html >>> #near-me-icon").attr("title",tooltipHint)
+      $("html >>> #near-me-icon").tooltip()
       try
         # Attempt to do this without looking through the shadow DOM
         $(selector).html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}' data-toggle='tooltip' id='near-me-icon'></core-icon>")
@@ -1159,7 +1183,7 @@ clearSearch = (partialReset = false) ->
   $("#linnean-order").polymerSelected("any")
   false
 
-  
+
 $ ->
   # Do bindings
   console.log("Doing onloads ...")

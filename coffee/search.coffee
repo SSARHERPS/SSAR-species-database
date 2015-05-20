@@ -309,7 +309,9 @@ checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "#nea
       $("html /deep/ #near-me-icon").attr("title",tooltipHint)
       $("html /deep/ #near-me-icon").tooltip()
     catch e
-      console.warn("Your browser doesn't support the /deep/ syntax for shadow DOMs.")
+      $("html >>> #{selector}").html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}' data-toggle='tooltip' id='near-me-icon'></core-icon>")
+      $("html >>> #near-me-icon").attr("title",tooltipHint)
+      $("html >>> #near-me-icon").tooltip()
       try
         # Attempt to do this without looking through the shadow DOM
         $(selector).html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}' data-toggle='tooltip' id='near-me-icon'></core-icon>")
@@ -454,7 +456,7 @@ clearSearch = (partialReset = false) ->
   $("#linnean-order").polymerSelected("any")
   false
 
-  
+
 $ ->
   # Do bindings
   console.log("Doing onloads ...")

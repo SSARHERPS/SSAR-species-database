@@ -182,7 +182,7 @@ renderAdminSearchResults = function(containerSelector) {
 };
 
 lookupEditorSpecies = function(taxon) {
-  var editHtml, html;
+  var e, editHtml, html;
   if (taxon == null) {
     taxon = void 0;
   }
@@ -198,12 +198,19 @@ lookupEditorSpecies = function(taxon) {
     editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" class=\"genus\" floatingLabel></paper-input> <paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" class=\"species\" floatingLabel></paper-input> <paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" class=\"subspecies\" floatingLabel></paper-input> <paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\"  class=\"common_name\" floatingLabel></paper-input> <paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input> <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",...</span></span> <paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input> <paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input> <paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input> <paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" class=\"linnean_order\" floatingLabel></paper-input> <paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" class=\"genus_authority\" floatingLabel></paper-input> <paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input> <paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" class=\"species_authority\" floatingLabel></paper-input> <paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input> <paper-autogrow-textarea target=\"edit-notes\" id=\"edit-notes-autogrow\"> <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\"></textarea> </paper-autogrow-textarea> <paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input> <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span><input type='hidden' name='taxon-id' id='taxon-id'/>";
     html = "<paper-action-dialog backdrop layered closeSelector=\"[dismissive]\" id='modal-taxon-edit'><div id='modal-taxon-editor'>" + editHtml + "</div><paper-button id='close-editor' dismissive>Cancel</paper-button><paper-button id='save-editor' affirmative>Save</paper-button></paper-action-dialog>";
     $("#search-results").after(html);
-    $("html /deep/ #save-editor").click(function() {
-      return saveEditorEntry();
-    });
+    try {
+      $("html /deep/ #save-editor").click(function() {
+        return saveEditorEntry();
+      });
+    } catch (_error) {
+      e = _error;
+      $("html >>> #save-editor").click(function() {
+        return saveEditorEntry();
+      });
+    }
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
-    var data, e;
+    var data;
     try {
       data = result.result[0];
       console.log("Populating from", data);
@@ -224,7 +231,12 @@ lookupEditorSpecies = function(taxon) {
           if (col !== "notes") {
             return $(fieldSelector).attr("value", d);
           } else {
-            return $("html /deep/ " + fieldSelector).text(d);
+            try {
+              return $("html /deep/ " + fieldSelector).text(d);
+            } catch (_error) {
+              e = _error;
+              return $("html >>> " + fieldSelector).text(d);
+            }
           }
         }
       });
@@ -250,8 +262,14 @@ saveEditorEntry = function() {
   examineIds = ["genus", "species", "subspecies", "common-name", "major-type", "major-subtype", "minor-type", "linnean-order", "genus-authority", "species-authority", "notes", "image"];
   saveObject = new Object();
   try {
-    gYear = $("html /deep/ #edit-gauthyear").val();
-    sYear = $("html /deep/ #edit-sauthyear").val();
+    try {
+      gYear = $("html /deep/ #edit-gauthyear").val();
+      sYear = $("html /deep/ #edit-sauthyear").val();
+    } catch (_error) {
+      e = _error;
+      gYear = $("html >>> #edit-gauthyear").val();
+      sYear = $("html >>> #edit-sauthyear").val();
+    }
     auth = new Object();
     auth[gYear] = sYear;
     authYearString = JSON.stringify(auth);
@@ -280,7 +298,13 @@ saveEditorEntry = function() {
   $.each(examineIds, function(k, id) {
     var col, thisSelector, val;
     console.log(k, id);
-    thisSelector = "html /deep/ #edit-" + id;
+    try {
+      thisSelector = "html /deep/ #edit-" + id;
+      $(thisSelector);
+    } catch (_error) {
+      e = _error;
+      thisSelector = "html >>> #edit-" + id;
+    }
     col = id.replace(/-/g, "_");
     val = $(thisSelector).val();
     if (col !== "notes") {
@@ -288,7 +312,12 @@ saveEditorEntry = function() {
     }
     return saveObject[col] = val;
   });
-  saveObject["id"] = $("html /deep/ #taxon-id").val();
+  try {
+    saveObject["id"] = $("html /deep/ #taxon-id").val();
+  } catch (_error) {
+    e = _error;
+    saveObject["id"] = $("html >>> #taxon-id").val();
+  }
   saveString = JSON.stringify(saveObject);
   s64 = Base64.encodeURI(saveString);
   hash = $.cookie("ssarherps_auth");
@@ -300,7 +329,12 @@ saveEditorEntry = function() {
   animateLoad();
   return $.post(adminParams.apiTarget, args, "json").done(function(result) {
     if (result.status === true) {
-      $("html /deep/ #modal-taxon-edit")[0].close();
+      try {
+        $("html /deep/ #modal-taxon-edit")[0].close();
+      } catch (_error) {
+        e = _error;
+        $("html >>> #modal-taxon-edit")[0].close();
+      }
       stopLoad();
       return false;
     }
@@ -1354,7 +1388,9 @@ checkTaxonNear = function(taxonQuery, callback, selector) {
       $("html /deep/ #near-me-icon").tooltip();
     } catch (_error) {
       e = _error;
-      console.warn("Your browser doesn't support the /deep/ syntax for shadow DOMs.");
+      $("html >>> " + selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + "' data-toggle='tooltip' id='near-me-icon'></core-icon>");
+      $("html >>> #near-me-icon").attr("title", tooltipHint);
+      $("html >>> #near-me-icon").tooltip();
       try {
         $(selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + "' data-toggle='tooltip' id='near-me-icon'></core-icon>");
         $("#near-me-icon").attr("title", tooltipHint);
