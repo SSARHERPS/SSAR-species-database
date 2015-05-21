@@ -3,7 +3,7 @@
  * The main coffeescript file for administrative stuff
  * Triggered from admin-page.html
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createNewTaxon, deferCalPhotos, delay, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createNewTaxon, deferCalPhotos, delay, deleteTaxon, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
   __slice = [].slice;
 
 adminParams = new Object();
@@ -137,7 +137,9 @@ renderAdminSearchResults = function(containerSelector) {
           }
           j++;
           if (j === Object.size(row)) {
-            htmlHead += "\n\t\t<th class='text-center'>Edit</th>\n\t</tr>";
+            htmlHead += "\n\t\t<th class='text-center'>Edit</th>";
+            bootstrapColCount++;
+            htmlHead += "\n\t\t<th class='text-center'>Delete</th>\n\t</tr>";
             bootstrapColCount++;
             htmlHead += "\n<!-- End Table Headers -->";
             console.log("Got " + bootstrapColCount + " display columns.");
@@ -161,7 +163,8 @@ renderAdminSearchResults = function(containerSelector) {
         }
         l++;
         if (l === Object.size(row)) {
-          htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='edit-taxon " + colClass + " text-center'><paper-icon-button icon='image:edit' class='edit' data-taxon='" + taxonQuery + "'></paper-icon-button></td>";
+          htmlRow += "\n\t\t<td id='edit-" + i + "' class='edit-taxon " + colClass + " text-center'><paper-icon-button icon='image:edit' class='edit' data-taxon='" + taxonQuery + "'></paper-icon-button></td>";
+          htmlRow += "\n\t\t<td id='delete-" + i + "' class='delete-taxon " + colClass + " text-center'><paper-icon-button icon='delete' class='delete-taxon-button fadebg' data-taxon='" + taxonQuery + "' data-database-id='" + row.id + "'></paper-icon-button></td>";
           htmlRow += "\n\t</tr>";
           return html += htmlRow;
         }
@@ -174,6 +177,12 @@ renderAdminSearchResults = function(containerSelector) {
           var taxon;
           taxon = $(this).attr('data-taxon');
           return lookupEditorSpecies(taxon);
+        });
+        $(".delete-taxon-button").click(function() {
+          var taxaId, taxon;
+          taxon = $(this).attr('data-taxon');
+          taxaId = $(this).attr('data-database-id');
+          return deleteTaxon(taxaId);
         });
         return stopLoad();
       }
@@ -453,6 +462,49 @@ saveEditorEntry = function(performMode) {
   }).fail(function(result, status) {
     stopLoadError();
     toastStatusMessage("Failed to send the data to the server.");
+    return false;
+  });
+};
+
+deleteTaxon = function(taxaId) {
+  var args, caller, diff, taxon, taxonRaw;
+  caller = $(".delete-taxon .delete-taxon-button[data-database-id='" + taxaId + "']");
+  taxonRaw = caller.attr("data-taxon").replace(/\+/g, " ");
+  taxon = taxonRaw.substr(0, 1).toUpperCase() + taxonRaw.substr(1);
+  if (!caller.hasClass("extreme-danger")) {
+    window.deleteWatchTimer = Date.now();
+    delay(300, function() {
+      return delete window.deleteWatchTimer;
+    });
+    caller.addClass("extreme-danger");
+    delay(7500, function() {
+      return caller.removeClass("extreme-danger");
+    });
+    toastStatusMessage("Click again to confirm deletion of " + taxon);
+    return false;
+  }
+  if (window.deleteWatchTimer != null) {
+    diff = Date.now() - window.deleteWatchTimer;
+    console.warn("The taxon was asked to be deleted " + diff + "ms after the confirmation was prompted. Rejecting ...");
+    return false;
+  }
+  animateLoad();
+  args = "perform=delete&id=" + taxaId;
+  return $.post(adminParams.apiTarget, args, "json").done(function(result) {
+    if (result.status === true) {
+      caller.parents("tr").remove();
+      toastStatusMessage("" + taxon + " with ID " + taxaId + " has been removed from the database.");
+      stopLoad();
+    } else {
+      stopLoadError();
+      toastStatusMessage(result.human_error);
+      console.error(result.error);
+      console.warn(result);
+    }
+    return false;
+  }).fail(function(result, status) {
+    stopLoadError();
+    toastStatusMessage("Failed to communicate with the server.");
     return false;
   });
 };

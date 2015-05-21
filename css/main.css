@@ -30,6 +30,19 @@ html >>> .materialblue {
     color:#fff;
 }
 
+.extreme-danger {
+    box-shadow: 0 0 2em 0.25em #f00;
+    background:#f00;
+    color: #fff;
+}
+
+.fadebg {
+    transition:all .2s ease-out;
+    -webkit-transition:all .2s ease-out;
+    -moz-transition:all .2s ease-out;
+    -o-transition:all .2s ease-out;
+}
+
 .materialcyan {
     background: #00bcd4;
     color:#fff;

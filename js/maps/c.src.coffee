@@ -117,7 +117,9 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
             bootstrapColCount++
           j++
           if j is Object.size(row)
-            htmlHead += "\n\t\t<th class='text-center'>Edit</th>\n\t</tr>"
+            htmlHead += "\n\t\t<th class='text-center'>Edit</th>"
+            bootstrapColCount++
+            htmlHead += "\n\t\t<th class='text-center'>Delete</th>\n\t</tr>"
             bootstrapColCount++
             htmlHead += "\n<!-- End Table Headers -->"
             console.log("Got #{bootstrapColCount} display columns.")
@@ -136,7 +138,8 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
           htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{k} #{colClass}'>#{col}</td>"
         l++
         if l is Object.size(row)
-          htmlRow += "\n\t\t<td id='#{k}-#{i}' class='edit-taxon #{colClass} text-center'><paper-icon-button icon='image:edit' class='edit' data-taxon='#{taxonQuery}'></paper-icon-button></td>"
+          htmlRow += "\n\t\t<td id='edit-#{i}' class='edit-taxon #{colClass} text-center'><paper-icon-button icon='image:edit' class='edit' data-taxon='#{taxonQuery}'></paper-icon-button></td>"
+          htmlRow += "\n\t\t<td id='delete-#{i}' class='delete-taxon #{colClass} text-center'><paper-icon-button icon='delete' class='delete-taxon-button fadebg' data-taxon='#{taxonQuery}' data-database-id='#{row.id}'></paper-icon-button></td>"
           htmlRow += "\n\t</tr>"
           html += htmlRow
       if toInt(i) is targetCount
@@ -146,6 +149,10 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
         $(".edit").click ->
           taxon = $(this).attr('data-taxon')
           lookupEditorSpecies(taxon)
+        $(".delete-taxon-button").click ->
+          taxon = $(this).attr('data-taxon')
+          taxaId = $(this).attr('data-database-id')
+          deleteTaxon(taxaId)
         stopLoad()
   .fail (result,status) ->
     console.error("There was an error performing the search")
@@ -414,6 +421,47 @@ saveEditorEntry = (performMode = "save") ->
   .fail (result,status) ->
     stopLoadError()
     toastStatusMessage("Failed to send the data to the server.")
+    false
+
+
+deleteTaxon = (taxaId) ->
+  caller = $(".delete-taxon .delete-taxon-button[data-database-id='#{taxaId}']")
+  taxonRaw = caller.attr("data-taxon").replace(/\+/g," ")
+  taxon = taxonRaw.substr(0,1).toUpperCase() + taxonRaw.substr(1)
+  unless caller.hasClass("extreme-danger")
+    # Prevent a double-click
+    window.deleteWatchTimer = Date.now()
+    delay 300, ->
+      delete window.deleteWatchTimer
+    caller.addClass("extreme-danger")
+    delay 7500, ->
+      caller.removeClass("extreme-danger")
+    toastStatusMessage("Click again to confirm deletion of #{taxon}")
+    return false
+  if window.deleteWatchTimer?
+    # It has been less than 300 ms since delete was first tapped.
+    # Deny it.
+    diff = Date.now() - window.deleteWatchTimer
+    console.warn("The taxon was asked to be deleted #{diff}ms after the confirmation was prompted. Rejecting ...")
+    return false
+  animateLoad()
+  args = "perform=delete&id=#{taxaId}"
+  $.post(adminParams.apiTarget,args,"json")
+  .done (result) ->
+    if result.status is true
+      # Remove the visual row
+      caller.parents("tr").remove()
+      toastStatusMessage("#{taxon} with ID #{taxaId} has been removed from the database.")
+      stopLoad()
+    else
+      stopLoadError()
+      toastStatusMessage(result.human_error)
+      console.error(result.error)
+      console.warn(result)
+    false
+  .fail (result,status) ->
+    stopLoadError()
+    toastStatusMessage("Failed to communicate with the server.")
     false
 
 handleDragDropImage = ->

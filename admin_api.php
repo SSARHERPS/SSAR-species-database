@@ -39,6 +39,14 @@ if(!function_exists('elapsed'))
 
 $admin_req=isset($_REQUEST['perform']) ? strtolower($_REQUEST['perform']):null;
 
+
+$login_status = getLoginState($get);
+if($login_status["status"] !== true) {
+  $login_status["error"] = "Invalid user";
+  $login_status["human_error"] = "You're not logged in as a valid user to edit this. Please log in and try again.";
+  return $login_status;
+}
+
 switch($admin_req)
   {
     # Stuff
@@ -47,6 +55,9 @@ switch($admin_req)
     break;
   case "new":
     returnAjax(newEntry($_REQUEST));
+    break;
+  case "delete":
+    returnAjax(deleteEntry($_REQUEST));
     break;
   default:
     returnAjax(getLoginState($_REQUEST,true));
@@ -57,13 +68,7 @@ function saveEntry($get)
   /***
    * Save a new taxon entry
    ***/
-  $login_status = getLoginState($get);
-  if($login_status["status"] !== true) {
-    $login_status["error"] = "Invalid user";
-    $login_status["human_error"] = "You're not logged in as a valid user to edit this. Please log in and try again.";
-    return $login_status;
-  }
-  # The login status was OK
+
   $data64 = $get["data"];
   $data_string = base64_decode($data64);
   $data = json_decode($data_string,true);
@@ -100,13 +105,6 @@ function newEntry($get)
    *
    * @param data a base 64-encoded JSON string of the data to insert
    ***/
-  $login_status = getLoginState($get);
-  if($login_status["status"] !== true) {
-    $login_status["error"] = "Invalid user";
-    $login_status["human_error"] = "You're not logged in as a valid user to create this. Please log in and try again.";
-    return $login_status;
-  }
-  # The login status was OK
   $data64 = $get["data"];
   $data_string = base64_decode($data64);
   $data = json_decode($data_string,true);
@@ -125,6 +123,24 @@ function newEntry($get)
     return array("status"=>false,"error"=>$result,"human_error"=>"Database error saving","data"=>$data,"ref"=>$result,"perform"=>"new");
   }
   return array("status"=>true,"perform"=>"new","data"=>$data);
+}
+  
+function deleteEntry($get)
+{
+  /***
+   * Delete a taxon entry
+   * Delete an entry described by the ID parameter
+   *
+   * @param $get["id"] The DB id to delete
+   ***/
+  global $db;
+  $id = $get["id"];
+  $result = $db->deleteRow($id,"id");
+  if ($result["status"] === false) 
+  {
+    $result["human_error"] = "Failed to delete item '$id' from the database";
+  }
+  return $result;
 }
 
 ?>
