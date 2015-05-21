@@ -219,9 +219,9 @@ lookupEditorSpecies = (taxon = undefined) ->
       existensial = $("html >>> #last-edited-by").exists()
     unless existensial
       try
-        $("html /deep/ #imagehelp").after(lastEdited)
+        $("html /deep/ #taxon-credit-help").after(lastEdited)
       catch e
-        $("html >>> #imagehelp").after(lastEdited)
+        $("html >>> #taxon-credit-help").after(lastEdited)
   # Look up the taxon, take the first result, and populate
   $.get(searchParams.targetApi,"q=#{taxon}","json")
   .done (result) ->
@@ -795,7 +795,40 @@ bindClickTargets = ->
   .unbind()
   .click ->
     openTab($(this).attr("data-url"))
-  
+
+browserBeware = ->
+  unless window.hasCheckedBrowser?
+    window.hasCheckedBrowser = 0
+  try
+    browsers = new WhichBrowser()
+    # Firefox general buggieness
+    if browsers.isBrowser("Firefox")
+      warnBrowserHtml = """
+      <div id="firefox-warning" class="alert alert-warning alert-dismissible fade in" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <strong>Warning!</strong> Firefox has buggy support for <a href="http://webcomponents.org/" class="alert-link">webcomponents</a> and the <a href="https://www.polymer-project.org" class="alert-link">Polymer project</a>. If you encounter bugs, try using Chrome (reccommended), Opera, Safari, Internet Explorer, or your phone instead &#8212; they'll all be faster, too.
+      </div>
+      """
+      $("#title").after(warnBrowserHtml)
+      # Firefox doesn't auto-initalize the dismissable
+      $(".alert").alert()
+      console.warn("We've noticed you're using Firefox. Firefox has problems with this site, we recommend trying Google Chrome instead:","https://www.google.com/chrome/")
+      console.warn("Firefox took #{window.hasCheckedBrowser * 250}ms after page load to render this error message.")
+    # Fix the collapse behaviour in IE
+    if browsers.isBrowser("Internet Explorer")
+      $("#collapse-button").click ->
+        $(".collapse").collapse("toggle")
+
+  catch e
+    if window.hasCheckedBrowser is 50
+      # We've waited almost 15 seconds
+      console.warn("We can't check your browser! If you're using Firefox, beware of bugs!")
+      return false
+    delay 250, ->
+      window.hasCheckedBrowser++
+      browserBeware()
+
+
 
 $ ->
   bindClickTargets()
@@ -811,6 +844,7 @@ $ ->
   catch e
     # If we're not in admin, get the location
     getLocation()
+  browserBeware()
 
 searchParams = new Object()
 searchParams.targetApi = "commonnames_api.php"

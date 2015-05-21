@@ -219,9 +219,9 @@ lookupEditorSpecies = (taxon = undefined) ->
       existensial = $("html >>> #last-edited-by").exists()
     unless existensial
       try
-        $("html /deep/ #imagehelp").after(lastEdited)
+        $("html /deep/ #taxon-credit-help").after(lastEdited)
       catch e
-        $("html >>> #imagehelp").after(lastEdited)
+        $("html >>> #taxon-credit-help").after(lastEdited)
   # Look up the taxon, take the first result, and populate
   $.get(searchParams.targetApi,"q=#{taxon}","json")
   .done (result) ->

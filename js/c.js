@@ -3,7 +3,7 @@
  * The main coffeescript file for administrative stuff
  * Triggered from admin-page.html
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, byteCount, checkTaxonNear, clearSearch, deferCalPhotos, delay, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, deferCalPhotos, delay, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
   __slice = [].slice;
 
 adminParams = new Object();
@@ -225,10 +225,10 @@ lookupEditorSpecies = function(taxon) {
     }
     if (!existensial) {
       try {
-        $("html /deep/ #imagehelp").after(lastEdited);
+        $("html /deep/ #taxon-credit-help").after(lastEdited);
       } catch (_error) {
         e = _error;
-        $("html >>> #imagehelp").after(lastEdited);
+        $("html >>> #taxon-credit-help").after(lastEdited);
       }
     }
   }
@@ -1041,6 +1041,38 @@ bindClickTargets = function() {
   });
 };
 
+browserBeware = function() {
+  var browsers, e, warnBrowserHtml;
+  if (window.hasCheckedBrowser == null) {
+    window.hasCheckedBrowser = 0;
+  }
+  try {
+    browsers = new WhichBrowser();
+    if (browsers.isBrowser("Firefox")) {
+      warnBrowserHtml = "<div id=\"firefox-warning\" class=\"alert alert-warning alert-dismissible fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Warning!</strong> Firefox has buggy support for <a href=\"http://webcomponents.org/\" class=\"alert-link\">webcomponents</a> and the <a href=\"https://www.polymer-project.org\" class=\"alert-link\">Polymer project</a>. If you encounter bugs, try using Chrome (reccommended), Opera, Safari, Internet Explorer, or your phone instead &#8212; they'll all be faster, too.\n</div>";
+      $("#title").after(warnBrowserHtml);
+      $(".alert").alert();
+      console.warn("We've noticed you're using Firefox. Firefox has problems with this site, we recommend trying Google Chrome instead:", "https://www.google.com/chrome/");
+      console.warn("Firefox took " + (window.hasCheckedBrowser * 250) + "ms after page load to render this error message.");
+    }
+    if (browsers.isBrowser("Internet Explorer")) {
+      return $("#collapse-button").click(function() {
+        return $(".collapse").collapse("toggle");
+      });
+    }
+  } catch (_error) {
+    e = _error;
+    if (window.hasCheckedBrowser === 50) {
+      console.warn("We can't check your browser! If you're using Firefox, beware of bugs!");
+      return false;
+    }
+    return delay(250, function() {
+      window.hasCheckedBrowser++;
+      return browserBeware();
+    });
+  }
+};
+
 $(function() {
   var e;
   bindClickTargets();
@@ -1054,12 +1086,13 @@ $(function() {
   try {
     checkAdmin();
     if (adminParams.loadAdminUi === true) {
-      return loadAdminUi();
+      loadAdminUi();
     }
   } catch (_error) {
     e = _error;
-    return getLocation();
+    getLocation();
   }
+  return browserBeware();
 });
 
 searchParams = new Object();

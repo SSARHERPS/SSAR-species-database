@@ -1459,6 +1459,7 @@ class UserFunctions extends DBHelper
       "8",
       "G",
       "6",
+      "b",
       "S",
       "5",
       "Z",
@@ -1719,7 +1720,7 @@ class UserFunctions extends DBHelper
          * validation, which we don't have by definition, so we're
          * going to manually construct the query here.
          */
-        $query="UPDATE `".$this->getTable()."` SET `".$this->pwcol."`=\"".$this->sanitize($pw_store)."\", `data`=\"".$data."\" WHERE `".$this->usercol."`='".$this->getUsername()."'";
+        $query="UPDATE `".$this->getTable()."` SET `".$this->pwcol."`='".$pw_store."', `data`=\"".$data."\" WHERE `".$this->usercol."`='".$this->getUsername()."'";
         $l=$this->openDB();
         mysqli_query($l,'BEGIN');
         $r=mysqli_query($l,$query);
@@ -1733,11 +1734,11 @@ class UserFunctions extends DBHelper
         
         $r2=mysqli_query($l,$finish_query);
         $callback["status"] = $r && $r2;
-        if ($callback["status"] !== true)
+        if ($r2 !== true)
         {
           $callback["error"] = "Unable to commit your password reset";
         }
-        else
+        if($callback["status"] === true)
         {
           # It all worked, remove the secret
           $this->setTempSecret();
