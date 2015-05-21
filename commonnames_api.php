@@ -615,7 +615,20 @@ if(isset($error))
   {
     returnAjax(array("status"=>false,"error"=>$error,"human_error"=>"There was a problem performing this query. Please try again.","method"=>$method));
   }
-else returnAjax(array(
+else 
+{
+  foreach($result_vector as $k=>$v) {
+    if (is_array($v)) {
+    foreach($v as $rk=>$vk) {
+      $v[$rk] = html_entity_decode($vk,ENT_HTML5,"UTF-8");
+    }
+    }
+    else {
+      $v = html_entity_decode($v);
+    }
+    $result_vector[$k] = $v;
+  }
+  returnAjax(array(
   "status"=>true,
   "result"=>$result_vector,
   "count"=>sizeof($result_vector),
@@ -634,6 +647,7 @@ else returnAjax(array(
     )
   )
 ));
+}
 
 
 ?>
