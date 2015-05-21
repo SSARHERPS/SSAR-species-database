@@ -39,6 +39,7 @@ Icon
 # Temp Files from emacs
 \#*
 \#*\#
+.\#*
 *.*~
 
 CONFIG.php
