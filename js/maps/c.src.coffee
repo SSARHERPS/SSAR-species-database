@@ -152,6 +152,78 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
     $("#search-status")[0].show()
     stopLoadError()
 
+
+loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
+  editHtml = """
+  <paper-input label="Genus" id="edit-genus" name="edit-genus" class="genus" floatingLabel></paper-input>
+  <paper-input label="Species" id="edit-species" name="edit-species" class="species" floatingLabel></paper-input>
+  <paper-input label="Subspecies" id="edit-subspecies" name="edit-subspecies" class="subspecies" floatingLabel></paper-input>
+  <paper-input label="Common Name" id="edit-common-name" name="edit-common-name"  class="common_name" floatingLabel></paper-input>
+  <paper-input label="Deprecated Scientific Names" id="edit-deprecated-scientific" name="edit-depreated-scientific" floatingLabel aria-describedby="deprecatedHelp"></paper-input>
+    <span class="help-block" id="deprecatedHelp">List names here in the form <span class="code">"Genus species":"Authority: year","Genus species":"Authority: year",...</span></span>
+  <paper-input label="Clade" id="edit-major-type" name="edit-major-type" floatingLabel></paper-input>
+  <paper-input label="Subtype" id="edit-major-subtype" name="edit-major-subtype" floatingLabel></paper-input>
+  <paper-input label="Minor clade / 'Family'" id="edit-minor-type" name="edit-minor-type" floatingLabel></paper-input>
+  <paper-input label="Linnean Order" id="edit-linnean-order" name="edit-linnean-order" class="linnean_order" floatingLabel></paper-input>
+  <paper-input label="Genus authority" id="edit-genus-authority" name="edit-genus-authority" class="genus_authority" floatingLabel></paper-input>
+  <paper-input label="Genus authority year" id="edit-gauthyear" name="edit-gauthyear" floatingLabel></paper-input>
+  <paper-input label="Species authority" id="edit-species-authority" name="edit-species-authority" class="species_authority" floatingLabel></paper-input>
+  <paper-input label="Species authority year" id="edit-sauthyear" name="edit-sauthyear" floatingLabel></paper-input>
+  <paper-autogrow-textarea target="edit-notes" id="edit-notes-autogrow">
+    <textarea placeholder="Notes" id="edit-notes" name="edit-notes"></textarea>
+  </paper-autogrow-textarea>
+  <paper-input label="Image" id="edit-image" name="edit-image" floatingLabel aria-describedby="imagehelp"></paper-input>
+    <span class="help-block" id="imagehelp">The image path here should be relative to the <span class="code">public_html/cndb/</span> directory.</span>
+  <paper-input label="Taxon Credit" id="edit-taxon-credit" name="edit-taxon-credit" floatingLabel aria-describedby="taxon-credit-help"></paper-input>
+    <span class="help-block" id="taxon-credit-help">This will be displayed as "Taxon information by [your entry]."</span>
+  #{extraHtml}
+  <input type="hidden" name="edit-taxon-author" id="edit-taxon-author" value="" />
+  """
+  html = """
+  <paper-action-dialog backdrop layered autoCloseDisabled closeSelector="[dismissive]" id='modal-taxon-edit'>
+    <div id='modal-taxon-editor'>
+      #{editHtml}
+    </div>
+    <paper-button id='close-editor' dismissive>Cancel</paper-button>
+    <paper-button id='save-editor' affirmative>#{affirmativeText}</paper-button></paper-action-dialog>
+  """
+  unless $("#modal-taxon-edit").exists()
+    $("#search-results").after(html)
+  else
+    try
+      $("html /deep/ #modal-taxon-editor").html(editHtml)
+    catch e
+      $("html >>> #modal-taxon-editor").html(editHtml)
+  # Reset the bindings
+  $("#modal-taxon-edit").unbind()
+  try
+    $("html /deep/ #save-editor").unbind()
+  catch e
+    $("html >>> #save-editor").unbind()
+
+
+
+createNewTaxon = ->
+  animateLoad()
+  loadModalTaxonEditor("","Create")
+  # Append the editor value
+  whoEdited = if isNull($.cookie("ssarherps_fullname")) then $.cookie("ssarherps_user") else $.cookie("ssarherps_fullname")
+  try
+    $("html /deep/ #edit-taxon-author").attr("value",whoEdited)
+  catch e
+    $("html >>> #edit-taxon-author").attr("value",whoEdited)
+  # Bind the save button
+  try
+    $("html /deep/ #save-editor")
+    .click ->
+      saveEditorEntry("new")
+  catch e
+    $("html >>> #save-editor")
+    .click ->
+      saveEditorEntry("new")
+  $("#modal-taxon-edit")[0].open()
+
+
 lookupEditorSpecies = (taxon = undefined) ->
   ###
   # Lookup a given species and load it for editing
@@ -165,63 +237,27 @@ lookupEditorSpecies = (taxon = undefined) ->
     <p id="last-edited-by">
       Last edited by <span id="taxon-author-last" class="capitalize"></span>
     </p>
-  """
-  if not $("#modal-taxon-edit").exists()
-    editHtml = """
-    <paper-input label="Genus" id="edit-genus" name="edit-genus" class="genus" floatingLabel></paper-input>
-    <paper-input label="Species" id="edit-species" name="edit-species" class="species" floatingLabel></paper-input>
-    <paper-input label="Subspecies" id="edit-subspecies" name="edit-subspecies" class="subspecies" floatingLabel></paper-input>
-    <paper-input label="Common Name" id="edit-common-name" name="edit-common-name"  class="common_name" floatingLabel></paper-input>
-    <paper-input label="Deprecated Scientific Names" id="edit-deprecated-scientific" name="edit-depreated-scientific" floatingLabel aria-describedby="deprecatedHelp"></paper-input>
-      <span class="help-block" id="deprecatedHelp">List names here in the form <span class="code">"Genus species":"Authority: year","Genus species":"Authority: year",...</span></span>
-    <paper-input label="Clade" id="edit-major-type" name="edit-major-type" floatingLabel></paper-input>
-    <paper-input label="Subtype" id="edit-major-subtype" name="edit-major-subtype" floatingLabel></paper-input>
-    <paper-input label="Minor clade / 'Family'" id="edit-minor-type" name="edit-minor-type" floatingLabel></paper-input>
-    <paper-input label="Linnean Order" id="edit-linnean-order" name="edit-linnean-order" class="linnean_order" floatingLabel></paper-input>
-    <paper-input label="Genus authority" id="edit-genus-authority" name="edit-genus-authority" class="genus_authority" floatingLabel></paper-input>
-    <paper-input label="Genus authority year" id="edit-gauthyear" name="edit-gauthyear" floatingLabel></paper-input>
-    <paper-input label="Species authority" id="edit-species-authority" name="edit-species-authority" class="species_authority" floatingLabel></paper-input>
-    <paper-input label="Species authority year" id="edit-sauthyear" name="edit-sauthyear" floatingLabel></paper-input>
-    <paper-autogrow-textarea target="edit-notes" id="edit-notes-autogrow">
-      <textarea placeholder="Notes" id="edit-notes" name="edit-notes"></textarea>
-    </paper-autogrow-textarea>
-    <paper-input label="Image" id="edit-image" name="edit-image" floatingLabel aria-describedby="imagehelp"></paper-input>
-      <span class="help-block" id="imagehelp">The image path here should be relative to the <span class="code">public_html/cndb/</span> directory.</span>
-    <paper-input label="Taxon Credit" id="edit-taxon-credit" name="edit-taxon-credit" floatingLabel aria-describedby="taxon-credit-help"></paper-input>
-      <span class="help-block" id="taxon-credit-help">This will be displayed as "Taxon information by [your entry]."</span>
-    #{lastEdited}
     <input type='hidden' name='taxon-id' id='taxon-id'/>
-    <input type="hidden" name="edit-taxon-author" id="edit-taxon-author" value="" />
-    """
-    html = """
-    <paper-action-dialog backdrop layered closeSelector="[dismissive]" id='modal-taxon-edit'>
-      <div id='modal-taxon-editor'>
-        #{editHtml}
-      </div>
-      <paper-button id='close-editor' dismissive>Cancel</paper-button>
-      <paper-button id='save-editor' affirmative>Save</paper-button></paper-action-dialog>
-    """
-    $("#search-results").after(html)
-    # Bind the save button
+  """
+  loadModalTaxonEditor(lastEdited)
+  # Bind the save button
+  try
+    $("html /deep/ #save-editor")
+    .click ->
+      saveEditorEntry()
+  catch e
+    $("html >>> #save-editor")
+    .click ->
+      saveEditorEntry()
+  try
+    existensial = $("html /deep/ #last-edited-by").exists()
+  catch e
+    existensial = $("html >>> #last-edited-by").exists()
+  unless existensial
     try
-      $("html /deep/ #save-editor")
-      .click ->
-        saveEditorEntry()
+      $("html /deep/ #taxon-credit-help").after(lastEdited)
     catch e
-      $("html >>> #save-editor")
-      .click ->
-        saveEditorEntry()
-  else
-    # Modal taxon exists, do we need to re-add the last edited?
-    try
-      existensial = $("html /deep/ #last-edited-by").exists()
-    catch e
-      existensial = $("html >>> #last-edited-by").exists()
-    unless existensial
-      try
-        $("html /deep/ #taxon-credit-help").after(lastEdited)
-      catch e
-        $("html >>> #taxon-credit-help").after(lastEdited)
+      $("html >>> #taxon-credit-help").after(lastEdited)
   # Look up the taxon, take the first result, and populate
   $.get(searchParams.targetApi,"q=#{taxon}","json")
   .done (result) ->
@@ -276,7 +312,7 @@ lookupEditorSpecies = (taxon = undefined) ->
     toastStatusMessage("There was a server error populating this taxon. Please try again.")
   false
 
-saveEditorEntry = ->
+saveEditorEntry = (performMode = "save") ->
   ###
   # Send an editor state along with login credentials,
   # and report the save result back to the user
@@ -353,12 +389,14 @@ saveEditorEntry = ->
   secret = $.cookie("ssarherps_secret")
   link = $.cookie("ssarherps_link")
   userVerification = "hash=#{hash}&secret=#{secret}&dblink=#{link}"
-  args = "perform=save&#{userVerification}&data=#{s64}"
+  args = "perform=#{performMode}&#{userVerification}&data=#{s64}"
   console.log("Going to save",saveObject)
+  console.log("Using mode '#{performMode}'")
   animateLoad()
   $.post(adminParams.apiTarget,args,"json")
   .done (result) ->
     if result.status is true
+      console.log("Server returned",result)
       try
         $("html /deep/ #modal-taxon-edit")[0].close()
       catch e

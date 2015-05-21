@@ -3,7 +3,7 @@
  * The main coffeescript file for administrative stuff
  * Triggered from admin-page.html
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, deferCalPhotos, delay, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createNewTaxon, deferCalPhotos, delay, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
   __slice = [].slice;
 
 adminParams = new Object();
@@ -186,8 +186,61 @@ renderAdminSearchResults = function(containerSelector) {
   });
 };
 
+loadModalTaxonEditor = function(extraHtml, affirmativeText) {
+  var e, editHtml, html;
+  if (extraHtml == null) {
+    extraHtml = "";
+  }
+  if (affirmativeText == null) {
+    affirmativeText = "Save";
+  }
+  editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" class=\"genus\" floatingLabel></paper-input>\n<paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" class=\"species\" floatingLabel></paper-input>\n<paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" class=\"subspecies\" floatingLabel></paper-input>\n<paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\"  class=\"common_name\" floatingLabel></paper-input>\n<paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input>\n  <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",...</span></span>\n<paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input>\n<paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input>\n<paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input>\n<paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" class=\"linnean_order\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" class=\"genus_authority\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input>\n<paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" class=\"species_authority\" floatingLabel></paper-input>\n<paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input>\n<paper-autogrow-textarea target=\"edit-notes\" id=\"edit-notes-autogrow\">\n  <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\"></textarea>\n</paper-autogrow-textarea>\n<paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input>\n  <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>\n<paper-input label=\"Taxon Credit\" id=\"edit-taxon-credit\" name=\"edit-taxon-credit\" floatingLabel aria-describedby=\"taxon-credit-help\"></paper-input>\n  <span class=\"help-block\" id=\"taxon-credit-help\">This will be displayed as \"Taxon information by [your entry].\"</span>\n" + extraHtml + "\n<input type=\"hidden\" name=\"edit-taxon-author\" id=\"edit-taxon-author\" value=\"\" />";
+  html = "<paper-action-dialog backdrop layered autoCloseDisabled closeSelector=\"[dismissive]\" id='modal-taxon-edit'>\n  <div id='modal-taxon-editor'>\n    " + editHtml + "\n  </div>\n  <paper-button id='close-editor' dismissive>Cancel</paper-button>\n  <paper-button id='save-editor' affirmative>" + affirmativeText + "</paper-button></paper-action-dialog>";
+  if (!$("#modal-taxon-edit").exists()) {
+    $("#search-results").after(html);
+  } else {
+    try {
+      $("html /deep/ #modal-taxon-editor").html(editHtml);
+    } catch (_error) {
+      e = _error;
+      $("html >>> #modal-taxon-editor").html(editHtml);
+    }
+  }
+  $("#modal-taxon-edit").unbind();
+  try {
+    return $("html /deep/ #save-editor").unbind();
+  } catch (_error) {
+    e = _error;
+    return $("html >>> #save-editor").unbind();
+  }
+};
+
+createNewTaxon = function() {
+  var e, whoEdited;
+  animateLoad();
+  loadModalTaxonEditor("", "Create");
+  whoEdited = isNull($.cookie("ssarherps_fullname")) ? $.cookie("ssarherps_user") : $.cookie("ssarherps_fullname");
+  try {
+    $("html /deep/ #edit-taxon-author").attr("value", whoEdited);
+  } catch (_error) {
+    e = _error;
+    $("html >>> #edit-taxon-author").attr("value", whoEdited);
+  }
+  try {
+    $("html /deep/ #save-editor").click(function() {
+      return saveEditorEntry("new");
+    });
+  } catch (_error) {
+    e = _error;
+    $("html >>> #save-editor").click(function() {
+      return saveEditorEntry("new");
+    });
+  }
+  return $("#modal-taxon-edit")[0].open();
+};
+
 lookupEditorSpecies = function(taxon) {
-  var e, editHtml, existensial, html, lastEdited;
+  var e, existensial, lastEdited;
   if (taxon == null) {
     taxon = void 0;
   }
@@ -201,35 +254,30 @@ lookupEditorSpecies = function(taxon) {
     return false;
   }
   animateLoad();
-  lastEdited = "<p id=\"last-edited-by\">\n  Last edited by <span id=\"taxon-author-last\" class=\"capitalize\"></span>\n</p>";
-  if (!$("#modal-taxon-edit").exists()) {
-    editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" class=\"genus\" floatingLabel></paper-input>\n<paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" class=\"species\" floatingLabel></paper-input>\n<paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" class=\"subspecies\" floatingLabel></paper-input>\n<paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\"  class=\"common_name\" floatingLabel></paper-input>\n<paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input>\n  <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",...</span></span>\n<paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input>\n<paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input>\n<paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input>\n<paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" class=\"linnean_order\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" class=\"genus_authority\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input>\n<paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" class=\"species_authority\" floatingLabel></paper-input>\n<paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input>\n<paper-autogrow-textarea target=\"edit-notes\" id=\"edit-notes-autogrow\">\n  <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\"></textarea>\n</paper-autogrow-textarea>\n<paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input>\n  <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>\n<paper-input label=\"Taxon Credit\" id=\"edit-taxon-credit\" name=\"edit-taxon-credit\" floatingLabel aria-describedby=\"taxon-credit-help\"></paper-input>\n  <span class=\"help-block\" id=\"taxon-credit-help\">This will be displayed as \"Taxon information by [your entry].\"</span>\n" + lastEdited + "\n<input type='hidden' name='taxon-id' id='taxon-id'/>\n<input type=\"hidden\" name=\"edit-taxon-author\" id=\"edit-taxon-author\" value=\"\" />";
-    html = "<paper-action-dialog backdrop layered closeSelector=\"[dismissive]\" id='modal-taxon-edit'>\n  <div id='modal-taxon-editor'>\n    " + editHtml + "\n  </div>\n  <paper-button id='close-editor' dismissive>Cancel</paper-button>\n  <paper-button id='save-editor' affirmative>Save</paper-button></paper-action-dialog>";
-    $("#search-results").after(html);
+  lastEdited = "<p id=\"last-edited-by\">\n  Last edited by <span id=\"taxon-author-last\" class=\"capitalize\"></span>\n</p>\n<input type='hidden' name='taxon-id' id='taxon-id'/>";
+  loadModalTaxonEditor(lastEdited);
+  try {
+    $("html /deep/ #save-editor").click(function() {
+      return saveEditorEntry();
+    });
+  } catch (_error) {
+    e = _error;
+    $("html >>> #save-editor").click(function() {
+      return saveEditorEntry();
+    });
+  }
+  try {
+    existensial = $("html /deep/ #last-edited-by").exists();
+  } catch (_error) {
+    e = _error;
+    existensial = $("html >>> #last-edited-by").exists();
+  }
+  if (!existensial) {
     try {
-      $("html /deep/ #save-editor").click(function() {
-        return saveEditorEntry();
-      });
+      $("html /deep/ #taxon-credit-help").after(lastEdited);
     } catch (_error) {
       e = _error;
-      $("html >>> #save-editor").click(function() {
-        return saveEditorEntry();
-      });
-    }
-  } else {
-    try {
-      existensial = $("html /deep/ #last-edited-by").exists();
-    } catch (_error) {
-      e = _error;
-      existensial = $("html >>> #last-edited-by").exists();
-    }
-    if (!existensial) {
-      try {
-        $("html /deep/ #taxon-credit-help").after(lastEdited);
-      } catch (_error) {
-        e = _error;
-        $("html >>> #taxon-credit-help").after(lastEdited);
-      }
+      $("html >>> #taxon-credit-help").after(lastEdited);
     }
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
@@ -301,13 +349,16 @@ lookupEditorSpecies = function(taxon) {
   return false;
 };
 
-saveEditorEntry = function() {
+saveEditorEntry = function(performMode) {
+  var args, auth, authYearString, dep, depA, depS, depString, e, examineIds, gYear, hash, link, s64, sYear, saveObject, saveString, secret, userVerification;
+  if (performMode == null) {
+    performMode = "save";
+  }
 
   /*
    * Send an editor state along with login credentials,
    * and report the save result back to the user
    */
-  var args, auth, authYearString, dep, depA, depS, depString, e, examineIds, gYear, hash, link, s64, sYear, saveObject, saveString, secret, userVerification;
   examineIds = ["genus", "species", "subspecies", "common-name", "major-type", "major-subtype", "minor-type", "linnean-order", "genus-authority", "species-authority", "notes", "image", "taxon-author", "taxon-credit"];
   saveObject = new Object();
   try {
@@ -375,11 +426,13 @@ saveEditorEntry = function() {
   secret = $.cookie("ssarherps_secret");
   link = $.cookie("ssarherps_link");
   userVerification = "hash=" + hash + "&secret=" + secret + "&dblink=" + link;
-  args = "perform=save&" + userVerification + "&data=" + s64;
+  args = "perform=" + performMode + "&" + userVerification + "&data=" + s64;
   console.log("Going to save", saveObject);
+  console.log("Using mode '" + performMode + "'");
   animateLoad();
   return $.post(adminParams.apiTarget, args, "json").done(function(result) {
     if (result.status === true) {
+      console.log("Server returned", result);
       try {
         $("html /deep/ #modal-taxon-edit")[0].close();
       } catch (_error) {

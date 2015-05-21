@@ -45,6 +45,9 @@ switch($admin_req)
   case "save":
     returnAjax(saveEntry($_REQUEST));
     break;
+  case "new":
+    returnAjax(newEntry($_REQUEST));
+    break;
   default:
     returnAjax(getLoginState($_REQUEST,true));
   }
@@ -55,7 +58,11 @@ function saveEntry($get)
    * Save a new taxon entry
    ***/
   $login_status = getLoginState($get);
-  if($login_status["status"] !== true) return $login_status;
+  if($login_status["status"] !== true) {
+    $login_status["error"] = "Invalid user";
+    $login_status["human_error"] = "You're not logged in as a valid user to edit this. Please log in and try again.";
+    return $login_status;
+  }
   # The login status was OK
   $data64 = $get["data"];
   $data_string = base64_decode($data64);
@@ -83,6 +90,41 @@ function saveEntry($get)
       return array("status"=>false,"error"=>$result,"human_error"=>"Database error saving","data"=>$data,"ref"=>$ref,"perform"=>"save");
     }
   return array("status"=>true,"perform"=>"save","data"=>$data);
+}
+
+function newEntry($get)
+{
+  /***
+   * Create a new taxon entry
+   *
+   *
+   * @param data a base 64-encoded JSON string of the data to insert
+   ***/
+  $login_status = getLoginState($get);
+  if($login_status["status"] !== true) {
+    $login_status["error"] = "Invalid user";
+    $login_status["human_error"] = "You're not logged in as a valid user to create this. Please log in and try again.";
+    return $login_status;
+  }
+  # The login status was OK
+  $data64 = $get["data"];
+  $data_string = base64_decode($data64);
+  $data = json_decode($data_string,true);
+  # Add the perform key
+  global $db;
+  try
+  {
+    $result = $db->addItem($data);
+  }
+  catch(Exception $e)
+  {
+    return array("status"=>false,"error"=>$e->getMessage(),"humman_error"=>"Database error saving","data"=>$data,"ref"=>$result,"perform"=>"new");
+  }
+  if($result !== true)
+  {
+    return array("status"=>false,"error"=>$result,"human_error"=>"Database error saving","data"=>$data,"ref"=>$result,"perform"=>"new");
+  }
+  return array("status"=>true,"perform"=>"new","data"=>$data);
 }
 
 ?>
