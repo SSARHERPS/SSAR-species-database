@@ -459,6 +459,11 @@ modalTaxon = (taxon = undefined) ->
         data.taxon_credit = "This taxon information is uncredited."
       else
         data.taxon_credit = "Taxon information by #{data.taxon_credit}."
+    try
+      notes = markdown.toHTML(data.notes)
+    catch e
+      notes = data.notes
+      console.warn("Couldn't parse markdown!! #{e.message}")
     html = """
     <div id='meta-taxon-info'>
       #{yearHtml}
@@ -473,7 +478,7 @@ modalTaxon = (taxon = undefined) ->
       #{deprecatedHtml}
     </div>
     <h3>Taxon Notes</h3>
-    <p id='taxon-notes'>#{data.notes}</p>
+    <p id='taxon-notes'>#{notes}</p>
     <p class="text-right small text-muted">#{data.taxon_credit}</p>
     """
     $("#modal-taxon-content").html(html)

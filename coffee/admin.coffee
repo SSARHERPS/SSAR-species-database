@@ -102,6 +102,10 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
   s = s.replace(/\./g,"")
   s = prepURI(s.toLowerCase())
   args = "q=#{s}&loose=true"
+  # Also update the link
+  b64s = Base64.encodeURI(s)
+  newLink = "#{adminParams.appUrl}##{b64s}"
+  $("#app-linkout").attr("data-url",newLink)
   $.get(searchParams.targetApi,args,"json")
   .done (result) ->
     if result.status isnt true or result.count is 0
@@ -447,7 +451,8 @@ saveEditorEntry = (performMode = "save") ->
         $("html /deep/ #modal-taxon-edit")[0].close()
       catch e
         $("html >>> #modal-taxon-edit")[0].close()
-      renderAdminSearchResults()
+      unless isNull($("#admin-search").val())
+        renderAdminSearchResults()
       return false
     stopLoadError()
     toastStatusMessage(result.human_error)

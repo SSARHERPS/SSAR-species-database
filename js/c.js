@@ -91,7 +91,7 @@ verifyLoginCredentials = function(callback) {
 };
 
 renderAdminSearchResults = function(containerSelector) {
-  var args, s;
+  var args, b64s, newLink, s;
   if (containerSelector == null) {
     containerSelector = "#search-results";
   }
@@ -109,6 +109,9 @@ renderAdminSearchResults = function(containerSelector) {
   s = s.replace(/\./g, "");
   s = prepURI(s.toLowerCase());
   args = "q=" + s + "&loose=true";
+  b64s = Base64.encodeURI(s);
+  newLink = "" + adminParams.appUrl + "#" + b64s;
+  $("#app-linkout").attr("data-url", newLink);
   return $.get(searchParams.targetApi, args, "json").done(function(result) {
     var bootstrapColCount, colClass, data, html, htmlClose, htmlHead, targetCount;
     if (result.status !== true || result.count === 0) {
@@ -489,7 +492,9 @@ saveEditorEntry = function(performMode) {
         e = _error;
         $("html >>> #modal-taxon-edit")[0].close();
       }
-      renderAdminSearchResults();
+      if (!isNull($("#admin-search").val())) {
+        renderAdminSearchResults();
+      }
       return false;
     }
     stopLoadError();
@@ -1790,7 +1795,7 @@ modalTaxon = function(taxon) {
     $("#result_container").after(html);
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
-    var data, deprecatedHtml, e, humanTaxon, i, minorTypeHtml, sn, taxonArray, year, yearHtml;
+    var data, deprecatedHtml, e, humanTaxon, i, minorTypeHtml, notes, sn, taxonArray, year, yearHtml;
     data = result.result[0];
     if (data == null) {
       toastStatusMessage("There was an error fetching the entry details. Please try again later.");
@@ -1839,7 +1844,14 @@ modalTaxon = function(taxon) {
         data.taxon_credit = "Taxon information by " + data.taxon_credit + ".";
       }
     }
-    html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type'>" + data.major_type + "</span> (<span id='taxon-common-type'>" + data.major_common_type + "</span>)\n    <core-icon icon='arrow-forward'></core-icon>\n    <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + data.notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_credit + "</p>";
+    try {
+      notes = markdown.toHTML(data.notes);
+    } catch (_error) {
+      e = _error;
+      notes = data.notes;
+      console.warn("Couldn't parse markdown!! " + e.message);
+    }
+    html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type'>" + data.major_type + "</span> (<span id='taxon-common-type'>" + data.major_common_type + "</span>)\n    <core-icon icon='arrow-forward'></core-icon>\n    <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_credit + "</p>";
     $("#modal-taxon-content").html(html);
     $("#modal-inat-linkout").unbind().click(function() {
       return openTab("http://www.inaturalist.org/taxa/search?q=" + taxon);

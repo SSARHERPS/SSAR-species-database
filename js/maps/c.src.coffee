@@ -102,6 +102,10 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
   s = s.replace(/\./g,"")
   s = prepURI(s.toLowerCase())
   args = "q=#{s}&loose=true"
+  # Also update the link
+  b64s = Base64.encodeURI(s)
+  newLink = "#{adminParams.appUrl}##{b64s}"
+  $("#app-linkout").attr("data-url",newLink)
   $.get(searchParams.targetApi,args,"json")
   .done (result) ->
     if result.status isnt true or result.count is 0
@@ -447,7 +451,8 @@ saveEditorEntry = (performMode = "save") ->
         $("html /deep/ #modal-taxon-edit")[0].close()
       catch e
         $("html >>> #modal-taxon-edit")[0].close()
-      renderAdminSearchResults()
+      unless isNull($("#admin-search").val())
+        renderAdminSearchResults()
       return false
     stopLoadError()
     toastStatusMessage(result.human_error)
@@ -1465,6 +1470,11 @@ modalTaxon = (taxon = undefined) ->
         data.taxon_credit = "This taxon information is uncredited."
       else
         data.taxon_credit = "Taxon information by #{data.taxon_credit}."
+    try
+      notes = markdown.toHTML(data.notes)
+    catch e
+      notes = data.notes
+      console.warn("Couldn't parse markdown!! #{e.message}")
     html = """
     <div id='meta-taxon-info'>
       #{yearHtml}
@@ -1479,7 +1489,7 @@ modalTaxon = (taxon = undefined) ->
       #{deprecatedHtml}
     </div>
     <h3>Taxon Notes</h3>
-    <p id='taxon-notes'>#{data.notes}</p>
+    <p id='taxon-notes'>#{notes}</p>
     <p class="text-right small text-muted">#{data.taxon_credit}</p>
     """
     $("#modal-taxon-content").html(html)
