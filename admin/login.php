@@ -202,7 +202,7 @@ $alt_forms="<div id='alt_logins'>
 <!-- OpenID, Google, Twitter, Facebook -->
 </div>";
 $login_preamble = "
-	    <h2>User Login</h2>";
+	    <h2 id='title'>User Login</h2>";
 if($_REQUEST['m']=='login_error') $login_preamble.="<h3 class='bg-warning'>There was a problem setting your login credentials. Please try again.</h3>";
 $loginform = "
 	    <form id='login' method='post' action='?q=submitlogin' class='form-horizontal'>

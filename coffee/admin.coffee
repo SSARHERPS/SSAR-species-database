@@ -291,9 +291,16 @@ lookupEditorSpecies = (taxon = undefined) ->
             console.warn("Remove edited by! Didn't have an author provided for column '#{col}', giving '#{d}'")
           else
             try
+              unless $("html /deep/ #taxon-author-last").exists()
+                throw("Bad selector error")
               $("html /deep/ #taxon-author-last").text(d)
             catch e
-              $("html >>> #taxon-author-last").text(d)
+              try
+                unless $("html >>> #taxon-author-last").exists()
+                  throw("Bad combinator selector")
+                $("html >>> #taxon-author-last").text(d)
+              catch e
+                $("#taxon-author-last").text(d)
           whoEdited = if isNull($.cookie("ssarherps_fullname")) then $.cookie("ssarherps_user") else $.cookie("ssarherps_fullname")
           try
             $("html /deep/ #edit-taxon-author").attr("value",whoEdited)
@@ -305,14 +312,28 @@ lookupEditorSpecies = (taxon = undefined) ->
             d = JSON.stringify(d).slice(1,-1)
           if col isnt "notes"
             try
+              unless $("html /deep/ #{fieldSelector}").exists()
+                throw("Bad Selector Error")
               $("html /deep/ #{fieldSelector}").attr("value",d)
             catch e
-              $("html >>> #{fieldSelector}").attr("value",d)
+              try
+                unless $("html >>> #{fieldSelector}").exists()
+                  throw("Bad combinator selector")
+                $("html >>> #{fieldSelector}").attr("value",d)
+              catch e
+                $("#{fieldSelector}").attr("value",d)
           else
             try
+              unless $("html /deep/ #{fieldSelector}").exists()
+                throw("Bad selector error")
               $("html /deep/ #{fieldSelector}").text(d)
             catch e
-              $("html >>> #{fieldSelector}").text(d)
+              try
+                unless $("html >>> #{fieldSelector}").exists()
+                  throw("Bad combinator selector")
+                $("html >>> #{fieldSelector}").text(d)
+              catch e
+                $("#{fieldSelector}").text(d)
       $("#modal-taxon-edit")[0].open()
       stopLoad()
     catch e

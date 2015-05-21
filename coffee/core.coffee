@@ -429,7 +429,7 @@ browserBeware = ->
         $(".collapse").collapse("toggle")
 
   catch e
-    if window.hasCheckedBrowser is 50
+    if window.hasCheckedBrowser is 100
       # We've waited almost 15 seconds
       console.warn("We can't check your browser! If you're using Firefox, beware of bugs!")
       return false

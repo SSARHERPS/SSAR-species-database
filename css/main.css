@@ -314,6 +314,7 @@ form {
 html /deep/ #modal-taxon-editor paper-input {
     display:block;
 }
+
 html /deep/ .help-block {
   display: block;
   margin-top: 5px;
@@ -336,6 +337,19 @@ html >>> .help-block {
 }
 
 html >>> paper-autogrow-textarea textarea {
+    width:90%;
+}
+
+#modal-taxon-editor paper-input {
+    display:block;
+}
+.help-block {
+  display: block;
+  margin-top: 5px;
+  margin-bottom: 10px;
+  color: #737373;
+}
+paper-autogrow-textarea textarea {
     width:90%;
 }
 

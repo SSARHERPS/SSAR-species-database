@@ -313,10 +313,21 @@ lookupEditorSpecies = function(taxon) {
             console.warn("Remove edited by! Didn't have an author provided for column '" + col + "', giving '" + d + "'");
           } else {
             try {
+              if (!$("html /deep/ #taxon-author-last").exists()) {
+                throw "Bad selector error";
+              }
               $("html /deep/ #taxon-author-last").text(d);
             } catch (_error) {
               e = _error;
-              $("html >>> #taxon-author-last").text(d);
+              try {
+                if (!$("html >>> #taxon-author-last").exists()) {
+                  throw "Bad combinator selector";
+                }
+                $("html >>> #taxon-author-last").text(d);
+              } catch (_error) {
+                e = _error;
+                $("#taxon-author-last").text(d);
+              }
             }
           }
           whoEdited = isNull($.cookie("ssarherps_fullname")) ? $.cookie("ssarherps_user") : $.cookie("ssarherps_fullname");
@@ -333,17 +344,39 @@ lookupEditorSpecies = function(taxon) {
           }
           if (col !== "notes") {
             try {
+              if (!$("html /deep/ " + fieldSelector).exists()) {
+                throw "Bad Selector Error";
+              }
               return $("html /deep/ " + fieldSelector).attr("value", d);
             } catch (_error) {
               e = _error;
-              return $("html >>> " + fieldSelector).attr("value", d);
+              try {
+                if (!$("html >>> " + fieldSelector).exists()) {
+                  throw "Bad combinator selector";
+                }
+                return $("html >>> " + fieldSelector).attr("value", d);
+              } catch (_error) {
+                e = _error;
+                return $("" + fieldSelector).attr("value", d);
+              }
             }
           } else {
             try {
+              if (!$("html /deep/ " + fieldSelector).exists()) {
+                throw "Bad selector error";
+              }
               return $("html /deep/ " + fieldSelector).text(d);
             } catch (_error) {
               e = _error;
-              return $("html >>> " + fieldSelector).text(d);
+              try {
+                if (!$("html >>> " + fieldSelector).exists()) {
+                  throw "Bad combinator selector";
+                }
+                return $("html >>> " + fieldSelector).text(d);
+              } catch (_error) {
+                e = _error;
+                return $("" + fieldSelector).text(d);
+              }
             }
           }
         }
@@ -1171,7 +1204,7 @@ browserBeware = function() {
     }
   } catch (_error) {
     e = _error;
-    if (window.hasCheckedBrowser === 50) {
+    if (window.hasCheckedBrowser === 100) {
       console.warn("We can't check your browser! If you're using Firefox, beware of bugs!");
       return false;
     }
