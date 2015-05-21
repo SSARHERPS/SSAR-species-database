@@ -27,6 +27,7 @@ loadAdminUi = ->
         <div>
           <paper-input label="Search for species" id="admin-search" name="admin-search" required autofocus floatingLabel class="col-xs-7 col-sm-8"></paper-input>
           <paper-fab id="do-admin-search" icon="search" raisedButton class="materialblue"></paper-fab>
+          <paper-fab id="do-admin-add" icon="add" raisedButton class="materialblue"></paper-fab>
         </div>
       </form>
       <div id='search-results' class="row"></div>
@@ -38,6 +39,8 @@ loadAdminUi = ->
         if e.which is 13 then renderAdminSearchResults()
       $("#do-admin-search").click ->
         renderAdminSearchResults()
+      $("#do-admin-add").click ->
+        createNewTaxon()
       bindClickTargets()
       false
   catch e
@@ -222,6 +225,7 @@ createNewTaxon = ->
     .click ->
       saveEditorEntry("new")
   $("#modal-taxon-edit")[0].open()
+  stopLoad()
 
 
 lookupEditorSpecies = (taxon = undefined) ->

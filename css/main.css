@@ -20,6 +20,11 @@ html >>> .materialblue {
     color:#fff;
 }
 
+.materialgreen, .materialblue:hover {
+    background: #4CAF50;
+    color: #fff;
+}
+
 .materialindigo {
     background: #3f51b5;
     color:#fff;

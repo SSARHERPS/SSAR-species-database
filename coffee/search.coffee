@@ -378,6 +378,10 @@ modalTaxon = (taxon = undefined) ->
   $.get(searchParams.targetApi,"q=#{taxon}","json")
   .done (result) ->
     data = result.result[0]
+    unless data?
+      toastStatusMessage("There was an error fetching the entry details. Please try again later.")
+      stopLoadError()
+      return false
     console.log("Got",data)
     year = parseTaxonYear(data.authority_year)
     yearHtml = ""
