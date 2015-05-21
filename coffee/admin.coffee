@@ -4,6 +4,7 @@
 ###
 adminParams = new Object()
 adminParams.apiTarget = "admin_api.php"
+adminParams.appUrl = "http://ssarherps.org/cndb/"
 adminParams.loginDir = "admin/"
 adminParams.loginApiTarget = "#{adminParams.loginDir}async_login_handler.php"
 
@@ -16,7 +17,20 @@ loadAdminUi = ->
   try
     verifyLoginCredentials (data) ->
       # Post verification
-      $("article").html("<h3>Welcome, #{$.cookie("ssarherps_name")} <paper-icon-button icon='settings-applications' class='click' data-url='#{data.login_url}'></paper-icon-button></h3><div id='admin-actions-block'><div class='bs-callout bs-callout-info'><p>Please be patient while the administrative interface loads.</p></div></div>")
+      articleHtml = """
+      <h3>
+        Welcome, #{$.cookie("ssarherps_name")}
+        <paper-icon-button icon='settings-applications' class='click' data-url='#{data.login_url}'></paper-icon-button>
+        <paper-icon-button icon='exit-to-app' class='click' data-url='#{adminParams.appUrl}' data-toggle="tooltip" title="Go to CNDB app" id="app-linkout"></paper-icon-button>
+      </h3>
+      <div id='admin-actions-block'>
+        <div class='bs-callout bs-callout-info'>
+          <p>Please be patient while the administrative interface loads.</p>
+        </div>
+      </div>
+      """
+      $("article").html(articleHtml)
+      $("#app-linkout").tooltip()
       ###
       # Render out the admin UI
       # We want a search box that we pipe through the API
@@ -433,7 +447,7 @@ saveEditorEntry = (performMode = "save") ->
         $("html /deep/ #modal-taxon-edit")[0].close()
       catch e
         $("html >>> #modal-taxon-edit")[0].close()
-      stopLoad()
+      renderAdminSearchResults()
       return false
     stopLoadError()
     toastStatusMessage(result.human_error)

@@ -10,6 +10,8 @@ adminParams = new Object();
 
 adminParams.apiTarget = "admin_api.php";
 
+adminParams.appUrl = "http://ssarherps.org/cndb/";
+
 adminParams.loginDir = "admin/";
 
 adminParams.loginApiTarget = "" + adminParams.loginDir + "async_login_handler.php";
@@ -24,8 +26,10 @@ loadAdminUi = function() {
   var e;
   try {
     verifyLoginCredentials(function(data) {
-      var searchForm;
-      $("article").html("<h3>Welcome, " + ($.cookie("ssarherps_name")) + " <paper-icon-button icon='settings-applications' class='click' data-url='" + data.login_url + "'></paper-icon-button></h3><div id='admin-actions-block'><div class='bs-callout bs-callout-info'><p>Please be patient while the administrative interface loads.</p></div></div>");
+      var articleHtml, searchForm;
+      articleHtml = "<h3>\n  Welcome, " + ($.cookie("ssarherps_name")) + "\n  <paper-icon-button icon='settings-applications' class='click' data-url='" + data.login_url + "'></paper-icon-button>\n  <paper-icon-button icon='exit-to-app' class='click' data-url='" + adminParams.appUrl + "' data-toggle=\"tooltip\" title=\"Go to CNDB app\" id=\"app-linkout\"></paper-icon-button>\n</h3>\n<div id='admin-actions-block'>\n  <div class='bs-callout bs-callout-info'>\n    <p>Please be patient while the administrative interface loads.</p>\n  </div>\n</div>";
+      $("article").html(articleHtml);
+      $("#app-linkout").tooltip();
 
       /*
        * Render out the admin UI
@@ -485,7 +489,7 @@ saveEditorEntry = function(performMode) {
         e = _error;
         $("html >>> #modal-taxon-edit")[0].close();
       }
-      stopLoad();
+      renderAdminSearchResults();
       return false;
     }
     stopLoadError();
