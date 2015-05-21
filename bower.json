@@ -29,7 +29,8 @@
     "octicons": "~2.1.2",
     "zeroclipboard": "~2.2.0",
     "jquery-cookie": "~1.4.1",
-    "whichbrowser": "~1.0.1020"
+    "whichbrowser": "~1.0.1020",
+    "markdown": "~0.5.0"
   },
   "resolutions": {
     "polymer": "^0.5.0",

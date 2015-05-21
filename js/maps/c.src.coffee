@@ -849,7 +849,36 @@ stopLoadError = (message, elId = "loader", fadeOut = 5000) ->
   catch e
     console.log('Could not stop load error animation', e.message)
 
+
+
+
 lightboxImages = (selector = ".lightboximage") ->
+  ###
+  # Lightbox images with this selector
+  #
+  # If the image has it, wrap it in an anchor and bind;
+  # otherwise just apply to the selector.
+  #
+  # Plays nice with layzr.js
+  # https://callmecavs.github.io/layzr.js/
+  ###
+  $(selector).each ->
+    if $(this).prop("tagName").toLowerCase() is "img" and $(this).parent().prop("tagName").toLowerCase() isnt "a"
+      tagHtml = $(this).removeClass("lightboximage").prop("outerHTML")
+      imgUrl = switch
+        when not isNull($(this).attr("data-layzr-retina"))
+          $(this).attr("data-layzr-retina")
+        when not isNull($(this).attr("data-layzr"))
+          $(this).attr("data-layzr")
+        else
+          $(this).attr("src")
+      $(this).replaceWith("<a href='#{imgUrl}' class='lightboximage'>#{tagHtml}</a>")
+  ###
+  #try
+  #  layzr = new Layzr()
+  #catch e
+  #  console.warn("The Layzr library couldn't be loaded.")
+  ###
   options =
       onStart: ->
         overlayOn()
@@ -869,6 +898,7 @@ lightboxImages = (selector = ".lightboximage") ->
   # Until these narrower selectors work, let's use this
   $(selector).imageLightbox(options)
 
+  
 activityIndicatorOn = ->
   $('<div id="imagelightbox-loading"><div></div></div>' ).appendTo('body')
 activityIndicatorOff = ->
@@ -975,6 +1005,8 @@ searchParams = new Object()
 searchParams.targetApi = "commonnames_api.php"
 searchParams.targetContainer = "#result_container"
 searchParams.apiPath = uri.urlString + searchParams.targetApi
+
+ssar = new Object()
 
 performSearch = (stateArgs = undefined) ->
   ###
@@ -1330,6 +1362,47 @@ deferCalPhotos = (selector = ".calphoto") ->
         lightboxImages(".calphoto-image-anchor")
   false
 
+
+insertModalImage = (taxon = ssar.activeTaxon) ->
+  unless taxon?
+    console.error("Tried to insert a modal image, but no taxon was provided!")
+    return false
+  unless typeof taxon is "object"
+    console.error("Invalid taxon data type (expecting object)")
+    return false
+  cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query"
+  taxonArray = [taxon.genus,taxon.species,taxon.subspecies]
+  taxonString = taxonArray.join("+")
+  args = "getthumbinfo=1&num=all&cconly=1&taxon=#{taxonString}&format=xml"
+  $.get(cpUrl,args)
+  .done (resultXml) ->
+    result = xmlToJSON.parseString(resultXml)
+    data = result.xml.calphotos
+    thumb = data.thumb_url
+    large = data.enlarge_jpeg_url
+    link = data.enlarge_url
+    # Render a thumbnail that onclick will lightbox
+    html = "<a href='#{large}' class='calphoto-img-anchor'><img src='#{thumb}' data-href='#{link}' class='calphoto-img-thumb' data-taxon='#{taxonString}'/></a>"
+    # Insert the image ...
+    try
+      unless $("html /deep/ #meta-taxon-info").exists()
+        throw("Bad selector error")
+      $("html /deep/ #meta-taxon-info").before(html)
+    catch e
+      try
+        unless $("html >>> #meta-taxon-info").exists()
+          throw("Bad combinator error")
+        $("html >>> #meta-taxon-info").before(html)
+      catch e
+        $("#meta-taxon-info").before(html)
+    false
+  .fail (result,status) ->
+    false
+  .always ->
+    lightboxImages(".calphoto-image-anchor")
+  false
+
+
 modalTaxon = (taxon = undefined) ->
   if not taxon?
     $(".cndb-result-entry").click ->
@@ -1421,6 +1494,11 @@ modalTaxon = (taxon = undefined) ->
     humanTaxon = humanTaxon.replace(/\+/g," ")
     $("#modal-taxon").attr("heading",humanTaxon)
     # Open it
+    taxonArray = taxon.split("+")
+    ssar.activeTaxon =
+      genus: taxonArray[0]
+      species: taxonArray[1]
+      subspecies: taxonArray[2]
     stopLoad()
     checkTaxonNear taxon, ->
       $("#modal-taxon")[0].open()

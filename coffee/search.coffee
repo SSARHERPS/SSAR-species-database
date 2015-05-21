@@ -3,6 +3,8 @@ searchParams.targetApi = "commonnames_api.php"
 searchParams.targetContainer = "#result_container"
 searchParams.apiPath = uri.urlString + searchParams.targetApi
 
+ssar = new Object()
+
 performSearch = (stateArgs = undefined) ->
   ###
   # Check the fields and filters and do the async search
@@ -357,6 +359,47 @@ deferCalPhotos = (selector = ".calphoto") ->
         lightboxImages(".calphoto-image-anchor")
   false
 
+
+insertModalImage = (taxon = ssar.activeTaxon) ->
+  unless taxon?
+    console.error("Tried to insert a modal image, but no taxon was provided!")
+    return false
+  unless typeof taxon is "object"
+    console.error("Invalid taxon data type (expecting object)")
+    return false
+  cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query"
+  taxonArray = [taxon.genus,taxon.species,taxon.subspecies]
+  taxonString = taxonArray.join("+")
+  args = "getthumbinfo=1&num=all&cconly=1&taxon=#{taxonString}&format=xml"
+  $.get(cpUrl,args)
+  .done (resultXml) ->
+    result = xmlToJSON.parseString(resultXml)
+    data = result.xml.calphotos
+    thumb = data.thumb_url
+    large = data.enlarge_jpeg_url
+    link = data.enlarge_url
+    # Render a thumbnail that onclick will lightbox
+    html = "<a href='#{large}' class='calphoto-img-anchor'><img src='#{thumb}' data-href='#{link}' class='calphoto-img-thumb' data-taxon='#{taxonString}'/></a>"
+    # Insert the image ...
+    try
+      unless $("html /deep/ #meta-taxon-info").exists()
+        throw("Bad selector error")
+      $("html /deep/ #meta-taxon-info").before(html)
+    catch e
+      try
+        unless $("html >>> #meta-taxon-info").exists()
+          throw("Bad combinator error")
+        $("html >>> #meta-taxon-info").before(html)
+      catch e
+        $("#meta-taxon-info").before(html)
+    false
+  .fail (result,status) ->
+    false
+  .always ->
+    lightboxImages(".calphoto-image-anchor")
+  false
+
+
 modalTaxon = (taxon = undefined) ->
   if not taxon?
     $(".cndb-result-entry").click ->
@@ -448,6 +491,11 @@ modalTaxon = (taxon = undefined) ->
     humanTaxon = humanTaxon.replace(/\+/g," ")
     $("#modal-taxon").attr("heading",humanTaxon)
     # Open it
+    taxonArray = taxon.split("+")
+    ssar.activeTaxon =
+      genus: taxonArray[0]
+      species: taxonArray[1]
+      subspecies: taxonArray[2]
     stopLoad()
     checkTaxonNear taxon, ->
       $("#modal-taxon")[0].open()

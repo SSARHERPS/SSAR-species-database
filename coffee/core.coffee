@@ -333,7 +333,36 @@ stopLoadError = (message, elId = "loader", fadeOut = 5000) ->
   catch e
     console.log('Could not stop load error animation', e.message)
 
+
+
+
 lightboxImages = (selector = ".lightboximage") ->
+  ###
+  # Lightbox images with this selector
+  #
+  # If the image has it, wrap it in an anchor and bind;
+  # otherwise just apply to the selector.
+  #
+  # Plays nice with layzr.js
+  # https://callmecavs.github.io/layzr.js/
+  ###
+  $(selector).each ->
+    if $(this).prop("tagName").toLowerCase() is "img" and $(this).parent().prop("tagName").toLowerCase() isnt "a"
+      tagHtml = $(this).removeClass("lightboximage").prop("outerHTML")
+      imgUrl = switch
+        when not isNull($(this).attr("data-layzr-retina"))
+          $(this).attr("data-layzr-retina")
+        when not isNull($(this).attr("data-layzr"))
+          $(this).attr("data-layzr")
+        else
+          $(this).attr("src")
+      $(this).replaceWith("<a href='#{imgUrl}' class='lightboximage'>#{tagHtml}</a>")
+  ###
+  #try
+  #  layzr = new Layzr()
+  #catch e
+  #  console.warn("The Layzr library couldn't be loaded.")
+  ###
   options =
       onStart: ->
         overlayOn()
@@ -353,6 +382,7 @@ lightboxImages = (selector = ".lightboximage") ->
   # Until these narrower selectors work, let's use this
   $(selector).imageLightbox(options)
 
+  
 activityIndicatorOn = ->
   $('<div id="imagelightbox-loading"><div></div></div>' ).appendTo('body')
 activityIndicatorOff = ->

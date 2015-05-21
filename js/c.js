@@ -3,7 +3,7 @@
  * The main coffeescript file for administrative stuff
  * Triggered from admin-page.html
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createNewTaxon, deferCalPhotos, delay, deleteTaxon, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createNewTaxon, deferCalPhotos, delay, deleteTaxon, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
   __slice = [].slice;
 
 adminParams = new Object();
@@ -1079,6 +1079,40 @@ lightboxImages = function(selector) {
   if (selector == null) {
     selector = ".lightboximage";
   }
+
+  /*
+   * Lightbox images with this selector
+   *
+   * If the image has it, wrap it in an anchor and bind;
+   * otherwise just apply to the selector.
+   *
+   * Plays nice with layzr.js
+   * https://callmecavs.github.io/layzr.js/
+   */
+  $(selector).each(function() {
+    var imgUrl, tagHtml;
+    if ($(this).prop("tagName").toLowerCase() === "img" && $(this).parent().prop("tagName").toLowerCase() !== "a") {
+      tagHtml = $(this).removeClass("lightboximage").prop("outerHTML");
+      imgUrl = (function() {
+        switch (false) {
+          case !!isNull($(this).attr("data-layzr-retina")):
+            return $(this).attr("data-layzr-retina");
+          case !!isNull($(this).attr("data-layzr")):
+            return $(this).attr("data-layzr");
+          default:
+            return $(this).attr("src");
+        }
+      }).call(this);
+      return $(this).replaceWith("<a href='" + imgUrl + "' class='lightboximage'>" + tagHtml + "</a>");
+    }
+  });
+
+  /*
+   *try
+   *  layzr = new Layzr()
+   *catch e
+   *  console.warn("The Layzr library couldn't be loaded.")
+   */
   options = {
     onStart: function() {
       return overlayOn();
@@ -1248,6 +1282,8 @@ searchParams.targetApi = "commonnames_api.php";
 searchParams.targetContainer = "#result_container";
 
 searchParams.apiPath = uri.urlString + searchParams.targetApi;
+
+ssar = new Object();
 
 performSearch = function(stateArgs) {
   var args, filters, s, sOrig;
@@ -1681,6 +1717,57 @@ deferCalPhotos = function(selector) {
   return false;
 };
 
+insertModalImage = function(taxon) {
+  var args, cpUrl, taxonArray, taxonString;
+  if (taxon == null) {
+    taxon = ssar.activeTaxon;
+  }
+  if (taxon == null) {
+    console.error("Tried to insert a modal image, but no taxon was provided!");
+    return false;
+  }
+  if (typeof taxon !== "object") {
+    console.error("Invalid taxon data type (expecting object)");
+    return false;
+  }
+  cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query";
+  taxonArray = [taxon.genus, taxon.species, taxon.subspecies];
+  taxonString = taxonArray.join("+");
+  args = "getthumbinfo=1&num=all&cconly=1&taxon=" + taxonString + "&format=xml";
+  $.get(cpUrl, args).done(function(resultXml) {
+    var data, e, html, large, link, result, thumb;
+    result = xmlToJSON.parseString(resultXml);
+    data = result.xml.calphotos;
+    thumb = data.thumb_url;
+    large = data.enlarge_jpeg_url;
+    link = data.enlarge_url;
+    html = "<a href='" + large + "' class='calphoto-img-anchor'><img src='" + thumb + "' data-href='" + link + "' class='calphoto-img-thumb' data-taxon='" + taxonString + "'/></a>";
+    try {
+      if (!$("html /deep/ #meta-taxon-info").exists()) {
+        throw "Bad selector error";
+      }
+      $("html /deep/ #meta-taxon-info").before(html);
+    } catch (_error) {
+      e = _error;
+      try {
+        if (!$("html >>> #meta-taxon-info").exists()) {
+          throw "Bad combinator error";
+        }
+        $("html >>> #meta-taxon-info").before(html);
+      } catch (_error) {
+        e = _error;
+        $("#meta-taxon-info").before(html);
+      }
+    }
+    return false;
+  }).fail(function(result, status) {
+    return false;
+  }).always(function() {
+    return lightboxImages(".calphoto-image-anchor");
+  });
+  return false;
+};
+
 modalTaxon = function(taxon) {
   var html;
   if (taxon == null) {
@@ -1698,7 +1785,7 @@ modalTaxon = function(taxon) {
     $("#result_container").after(html);
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
-    var data, deprecatedHtml, e, humanTaxon, i, minorTypeHtml, sn, year, yearHtml;
+    var data, deprecatedHtml, e, humanTaxon, i, minorTypeHtml, sn, taxonArray, year, yearHtml;
     data = result.result[0];
     if (data == null) {
       toastStatusMessage("There was an error fetching the entry details. Please try again later.");
@@ -1759,6 +1846,12 @@ modalTaxon = function(taxon) {
     humanTaxon = taxon.charAt(0).toUpperCase() + taxon.slice(1);
     humanTaxon = humanTaxon.replace(/\+/g, " ");
     $("#modal-taxon").attr("heading", humanTaxon);
+    taxonArray = taxon.split("+");
+    ssar.activeTaxon = {
+      genus: taxonArray[0],
+      species: taxonArray[1],
+      subspecies: taxonArray[2]
+    };
     stopLoad();
     return checkTaxonNear(taxon, function() {
       return $("#modal-taxon")[0].open();
