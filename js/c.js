@@ -1075,7 +1075,7 @@ stopLoadError = function(message, elId, fadeOut) {
 };
 
 lightboxImages = function(selector) {
-  var options;
+  var e, options;
   if (selector == null) {
     selector = ".lightboximage";
   }
@@ -1135,7 +1135,12 @@ lightboxImages = function(selector) {
     if not $(this).attr("nolightbox")?
       $(this).imageLightbox(options)
    */
-  return $(selector).imageLightbox(options);
+  try {
+    return $(selector).imageLightbox(options);
+  } catch (_error) {
+    e = _error;
+    return console.error("Unable to lightbox images!");
+  }
 };
 
 activityIndicatorOn = function() {

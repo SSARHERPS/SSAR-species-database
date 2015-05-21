@@ -896,7 +896,10 @@ lightboxImages = (selector = ".lightboximage") ->
       $(this).imageLightbox(options)
   ###
   # Until these narrower selectors work, let's use this
-  $(selector).imageLightbox(options)
+  try
+    $(selector).imageLightbox(options)
+  catch e
+    console.error("Unable to lightbox images!")
 
   
 activityIndicatorOn = ->
