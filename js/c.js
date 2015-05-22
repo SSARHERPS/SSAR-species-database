@@ -1739,10 +1739,17 @@ deferCalPhotos = function(selector) {
 };
 
 insertModalImage = function(taxon) {
-  var args, cpUrl, taxonArray, taxonString;
+  var args, cpUrl, settings, taxonArray, taxonString;
   if (taxon == null) {
     taxon = ssar.activeTaxon;
   }
+
+  /*
+   * Insert into the taxo modal a lightboxable photo from calphotos
+   *
+   * Blocked on
+   *
+   */
   if (taxon == null) {
     console.error("Tried to insert a modal image, but no taxon was provided!");
     return false;
@@ -1752,14 +1759,33 @@ insertModalImage = function(taxon) {
     return false;
   }
   cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query";
-  taxonArray = [taxon.genus, taxon.species, taxon.subspecies];
+  taxonArray = [taxon.genus, taxon.species];
+  if (taxon.subspecies != null) {
+    taxonArray.push(taxon.subspecies);
+  }
   taxonString = taxonArray.join("+");
   args = "getthumbinfo=1&num=all&cconly=1&taxon=" + taxonString + "&format=xml";
-  $.get(cpUrl, args).done(function(resultXml) {
+  console.log("Looking at", "" + cpUrl + "?" + args);
+  settings = {
+    url: cpUrl,
+    data: args,
+    dataType: "xml",
+    type: "get",
+    crossDomain: true
+  };
+  $.ajax(settings).done(function(resultXml) {
     var data, e, html, large, link, result, thumb;
     result = xmlToJSON.parseString(resultXml);
     data = result.xml.calphotos;
+    if (data == null) {
+      console.warn("CalPhotos didn't return any valid images for this search!");
+      return false;
+    }
     thumb = data.thumb_url;
+    if (thumb == null) {
+      console.warn("CalPhotos didn't return any valid images for this search!");
+      return false;
+    }
     large = data.enlarge_jpeg_url;
     link = data.enlarge_url;
     html = "<a href='" + large + "' class='calphoto-img-anchor'><img src='" + thumb + "' data-href='" + link + "' class='calphoto-img-thumb' data-taxon='" + taxonString + "'/></a>";
@@ -1780,11 +1806,12 @@ insertModalImage = function(taxon) {
         $("#meta-taxon-info").before(html);
       }
     }
+    lightboxImages(".calphoto-image-anchor");
     return false;
   }).fail(function(result, status) {
+    console.log(result, status);
+    console.error("Couldn't load an image to insert!");
     return false;
-  }).always(function() {
-    return lightboxImages(".calphoto-image-anchor");
   });
   return false;
 };

@@ -364,6 +364,12 @@ deferCalPhotos = (selector = ".calphoto") ->
 
 
 insertModalImage = (taxon = ssar.activeTaxon) ->
+  ###
+  # Insert into the taxo modal a lightboxable photo from calphotos
+  #
+  # Blocked on
+  # 
+  ###
   unless taxon?
     console.error("Tried to insert a modal image, but no taxon was provided!")
     return false
@@ -371,14 +377,29 @@ insertModalImage = (taxon = ssar.activeTaxon) ->
     console.error("Invalid taxon data type (expecting object)")
     return false
   cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query"
-  taxonArray = [taxon.genus,taxon.species,taxon.subspecies]
+  taxonArray = [taxon.genus,taxon.species]
+  if taxon.subspecies?
+    taxonArray.push(taxon.subspecies)
   taxonString = taxonArray.join("+")
   args = "getthumbinfo=1&num=all&cconly=1&taxon=#{taxonString}&format=xml"
-  $.get(cpUrl,args)
+  console.log("Looking at","#{cpUrl}?#{args}")
+  settings =
+    url: cpUrl
+    data: args
+    dataType: "xml"
+    type: "get"
+    crossDomain: true
+  $.ajax(settings)
   .done (resultXml) ->
     result = xmlToJSON.parseString(resultXml)
     data = result.xml.calphotos
+    unless data?
+      console.warn("CalPhotos didn't return any valid images for this search!")
+      return false
     thumb = data.thumb_url
+    unless thumb?
+      console.warn("CalPhotos didn't return any valid images for this search!")
+      return false
     large = data.enlarge_jpeg_url
     link = data.enlarge_url
     # Render a thumbnail that onclick will lightbox
@@ -395,11 +416,12 @@ insertModalImage = (taxon = ssar.activeTaxon) ->
         $("html >>> #meta-taxon-info").before(html)
       catch e
         $("#meta-taxon-info").before(html)
+    lightboxImages(".calphoto-image-anchor")
     false
   .fail (result,status) ->
+    console.log(result,status)
+    console.error("Couldn't load an image to insert!")
     false
-  .always ->
-    lightboxImages(".calphoto-image-anchor")
   false
 
 
