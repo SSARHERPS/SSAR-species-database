@@ -83,6 +83,9 @@ module.exports = (grunt) ->
         files:
           "js/jquery.cookie.min.js": ["bower_components/jquery-cookie/jquery.cookie.js"]
     cssmin:
+      options:
+        sourceMap: true
+        advanced: false
       target:
         files:
           "css/main.min.css":["css/main.css"]
