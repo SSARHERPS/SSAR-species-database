@@ -12,6 +12,8 @@ adminParams.apiTarget = "admin_api.php";
 
 adminParams.appUrl = "http://ssarherps.org/cndb/";
 
+adminParams.adminPageUrl = "" + adminParams.appUrl + "admin-page.html";
+
 adminParams.loginDir = "admin/";
 
 adminParams.loginApiTarget = "" + adminParams.loginDir + "async_login_handler.php";
@@ -566,7 +568,13 @@ foo = function() {
   return false;
 };
 
-$(function() {});
+$(function() {
+  if ($("#next").exists()) {
+    return $("#next").unbind().click(function() {
+      return openTab(adminParams.adminPageUrl);
+    });
+  }
+});
 
 root = typeof exports !== "undefined" && exports !== null ? exports : this;
 

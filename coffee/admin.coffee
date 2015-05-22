@@ -5,6 +5,7 @@
 adminParams = new Object()
 adminParams.apiTarget = "admin_api.php"
 adminParams.appUrl = "http://ssarherps.org/cndb/"
+adminParams.adminPageUrl = "#{adminParams.appUrl}admin-page.html"
 adminParams.loginDir = "admin/"
 adminParams.loginApiTarget = "#{adminParams.loginDir}async_login_handler.php"
 
@@ -521,4 +522,9 @@ foo = ->
   false
 
 $ ->
-  # The onload for the admin has been moved to the core.coffee file.
+  if $("#next").exists()
+    $("#next")
+    .unbind()
+    .click ->
+      openTab(adminParams.adminPageUrl)
+  # The rest of the onload for the admin has been moved to the core.coffee file.

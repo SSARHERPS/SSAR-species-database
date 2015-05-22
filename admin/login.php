@@ -195,7 +195,7 @@ catch(Exception $e)
   {
     $has2fa = false;
   }
-$settings_blob = "<section id='account_settings'><h2>Settings</h2><ul id='settings_list'><li><a href='#' id='showAdvancedOptions' data-domain='$domain' data-user-tfa='".$has2fa."' role='button' class='btn btn-default'>Account Settings</a></li>".$verifyphone_link.$random."</ul></section>";
+$settings_blob = "<section id='account_settings' class='panel panel-default clearfix'><div class='panel-heading'><h2 class='panel-title'>Settings</h2></div><div class='panel-body'><ul id='settings_list'><li><a href='#' id='showAdvancedOptions' data-domain='$domain' data-user-tfa='".$has2fa."' role='button' class='btn btn-default'>Account Settings</a></li>".$verifyphone_link.$random."</ul></div></section>";
 
 $login_output.="<div id='login_block'>";
 $alt_forms="<div id='alt_logins'>
@@ -270,7 +270,7 @@ if($_REQUEST['q']=='submitlogin')
             $display_name=$xml->getTagContents($name_block,"<dname>");
             # Account for possible differnt modes of saving
             if(empty($first_name)) $first_name = $name_block;
-            $login_output.="<h3 id='welcome_back'>Welcome back, ".$first_name."</h3>"; //Welcome message
+            $login_output.="<h1 id='welcome_back'>Welcome back, ".$first_name."</h1>"; //Welcome message
 
             $cookie_result=$user->createCookieTokens($userdata);
             if($debug)
@@ -738,8 +738,18 @@ else if(isset($_REQUEST['2fa']))
   }
 else
   {
+      if($redirect_to_home !== true && empty($redirect_url))
+      {
+          $durl = $self_url;
+      }
+      else
+      {
+          if($redirect_to_home === true) $durl = $baseurl;
+          else $durl = $redirect_url;
+      }
+      
     if(!$logged_in) $login_output.=$login_preamble . $loginform.$loginform_close;
-    else $login_output.="<p id='signin_greeting'>Welcome back, $first_name</p><br/><p id='logout_para'><aside class='ssmall'><a href='?q=logout'>(Logout)</a></aside></p>".$settings_blob."<button id='next' name='next' class='btn btn-default continue'>Continue &#187;</button>";
+    else $login_output.="<aside class='ssmall pull-right'><a href='?q=logout' class='btn btn-warning btn-sm'><span class='glyphicon glyphicon-log-out' aria-hidden='true'></span> Logout</a></aside><h1 id='signin_greeting'>Welcome back, $first_name</h1<br/><p id='logout_para'></p>".$settings_blob."<button id='next' name='next' class='btn btn-primary continue click' data-url='$durl'>Continue &#187;</button>";
     $deferredJS .= "\n$(\"#next\").click(function(){window.location.href=\"".$durl."\";});";
   }
 $login_output.="</div>";
