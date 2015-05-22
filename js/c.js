@@ -1662,18 +1662,21 @@ checkTaxonNear = function(taxonQuery, callback, selector) {
   }).always(function() {
     var e;
     try {
-      $("html /deep/ " + selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + "' data-toggle='tooltip' id='near-me-icon'></core-icon>");
+      $("html /deep/ " + selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + " near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>");
       $("html /deep/ #near-me-icon").attr("title", tooltipHint);
-      $("html /deep/ #near-me-icon").tooltip();
+      $("html /deep/ #near-me-container").attr("title", tooltipHint);
+      $("html /deep/ .near-me").tooltip();
     } catch (_error) {
       e = _error;
-      $("html >>> " + selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + "' data-toggle='tooltip' id='near-me-icon'></core-icon>");
+      $("html >>> " + selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + " near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>");
       $("html >>> #near-me-icon").attr("title", tooltipHint);
-      $("html >>> #near-me-icon").tooltip();
+      $("html >> #near-me-container").attr("title", tooltipHint);
+      $("html >>> .near-me").tooltip();
       try {
         $(selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + "' data-toggle='tooltip' id='near-me-icon'></core-icon>");
         $("#near-me-icon").attr("title", tooltipHint);
-        $("#near-me-icon").tooltip();
+        $("#near-me-container").attr("title", tooltipHint);
+        $(".near-me").tooltip();
       } catch (_error) {
         e = _error;
         console.warn("Fallback failed to draw contents on the <paper-action-dialog>");
@@ -1806,7 +1809,7 @@ modalTaxon = function(taxon) {
     year = parseTaxonYear(data.authority_year);
     yearHtml = "";
     if (year !== false) {
-      yearHtml = "<div id='near-me-container'></div><p><span class='genus'>" + data.genus + "</span>, <span class='genus_authority'>" + data.genus_authority + "</span> " + year.genus + "; <span class='species'>" + data.species + "</span>, <span class='species_authority'>" + data.species_authority + "</span> " + year.species + "</p>";
+      yearHtml = "<div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div><p><span class='genus'>" + data.genus + "</span>, <span class='genus_authority'>" + data.genus_authority + "</span> " + year.genus + "; <span class='species'>" + data.species + "</span>, <span class='species_authority'>" + data.species_authority + "</span> " + year.species + "</p>";
     }
     deprecatedHtml = "";
     if (!isNull(data.deprecated_scientific)) {

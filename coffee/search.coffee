@@ -307,18 +307,21 @@ checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "#nea
     tooltipHint = "We couldn't determine your location"
   .always ->
     try
-      $("html /deep/ #{selector}").html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}' data-toggle='tooltip' id='near-me-icon'></core-icon>")
+      $("html /deep/ #{selector}").html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass} near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>")
       $("html /deep/ #near-me-icon").attr("title",tooltipHint)
-      $("html /deep/ #near-me-icon").tooltip()
+      $("html /deep/ #near-me-container").attr("title",tooltipHint)
+      $("html /deep/ .near-me").tooltip()
     catch e
-      $("html >>> #{selector}").html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}' data-toggle='tooltip' id='near-me-icon'></core-icon>")
+      $("html >>> #{selector}").html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass} near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>")
       $("html >>> #near-me-icon").attr("title",tooltipHint)
-      $("html >>> #near-me-icon").tooltip()
+      $("html >> #near-me-container").attr("title",tooltipHint)
+      $("html >>> .near-me").tooltip()
       try
         # Attempt to do this without looking through the shadow DOM
         $(selector).html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}' data-toggle='tooltip' id='near-me-icon'></core-icon>")
         $("#near-me-icon").attr("title",tooltipHint)
-        $("#near-me-icon").tooltip()
+        $("#near-me-container").attr("title",tooltipHint)
+        $(".near-me").tooltip()
       catch e
         console.warn("Fallback failed to draw contents on the <paper-action-dialog>")
     if callback?
@@ -429,7 +432,7 @@ modalTaxon = (taxon = undefined) ->
     year = parseTaxonYear(data.authority_year)
     yearHtml = ""
     if year isnt false
-      yearHtml = "<div id='near-me-container'></div><p><span class='genus'>#{data.genus}</span>, <span class='genus_authority'>#{data.genus_authority}</span> #{year.genus}; <span class='species'>#{data.species}</span>, <span class='species_authority'>#{data.species_authority}</span> #{year.species}</p>"
+      yearHtml = "<div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div><p><span class='genus'>#{data.genus}</span>, <span class='genus_authority'>#{data.genus_authority}</span> #{year.genus}; <span class='species'>#{data.species}</span>, <span class='species_authority'>#{data.species_authority}</span> #{year.species}</p>"
     deprecatedHtml = ""
     if not isNull(data.deprecated_scientific)
       deprecatedHtml = "<p>Deprecated names:"
