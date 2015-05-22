@@ -10,9 +10,7 @@ module.exports = (grunt) ->
   # https://github.com/gruntjs/grunt-contrib-watch
   grunt.loadNpmTasks("grunt-contrib-watch")
   grunt.loadNpmTasks("grunt-contrib-uglify")
-  # https://github.com/mathiasbynens/grunt-yui-compressor
-  # May end up porting to https://github.com/gruntjs/grunt-contrib-uglify
-  grunt.loadNpmTasks('grunt-yui-compressor')
+  grunt.loadNpmTasks("grunt-contrib-cssmin")
   # Validators
   grunt.loadNpmTasks('grunt-bootlint')
   grunt.loadNpmTasks('grunt-html')
@@ -85,9 +83,9 @@ module.exports = (grunt) ->
         files:
           "js/jquery.cookie.min.js": ["bower_components/jquery-cookie/jquery.cookie.js"]
     cssmin:
-      dist:
-        src:["css/main.css"]
-        dest:"css/main.min.css"
+      target:
+        files:
+          "css/main.min.css":["css/main.css"]
     coffee:
       compile:
         options:

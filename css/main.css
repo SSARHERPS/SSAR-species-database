@@ -141,6 +141,14 @@ html >>> #near-me-container {
     padding:1em;
 }
 
+footer {
+    position: fixed;
+    bottom: 0px;
+    width: 100%;
+    background: #fff;
+    box-shadow: 5px 5px 8px 5px rgba(0,0,0,.5);
+}
+
 .capitalize,
 html /deep/ .capitalize,
 html /deep/ .genus,

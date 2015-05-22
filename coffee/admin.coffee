@@ -20,8 +20,12 @@ loadAdminUi = ->
       articleHtml = """
       <h3>
         Welcome, #{$.cookie("ssarherps_name")}
-        <paper-icon-button icon='settings-applications' class='click' data-url='#{data.login_url}'></paper-icon-button>
-        <paper-icon-button icon='exit-to-app' class='click' data-url='#{adminParams.appUrl}' data-toggle="tooltip" title="Go to CNDB app" id="app-linkout"></paper-icon-button>
+        <span id="pib-wrapper-settings" class="pib-wrapper" data-toggle="tooltip" title="User Settings" data-placement="bottom">
+          <paper-icon-button icon='settings-applications' class='click' data-url='#{data.login_url}'></paper-icon-button>
+        </span>
+        <span id="pib-wrapper-exit-to-app" class="pib-wrapper" data-toggle="tooltip" title="Go to CNDB app" data-placement="bottom">
+          <paper-icon-button icon='exit-to-app' class='click' data-url='#{adminParams.appUrl}' id="app-linkout"></paper-icon-button>
+        </span>
       </h3>
       <div id='admin-actions-block'>
         <div class='bs-callout bs-callout-info'>
@@ -30,7 +34,7 @@ loadAdminUi = ->
       </div>
       """
       $("article").html(articleHtml)
-      $("#app-linkout").tooltip()
+      $(".pib-wrapper").tooltip()
       ###
       # Render out the admin UI
       # We want a search box that we pipe through the API
