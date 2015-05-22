@@ -1854,7 +1854,7 @@ deferCalPhotos = function(selector) {
 };
 
 insertModalImage = function(taxon) {
-  var args, cpUrl, settings, taxonArray, taxonString;
+  var args, cpUrl, doneCORS, e, failCORS, taxonArray, taxonString;
   if (taxon == null) {
     taxon = ssar.activeTaxon;
   }
@@ -1881,14 +1881,7 @@ insertModalImage = function(taxon) {
   taxonString = taxonArray.join("+");
   args = "getthumbinfo=1&num=all&cconly=1&taxon=" + taxonString + "&format=xml";
   console.log("Looking at", "" + cpUrl + "?" + args);
-  settings = {
-    url: cpUrl,
-    data: args,
-    dataType: "xml",
-    type: "get",
-    crossDomain: true
-  };
-  $.ajax(settings).done(function(resultXml) {
+  doneCORS = function(resultXml) {
     var data, e, html, large, link, result, thumb;
     result = xmlToJSON.parseString(resultXml);
     data = result.xml.calphotos;
@@ -1923,11 +1916,18 @@ insertModalImage = function(taxon) {
     }
     lightboxImages(".calphoto-image-anchor");
     return false;
-  }).fail(function(result, status) {
+  };
+  failCORS = function(result, status) {
     console.log(result, status);
     console.error("Couldn't load an image to insert!");
     return false;
-  });
+  };
+  try {
+    doCORSget(cpUrl, args, doneCORS, failCORS);
+  } catch (_error) {
+    e = _error;
+    console.error(e.message);
+  }
   return false;
 };
 
@@ -2004,8 +2004,8 @@ modalTaxon = function(taxon) {
       notes = data.notes;
       console.warn("Couldn't parse markdown!! " + e.message);
     }
-    commonType = !isNull(data.major_common_type) ? "(<span id='taxon-common-type'>" + data.major_common_type + "</span>)" : "";
-    html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type'>" + data.major_type + "</span> \n    <core-icon icon='arrow-forward'></core-icon>\n    <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_credit + "</p>";
+    commonType = !isNull(data.major_common_type) ? " (<span id='taxon-common-type'>" + data.major_common_type + "</span>) " : "";
+    html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type'>" + data.major_type + "</span>\n    " + commonType + " \n    <core-icon icon='arrow-forward'></core-icon>\n    <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_credit + "</p>";
     $("#modal-taxon-content").html(html);
     $("#modal-inat-linkout").unbind().click(function() {
       return openTab("http://www.inaturalist.org/taxa/search?q=" + taxon);

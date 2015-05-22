@@ -1488,12 +1488,14 @@ insertModalImage = (taxon = ssar.activeTaxon) ->
   # Blocked on
   # 
   ###
+  # Is the modal dialog open?
   unless taxon?
     console.error("Tried to insert a modal image, but no taxon was provided!")
     return false
   unless typeof taxon is "object"
     console.error("Invalid taxon data type (expecting object)")
     return false
+  
   cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query"
   taxonArray = [taxon.genus,taxon.species]
   if taxon.subspecies?
@@ -1501,14 +1503,7 @@ insertModalImage = (taxon = ssar.activeTaxon) ->
   taxonString = taxonArray.join("+")
   args = "getthumbinfo=1&num=all&cconly=1&taxon=#{taxonString}&format=xml"
   console.log("Looking at","#{cpUrl}?#{args}")
-  settings =
-    url: cpUrl
-    data: args
-    dataType: "xml"
-    type: "get"
-    crossDomain: true
-  $.ajax(settings)
-  .done (resultXml) ->
+  doneCORS = (resultXml) ->
     result = xmlToJSON.parseString(resultXml)
     data = result.xml.calphotos
     unless data?
@@ -1536,10 +1531,14 @@ insertModalImage = (taxon = ssar.activeTaxon) ->
         $("#meta-taxon-info").before(html)
     lightboxImages(".calphoto-image-anchor")
     false
-  .fail (result,status) ->
+  failCORS = (result,status) ->
     console.log(result,status)
     console.error("Couldn't load an image to insert!")
     false
+  try
+    doCORSget(cpUrl, args, doneCORS, failCORS)
+  catch e
+    console.error(e.message)
   false
 
 
@@ -1607,7 +1606,7 @@ modalTaxon = (taxon = undefined) ->
     catch e
       notes = data.notes
       console.warn("Couldn't parse markdown!! #{e.message}")
-    commonType = unless isNull(data.major_common_type) then "(<span id='taxon-common-type'>#{data.major_common_type}</span>)" else ""
+    commonType = unless isNull(data.major_common_type) then " (<span id='taxon-common-type'>#{data.major_common_type}</span>) " else ""
     html = """
     <div id='meta-taxon-info'>
       #{yearHtml}
@@ -1615,7 +1614,8 @@ modalTaxon = (taxon = undefined) ->
         English name: <span id='taxon-common-name' class='common_name'>#{data.common_name}</span>
       </p>
       <p>
-        Type: <span id='taxon-type'>#{data.major_type}</span> 
+        Type: <span id='taxon-type'>#{data.major_type}</span>
+        #{commonType} 
         <core-icon icon='arrow-forward'></core-icon>
         <span id='taxon-subtype'>#{data.major_subtype}</span>#{minorTypeHtml}
       </p>
