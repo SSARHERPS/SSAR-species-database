@@ -3,7 +3,7 @@
  * The main coffeescript file for administrative stuff
  * Triggered from admin-page.html
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createNewTaxon, deferCalPhotos, delay, deleteTaxon, doCORSget, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createDuplicateTaxon, createNewTaxon, deferCalPhotos, delay, deleteTaxon, doCORSget, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
   __slice = [].slice;
 
 adminParams = new Object();
@@ -220,7 +220,7 @@ loadModalTaxonEditor = function(extraHtml, affirmativeText) {
    * Load a modal taxon editor
    */
   editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" class=\"genus\" floatingLabel></paper-input>\n<paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" class=\"species\" floatingLabel></paper-input>\n<paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" class=\"subspecies\" floatingLabel></paper-input>\n<paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\"  class=\"common_name\" floatingLabel></paper-input>\n<paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input>\n  <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",...</span></span>\n<paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input>\n<paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input>\n<paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input>\n<paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" class=\"linnean_order\" floatingLabel></paper-input>\n<paper-input label=\"Common Type\" id=\"edit-major-common-type\" name=\"edit-major-common-type\" class=\"major_common_type\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" class=\"genus_authority\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input>\n<paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" class=\"species_authority\" floatingLabel></paper-input>\n<paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input>\n<br/><br/>\n<paper-autogrow-textarea id=\"edit-notes-autogrow\" rows=\"5\">\n  <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\" aria-describedby=\"notes-help\" rows=\"5\"></textarea>\n</paper-autogrow-textarea>\n<span class=\"help-block\" id=\"notes-help\">You can write your notes in Markdown. (<a href=\"https://daringfireball.net/projects/markdown/syntax\" \"onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'\">Official Full Syntax Guide</a>)</span>\n<paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input>\n  <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>\n<paper-input label=\"Taxon Credit\" id=\"edit-taxon-credit\" name=\"edit-taxon-credit\" floatingLabel aria-describedby=\"taxon-credit-help\"></paper-input>\n  <span class=\"help-block\" id=\"taxon-credit-help\">This will be displayed as \"Taxon information by [your entry].\"</span>\n" + extraHtml + "\n<input type=\"hidden\" name=\"edit-taxon-author\" id=\"edit-taxon-author\" value=\"\" />";
-  html = "<paper-action-dialog backdrop layered autoCloseDisabled closeSelector=\"[dismissive]\" id='modal-taxon-edit'>\n  <div id='modal-taxon-editor'>\n    " + editHtml + "\n  </div>\n  <paper-button id='close-editor' dismissive>Cancel</paper-button>\n  <paper-button id='save-editor' affirmative>" + affirmativeText + "</paper-button></paper-action-dialog>";
+  html = "<paper-action-dialog backdrop layered autoCloseDisabled closeSelector=\"#close-editor\" id='modal-taxon-edit'>\n  <div id='modal-taxon-editor'>\n    " + editHtml + "\n  </div>\n  <paper-button id='close-editor' dismissive>Cancel</paper-button>\n  <paper-button id='duplicate-taxon' dismissive>Duplicate</paper-button>\n  <paper-button id='save-editor' affirmative>" + affirmativeText + "</paper-button></paper-action-dialog>";
   if (!$("#modal-taxon-edit").exists()) {
     $("#search-results").after(html);
   } else {
@@ -252,10 +252,16 @@ loadModalTaxonEditor = function(extraHtml, affirmativeText) {
   }
   $("#modal-taxon-edit").unbind();
   try {
-    return $("html /deep/ #save-editor").unbind();
+    $("html /deep/ #save-editor").unbind();
+    return $("html /deep/ #duplicate-taxon").unbind().click(function() {
+      return createDuplicateTaxon();
+    });
   } catch (_error) {
     e = _error;
-    return $("html >>> #save-editor").unbind();
+    $("html >>> #save-editor").unbind();
+    return $("html >>> #duplicate-taxon").unbind().click(function() {
+      return createDuplicateTaxon();
+    });
   }
 };
 
@@ -282,6 +288,49 @@ createNewTaxon = function() {
   }
   $("#modal-taxon-edit")[0].open();
   return stopLoad();
+};
+
+createDuplicateTaxon = function() {
+
+  /*
+   *
+   */
+  var e;
+  animateLoad();
+  try {
+    try {
+      $("html /deep/ #taxon-id").remove();
+      $("html /deep/ #last-edited-by").remove();
+      $("html /deep/ #duplicate-taxon").remove();
+    } catch (_error) {
+      e = _error;
+      $("html >>> #taxon-id").remove();
+      $("html >>> #last-edited-by").remove();
+      $("html >>> #duplicate-taxon").remove();
+    }
+    try {
+      $("html /deep/ #save-editor").text("Create").unbind().click(function() {
+        return saveEditorEntry("new");
+      });
+    } catch (_error) {
+      e = _error;
+      $("html >>> #save-editor").text("Create").unbind().click(function() {
+        return saveEditorEntry("new");
+      });
+    }
+    stopLoad();
+  } catch (_error) {
+    e = _error;
+    stopLoadError("Unable to duplicate taxon");
+    console.error("Couldn't duplicate taxon! " + e.message);
+    try {
+      $("html /deep/ #modal-taxon-edit").get(0).close();
+    } catch (_error) {
+      e = _error;
+      $("html >>> #modal-taxon-edit").get(0).close();
+    }
+  }
+  return false;
 };
 
 lookupEditorSpecies = function(taxon) {

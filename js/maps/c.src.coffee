@@ -220,11 +220,12 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <input type="hidden" name="edit-taxon-author" id="edit-taxon-author" value="" />
   """
   html = """
-  <paper-action-dialog backdrop layered autoCloseDisabled closeSelector="[dismissive]" id='modal-taxon-edit'>
+  <paper-action-dialog backdrop layered autoCloseDisabled closeSelector="#close-editor" id='modal-taxon-edit'>
     <div id='modal-taxon-editor'>
       #{editHtml}
     </div>
     <paper-button id='close-editor' dismissive>Cancel</paper-button>
+    <paper-button id='duplicate-taxon' dismissive>Duplicate</paper-button>
     <paper-button id='save-editor' affirmative>#{affirmativeText}</paper-button></paper-action-dialog>
   """
   unless $("#modal-taxon-edit").exists()
@@ -253,8 +254,17 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   $("#modal-taxon-edit").unbind()
   try
     $("html /deep/ #save-editor").unbind()
+    $("html /deep/ #duplicate-taxon")
+    .unbind()
+    .click ->
+      createDuplicateTaxon()
   catch e
     $("html >>> #save-editor").unbind()
+    $("html >>> #duplicate-taxon")
+    .unbind()
+    .click ->
+      createDuplicateTaxon()
+
 
 
 
@@ -278,6 +288,44 @@ createNewTaxon = ->
       saveEditorEntry("new")
   $("#modal-taxon-edit")[0].open()
   stopLoad()
+
+createDuplicateTaxon = ->
+  ###
+  #
+  ###
+  animateLoad()
+  try
+    # Change the open editor ID value
+    try
+      $("html /deep/ #taxon-id").remove()
+      $("html /deep/ #last-edited-by").remove()
+      $("html /deep/ #duplicate-taxon").remove()
+    catch e
+      $("html >>> #taxon-id").remove()
+      $("html >>> #last-edited-by").remove()
+      $("html >>> #duplicate-taxon").remove()
+    # Rebind the saves
+    try
+      $("html /deep/ #save-editor")
+      .text("Create")
+      .unbind()
+      .click ->
+        saveEditorEntry("new")
+    catch e
+      $("html >>> #save-editor")
+      .text("Create")
+      .unbind()
+      .click ->
+        saveEditorEntry("new")
+    stopLoad()
+  catch e
+    stopLoadError("Unable to duplicate taxon")
+    console.error("Couldn't duplicate taxon! #{e.message}")
+    try
+      $("html /deep/ #modal-taxon-edit").get(0).close()
+    catch e
+      $("html >>> #modal-taxon-edit").get(0).close()
+  false
 
 
 lookupEditorSpecies = (taxon = undefined) ->
