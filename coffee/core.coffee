@@ -335,6 +335,64 @@ stopLoadError = (message, elId = "loader", fadeOut = 5000) ->
 
 
 
+doCORSget = (url, args, callback = undefined, callbackFail = undefined) ->
+  corsFail = ->
+    if typeof callbackFail is "function"
+      callbackFail()
+    else
+      throw new Error("There was an error performing the CORS request")
+  # First try the jquery way
+  settings =
+    url: url
+    data: args
+    type: "get"
+    crossDomain: true
+  try
+    $.ajax(settings)
+    .done (result) ->
+      if typeof callback is "function"
+        callback()
+        return false
+      console.log(response)
+    .fail (result,status) ->
+      console.warn("Couldn't perform jQuery AJAX CORS. Attempting manually.")
+  catch e
+    console.warn("There was an error using jQuery to perform the CORS request. Attemping manually.")
+  # Then try the long way
+  url = "#{url}?#{args}"
+  createCORSRequest = (method = "get", url) ->
+    # From http://www.html5rocks.com/en/tutorials/cors/
+    xhr = new XMLHttpRequest()
+    if "withCredentials" of xhr
+      # Check if the XMLHttpRequest object has a "withCredentials"
+      # property.
+      # "withCredentials" only exists on XMLHTTPRequest2 objects.
+      xhr.open(method,url,true)
+    else if typeof XDomainRequest isnt "undefined"
+      # Otherwise, check if XDomainRequest.
+      # XDomainRequest only exists in IE, and is IE's way of making CORS requests.
+      xhr = new XDomainRequest()
+      xhr.open(method,url)
+    else
+      xhr = null
+    return xhr
+  # Now execute it
+  xhr = createCORSRequest("get",url)
+  if !xhr
+    throw new Error("CORS not supported")
+  xhr.onload = ->
+    response = xhr.responseText
+    if typeof callback is "function"
+      callback(response)
+    console.log(response)
+    return false
+  xhr.onerror = ->
+    console.warn("Couldn't do manual XMLHttp CORS request")
+    # Place this in the last error
+    corsFail()
+  xhr.send()
+  false
+
 
 lightboxImages = (selector = ".lightboximage") ->
   ###
@@ -385,7 +443,7 @@ lightboxImages = (selector = ".lightboximage") ->
   catch e
     console.error("Unable to lightbox images!")
 
-  
+
 activityIndicatorOn = ->
   $('<div id="imagelightbox-loading"><div></div></div>' ).appendTo('body')
 activityIndicatorOff = ->

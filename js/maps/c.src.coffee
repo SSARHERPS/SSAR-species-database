@@ -187,6 +187,10 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
 
 
 loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
+  ###
+  # Load a modal taxon editor
+  ###
+  #  | <a href="#" "onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'">Syntax Cheat Sheet</a>
   editHtml = """
   <paper-input label="Genus" id="edit-genus" name="edit-genus" class="genus" floatingLabel></paper-input>
   <paper-input label="Species" id="edit-species" name="edit-species" class="species" floatingLabel></paper-input>
@@ -198,13 +202,16 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-input label="Subtype" id="edit-major-subtype" name="edit-major-subtype" floatingLabel></paper-input>
   <paper-input label="Minor clade / 'Family'" id="edit-minor-type" name="edit-minor-type" floatingLabel></paper-input>
   <paper-input label="Linnean Order" id="edit-linnean-order" name="edit-linnean-order" class="linnean_order" floatingLabel></paper-input>
+  <paper-input label="Common Type" id="edit-major-common-type" name="edit-major-common-type" class="major_common_type" floatingLabel></paper-input>
   <paper-input label="Genus authority" id="edit-genus-authority" name="edit-genus-authority" class="genus_authority" floatingLabel></paper-input>
   <paper-input label="Genus authority year" id="edit-gauthyear" name="edit-gauthyear" floatingLabel></paper-input>
   <paper-input label="Species authority" id="edit-species-authority" name="edit-species-authority" class="species_authority" floatingLabel></paper-input>
   <paper-input label="Species authority year" id="edit-sauthyear" name="edit-sauthyear" floatingLabel></paper-input>
-  <paper-autogrow-textarea target="edit-notes" id="edit-notes-autogrow">
-    <textarea placeholder="Notes" id="edit-notes" name="edit-notes"></textarea>
+  <br/><br/>
+  <paper-autogrow-textarea id="edit-notes-autogrow" rows="5">
+    <textarea placeholder="Notes" id="edit-notes" name="edit-notes" aria-describedby="notes-help" rows="5"></textarea>
   </paper-autogrow-textarea>
+  <span class="help-block" id="notes-help">You can write your notes in Markdown. (<a href="https://daringfireball.net/projects/markdown/syntax" "onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'">Official Full Syntax Guide</a>)</span>
   <paper-input label="Image" id="edit-image" name="edit-image" floatingLabel aria-describedby="imagehelp"></paper-input>
     <span class="help-block" id="imagehelp">The image path here should be relative to the <span class="code">public_html/cndb/</span> directory.</span>
   <paper-input label="Taxon Credit" id="edit-taxon-credit" name="edit-taxon-credit" floatingLabel aria-describedby="taxon-credit-help"></paper-input>
@@ -227,6 +234,21 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
       $("html /deep/ #modal-taxon-editor").html(editHtml)
     catch e
       $("html >>> #modal-taxon-editor").html(editHtml)
+  # Bind the autogrow
+  # See https://www.polymer-project.org/0.5/docs/elements/paper-autogrow-textarea.html
+  try
+    noteArea = $("html /deep/ #edit-notes").get(0)
+    $("html /deep/ #edit-notes-autogrow").attr("target",noteArea)
+  catch e
+    try
+      noteArea = $("html >>> #edit-notes").get(0)
+      $("html >>> #edit-notes-autogrow").attr("target",noteArea)
+    catch e
+      try
+        noteArea = $("#edit-notes").get(0)
+        $("#edit-notes-autogrow").attr("target",noteArea)
+      catch e
+        console.error("Couldn't bind autogrow")
   # Reset the bindings
   $("#modal-taxon-edit").unbind()
   try
@@ -357,6 +379,22 @@ lookupEditorSpecies = (taxon = undefined) ->
                 $("html >>> #{fieldSelector}").text(d)
               catch e
                 $("#{fieldSelector}").text(d)
+      # Update the autogrow
+      # See https://www.polymer-project.org/0.5/docs/elements/paper-autogrow-textarea.html
+      try
+        noteArea = $("html /deep/ #edit-notes").get(0)
+        $("html /deep/ #edit-notes-autogrow").get(0).update(noteArea)
+      catch e
+        try
+          noteArea = $("html >>> #edit-notes").get(0)
+          $("html >>> #edit-notes-autogrow").get(0).update(noteArea)
+        catch e
+          try
+            noteArea = $("#edit-notes").get(0)
+            $("#edit-notes-autogrow").get(0).update(noteArea)
+          catch e
+            # Having an error binding the update
+            console.error("Couldn't update autogrow size. Possibly related to","https://github.com/Polymer/paper-input/issues/182")
       $("#modal-taxon-edit")[0].open()
       stopLoad()
     catch e
@@ -380,6 +418,7 @@ saveEditorEntry = (performMode = "save") ->
     "subspecies"
     "common-name"
     "major-type"
+    "major-common-type"
     "major-subtype"
     "minor-type"
     "linnean-order"
@@ -866,6 +905,64 @@ stopLoadError = (message, elId = "loader", fadeOut = 5000) ->
 
 
 
+doCORSget = (url, args, callback = undefined, callbackFail = undefined) ->
+  corsFail = ->
+    if typeof callbackFail is "function"
+      callbackFail()
+    else
+      throw new Error("There was an error performing the CORS request")
+  # First try the jquery way
+  settings =
+    url: url
+    data: args
+    type: "get"
+    crossDomain: true
+  try
+    $.ajax(settings)
+    .done (result) ->
+      if typeof callback is "function"
+        callback()
+        return false
+      console.log(response)
+    .fail (result,status) ->
+      console.warn("Couldn't perform jQuery AJAX CORS. Attempting manually.")
+  catch e
+    console.warn("There was an error using jQuery to perform the CORS request. Attemping manually.")
+  # Then try the long way
+  url = "#{url}?#{args}"
+  createCORSRequest = (method = "get", url) ->
+    # From http://www.html5rocks.com/en/tutorials/cors/
+    xhr = new XMLHttpRequest()
+    if "withCredentials" of xhr
+      # Check if the XMLHttpRequest object has a "withCredentials"
+      # property.
+      # "withCredentials" only exists on XMLHTTPRequest2 objects.
+      xhr.open(method,url,true)
+    else if typeof XDomainRequest isnt "undefined"
+      # Otherwise, check if XDomainRequest.
+      # XDomainRequest only exists in IE, and is IE's way of making CORS requests.
+      xhr = new XDomainRequest()
+      xhr.open(method,url)
+    else
+      xhr = null
+    return xhr
+  # Now execute it
+  xhr = createCORSRequest("get",url)
+  if !xhr
+    throw new Error("CORS not supported")
+  xhr.onload = ->
+    response = xhr.responseText
+    if typeof callback is "function"
+      callback(response)
+    console.log(response)
+    return false
+  xhr.onerror = ->
+    console.warn("Couldn't do manual XMLHttp CORS request")
+    # Place this in the last error
+    corsFail()
+  xhr.send()
+  false
+
 
 lightboxImages = (selector = ".lightboximage") ->
   ###
@@ -916,7 +1013,7 @@ lightboxImages = (selector = ".lightboximage") ->
   catch e
     console.error("Unable to lightbox images!")
 
-  
+
 activityIndicatorOn = ->
   $('<div id="imagelightbox-loading"><div></div></div>' ).appendTo('body')
 activityIndicatorOff = ->
@@ -1510,6 +1607,7 @@ modalTaxon = (taxon = undefined) ->
     catch e
       notes = data.notes
       console.warn("Couldn't parse markdown!! #{e.message}")
+    commonType = unless isNull(data.major_common_type) then "(<span id='taxon-common-type'>#{data.major_common_type}</span>)" else ""
     html = """
     <div id='meta-taxon-info'>
       #{yearHtml}
@@ -1517,7 +1615,7 @@ modalTaxon = (taxon = undefined) ->
         English name: <span id='taxon-common-name' class='common_name'>#{data.common_name}</span>
       </p>
       <p>
-        Type: <span id='taxon-type'>#{data.major_type}</span> (<span id='taxon-common-type'>#{data.major_common_type}</span>)
+        Type: <span id='taxon-type'>#{data.major_type}</span> 
         <core-icon icon='arrow-forward'></core-icon>
         <span id='taxon-subtype'>#{data.major_subtype}</span>#{minorTypeHtml}
       </p>

@@ -489,6 +489,7 @@ modalTaxon = (taxon = undefined) ->
     catch e
       notes = data.notes
       console.warn("Couldn't parse markdown!! #{e.message}")
+    commonType = unless isNull(data.major_common_type) then "(<span id='taxon-common-type'>#{data.major_common_type}</span>)" else ""
     html = """
     <div id='meta-taxon-info'>
       #{yearHtml}
@@ -496,7 +497,7 @@ modalTaxon = (taxon = undefined) ->
         English name: <span id='taxon-common-name' class='common_name'>#{data.common_name}</span>
       </p>
       <p>
-        Type: <span id='taxon-type'>#{data.major_type}</span> (<span id='taxon-common-type'>#{data.major_common_type}</span>)
+        Type: <span id='taxon-type'>#{data.major_type}</span> 
         <core-icon icon='arrow-forward'></core-icon>
         <span id='taxon-subtype'>#{data.major_subtype}</span>#{minorTypeHtml}
       </p>
