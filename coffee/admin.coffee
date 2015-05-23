@@ -653,7 +653,8 @@ saveEditorEntry = (performMode = "save") ->
       when "genus", "species", "subspecies"
         # Scientific name must be well-formed
         error = "This required field must have only letters"
-        if /[^A-Za-z]/m.test(val) or isNull(val)
+        nullTest = if id is "genus" or id is "species" then isNull(val) else false
+        if /[^A-Za-z]/m.test(val) or nullTest
           try
             $("html /deep/ #edit-#{id} /deep/ paper-input-decorator")
             .attr("error",error)

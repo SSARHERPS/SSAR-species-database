@@ -683,7 +683,7 @@ saveEditorEntry = function(performMode) {
   }
   saveObject["deprecated_scientific"] = depString;
   $.each(examineIds, function(k, id) {
-    var col, thisSelector, val;
+    var col, nullTest, thisSelector, val;
     console.log(k, id);
     try {
       thisSelector = "html /deep/ #edit-" + id;
@@ -704,7 +704,8 @@ saveEditorEntry = function(performMode) {
       case "species":
       case "subspecies":
         error = "This required field must have only letters";
-        if (/[^A-Za-z]/m.test(val) || isNull(val)) {
+        nullTest = id === "genus" || id === "species" ? isNull(val) : false;
+        if (/[^A-Za-z]/m.test(val) || nullTest) {
           try {
             $("html /deep/ #edit-" + id + " /deep/ paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
           } catch (_error) {
