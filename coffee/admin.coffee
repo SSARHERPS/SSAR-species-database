@@ -148,9 +148,9 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
             console.log("Got #{bootstrapColCount} display columns.")
             bootstrapColSize = roundNumber(12/bootstrapColCount,0)
             colClass = "col-md-#{bootstrapColSize}"
-      taxonQuery = "#{row.genus}+#{row.species}"
+      taxonQuery = "#{row.genus.trim()}+#{row.species.trim()}"
       if not isNull(row.subspecies)
-        taxonQuery = "#{taxonQuery}+#{row.subspecies}"
+        taxonQuery = "#{taxonQuery}+#{row.subspecies.trim()}"
       htmlRow = "\n\t<tr id='cndb-row#{i}' class='cndb-result-entry' data-taxon=\"#{taxonQuery}\">"
       l = 0
       $.each row, (k,col) ->
@@ -441,9 +441,19 @@ lookupEditorSpecies = (taxon = undefined) ->
         unless isNull(originalNames.subspecies)
           speciesString += originalNames.subspecies
         data.deprecated_scientific["#{originalNames.genus} #{speciesString}"] = "AUTHORITY: YEAR"
+      else
+        try
+          data.deprecated_scientific = JSON.parse(data.deprecated_scientific)
+        catch e
+          # Do nothing
       $.each data, (col,d) ->
         # For each column, replace _ with - and prepend "edit"
         # This should be the selector
+        try
+          if typeof d is "string"
+            d = d.trim()
+        catch e
+          # Do nothing -- probably numeric
         if col is "id"
           $("#taxon-id").attr("value",d)
         if col is "authority_year"
@@ -475,7 +485,9 @@ lookupEditorSpecies = (taxon = undefined) ->
         else
           fieldSelector = "#edit-#{col.replace(/_/g,"-")}"
           if col is "deprecated_scientific"
-            d = JSON.stringify(d).slice(1,-1)
+            d = JSON.stringify(d).trim().replace(/\\/g,"")
+            d = d.replace(/{/,"")
+            d = d.replace(/}/,"")
           if col isnt "notes"
             try
               unless $("html /deep/ #{fieldSelector}").exists()
@@ -570,11 +582,17 @@ saveEditorEntry = (performMode = "save") ->
   saveObject["authority_year"] = authYearString
   try
     dep = new Object()
-    depS = $("#edit-deprecated-scientific").val()
+    try
+      depS = $("html /deep/ #edit-deprecated-scientific").val()
+    catch e
+      try
+        depS = $("html >>> #edit-deprecated-scientific").val()
+      catch e
+        depS = $("#edit-deprecated-scientific").val()
     depA = depS.split(",")
-    $.each depA, (k) ->
+    $.each depA, (i,k) ->
       item = k.split("\":\"")
-      dep[item[0]] = item[1]
+      dep[item[0].replace(/"/g,"")] = item[1].replace(/"/g,"")
     depString = JSON.stringify(dep)
   catch e
     console.log("Failed to parse the deprecated scientifics")
@@ -589,7 +607,7 @@ saveEditorEntry = (performMode = "save") ->
     catch e
       thisSelector = "html >>> #edit-#{id}"
     col = id.replace(/-/g,"_")
-    val = $(thisSelector).val()
+    val = $(thisSelector).val().trim()
     if col isnt "notes" and col isnt "taxon_credit"
       # We want these to be as literally typed, rather than smart-formatted.
       val = val.toLowerCase()

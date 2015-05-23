@@ -157,9 +157,9 @@ renderAdminSearchResults = function(containerSelector) {
           }
         });
       }
-      taxonQuery = "" + row.genus + "+" + row.species;
+      taxonQuery = "" + (row.genus.trim()) + "+" + (row.species.trim());
       if (!isNull(row.subspecies)) {
-        taxonQuery = "" + taxonQuery + "+" + row.subspecies;
+        taxonQuery = "" + taxonQuery + "+" + (row.subspecies.trim());
       }
       htmlRow = "\n\t<tr id='cndb-row" + i + "' class='cndb-result-entry' data-taxon=\"" + taxonQuery + "\">";
       l = 0;
@@ -465,9 +465,22 @@ lookupEditorSpecies = function(taxon) {
           speciesString += originalNames.subspecies;
         }
         data.deprecated_scientific["" + originalNames.genus + " " + speciesString] = "AUTHORITY: YEAR";
+      } else {
+        try {
+          data.deprecated_scientific = JSON.parse(data.deprecated_scientific);
+        } catch (_error) {
+          e = _error;
+        }
       }
       $.each(data, function(col, d) {
         var fieldSelector, whoEdited, year;
+        try {
+          if (typeof d === "string") {
+            d = d.trim();
+          }
+        } catch (_error) {
+          e = _error;
+        }
         if (col === "id") {
           $("#taxon-id").attr("value", d);
         }
@@ -508,7 +521,9 @@ lookupEditorSpecies = function(taxon) {
         } else {
           fieldSelector = "#edit-" + (col.replace(/_/g, "-"));
           if (col === "deprecated_scientific") {
-            d = JSON.stringify(d).slice(1, -1);
+            d = JSON.stringify(d).trim().replace(/\\/g, "");
+            d = d.replace(/{/, "");
+            d = d.replace(/}/, "");
           }
           if (col !== "notes") {
             try {
@@ -614,12 +629,22 @@ saveEditorEntry = function(performMode) {
   saveObject["authority_year"] = authYearString;
   try {
     dep = new Object();
-    depS = $("#edit-deprecated-scientific").val();
+    try {
+      depS = $("html /deep/ #edit-deprecated-scientific").val();
+    } catch (_error) {
+      e = _error;
+      try {
+        depS = $("html >>> #edit-deprecated-scientific").val();
+      } catch (_error) {
+        e = _error;
+        depS = $("#edit-deprecated-scientific").val();
+      }
+    }
     depA = depS.split(",");
-    $.each(depA, function(k) {
+    $.each(depA, function(i, k) {
       var item;
       item = k.split("\":\"");
-      return dep[item[0]] = item[1];
+      return dep[item[0].replace(/"/g, "")] = item[1].replace(/"/g, "");
     });
     depString = JSON.stringify(dep);
   } catch (_error) {
@@ -641,7 +666,7 @@ saveEditorEntry = function(performMode) {
       thisSelector = "html >>> #edit-" + id;
     }
     col = id.replace(/-/g, "_");
-    val = $(thisSelector).val();
+    val = $(thisSelector).val().trim();
     if (col !== "notes" && col !== "taxon_credit") {
       val = val.toLowerCase();
     }
