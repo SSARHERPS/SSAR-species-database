@@ -322,6 +322,16 @@ paper-icon-button {
 form {
     /* margin-left:2rem; */
 }
+
+html /deep/ .code {
+    font-family: monospace;
+}
+
+html >>> .code {
+    font-family: monospace;
+}
+
+
 html /deep/ #modal-taxon-editor paper-input {
     display:block;
 }

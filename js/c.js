@@ -219,7 +219,7 @@ loadModalTaxonEditor = function(extraHtml, affirmativeText) {
   /*
    * Load a modal taxon editor
    */
-  editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" class=\"genus\" floatingLabel></paper-input>\n<paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" class=\"species\" floatingLabel></paper-input>\n<paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" class=\"subspecies\" floatingLabel></paper-input>\n<paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\"  class=\"common_name\" floatingLabel></paper-input>\n<paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input>\n  <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",...</span></span>\n<paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input>\n<paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input>\n<paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input>\n<paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" class=\"linnean_order\" floatingLabel></paper-input>\n<paper-input label=\"Common Type\" id=\"edit-major-common-type\" name=\"edit-major-common-type\" class=\"major_common_type\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" class=\"genus_authority\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input>\n<paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" class=\"species_authority\" floatingLabel></paper-input>\n<paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input>\n<br/><br/>\n<paper-autogrow-textarea id=\"edit-notes-autogrow\" rows=\"5\">\n  <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\" aria-describedby=\"notes-help\" rows=\"5\"></textarea>\n</paper-autogrow-textarea>\n<span class=\"help-block\" id=\"notes-help\">You can write your notes in Markdown. (<a href=\"https://daringfireball.net/projects/markdown/syntax\" \"onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'\">Official Full Syntax Guide</a>)</span>\n<paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input>\n  <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>\n<paper-input label=\"Taxon Credit\" id=\"edit-taxon-credit\" name=\"edit-taxon-credit\" floatingLabel aria-describedby=\"taxon-credit-help\"></paper-input>\n  <span class=\"help-block\" id=\"taxon-credit-help\">This will be displayed as \"Taxon information by [your entry].\"</span>\n" + extraHtml + "\n<input type=\"hidden\" name=\"edit-taxon-author\" id=\"edit-taxon-author\" value=\"\" />";
+  editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" class=\"genus\" floatingLabel></paper-input>\n<paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" class=\"species\" floatingLabel></paper-input>\n<paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" class=\"subspecies\" floatingLabel></paper-input>\n<paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\"  class=\"common_name\" floatingLabel></paper-input>\n<paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input>\n  <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",...</span>. If not, it may not save correctly.</span>\n<paper-input label=\"Clade\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input>\n<paper-input label=\"Subtype\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input>\n<paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input>\n<paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" class=\"linnean_order\" floatingLabel></paper-input>\n<paper-input label=\"Common Type\" id=\"edit-major-common-type\" name=\"edit-major-common-type\" class=\"major_common_type\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" class=\"genus_authority\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input>\n<paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" class=\"species_authority\" floatingLabel></paper-input>\n<paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input>\n<br/><br/>\n<paper-autogrow-textarea id=\"edit-notes-autogrow\" rows=\"5\">\n  <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\" aria-describedby=\"notes-help\" rows=\"5\"></textarea>\n</paper-autogrow-textarea>\n<span class=\"help-block\" id=\"notes-help\">You can write your notes in Markdown. (<a href=\"https://daringfireball.net/projects/markdown/syntax\" \"onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'\">Official Full Syntax Guide</a>)</span>\n<paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input>\n  <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>\n<paper-input label=\"Taxon Credit\" id=\"edit-taxon-credit\" name=\"edit-taxon-credit\" floatingLabel aria-describedby=\"taxon-credit-help\"></paper-input>\n  <span class=\"help-block\" id=\"taxon-credit-help\">This will be displayed as \"Taxon information by [your entry].\"</span>\n" + extraHtml + "\n<input type=\"hidden\" name=\"edit-taxon-author\" id=\"edit-taxon-author\" value=\"\" />";
   html = "<paper-action-dialog backdrop layered autoCloseDisabled closeSelector=\"#close-editor\" id='modal-taxon-edit'>\n  <div id='modal-taxon-editor'>\n    " + editHtml + "\n  </div>\n  <paper-button id='close-editor' dismissive>Cancel</paper-button>\n  <paper-button id='duplicate-taxon' dismissive>Duplicate</paper-button>\n  <paper-button id='save-editor' affirmative>" + affirmativeText + "</paper-button></paper-action-dialog>";
   if (!$("#modal-taxon-edit").exists()) {
     $("#search-results").after(html);
@@ -336,7 +336,7 @@ createDuplicateTaxon = function() {
 };
 
 lookupEditorSpecies = function(taxon) {
-  var e, existensial, lastEdited;
+  var args, e, existensial, genusArray, k, lastEdited, originalNames, replacementNames, speciesArray, subspeciesArray, taxonArray, v;
   if (taxon == null) {
     taxon = void 0;
   }
@@ -376,11 +376,96 @@ lookupEditorSpecies = function(taxon) {
       $("html >>> #taxon-credit-help").after(lastEdited);
     }
   }
-  $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
-    var data, noteArea;
+
+  /*
+   * After
+   * https://github.com/tigerhawkvok/SSAR-species-database/issues/33 :
+   *
+   * Some entries have illegal scientific names. Fix them, and assume
+   * the wrong ones are deprecated.
+   *
+   * Therefore, "Phrynosoma (Anota) platyrhinos"  should use
+   * "Anota platyrhinos" as the real name and "Phrynosoma platyrhinos"
+   * as the deprecated.
+   */
+  replacementNames = void 0;
+  originalNames = void 0;
+  args = "q=" + taxon;
+  if (taxon.search(/\(/) !== -1) {
+    originalNames = {
+      genus: "",
+      species: "",
+      subspecies: ""
+    };
+    replacementNames = {
+      genus: "",
+      species: "",
+      subspecies: ""
+    };
+    taxonArray = taxon.split("+");
+    k = 0;
+    while (k < taxonArray.length) {
+      v = taxonArray[k];
+      console.log("Checking '" + v + "'");
+      switch (toInt(k)) {
+        case 0:
+          genusArray = v.split("(");
+          console.log("Looking at genus array", genusArray);
+          originalNames.genus = genusArray[0].trim();
+          replacementNames.genus = genusArray[1] != null ? genusArray[1].trim().slice(0, -1) : genusArray[0];
+          break;
+        case 1:
+          speciesArray = v.split("(");
+          console.log("Looking at species array", speciesArray);
+          originalNames.species = speciesArray[0].trim();
+          replacementNames.species = speciesArray[1] != null ? speciesArray[1].trim().slice(0, -1) : speciesArray[0];
+          break;
+        case 2:
+          subspeciesArray = v.split("(");
+          console.log("Looking at ssp array", subspeciesArray);
+          originalNames.subspecies = subspeciesArray[0].trim();
+          replacementNames.subspecies = subspeciesArray[1] != null ? subspeciesArray[1].trim().slice(0, -1) : subspeciesArray[0];
+          break;
+        default:
+          console.error("K value of '" + k + "' didn't match 0,1,2!");
+      }
+      taxonArray[k] = v.trim();
+      k++;
+    }
+    taxon = "" + originalNames.genus + "+" + originalNames.species;
+    if (!isNull(originalNames.subspecies)) {
+      taxon += originalNames.subspecies;
+    }
+    args = "q=" + taxon + "&loose=true";
+    console.warn("Bad name! Calculated out:");
+    console.warn("Should be currently", replacementNames);
+    console.warn("Was previously", originalNames);
+    console.warn("Pinging with", "http://ssarherps.org/cndb/" + searchParams.targetApi + "?q=" + taxon);
+  }
+  $.get(searchParams.targetApi, args, "json").done(function(result) {
+    var data, noteArea, speciesString;
     try {
       data = result.result[0];
+      if (data == null) {
+        stopLoadError("Sorry, there was a problem parsing the information for this taxon. If it persists, you may have to fix it manually.");
+        console.error("No data returned for", "" + searchParams.targetApi + "?q=" + taxon);
+        return false;
+      }
       console.log("Populating from", data);
+      if (originalNames != null) {
+        toastStatusMessage("Bad information found. Please review and resave.");
+        data.genus = replacementNames.genus;
+        data.species = replacementNames.species;
+        data.subspecies = replacementNames.subspecies;
+        if (typeof data.deprecated_scientific !== "object") {
+          data.deprecated_scientific = new Object();
+        }
+        speciesString = originalNames.species;
+        if (!isNull(originalNames.subspecies)) {
+          speciesString += originalNames.subspecies;
+        }
+        data.deprecated_scientific["" + originalNames.genus + " " + speciesString] = "AUTHORITY: YEAR";
+      }
       $.each(data, function(col, d) {
         var fieldSelector, whoEdited, year;
         if (col === "id") {
@@ -533,7 +618,7 @@ saveEditorEntry = function(performMode) {
     depA = depS.split(",");
     $.each(depA, function(k) {
       var item;
-      item = k.split(":");
+      item = k.split("\":\"");
       return dep[item[0]] = item[1];
     });
     depString = JSON.stringify(dep);

@@ -197,7 +197,7 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-input label="Subspecies" id="edit-subspecies" name="edit-subspecies" class="subspecies" floatingLabel></paper-input>
   <paper-input label="Common Name" id="edit-common-name" name="edit-common-name"  class="common_name" floatingLabel></paper-input>
   <paper-input label="Deprecated Scientific Names" id="edit-deprecated-scientific" name="edit-depreated-scientific" floatingLabel aria-describedby="deprecatedHelp"></paper-input>
-    <span class="help-block" id="deprecatedHelp">List names here in the form <span class="code">"Genus species":"Authority: year","Genus species":"Authority: year",...</span></span>
+    <span class="help-block" id="deprecatedHelp">List names here in the form <span class="code">"Genus species":"Authority: year",...</span>. If not, it may not save correctly.</span>
   <paper-input label="Clade" id="edit-major-type" name="edit-major-type" floatingLabel></paper-input>
   <paper-input label="Subtype" id="edit-major-subtype" name="edit-major-subtype" floatingLabel></paper-input>
   <paper-input label="Minor clade / 'Family'" id="edit-minor-type" name="edit-minor-type" floatingLabel></paper-input>
@@ -363,12 +363,84 @@ lookupEditorSpecies = (taxon = undefined) ->
       $("html /deep/ #taxon-credit-help").after(lastEdited)
     catch e
       $("html >>> #taxon-credit-help").after(lastEdited)
+  ###
+  # After
+  # https://github.com/tigerhawkvok/SSAR-species-database/issues/33 :
+  #
+  # Some entries have illegal scientific names. Fix them, and assume
+  # the wrong ones are deprecated.
+  #
+  # Therefore, "Phrynosoma (Anota) platyrhinos"  should use
+  # "Anota platyrhinos" as the real name and "Phrynosoma platyrhinos"
+  # as the deprecated.
+  ###
+  replacementNames = undefined
+  originalNames = undefined
+  args = "q=#{taxon}"
+  if taxon.search(/\(/) isnt -1
+    originalNames =
+      genus: ""
+      species: ""
+      subspecies: ""
+    replacementNames =
+      genus: ""
+      species: ""
+      subspecies: ""
+    taxonArray = taxon.split("+")
+    k = 0
+    while k < taxonArray.length
+      v = taxonArray[k]
+      console.log("Checking '#{v}'")
+      switch toInt(k)
+        when 0
+          genusArray = v.split("(")
+          console.log("Looking at genus array",genusArray)
+          originalNames.genus = genusArray[0].trim()
+          replacementNames.genus = if genusArray[1]? then genusArray[1].trim().slice(0,-1) else genusArray[0]
+        when 1
+          speciesArray = v.split("(")
+          console.log("Looking at species array",speciesArray)
+          originalNames.species = speciesArray[0].trim()
+          replacementNames.species = if speciesArray[1]? then speciesArray[1].trim().slice(0,-1) else speciesArray[0]
+        when 2
+          subspeciesArray = v.split("(")
+          console.log("Looking at ssp array",subspeciesArray)
+          originalNames.subspecies = subspeciesArray[0].trim()
+          replacementNames.subspecies = if subspeciesArray[1]? then subspeciesArray[1].trim().slice(0,-1) else subspeciesArray[0]
+        else
+          console.error("K value of '#{k}' didn't match 0,1,2!")
+      taxonArray[k] = v.trim()
+      k++
+    taxon = "#{originalNames.genus}+#{originalNames.species}"
+    unless isNull(originalNames.subspecies)
+      taxon += originalNames.subspecies
+    args = "q=#{taxon}&loose=true"
+    console.warn("Bad name! Calculated out:")
+    console.warn("Should be currently",replacementNames)
+    console.warn("Was previously",originalNames)
+    console.warn("Pinging with","http://ssarherps.org/cndb/#{searchParams.targetApi}?q=#{taxon}")
   # Look up the taxon, take the first result, and populate
-  $.get(searchParams.targetApi,"q=#{taxon}","json")
+  $.get(searchParams.targetApi,args,"json")
   .done (result) ->
     try
       data = result.result[0]
+      unless data?
+        stopLoadError("Sorry, there was a problem parsing the information for this taxon. If it persists, you may have to fix it manually.")
+        console.error("No data returned for","#{searchParams.targetApi}?q=#{taxon}")
+        return false
       console.log("Populating from",data)
+      if originalNames?
+        # We have replacements to perform
+        toastStatusMessage("Bad information found. Please review and resave.")
+        data.genus = replacementNames.genus
+        data.species = replacementNames.species
+        data.subspecies = replacementNames.subspecies
+        unless typeof data.deprecated_scientific is "object"
+          data.deprecated_scientific = new Object()
+        speciesString = originalNames.species
+        unless isNull(originalNames.subspecies)
+          speciesString += originalNames.subspecies
+        data.deprecated_scientific["#{originalNames.genus} #{speciesString}"] = "AUTHORITY: YEAR"
       $.each data, (col,d) ->
         # For each column, replace _ with - and prepend "edit"
         # This should be the selector
@@ -501,7 +573,7 @@ saveEditorEntry = (performMode = "save") ->
     depS = $("#edit-deprecated-scientific").val()
     depA = depS.split(",")
     $.each depA, (k) ->
-      item = k.split(":")
+      item = k.split("\":\"")
       dep[item[0]] = item[1]
     depString = JSON.stringify(dep)
   catch e
