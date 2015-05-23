@@ -13,7 +13,7 @@
  * @param string order (comma-seperated values)
  * @param string only (comma-seperated values)
  * @param string include (comma-seperated values)
- * @param string type 
+ * @param string type
  * @param JSON filter
  *
  * Initial version by Philip Kahn
@@ -24,6 +24,8 @@
 /*****************
  * Setup
  *****************/
+
+#$show_debug = true;
 
 require_once("CONFIG.php");
 require_once(dirname(__FILE__)."/core/core.php");
@@ -61,7 +63,7 @@ function returnAjax($data)
 {
   /***
    * Return the data as a JSON object
-   * 
+   *
    * @param array $data
    *
    ***/
@@ -209,12 +211,13 @@ function handleParamSearch($filter_params,$loose = false,$boolean_type = "AND", 
   $where_arr = array();
   foreach($filter_params as $col=>$crit)
     {
-      $where_arr[] = $loose ? "`".$col."` LIKE '%".$crit."%'":"`".$col."`='".$crit."'";
+      $where_arr[] = $loose ? "LOWER(`".$col."`) LIKE '%".$crit."%'":"`".$col."`='".$crit."'";
     }
   $where = "".implode(" ".strtoupper($boolean_type)." ",$where_arr)."";
   if(!empty($extra_params))
     {
       $where .= " AND (".$extra_params.")";
+      # $where .= " " . strtoupper($boolean_type) . " (".$extra_params.")";
     }
   $where = "(".$where.")";
   $query .= $where;
@@ -222,6 +225,7 @@ function handleParamSearch($filter_params,$loose = false,$boolean_type = "AND", 
   $ordering = explode(",",$order_by);
   $order = " ORDER BY "."`".implode("`,`",$ordering)."`";
   $query .= $order;
+  # echo $query;
   $l = $db->openDB();
   $r = mysqli_query($l,$query);
   if($r === false)
@@ -249,7 +253,7 @@ if(empty($params) || !empty($search))
     if(empty($search))
       {
         # For the full list, just return scientific data
-        $search_list = $order_by; 
+        $search_list = $order_by;
         $col = "species";
         $params[$col] = $search;
         $loose = true;
@@ -298,6 +302,7 @@ if(empty($params) || !empty($search))
           {
             # Handle the complicated statement. It'll need to be
             # escaped from normal handling.
+              $method = "spaceless_search_param";
             $extra_params = array();
             $extra_boolean_type = " OR ";
             if(!isset($_REQUEST['only']))
@@ -326,13 +331,14 @@ if(empty($params) || !empty($search))
               }
             foreach($extra_params as $col => $search)
               {
-                $extra_params[$col] = $loose ? "`".$col."` LIKE '%".$search."%'":"`".$col."`='".$search."'";
+                $extra_params[$col] = $loose ? "LOWER(`".$col."`) LIKE '%".$search."%'":"`".$col."`='".$search."'";
               }
             $extra_filter = implode($extra_boolean_type,$extra_params);
             $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);
           }
         else
           {
+              $method = "spaceless_search_direct";
             $boolean_type = "OR";
             if(!isset($_REQUEST['only']))
               {
@@ -372,7 +378,7 @@ if(empty($params) || !empty($search))
                     if(is_string($r)) $error = $r;
                     else $error = $e;
                   }
-                #if($show_debug === true) $result_vector["debug"] = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by,true);
+                if($show_debug === true) $result_vector["debug"] = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by,true);
               }
             else
               {
@@ -433,7 +439,7 @@ if(empty($params) || !empty($search))
                 $where_arr = array();
                 foreach($extra_params as $col=>$crit)
                   {
-                    $where_arr[] = $loose ? "`".$col."` LIKE '%".$crit."%'":"`".$col."`='".$crit."'";
+                    $where_arr[] = $loose ? "LOWER(`".$col."`) LIKE '%".$crit."%'":"`".$col."`='".$crit."'";
                   }
                 $extra_filter = implode($extra_boolean_type,$where_arr);
               }
@@ -446,7 +452,7 @@ if(empty($params) || !empty($search))
                   {
                     $col = "common_name";
                     $method = "no_scientific_common";
-                    $extra_filter = $loose ? "`".$col."` LIKE '%".$search."%'":"`".$col."`='".$search."'";
+                    $extra_filter = $loose ? "LOWER(`".$col."`) LIKE '%".$search."%'":"`".$col."`='".$search."'";
                     $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);
                   }
               }
@@ -615,7 +621,7 @@ if(isset($error))
   {
     returnAjax(array("status"=>false,"error"=>$error,"human_error"=>"There was a problem performing this query. Please try again.","method"=>$method));
   }
-else 
+else
 {
   foreach($result_vector as $k=>$v) {
     if (is_array($v)) {
