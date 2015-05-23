@@ -260,6 +260,10 @@ loadModalTaxonEditor = function(extraHtml, affirmativeText) {
 };
 
 createNewTaxon = function() {
+
+  /*
+   * Load a blank modal taxon editor, ready to make a new one
+   */
   var e, whoEdited;
   animateLoad();
   loadModalTaxonEditor("", "Create");
@@ -293,7 +297,10 @@ createNewTaxon = function() {
 createDuplicateTaxon = function() {
 
   /*
+   * Accessed from an existing taxon modal editor.
    *
+   * Remove the edited notes, remove the duplicate button, and change
+   * the bidings so a new entry is created.
    */
   var e;
   animateLoad();
@@ -343,6 +350,7 @@ lookupEditorSpecies = function(taxon) {
 
   /*
    * Lookup a given species and load it for editing
+   * Has some hooks for badly formatted taxa.
    *
    * @param taxon a URL-encoded string for a taxon.
    */
@@ -451,7 +459,11 @@ lookupEditorSpecies = function(taxon) {
         console.error("No data returned for", "" + searchParams.targetApi + "?q=" + taxon);
         return false;
       }
-      console.log("Populating from", data);
+      try {
+        data.deprecated_scientific = JSON.parse(data.deprecated_scientific);
+      } catch (_error) {
+        e = _error;
+      }
       if (originalNames != null) {
         toastStatusMessage("Bad information found. Please review and resave.");
         data.genus = replacementNames.genus;
@@ -465,12 +477,6 @@ lookupEditorSpecies = function(taxon) {
           speciesString += originalNames.subspecies;
         }
         data.deprecated_scientific["" + originalNames.genus + " " + speciesString] = "AUTHORITY: YEAR";
-      } else {
-        try {
-          data.deprecated_scientific = JSON.parse(data.deprecated_scientific);
-        } catch (_error) {
-          e = _error;
-        }
       }
       $.each(data, function(col, d) {
         var fieldSelector, whoEdited, year;
@@ -491,7 +497,7 @@ lookupEditorSpecies = function(taxon) {
         } else if (col === "taxon_author") {
           if (d === "null" || isNull(d)) {
             $("#last-edited-by").remove();
-            console.warn("Remove edited by! Didn't have an author provided for column '" + col + "', giving '" + d + "'");
+            console.warn("Removed #last-edited-by! Didn't have an author provided for column '" + col + "', giving '" + d + "'. It's probably the first edit to this taxon.");
           } else {
             try {
               if (!$("html /deep/ #taxon-author-last").exists()) {

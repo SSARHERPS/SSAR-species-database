@@ -231,11 +231,6 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   if $("#modal-taxon-edit").exists()
     $("#modal-taxon-edit").remove()
   $("#search-results").after(html)
-  # else
-  #   try
-  #     $("html /deep/ #modal-taxon-editor").html(editHtml)
-  #   catch e
-  #     $("html >>> #modal-taxon-editor").html(editHtml)
   # Bind the autogrow
   # See https://www.polymer-project.org/0.5/docs/elements/paper-autogrow-textarea.html
   try
@@ -270,6 +265,9 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
 
 
 createNewTaxon = ->
+  ###
+  # Load a blank modal taxon editor, ready to make a new one
+  ###
   animateLoad()
   loadModalTaxonEditor("","Create")
   # REmove the dupliate button
@@ -297,7 +295,10 @@ createNewTaxon = ->
 
 createDuplicateTaxon = ->
   ###
+  # Accessed from an existing taxon modal editor.
   #
+  # Remove the edited notes, remove the duplicate button, and change
+  # the bidings so a new entry is created.
   ###
   animateLoad()
   try
@@ -338,6 +339,7 @@ createDuplicateTaxon = ->
 lookupEditorSpecies = (taxon = undefined) ->
   ###
   # Lookup a given species and load it for editing
+  # Has some hooks for badly formatted taxa.
   #
   # @param taxon a URL-encoded string for a taxon.
   ###
@@ -425,16 +427,27 @@ lookupEditorSpecies = (taxon = undefined) ->
     console.warn("Should be currently",replacementNames)
     console.warn("Was previously",originalNames)
     console.warn("Pinging with","http://ssarherps.org/cndb/#{searchParams.targetApi}?q=#{taxon}")
+  # The actual query! This is what populates the editor.
   # Look up the taxon, take the first result, and populate
   $.get(searchParams.targetApi,args,"json")
   .done (result) ->
     try
+      # We'll always take the first result. They query should be
+      # perfectly specific, so we want the closest match in case of
+      # G. sp. vs. G. sp. ssp.
       data = result.result[0]
       unless data?
         stopLoadError("Sorry, there was a problem parsing the information for this taxon. If it persists, you may have to fix it manually.")
         console.error("No data returned for","#{searchParams.targetApi}?q=#{taxon}")
         return false
-      console.log("Populating from",data)
+      # The deprecated_scientific object is a json-string. We wan to
+      # have this as an object to work with down the road.
+      try
+        data.deprecated_scientific = JSON.parse(data.deprecated_scientific)
+      catch e
+        # Do nothing -- it's probably empty.
+      # Above, we defined originalNames as undefined, and it only
+      # became an object if things needed to be cleaned up.
       if originalNames?
         # We have replacements to perform
         toastStatusMessage("Bad information found. Please review and resave.")
@@ -447,19 +460,18 @@ lookupEditorSpecies = (taxon = undefined) ->
         unless isNull(originalNames.subspecies)
           speciesString += originalNames.subspecies
         data.deprecated_scientific["#{originalNames.genus} #{speciesString}"] = "AUTHORITY: YEAR"
-      else
-        try
-          data.deprecated_scientific = JSON.parse(data.deprecated_scientific)
-        catch e
-          # Do nothing
+      # We've finished cleaning up the data from the server, time to
+      # actually populate the edior.
       $.each data, (col,d) ->
         # For each column, replace _ with - and prepend "edit"
         # This should be the selector
         try
           if typeof d is "string"
+            # Clean up any strings that may have random spaces.
             d = d.trim()
         catch e
-          # Do nothing -- probably numeric
+          # Do nothing -- probably numeric, and in any case we're no
+          # worse than we started.
         if col is "id"
           $("#taxon-id").attr("value",d)
         if col is "authority_year"
@@ -470,7 +482,7 @@ lookupEditorSpecies = (taxon = undefined) ->
         else if col is "taxon_author"
           if d is "null" or isNull(d)
             $("#last-edited-by").remove()
-            console.warn("Remove edited by! Didn't have an author provided for column '#{col}', giving '#{d}'")
+            console.warn("Removed #last-edited-by! Didn't have an author provided for column '#{col}', giving '#{d}'. It's probably the first edit to this taxon.")
           else
             try
               unless $("html /deep/ #taxon-author-last").exists()
