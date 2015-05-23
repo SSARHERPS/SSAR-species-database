@@ -112,7 +112,7 @@ function saveEntry($get)
                   $thumbArr = explode(".",$img);
                   $extension = array_pop($thumbArr);
                   $outputFile = dirname(__FILE__)."/".implode(".",$thumbArr)."-thumb.".$extension;
-                  $imgDetails["resize_status"] = $i->resizeImage($outputFile,512,512);                  
+                  $imgDetails["resize_status"] = $i->resizeImage($outputFile,256,256); 
               }
               catch(Exception $e)
               {
