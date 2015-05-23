@@ -202,7 +202,7 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-input label="Subtype" id="edit-major-subtype" name="edit-major-subtype" floatingLabel></paper-input>
   <paper-input label="Minor clade / 'Family'" id="edit-minor-type" name="edit-minor-type" floatingLabel></paper-input>
   <paper-input label="Linnean Order" id="edit-linnean-order" name="edit-linnean-order" class="linnean_order" floatingLabel></paper-input>
-  <paper-input label="Common Type (eg., \"lizard\")" id="edit-major-common-type" name="edit-major-common-type" class="major_common_type" floatingLabel></paper-input>
+  <paper-input label="Common Type (eg., 'lizard')" id="edit-major-common-type" name="edit-major-common-type" class="major_common_type" floatingLabel></paper-input>
   <paper-input label="Genus authority" id="edit-genus-authority" name="edit-genus-authority" class="genus_authority" floatingLabel></paper-input>
   <paper-input label="Genus authority year" id="edit-gauthyear" name="edit-gauthyear" floatingLabel></paper-input>
   <paper-input label="Species authority" id="edit-species-authority" name="edit-species-authority" class="species_authority" floatingLabel></paper-input>
@@ -546,7 +546,7 @@ saveEditorEntry = (performMode = "save") ->
     # Authority year
     linnaeusYear = 1707 # Linnaeus's birth year
     d = new Date()
-    nextYear = d.getUTCFullYear() + 1
+    nextYear = d.getUTCFullYear() + 1 # So we can honestly say "between" and mean it
     try
       gYear = $("html /deep/ #edit-gauthyear").val()
       sYear = $("html /deep/ #edit-sauthyear").val()
@@ -651,12 +651,23 @@ saveEditorEntry = (performMode = "save") ->
     stopLoadError("There was a problem with your entry. Please correct your entry and try again.")
     console.error("Bad characters in entry. Stopping ...")
     return false
-  try
-    saveObject["id"] = $("html /deep/ #taxon-id").val()
-  catch e
-    saveObject["id"] = $("html >>> #taxon-id").val()
+  saveObject.id = d$("#taxon-id").val()
+  unless isNumber(saveObject.id)
+    animateLoad()
+    stopLoadError("The system was unable to generate a valid taxon ID for this entry. Please see the console for more details.")
+    console.error("Unable to get a valid, numeric taxon id! We got '#{saveObject.id}'.")
+    console.warn("The total save object so far is:",saveObject)
+    return false
   saveString = JSON.stringify(saveObject)
   s64 = Base64.encodeURI(saveString)
+  if isNull(saveString) or isNull(s64)
+    animateLoad()
+    stopLoadError("The system was unable to parse this entry for the server. Please see the console for more details.")
+    console.error("Unable to stringify the JSON!.")
+    console.warn("The total save object so far is:",saveObject)
+    console.warn("Got the output string",saveSring)
+    console.warn("Sending b64 string",s64)
+    return false
   hash = $.cookie("ssarherps_auth")
   secret = $.cookie("ssarherps_secret")
   link = $.cookie("ssarherps_link")
@@ -682,6 +693,8 @@ saveEditorEntry = (performMode = "save") ->
     stopLoadError()
     toastStatusMessage(result.human_error)
     console.error(result.error)
+    console.warn("Server returned",result)
+    console.warn("We sent","http://ssarherps.org/cndb/#{adminParams.apiTarget}?#{args}")
     return false
   .fail (result,status) ->
     stopLoadError()
@@ -1068,7 +1081,7 @@ stopLoad = (elId = "loader", fadeOut = 1000) ->
     console.log('Could not stop load animation', e.message)
 
 
-stopLoadError = (message, elId = "loader", fadeOut = 5000) ->
+stopLoadError = (message, elId = "loader", fadeOut = 7500) ->
   if elId.slice(0,1) is "#"
     selector = elId
     elId = elId.slice(1)

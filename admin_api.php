@@ -70,12 +70,20 @@ function saveEntry($get)
    ***/
 
   $data64 = $get["data"];
-  $data_string = base64_decode($data64);
+  $enc = strtr($data64, '-_', '+/');
+  $enc = chunk_split(preg_replace('!\015\012|\015|\012!','',$enc));
+  $enc = str_replace(' ','+',$enc);
+  $data_string = base64_decode($enc);
   $data = json_decode($data_string,true);
   if(!isset($data["id"]))
     {
       # The required attribute is missing
-      return array("status"=>false,"error"=>"POST data attribute \"id\" is missing","human_error"=>"The request to the server was malformed. Please try again.");
+        $details = array (
+                          "original_data" => $data64,
+                          "decoded_data" => $data_string,
+                          "data_array" => $data
+                          );
+      return array("status"=>false,"error"=>"POST data attribute \"id\" is missing","human_error"=>"The request to the server was malformed. Please try again.","details"=>$details);
     }
   # Add the perform key
   global $db;
@@ -124,7 +132,7 @@ function newEntry($get)
   }
   return array("status"=>true,"perform"=>"new","data"=>$data);
 }
-  
+
 function deleteEntry($get)
 {
   /***
@@ -136,7 +144,7 @@ function deleteEntry($get)
   global $db;
   $id = $get["id"];
   $result = $db->deleteRow($id,"id");
-  if ($result["status"] === false) 
+  if ($result["status"] === false)
   {
     $result["human_error"] = "Failed to delete item '$id' from the database";
   }
