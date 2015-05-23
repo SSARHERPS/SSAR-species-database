@@ -4,8 +4,7 @@
 ###
 adminParams = new Object()
 adminParams.apiTarget = "admin_api.php"
-adminParams.appUrl = "http://ssarherps.org/cndb/"
-adminParams.adminPageUrl = "#{adminParams.appUrl}admin-page.html"
+adminParams.adminPageUrl = "http://ssarherps.org/cndb/admin-page.html"
 adminParams.loginDir = "admin/"
 adminParams.loginApiTarget = "#{adminParams.loginDir}async_login_handler.php"
 
@@ -25,7 +24,7 @@ loadAdminUi = ->
           <paper-icon-button icon='settings-applications' class='click' data-url='#{data.login_url}'></paper-icon-button>
         </span>
         <span id="pib-wrapper-exit-to-app" class="pib-wrapper" data-toggle="tooltip" title="Go to CNDB app" data-placement="bottom">
-          <paper-icon-button icon='exit-to-app' class='click' data-url='#{adminParams.appUrl}' id="app-linkout"></paper-icon-button>
+          <paper-icon-button icon='exit-to-app' class='click' data-url='#{uri.urlString}' id="app-linkout"></paper-icon-button>
         </span>
       </h3>
       <div id='admin-actions-block'>
@@ -109,7 +108,7 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
   args = "q=#{s}&loose=true"
   # Also update the link
   b64s = Base64.encodeURI(s)
-  newLink = "#{adminParams.appUrl}##{b64s}"
+  newLink = "#{uri.urlString}##{b64s}"
   $("#app-linkout").attr("data-url",newLink)
   $.get(searchParams.targetApi,args,"json")
   .done (result) ->
@@ -415,7 +414,7 @@ lookupEditorSpecies = (taxon = undefined) ->
     console.warn("Bad name! Calculated out:")
     console.warn("Should be currently",replacementNames)
     console.warn("Was previously",originalNames)
-    console.warn("Pinging with","http://ssarherps.org/cndb/#{searchParams.targetApi}?q=#{taxon}")
+    console.warn("Pinging with","#{uri.urlString}#{searchParams.targetApi}?q=#{taxon}")
   # The actual query! This is what populates the editor.
   # Look up the taxon, take the first result, and populate
   $.get(searchParams.targetApi,args,"json")
@@ -610,7 +609,7 @@ saveEditorEntry = (performMode = "save") ->
       thisSelector = "html >>> #edit-#{id}"
     col = id.replace(/-/g,"_")
     val = $(thisSelector).val().trim()
-    if col isnt "notes" and col isnt "taxon_credit"
+    if col isnt "notes" and col isnt "taxon_credit" and col isnt "image"
       # We want these to be as literally typed, rather than
       # smart-formatted.
       # Deprecated scientifics are already taken care of.
@@ -694,11 +693,11 @@ saveEditorEntry = (performMode = "save") ->
     toastStatusMessage(result.human_error)
     console.error(result.error)
     console.warn("Server returned",result)
-    console.warn("We sent","http://ssarherps.org/cndb/#{adminParams.apiTarget}?#{args}")
+    console.warn("We sent","#{uri.urlString}#{adminParams.apiTarget}?#{args}")
     return false
   .fail (result,status) ->
-    stopLoadError()
-    toastStatusMessage("Failed to send the data to the server.")
+    stopLoadError("Failed to send the data to the server.")
+    console.error("Server error! We sent","#{uri.urlString}#{adminParams.apiTarget}?#{args}")
     false
 
 

@@ -416,7 +416,7 @@ d$ = (selector) ->
   deepJQuery(selector)
 
 
-lightboxImages = (selector = ".lightboximage") ->
+lightboxImages = (selector = ".lightboximage", lookDeeply = false) ->
   ###
   # Lightbox images with this selector
   #
@@ -426,7 +426,8 @@ lightboxImages = (selector = ".lightboximage") ->
   # Plays nice with layzr.js
   # https://callmecavs.github.io/layzr.js/
   ###
-  $(selector).each ->
+  jqo = if lookDeeply then d$(selector) else $(selector)
+  jqo.each ->
     if $(this).prop("tagName").toLowerCase() is "img" and $(this).parent().prop("tagName").toLowerCase() isnt "a"
       tagHtml = $(this).removeClass("lightboximage").prop("outerHTML")
       imgUrl = switch
@@ -453,7 +454,7 @@ lightboxImages = (selector = ".lightboximage") ->
         activityIndicatorOn()
       onLoadEnd: ->
         activityIndicatorOff()
-      allowedTypes: 'png|jpg|jpeg|gif'
+      allowedTypes: 'png|jpg|jpeg|gif|bmp|webp'
   ###
   $(selector).has("img").each ->
     if not $(this).attr("nolightbox")?
@@ -461,7 +462,7 @@ lightboxImages = (selector = ".lightboximage") ->
   ###
   # Until these narrower selectors work, let's use this
   try
-    $(selector).imageLightbox(options)
+    jqo.imageLightbox(options)
   catch e
     console.error("Unable to lightbox images!")
 

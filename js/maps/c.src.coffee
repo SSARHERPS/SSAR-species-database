@@ -4,8 +4,7 @@
 ###
 adminParams = new Object()
 adminParams.apiTarget = "admin_api.php"
-adminParams.appUrl = "http://ssarherps.org/cndb/"
-adminParams.adminPageUrl = "#{adminParams.appUrl}admin-page.html"
+adminParams.adminPageUrl = "http://ssarherps.org/cndb/admin-page.html"
 adminParams.loginDir = "admin/"
 adminParams.loginApiTarget = "#{adminParams.loginDir}async_login_handler.php"
 
@@ -25,7 +24,7 @@ loadAdminUi = ->
           <paper-icon-button icon='settings-applications' class='click' data-url='#{data.login_url}'></paper-icon-button>
         </span>
         <span id="pib-wrapper-exit-to-app" class="pib-wrapper" data-toggle="tooltip" title="Go to CNDB app" data-placement="bottom">
-          <paper-icon-button icon='exit-to-app' class='click' data-url='#{adminParams.appUrl}' id="app-linkout"></paper-icon-button>
+          <paper-icon-button icon='exit-to-app' class='click' data-url='#{uri.urlString}' id="app-linkout"></paper-icon-button>
         </span>
       </h3>
       <div id='admin-actions-block'>
@@ -109,7 +108,7 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
   args = "q=#{s}&loose=true"
   # Also update the link
   b64s = Base64.encodeURI(s)
-  newLink = "#{adminParams.appUrl}##{b64s}"
+  newLink = "#{uri.urlString}##{b64s}"
   $("#app-linkout").attr("data-url",newLink)
   $.get(searchParams.targetApi,args,"json")
   .done (result) ->
@@ -415,7 +414,7 @@ lookupEditorSpecies = (taxon = undefined) ->
     console.warn("Bad name! Calculated out:")
     console.warn("Should be currently",replacementNames)
     console.warn("Was previously",originalNames)
-    console.warn("Pinging with","http://ssarherps.org/cndb/#{searchParams.targetApi}?q=#{taxon}")
+    console.warn("Pinging with","#{uri.urlString}#{searchParams.targetApi}?q=#{taxon}")
   # The actual query! This is what populates the editor.
   # Look up the taxon, take the first result, and populate
   $.get(searchParams.targetApi,args,"json")
@@ -610,7 +609,7 @@ saveEditorEntry = (performMode = "save") ->
       thisSelector = "html >>> #edit-#{id}"
     col = id.replace(/-/g,"_")
     val = $(thisSelector).val().trim()
-    if col isnt "notes" and col isnt "taxon_credit"
+    if col isnt "notes" and col isnt "taxon_credit" and col isnt "image"
       # We want these to be as literally typed, rather than
       # smart-formatted.
       # Deprecated scientifics are already taken care of.
@@ -694,11 +693,11 @@ saveEditorEntry = (performMode = "save") ->
     toastStatusMessage(result.human_error)
     console.error(result.error)
     console.warn("Server returned",result)
-    console.warn("We sent","http://ssarherps.org/cndb/#{adminParams.apiTarget}?#{args}")
+    console.warn("We sent","#{uri.urlString}#{adminParams.apiTarget}?#{args}")
     return false
   .fail (result,status) ->
-    stopLoadError()
-    toastStatusMessage("Failed to send the data to the server.")
+    stopLoadError("Failed to send the data to the server.")
+    console.error("Server error! We sent","#{uri.urlString}#{adminParams.apiTarget}?#{args}")
     false
 
 
@@ -1180,7 +1179,7 @@ d$ = (selector) ->
   deepJQuery(selector)
 
 
-lightboxImages = (selector = ".lightboximage") ->
+lightboxImages = (selector = ".lightboximage", lookDeeply = false) ->
   ###
   # Lightbox images with this selector
   #
@@ -1190,7 +1189,8 @@ lightboxImages = (selector = ".lightboximage") ->
   # Plays nice with layzr.js
   # https://callmecavs.github.io/layzr.js/
   ###
-  $(selector).each ->
+  jqo = if lookDeeply then d$(selector) else $(selector)
+  jqo.each ->
     if $(this).prop("tagName").toLowerCase() is "img" and $(this).parent().prop("tagName").toLowerCase() isnt "a"
       tagHtml = $(this).removeClass("lightboximage").prop("outerHTML")
       imgUrl = switch
@@ -1217,7 +1217,7 @@ lightboxImages = (selector = ".lightboximage") ->
         activityIndicatorOn()
       onLoadEnd: ->
         activityIndicatorOff()
-      allowedTypes: 'png|jpg|jpeg|gif'
+      allowedTypes: 'png|jpg|jpeg|gif|bmp|webp'
   ###
   $(selector).has("img").each ->
     if not $(this).attr("nolightbox")?
@@ -1225,7 +1225,7 @@ lightboxImages = (selector = ".lightboximage") ->
   ###
   # Until these narrower selectors work, let's use this
   try
-    $(selector).imageLightbox(options)
+    jqo.imageLightbox(options)
   catch e
     console.error("Unable to lightbox images!")
 
@@ -1554,7 +1554,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
               # http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=batrachoseps+attenuatus
               col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{taxonQuery}' class='newwindow calphoto' data-taxon=\"#{taxonQuery}\"></paper-icon-button>"
             else
-              col = "<paper-icon-button icon='image:image' data-lightbox='#{col}' class='lightboximage'></paper-icon-button>"
+              col = "<paper-icon-button icon='image:image' data-lightbox='#{uri.urlString}#{col}' class='lightboximage'></paper-icon-button>"
           # What should be centered, and what should be left-aligned?
           if k isnt "genus" and k isnt "species" and k isnt "subspecies"
             kClass = "#{k} text-center"
@@ -1720,26 +1720,60 @@ deferCalPhotos = (selector = ".calphoto") ->
   false
 
 
-insertModalImage = (taxon = ssar.activeTaxon) ->
+insertModalImage = (imageUrl = ssar.taxonImage, taxon = ssar.activeTaxon, callback = undefined) ->
   ###
-  # Insert into the taxo modal a lightboxable photo from calphotos
+  # Insert into the taxon modal a lightboxable photo. If none exists,
+  # load from CalPhotos
   #
-  # Blocked on
-  #
+  # CalPhotos functionality blocked on
+  # https://github.com/tigerhawkvok/SSAR-species-database/issues/30
   ###
   # Is the modal dialog open?
   unless taxon?
     console.error("Tried to insert a modal image, but no taxon was provided!")
     return false
   unless typeof taxon is "object"
-    console.error("Invalid taxon data type (expecting object)")
+    console.error("Invalid taxon data type (expecting object), got #{typeof taxon}")
+    warnArgs =
+      taxon: taxon
+      imageUrl: imageUrl
+      defaultTaxon: ssar.activeTaxon
+      defaultImage: ssar.taxonImage
+    console.warn(warnArgs)
     return false
 
-  cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query"
+  insertImage = (thumbnail, largeImg, largeImgLink, taxonQueryString, classPrefix = "calphoto") ->
+    html = """
+    <a href="#{largeImg}" class="#{classPrefix}-img-anchor" style="float:right; margin-top:-1em;">
+      <img src="#{thumbnail}"
+        data-href="#{largeImgLink}"
+        class="#{classPrefix}-img-thumb"
+        data-taxon="#{taxonQueryString}" />
+    </a>
+    """
+    d$("#meta-taxon-info").before(html)
+    lightboxImages(".#{classPrefix}-img-anchor", true)
+    if typeof callback is "function"
+      callback()
+    false
+
   taxonArray = [taxon.genus,taxon.species]
   if taxon.subspecies?
     taxonArray.push(taxon.subspecies)
   taxonString = taxonArray.join("+")
+
+  if imageUrl?
+    # Insert it
+    imgArray = imageUrl.split(".")
+    extension = imgArray.pop()
+    imgPath = imgArray.join(".")
+    thumbUrl = "#{uri.urlString}#{imgPath}-thumb.#{extension}"
+    fullUrl = "#{uri.urlString}#{imgPath}.#{extension}"
+    insertImage(thumbUrl, fullUrl, fullUrl, taxonString, "ssarimg")
+    return false
+
+  # OK, we don't have it, do CalPhotos
+  cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query"
   args = "getthumbinfo=1&num=all&cconly=1&taxon=#{taxonString}&format=xml"
   console.log("Looking at","#{cpUrl}?#{args}")
   doneCORS = (resultXml) ->
@@ -1754,21 +1788,8 @@ insertModalImage = (taxon = ssar.activeTaxon) ->
       return false
     large = data.enlarge_jpeg_url
     link = data.enlarge_url
-    # Render a thumbnail that onclick will lightbox
-    html = "<a href='#{large}' class='calphoto-img-anchor'><img src='#{thumb}' data-href='#{link}' class='calphoto-img-thumb' data-taxon='#{taxonString}'/></a>"
-    # Insert the image ...
-    try
-      unless $("html /deep/ #meta-taxon-info").exists()
-        throw("Bad selector error")
-      $("html /deep/ #meta-taxon-info").before(html)
-    catch e
-      try
-        unless $("html >>> #meta-taxon-info").exists()
-          throw("Bad combinator error")
-        $("html >>> #meta-taxon-info").before(html)
-      catch e
-        $("#meta-taxon-info").before(html)
-    lightboxImages(".calphoto-image-anchor")
+    # Do the image insertion
+    insertImage(thumb,link,large,taxonSring)
     false
   failCORS = (result,status) ->
     console.log(result,status)
@@ -1884,8 +1905,12 @@ modalTaxon = (taxon = undefined) ->
       genus: taxonArray[0]
       species: taxonArray[1]
       subspecies: taxonArray[2]
-    stopLoad()
+    if isNull(data.image) then data.image = undefined
+    ssar.taxonImage = data.image
+    # Insert the image
+    insertModalImage()
     checkTaxonNear taxon, ->
+      stopLoad()
       $("#modal-taxon")[0].open()
   .fail (result,status) ->
     stopLoadError()

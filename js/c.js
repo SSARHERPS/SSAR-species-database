@@ -10,9 +10,7 @@ adminParams = new Object();
 
 adminParams.apiTarget = "admin_api.php";
 
-adminParams.appUrl = "http://ssarherps.org/cndb/";
-
-adminParams.adminPageUrl = "" + adminParams.appUrl + "admin-page.html";
+adminParams.adminPageUrl = "http://ssarherps.org/cndb/admin-page.html";
 
 adminParams.loginDir = "admin/";
 
@@ -29,7 +27,7 @@ loadAdminUi = function() {
   try {
     verifyLoginCredentials(function(data) {
       var articleHtml, searchForm;
-      articleHtml = "<h3>\n  Welcome, " + ($.cookie("ssarherps_name")) + "\n  <span id=\"pib-wrapper-settings\" class=\"pib-wrapper\" data-toggle=\"tooltip\" title=\"User Settings\" data-placement=\"bottom\">\n    <paper-icon-button icon='settings-applications' class='click' data-url='" + data.login_url + "'></paper-icon-button>\n  </span>\n  <span id=\"pib-wrapper-exit-to-app\" class=\"pib-wrapper\" data-toggle=\"tooltip\" title=\"Go to CNDB app\" data-placement=\"bottom\">\n    <paper-icon-button icon='exit-to-app' class='click' data-url='" + adminParams.appUrl + "' id=\"app-linkout\"></paper-icon-button>\n  </span>\n</h3>\n<div id='admin-actions-block'>\n  <div class='bs-callout bs-callout-info'>\n    <p>Please be patient while the administrative interface loads.</p>\n  </div>\n</div>";
+      articleHtml = "<h3>\n  Welcome, " + ($.cookie("ssarherps_name")) + "\n  <span id=\"pib-wrapper-settings\" class=\"pib-wrapper\" data-toggle=\"tooltip\" title=\"User Settings\" data-placement=\"bottom\">\n    <paper-icon-button icon='settings-applications' class='click' data-url='" + data.login_url + "'></paper-icon-button>\n  </span>\n  <span id=\"pib-wrapper-exit-to-app\" class=\"pib-wrapper\" data-toggle=\"tooltip\" title=\"Go to CNDB app\" data-placement=\"bottom\">\n    <paper-icon-button icon='exit-to-app' class='click' data-url='" + uri.urlString + "' id=\"app-linkout\"></paper-icon-button>\n  </span>\n</h3>\n<div id='admin-actions-block'>\n  <div class='bs-callout bs-callout-info'>\n    <p>Please be patient while the administrative interface loads.</p>\n  </div>\n</div>";
       $("article").html(articleHtml);
       $(".pib-wrapper").tooltip();
 
@@ -112,7 +110,7 @@ renderAdminSearchResults = function(containerSelector) {
   s = prepURI(s.toLowerCase());
   args = "q=" + s + "&loose=true";
   b64s = Base64.encodeURI(s);
-  newLink = "" + adminParams.appUrl + "#" + b64s;
+  newLink = "" + uri.urlString + "#" + b64s;
   $("#app-linkout").attr("data-url", newLink);
   return $.get(searchParams.targetApi, args, "json").done(function(result) {
     var bootstrapColCount, colClass, data, html, htmlClose, htmlHead, targetCount;
@@ -431,7 +429,7 @@ lookupEditorSpecies = function(taxon) {
     console.warn("Bad name! Calculated out:");
     console.warn("Should be currently", replacementNames);
     console.warn("Was previously", originalNames);
-    console.warn("Pinging with", "http://ssarherps.org/cndb/" + searchParams.targetApi + "?q=" + taxon);
+    console.warn("Pinging with", "" + uri.urlString + searchParams.targetApi + "?q=" + taxon);
   }
   $.get(searchParams.targetApi, args, "json").done(function(result) {
     var data, e, noteArea, speciesString;
@@ -628,7 +626,7 @@ saveEditorEntry = function(performMode) {
     }
     col = id.replace(/-/g, "_");
     val = $(thisSelector).val().trim();
-    if (col !== "notes" && col !== "taxon_credit") {
+    if (col !== "notes" && col !== "taxon_credit" && col !== "image") {
       val = val.toLowerCase();
     }
     switch (id) {
@@ -720,11 +718,11 @@ saveEditorEntry = function(performMode) {
     toastStatusMessage(result.human_error);
     console.error(result.error);
     console.warn("Server returned", result);
-    console.warn("We sent", "http://ssarherps.org/cndb/" + adminParams.apiTarget + "?" + args);
+    console.warn("We sent", "" + uri.urlString + adminParams.apiTarget + "?" + args);
     return false;
   }).fail(function(result, status) {
-    stopLoadError();
-    toastStatusMessage("Failed to send the data to the server.");
+    stopLoadError("Failed to send the data to the server.");
+    console.error("Server error! We sent", "" + uri.urlString + adminParams.apiTarget + "?" + args);
     return false;
   });
 };
@@ -1411,10 +1409,13 @@ d$ = function(selector) {
   return deepJQuery(selector);
 };
 
-lightboxImages = function(selector) {
-  var e, options;
+lightboxImages = function(selector, lookDeeply) {
+  var e, jqo, options;
   if (selector == null) {
     selector = ".lightboximage";
+  }
+  if (lookDeeply == null) {
+    lookDeeply = false;
   }
 
   /*
@@ -1426,7 +1427,8 @@ lightboxImages = function(selector) {
    * Plays nice with layzr.js
    * https://callmecavs.github.io/layzr.js/
    */
-  $(selector).each(function() {
+  jqo = lookDeeply ? d$(selector) : $(selector);
+  jqo.each(function() {
     var imgUrl, tagHtml;
     if ($(this).prop("tagName").toLowerCase() === "img" && $(this).parent().prop("tagName").toLowerCase() !== "a") {
       tagHtml = $(this).removeClass("lightboximage").prop("outerHTML");
@@ -1464,7 +1466,7 @@ lightboxImages = function(selector) {
     onLoadEnd: function() {
       return activityIndicatorOff();
     },
-    allowedTypes: 'png|jpg|jpeg|gif'
+    allowedTypes: 'png|jpg|jpeg|gif|bmp|webp'
   };
 
   /*
@@ -1473,7 +1475,7 @@ lightboxImages = function(selector) {
       $(this).imageLightbox(options)
    */
   try {
-    return $(selector).imageLightbox(options);
+    return jqo.imageLightbox(options);
   } catch (_error) {
     e = _error;
     return console.error("Unable to lightbox images!");
@@ -1879,7 +1881,7 @@ formatSearchResults = function(result, container) {
             if (isNull(col)) {
               col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=" + taxonQuery + "' class='newwindow calphoto' data-taxon=\"" + taxonQuery + "\"></paper-icon-button>";
             } else {
-              col = "<paper-icon-button icon='image:image' data-lightbox='" + col + "' class='lightboximage'></paper-icon-button>";
+              col = "<paper-icon-button icon='image:image' data-lightbox='" + uri.urlString + col + "' class='lightboximage'></paper-icon-button>";
             }
           }
           if (k !== "genus" && k !== "species" && k !== "subspecies") {
@@ -2075,36 +2077,72 @@ deferCalPhotos = function(selector) {
   return false;
 };
 
-insertModalImage = function(taxon) {
-  var args, cpUrl, doneCORS, e, failCORS, taxonArray, taxonString;
+insertModalImage = function(imageUrl, taxon, callback) {
+  var args, cpUrl, doneCORS, e, extension, failCORS, fullUrl, imgArray, imgPath, insertImage, taxonArray, taxonString, thumbUrl, warnArgs;
+  if (imageUrl == null) {
+    imageUrl = ssar.taxonImage;
+  }
   if (taxon == null) {
     taxon = ssar.activeTaxon;
   }
+  if (callback == null) {
+    callback = void 0;
+  }
 
   /*
-   * Insert into the taxo modal a lightboxable photo from calphotos
+   * Insert into the taxon modal a lightboxable photo. If none exists,
+   * load from CalPhotos
    *
-   * Blocked on
-   *
+   * CalPhotos functionality blocked on
+   * https://github.com/tigerhawkvok/SSAR-species-database/issues/30
    */
   if (taxon == null) {
     console.error("Tried to insert a modal image, but no taxon was provided!");
     return false;
   }
   if (typeof taxon !== "object") {
-    console.error("Invalid taxon data type (expecting object)");
+    console.error("Invalid taxon data type (expecting object), got " + (typeof taxon));
+    warnArgs = {
+      taxon: taxon,
+      imageUrl: imageUrl,
+      defaultTaxon: ssar.activeTaxon,
+      defaultImage: ssar.taxonImage
+    };
+    console.warn(warnArgs);
     return false;
   }
-  cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query";
+  insertImage = function(thumbnail, largeImg, largeImgLink, taxonQueryString, classPrefix) {
+    var html;
+    if (classPrefix == null) {
+      classPrefix = "calphoto";
+    }
+    html = "<a href=\"" + largeImg + "\" class=\"" + classPrefix + "-img-anchor\" style=\"float:right; margin-top:-1em;\">\n  <img src=\"" + thumbnail + "\"\n    data-href=\"" + largeImgLink + "\"\n    class=\"" + classPrefix + "-img-thumb\"\n    data-taxon=\"" + taxonQueryString + "\" />\n</a>";
+    d$("#meta-taxon-info").before(html);
+    lightboxImages("." + classPrefix + "-img-anchor", true);
+    if (typeof callback === "function") {
+      callback();
+    }
+    return false;
+  };
   taxonArray = [taxon.genus, taxon.species];
   if (taxon.subspecies != null) {
     taxonArray.push(taxon.subspecies);
   }
   taxonString = taxonArray.join("+");
+  if (imageUrl != null) {
+    imgArray = imageUrl.split(".");
+    extension = imgArray.pop();
+    imgPath = imgArray.join(".");
+    thumbUrl = "" + uri.urlString + imgPath + "-thumb." + extension;
+    fullUrl = "" + uri.urlString + imgPath + "." + extension;
+    insertImage(thumbUrl, fullUrl, fullUrl, taxonString, "ssarimg");
+    return false;
+  }
+  cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query";
   args = "getthumbinfo=1&num=all&cconly=1&taxon=" + taxonString + "&format=xml";
   console.log("Looking at", "" + cpUrl + "?" + args);
   doneCORS = function(resultXml) {
-    var data, e, html, large, link, result, thumb;
+    var data, large, link, result, thumb;
     result = xmlToJSON.parseString(resultXml);
     data = result.xml.calphotos;
     if (data == null) {
@@ -2118,25 +2156,7 @@ insertModalImage = function(taxon) {
     }
     large = data.enlarge_jpeg_url;
     link = data.enlarge_url;
-    html = "<a href='" + large + "' class='calphoto-img-anchor'><img src='" + thumb + "' data-href='" + link + "' class='calphoto-img-thumb' data-taxon='" + taxonString + "'/></a>";
-    try {
-      if (!$("html /deep/ #meta-taxon-info").exists()) {
-        throw "Bad selector error";
-      }
-      $("html /deep/ #meta-taxon-info").before(html);
-    } catch (_error) {
-      e = _error;
-      try {
-        if (!$("html >>> #meta-taxon-info").exists()) {
-          throw "Bad combinator error";
-        }
-        $("html >>> #meta-taxon-info").before(html);
-      } catch (_error) {
-        e = _error;
-        $("#meta-taxon-info").before(html);
-      }
-    }
-    lightboxImages(".calphoto-image-anchor");
+    insertImage(thumb, link, large, taxonSring);
     return false;
   };
   failCORS = function(result, status) {
@@ -2245,8 +2265,13 @@ modalTaxon = function(taxon) {
       species: taxonArray[1],
       subspecies: taxonArray[2]
     };
-    stopLoad();
+    if (isNull(data.image)) {
+      data.image = void 0;
+    }
+    ssar.taxonImage = data.image;
+    insertModalImage();
     return checkTaxonNear(taxon, function() {
+      stopLoad();
       return $("#modal-taxon")[0].open();
     });
   }).fail(function(result, status) {

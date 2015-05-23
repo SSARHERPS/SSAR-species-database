@@ -93,6 +93,39 @@ function saveEntry($get)
   try
     {
       $result = $db->updateEntry($data,$ref);
+      # Now, we want to do image processing if an image was alerted
+      $imgDetails = false;
+      if(!empty($data["image"])) {
+          $img = $data["image"];
+          $imgDetails = array("has_provided_img"=>true);
+          # Process away!
+          $file = dirname(__FILE__)."/".$img;
+          $imgDetails["file_path"] = $file;
+          $imgDetails["relative_path"] = $img;
+          if(file_exists($file))
+          {
+              $imgDetails["img_present"] = true;
+              # Resize away
+              try
+              {
+                  $i = new ImageFunctions($file);
+                  $thumbArr = explode(".",$img);
+                  $extension = array_pop($thumbArr);
+                  $outputFile = dirname(__FILE__)."/".implode(".",$thumbArr)."-thumb.".$extension;
+                  $imgDetails["resize_status"] = $i->resizeImage($outputFile,512,512);                  
+              }
+              catch(Exception $e)
+              {
+                  $imgDetails["resize_status"] = false;
+                  $imgDetails["resize_error"] = $e->getMessage();
+              }
+
+          }
+          else
+          {
+              $imgDetails["img_present"] = false;
+          }
+      }
     }
   catch(Exception $e)
     {
@@ -102,7 +135,7 @@ function saveEntry($get)
     {
       return array("status"=>false,"error"=>$result,"human_error"=>"Database error saving","data"=>$data,"ref"=>$ref,"perform"=>"save");
     }
-  return array("status"=>true,"perform"=>"save","data"=>$data);
+  return array("status"=>true,"perform"=>"save","data"=>$data, "img_details"=>$imgDetails);
 }
 
 function newEntry($get)
