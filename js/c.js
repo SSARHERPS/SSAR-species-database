@@ -318,7 +318,9 @@ createDuplicateTaxon = function() {
         return saveEditorEntry("new");
       });
     }
-    stopLoad();
+    delay(250, function() {
+      return stopLoad();
+    });
   } catch (_error) {
     e = _error;
     stopLoadError("Unable to duplicate taxon");
@@ -1832,23 +1834,36 @@ checkTaxonNear = function(taxonQuery, callback, selector) {
     geoIcon = "warning";
     return tooltipHint = "We couldn't determine your location";
   }).always(function() {
-    var e;
+    var e, tooltipHtml;
+    tooltipHtml = "<div class=\"tooltip fade top in right\" role=\"tooltip\" style=\"top: 6.5em; left: 4em; right:initial; display:none\" id=\"manual-location-tooltip\">\n  <div class=\"tooltip-arrow\" style=\"top:50%;left:5px\"></div>\n  <div class=\"tooltip-inner\">" + tooltipHint + "</div>\n</div>";
     try {
       $("html /deep/ " + selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + " near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>");
-      $("html /deep/ #near-me-icon").attr("title", tooltipHint);
-      $("html /deep/ #near-me-container").attr("title", tooltipHint);
-      $("html /deep/ .near-me").tooltip();
+      $("html /deep/ #near-me-container").after(tooltipHtml).mouseenter(function() {
+        $("html /deep/ #manual-location-tooltip").css("display", "block");
+        return false;
+      }).mouseleave(function() {
+        $("html /deep/ #manual-location-tooltip").css("display", "none");
+        return false;
+      });
     } catch (_error) {
       e = _error;
       $("html >>> " + selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + " near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>");
-      $("html >>> #near-me-icon").attr("title", tooltipHint);
-      $("html >> #near-me-container").attr("title", tooltipHint);
-      $("html >>> .near-me").tooltip();
+      $("html >>> #near-me-container").after(tooltipHtml).mouseenter(function() {
+        $("html >>> #manual-location-tooltip").css("display", "block");
+        return false;
+      }).mouseleave(function() {
+        $("html >>> #manual-location-tooltip").css("display", "none");
+        return false;
+      });
       try {
         $(selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + "' data-toggle='tooltip' id='near-me-icon'></core-icon>");
-        $("#near-me-icon").attr("title", tooltipHint);
-        $("#near-me-container").attr("title", tooltipHint);
-        $(".near-me").tooltip();
+        $("#near-me-container").after(tooltipHtml).mouseenter(function() {
+          $("#manual-location-tooltip").css("display", "block");
+          return false;
+        }).mouseleave(function() {
+          $("#manual-location-tooltip").css("display", "none");
+          return false;
+        });
       } catch (_error) {
         e = _error;
         console.warn("Fallback failed to draw contents on the <paper-action-dialog>");
@@ -1860,6 +1875,15 @@ checkTaxonNear = function(taxonQuery, callback, selector) {
   });
   return false;
 };
+
+
+/*
+
+$("html /deep/ #near-me-container").after('<div class="tooltip fade top in" role="tooltip" style="top: 3.5em; left: 2px; display:block"><div class="tooltip-arrow" style="left: 50%;"></div><div class="tooltip-inner">FOOBAR</div></div>')
+
+
+<div class="tooltip fade top in" role="tooltip" id="tooltip996699" style="top: -2px; left: 448px; display: block;"><div class="tooltip-arrow" style="left: 50%;"></div><div class="tooltip-inner">Stuff</div></div>
+ */
 
 deferCalPhotos = function(selector) {
   var count, cpUrl, i;
@@ -2054,7 +2078,7 @@ modalTaxon = function(taxon) {
       console.warn("Couldn't parse markdown!! " + e.message);
     }
     commonType = !isNull(data.major_common_type) ? " (<span id='taxon-common-type'>" + data.major_common_type + "</span>) " : "";
-    html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type'>" + data.major_type + "</span>\n    " + commonType + " \n    <core-icon icon='arrow-forward'></core-icon>\n    <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_credit + "</p>";
+    html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type'>" + data.major_type + "</span>\n    " + commonType + "\n    <core-icon icon='arrow-forward'></core-icon>\n    <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_credit + "</p>";
     $("#modal-taxon-content").html(html);
     $("#modal-inat-linkout").unbind().click(function() {
       return openTab("http://www.inaturalist.org/taxa/search?q=" + taxon);

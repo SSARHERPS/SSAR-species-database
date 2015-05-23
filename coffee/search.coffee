@@ -306,28 +306,59 @@ checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "#nea
     geoIcon = "warning"
     tooltipHint = "We couldn't determine your location"
   .always ->
+    tooltipHtml = """
+    <div class="tooltip fade top in right" role="tooltip" style="top: 6.5em; left: 4em; right:initial; display:none" id="manual-location-tooltip">
+      <div class="tooltip-arrow" style="top:50%;left:5px"></div>
+      <div class="tooltip-inner">#{tooltipHint}</div>
+    </div>
+    """
     try
       $("html /deep/ #{selector}").html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass} near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>")
-      $("html /deep/ #near-me-icon").attr("title",tooltipHint)
-      $("html /deep/ #near-me-container").attr("title",tooltipHint)
-      $("html /deep/ .near-me").tooltip()
+      $("html /deep/ #near-me-container")
+      .after(tooltipHtml)
+      .mouseenter ->
+        $("html /deep/ #manual-location-tooltip").css("display","block")
+        false
+      .mouseleave ->
+        $("html /deep/ #manual-location-tooltip").css("display","none")
+        false
+      #$("html /deep/ .near-me").tooltip()
     catch e
       $("html >>> #{selector}").html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass} near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>")
-      $("html >>> #near-me-icon").attr("title",tooltipHint)
-      $("html >> #near-me-container").attr("title",tooltipHint)
-      $("html >>> .near-me").tooltip()
+      $("html >>> #near-me-container")
+      .after(tooltipHtml)
+      .mouseenter ->
+        $("html >>> #manual-location-tooltip").css("display","block")
+        false
+      .mouseleave ->
+        $("html >>> #manual-location-tooltip").css("display","none")
+        false
+      #$("html >>> .near-me").tooltip()
       try
         # Attempt to do this without looking through the shadow DOM
         $(selector).html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}' data-toggle='tooltip' id='near-me-icon'></core-icon>")
-        $("#near-me-icon").attr("title",tooltipHint)
-        $("#near-me-container").attr("title",tooltipHint)
-        $(".near-me").tooltip()
+        $("#near-me-container")
+        .after(tooltipHtml)
+        .mouseenter ->
+          $("#manual-location-tooltip").css("display","block")
+          false
+        .mouseleave ->
+          $("#manual-location-tooltip").css("display","none")
+          false
+        #$(".near-me").tooltip()
       catch e
         console.warn("Fallback failed to draw contents on the <paper-action-dialog>")
     if callback?
       callback()
   false
 
+###
+
+$("html /deep/ #near-me-container").after('<div class="tooltip fade top in" role="tooltip" style="top: 3.5em; left: 2px; display:block"><div class="tooltip-arrow" style="left: 50%;"></div><div class="tooltip-inner">FOOBAR</div></div>')
+
+
+<div class="tooltip fade top in" role="tooltip" id="tooltip996699" style="top: -2px; left: 448px; display: block;"><div class="tooltip-arrow" style="left: 50%;"></div><div class="tooltip-inner">Stuff</div></div>
+###
 
 
 deferCalPhotos = (selector = ".calphoto") ->
@@ -368,7 +399,7 @@ insertModalImage = (taxon = ssar.activeTaxon) ->
   # Insert into the taxo modal a lightboxable photo from calphotos
   #
   # Blocked on
-  # 
+  #
   ###
   # Is the modal dialog open?
   unless taxon?
@@ -377,7 +408,7 @@ insertModalImage = (taxon = ssar.activeTaxon) ->
   unless typeof taxon is "object"
     console.error("Invalid taxon data type (expecting object)")
     return false
-  
+
   cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query"
   taxonArray = [taxon.genus,taxon.species]
   if taxon.subspecies?
@@ -497,7 +528,7 @@ modalTaxon = (taxon = undefined) ->
       </p>
       <p>
         Type: <span id='taxon-type'>#{data.major_type}</span>
-        #{commonType} 
+        #{commonType}
         <core-icon icon='arrow-forward'></core-icon>
         <span id='taxon-subtype'>#{data.major_subtype}</span>#{minorTypeHtml}
       </p>

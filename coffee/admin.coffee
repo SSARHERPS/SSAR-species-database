@@ -317,7 +317,8 @@ createDuplicateTaxon = ->
       .unbind()
       .click ->
         saveEditorEntry("new")
-    stopLoad()
+    delay 250, ->
+      stopLoad()
   catch e
     stopLoadError("Unable to duplicate taxon")
     console.error("Couldn't duplicate taxon! #{e.message}")
