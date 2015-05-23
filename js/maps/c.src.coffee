@@ -1189,6 +1189,28 @@ doCORSget = (url, args, callback = undefined, callbackFail = undefined) ->
   xhr.send()
   false
 
+deepJQuery = (selector) ->
+  ###
+  # Do a shadow-piercing selector
+  #
+  # Cross-browser, works with Chrome, Firefox, Opera, Safari, and IE
+  # Falls back to standard jQuery selector when everything fails.
+  ###
+  try
+    unless $("html /deep/ #{selector}").exists()
+      throw("Bad /deep/ selector")
+    return $("html /deep/ #{selector}")
+  catch e
+    try
+      unless $("html >>> #{selector}").exists()
+        throw("Bad >>> selector")
+      return $("html >>> #{selector}")
+    catch e
+      return $(selector)
+
+d$ = (selector) ->
+  deepJQuery(selector)
+
 
 lightboxImages = (selector = ".lightboximage") ->
   ###

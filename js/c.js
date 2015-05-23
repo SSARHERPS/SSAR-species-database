@@ -3,7 +3,7 @@
  * The main coffeescript file for administrative stuff
  * Triggered from admin-page.html
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createDuplicateTaxon, createNewTaxon, deferCalPhotos, delay, deleteTaxon, doCORSget, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createDuplicateTaxon, createNewTaxon, d$, deepJQuery, deferCalPhotos, delay, deleteTaxon, doCORSget, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
   __slice = [].slice;
 
 adminParams = new Object();
@@ -1438,6 +1438,38 @@ doCORSget = function(url, args, callback, callbackFail) {
   };
   xhr.send();
   return false;
+};
+
+deepJQuery = function(selector) {
+
+  /*
+   * Do a shadow-piercing selector
+   *
+   * Cross-browser, works with Chrome, Firefox, Opera, Safari, and IE
+   * Falls back to standard jQuery selector when everything fails.
+   */
+  var e;
+  try {
+    if (!$("html /deep/ " + selector).exists()) {
+      throw "Bad /deep/ selector";
+    }
+    return $("html /deep/ " + selector);
+  } catch (_error) {
+    e = _error;
+    try {
+      if (!$("html >>> " + selector).exists()) {
+        throw "Bad >>> selector";
+      }
+      return $("html >>> " + selector);
+    } catch (_error) {
+      e = _error;
+      return $(selector);
+    }
+  }
+};
+
+d$ = function(selector) {
+  return deepJQuery(selector);
 };
 
 lightboxImages = function(selector) {
