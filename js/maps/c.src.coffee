@@ -1519,14 +1519,6 @@ checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "#nea
       callback()
   false
 
-###
-
-$("html /deep/ #near-me-container").after('<div class="tooltip fade top in" role="tooltip" style="top: 3.5em; left: 2px; display:block"><div class="tooltip-arrow" style="left: 50%;"></div><div class="tooltip-inner">FOOBAR</div></div>')
-
-
-<div class="tooltip fade top in" role="tooltip" id="tooltip996699" style="top: -2px; left: 448px; display: block;"><div class="tooltip-arrow" style="left: 50%;"></div><div class="tooltip-inner">Stuff</div></div>
-###
-
 
 deferCalPhotos = (selector = ".calphoto") ->
   ###
