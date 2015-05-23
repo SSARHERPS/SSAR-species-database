@@ -202,7 +202,7 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-input label="Subtype" id="edit-major-subtype" name="edit-major-subtype" floatingLabel></paper-input>
   <paper-input label="Minor clade / 'Family'" id="edit-minor-type" name="edit-minor-type" floatingLabel></paper-input>
   <paper-input label="Linnean Order" id="edit-linnean-order" name="edit-linnean-order" class="linnean_order" floatingLabel></paper-input>
-  <paper-input label="Common Type" id="edit-major-common-type" name="edit-major-common-type" class="major_common_type" floatingLabel></paper-input>
+  <paper-input label="Common Type (eg., \"lizard\")" id="edit-major-common-type" name="edit-major-common-type" class="major_common_type" floatingLabel></paper-input>
   <paper-input label="Genus authority" id="edit-genus-authority" name="edit-genus-authority" class="genus_authority" floatingLabel></paper-input>
   <paper-input label="Genus authority year" id="edit-gauthyear" name="edit-gauthyear" floatingLabel></paper-input>
   <paper-input label="Species authority" id="edit-species-authority" name="edit-species-authority" class="species_authority" floatingLabel></paper-input>
@@ -228,13 +228,14 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
     <paper-button id='duplicate-taxon' dismissive>Duplicate</paper-button>
     <paper-button id='save-editor' affirmative>#{affirmativeText}</paper-button></paper-action-dialog>
   """
-  unless $("#modal-taxon-edit").exists()
-    $("#search-results").after(html)
-  else
-    try
-      $("html /deep/ #modal-taxon-editor").html(editHtml)
-    catch e
-      $("html >>> #modal-taxon-editor").html(editHtml)
+  if $("#modal-taxon-edit").exists()
+    $("#modal-taxon-edit").remove()
+  $("#search-results").after(html)
+  # else
+  #   try
+  #     $("html /deep/ #modal-taxon-editor").html(editHtml)
+  #   catch e
+  #     $("html >>> #modal-taxon-editor").html(editHtml)
   # Bind the autogrow
   # See https://www.polymer-project.org/0.5/docs/elements/paper-autogrow-textarea.html
   try
@@ -271,6 +272,11 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
 createNewTaxon = ->
   animateLoad()
   loadModalTaxonEditor("","Create")
+  # REmove the dupliate button
+  try
+    $("html /deep/ #duplicate-taxon").remove()
+  catch e
+    $("html >>> #duplicate-taxon").remove()
   # Append the editor value
   whoEdited = if isNull($.cookie("ssarherps_fullname")) then $.cookie("ssarherps_user") else $.cookie("ssarherps_fullname")
   try
@@ -563,15 +569,44 @@ saveEditorEntry = (performMode = "save") ->
     "taxon-credit"
     ]
   saveObject = new Object()
+  escapeCompletion = false
+  try
+    $("html /deep/ paper-input /deep/ paper-input-decorator").removeAttr("isinvalid")
+  catch e
+    $("html >>> paper-input-button >>> paper-input-decorator").removeAttr("isinvalid")
   ## Manual parses
   try
     # Authority year
+    linnaeusYear = 1707 # Linnaeus's birth year
+    d = new Date()
+    nextYear = d.getUTCFullYear() + 1
     try
       gYear = $("html /deep/ #edit-gauthyear").val()
       sYear = $("html /deep/ #edit-sauthyear").val()
     catch e
       gYear = $("html >>> #edit-gauthyear").val()
       sYear = $("html >>> #edit-sauthyear").val()
+    error = "This must be a valid year between #{linnaeusYear} and #{nextYear}"
+    unless isNumber(gYear) and linnaeusYear < gYear < nextYear
+      escapeCompletion = true
+      try
+        $("html /deep/ #edit-gauthyear /deep/ paper-input-decorator")
+        .attr("error",error)
+        .attr("isinvalid","isinvalid")
+      catch e
+        $("html >>> #edit-gauthyear >>> paper-input-decorator")
+        .attr("error",error)
+        .attr("isinvalid","isinvalid")
+    unless isNumber(sYear) and linnaeusYear < sYear < nextYear
+      escapeCompletion = true
+      try
+        $("html /deep/ #edit-sauthyear /deep/ paper-input-decorator")
+        .attr("error",error)
+        .attr("isinvalid","isinvalid")
+      catch e
+        $("html >>> #edit-sauthyear >>> paper-input-decorator")
+        .attr("error",error)
+        .attr("isinvalid","isinvalid")
     auth = new Object()
     auth[gYear] = sYear
     authYearString = JSON.stringify(auth)
@@ -599,7 +634,6 @@ saveEditorEntry = (performMode = "save") ->
     depString = ""
   saveObject["deprecated_scientific"] = depString
   # For the rest of the items, iterate over and put on saveObject
-  escapeCompletion = false
   $.each examineIds, (k,id) ->
     console.log(k,id)
     try
@@ -614,17 +648,39 @@ saveEditorEntry = (performMode = "save") ->
       # smart-formatted.
       # Deprecated scientifics are already taken care of.
       val = val.toLowerCase()
-    if col is "genus" or col is "species" or col is "subspecies"
-      # Check the formatting
-      # If it's bad, spit an error
-      if /[^A-Za-z]/m.test(val)
-        animateLoad()
-        stopLoadError("The #{col} has illegal characters. Please fix it and try again.")
-        # Keep it from proceeding -- a return here just stops the loop
-        escapeCompletion = true
-        return false
+    ## Do the input validation
+    switch id
+      when "genus", "species", "subspecies"
+        # Scientific name must be well-formed
+        error = "This required field must have only letters"
+        if /[^A-Za-z]/m.test(val) or isNull(val)
+          try
+            $("html /deep/ #edit-#{id} /deep/ paper-input-decorator")
+            .attr("error",error)
+            .attr("isinvalid","isinvalid")
+          catch e
+            $("html >>> #edit-#{id} >>> paper-input-decorator")
+            .attr("error",error)
+            .attr("isinvalid","isinvalid")
+          escapeCompletion = true
+      when "common-name", "major-type", "linnean-order", "genus-authority", "species-authority"
+        # These must just exist
+        error = "This cannot be empty"
+        if isNull(val)
+          try
+            $("html /deep/ #edit-#{id} /deep/ paper-input-decorator")
+            .attr("error",error)
+            .attr("isinvalid","isinvalid")
+          catch e
+            $("html >>> #edit-#{id} >>> paper-input-decorator")
+            .attr("error",error)
+            .attr("isinvalid","isinvalid")
+          escapeCompletion = true
+
     saveObject[col] = val
   if escapeCompletion
+    animateLoad()
+    stopLoadError("There was a problem with your entry. Please correct your entry and try again.")
     console.error("Bad characters in entry. Stopping ...")
     return false
   try
