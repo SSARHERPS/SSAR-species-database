@@ -514,7 +514,7 @@ public function doQuery($search,$cols = "*",$boolean_type = "AND", $loose = fals
   $where_arr = array();
   foreach($search as $col=>$crit)
     {
-      $where_arr[] = $loose ? "`".$col."` LIKE '%".$crit."%'":"`".$col."`='".$crit."'";
+      $where_arr[] = $loose ? "LOWER(`".$col."`) LIKE '%".$crit."%'":"`".$col."`='".$crit."'";
     }
   $where = "(".implode(" ".strtoupper($boolean_type)." ",$where_arr).")";
   $query = "SELECT $col_selector FROM `".$this->getTable()."` WHERE $where";
