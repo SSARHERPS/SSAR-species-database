@@ -354,23 +354,12 @@ lookupEditorSpecies = (taxon = undefined) ->
   """
   loadModalTaxonEditor(lastEdited)
   # Bind the save button
-  try
-    $("html /deep/ #save-editor")
-    .click ->
-      saveEditorEntry()
-  catch e
-    $("html >>> #save-editor")
-    .click ->
-      saveEditorEntry()
-  try
-    existensial = $("html /deep/ #last-edited-by").exists()
-  catch e
-    existensial = $("html >>> #last-edited-by").exists()
+  d$("#save-editor")
+  .click ->
+    saveEditorEntry()
+  existensial = d$("#last-edited-by").exists()
   unless existensial
-    try
-      $("html /deep/ #taxon-credit-help").after(lastEdited)
-    catch e
-      $("html >>> #taxon-credit-help").after(lastEdited)
+    d$("#axon-credit-help").after(lastEdited)
   ###
   # After
   # https://github.com/tigerhawkvok/SSAR-species-database/issues/33 :
@@ -484,17 +473,7 @@ lookupEditorSpecies = (taxon = undefined) ->
             $("#last-edited-by").remove()
             console.warn("Removed #last-edited-by! Didn't have an author provided for column '#{col}', giving '#{d}'. It's probably the first edit to this taxon.")
           else
-            try
-              unless $("html /deep/ #taxon-author-last").exists()
-                throw("Bad selector error")
-              $("html /deep/ #taxon-author-last").text(d)
-            catch e
-              try
-                unless $("html >>> #taxon-author-last").exists()
-                  throw("Bad combinator selector")
-                $("html >>> #taxon-author-last").text(d)
-              catch e
-                $("#taxon-author-last").text(d)
+            d$("#taxon-author-last").text(d)
           whoEdited = if isNull($.cookie("ssarherps_fullname")) then $.cookie("ssarherps_user") else $.cookie("ssarherps_fullname")
           try
             $("html /deep/ #edit-taxon-author").attr("value",whoEdited)
@@ -503,49 +482,25 @@ lookupEditorSpecies = (taxon = undefined) ->
         else
           fieldSelector = "#edit-#{col.replace(/_/g,"-")}"
           if col is "deprecated_scientific"
+            # Create a "neat" string from it
             d = JSON.stringify(d).trim().replace(/\\/g,"")
             d = d.replace(/{/,"")
             d = d.replace(/}/,"")
+            if d is '""'
+              d = ""
           if col isnt "notes"
-            try
-              unless $("html /deep/ #{fieldSelector}").exists()
-                throw("Bad Selector Error")
-              $("html /deep/ #{fieldSelector}").attr("value",d)
-            catch e
-              try
-                unless $("html >>> #{fieldSelector}").exists()
-                  throw("Bad combinator selector")
-                $("html >>> #{fieldSelector}").attr("value",d)
-              catch e
-                $("#{fieldSelector}").attr("value",d)
+            d$(fieldSelector).attr("value",d)
           else
-            try
-              unless $("html /deep/ #{fieldSelector}").exists()
-                throw("Bad selector error")
-              $("html /deep/ #{fieldSelector}").text(d)
-            catch e
-              try
-                unless $("html >>> #{fieldSelector}").exists()
-                  throw("Bad combinator selector")
-                $("html >>> #{fieldSelector}").text(d)
-              catch e
-                $("#{fieldSelector}").text(d)
+            d$(fieldSelector).text(d)
       # Update the autogrow
       # See https://www.polymer-project.org/0.5/docs/elements/paper-autogrow-textarea.html
       try
-        noteArea = $("html /deep/ #edit-notes").get(0)
-        $("html /deep/ #edit-notes-autogrow").get(0).update(noteArea)
+        noteArea = d$("#edit-notes").get(0)
+        d$("#edit-notes-autogrow").get(0).update(noteArea)
       catch e
-        try
-          noteArea = $("html >>> #edit-notes").get(0)
-          $("html >>> #edit-notes-autogrow").get(0).update(noteArea)
-        catch e
-          try
-            noteArea = $("#edit-notes").get(0)
-            $("#edit-notes-autogrow").get(0).update(noteArea)
-          catch e
-            # Having an error binding the update
-            console.error("Couldn't update autogrow size. Possibly related to","https://github.com/Polymer/paper-input/issues/182")
+        # Having an error binding the update
+        console.error("Couldn't update autogrow size. Possibly related to","https://github.com/Polymer/paper-input/issues/182")
+      # Finally, open the editor
       $("#modal-taxon-edit")[0].open()
       stopLoad()
     catch e

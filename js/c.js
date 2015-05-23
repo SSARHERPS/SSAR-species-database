@@ -343,7 +343,7 @@ createDuplicateTaxon = function() {
 };
 
 lookupEditorSpecies = function(taxon) {
-  var args, e, existensial, genusArray, k, lastEdited, originalNames, replacementNames, speciesArray, subspeciesArray, taxonArray, v;
+  var args, existensial, genusArray, k, lastEdited, originalNames, replacementNames, speciesArray, subspeciesArray, taxonArray, v;
   if (taxon == null) {
     taxon = void 0;
   }
@@ -360,29 +360,12 @@ lookupEditorSpecies = function(taxon) {
   animateLoad();
   lastEdited = "<p id=\"last-edited-by\">\n  Last edited by <span id=\"taxon-author-last\" class=\"capitalize\"></span>\n</p>\n<input type='hidden' name='taxon-id' id='taxon-id'/>";
   loadModalTaxonEditor(lastEdited);
-  try {
-    $("html /deep/ #save-editor").click(function() {
-      return saveEditorEntry();
-    });
-  } catch (_error) {
-    e = _error;
-    $("html >>> #save-editor").click(function() {
-      return saveEditorEntry();
-    });
-  }
-  try {
-    existensial = $("html /deep/ #last-edited-by").exists();
-  } catch (_error) {
-    e = _error;
-    existensial = $("html >>> #last-edited-by").exists();
-  }
+  d$("#save-editor").click(function() {
+    return saveEditorEntry();
+  });
+  existensial = d$("#last-edited-by").exists();
   if (!existensial) {
-    try {
-      $("html /deep/ #taxon-credit-help").after(lastEdited);
-    } catch (_error) {
-      e = _error;
-      $("html >>> #taxon-credit-help").after(lastEdited);
-    }
+    d$("#axon-credit-help").after(lastEdited);
   }
 
   /*
@@ -451,7 +434,7 @@ lookupEditorSpecies = function(taxon) {
     console.warn("Pinging with", "http://ssarherps.org/cndb/" + searchParams.targetApi + "?q=" + taxon);
   }
   $.get(searchParams.targetApi, args, "json").done(function(result) {
-    var data, noteArea, speciesString;
+    var data, e, noteArea, speciesString;
     try {
       data = result.result[0];
       if (data == null) {
@@ -499,23 +482,7 @@ lookupEditorSpecies = function(taxon) {
             $("#last-edited-by").remove();
             console.warn("Removed #last-edited-by! Didn't have an author provided for column '" + col + "', giving '" + d + "'. It's probably the first edit to this taxon.");
           } else {
-            try {
-              if (!$("html /deep/ #taxon-author-last").exists()) {
-                throw "Bad selector error";
-              }
-              $("html /deep/ #taxon-author-last").text(d);
-            } catch (_error) {
-              e = _error;
-              try {
-                if (!$("html >>> #taxon-author-last").exists()) {
-                  throw "Bad combinator selector";
-                }
-                $("html >>> #taxon-author-last").text(d);
-              } catch (_error) {
-                e = _error;
-                $("#taxon-author-last").text(d);
-              }
-            }
+            d$("#taxon-author-last").text(d);
           }
           whoEdited = isNull($.cookie("ssarherps_fullname")) ? $.cookie("ssarherps_user") : $.cookie("ssarherps_fullname");
           try {
@@ -530,64 +497,23 @@ lookupEditorSpecies = function(taxon) {
             d = JSON.stringify(d).trim().replace(/\\/g, "");
             d = d.replace(/{/, "");
             d = d.replace(/}/, "");
+            if (d === '""') {
+              d = "";
+            }
           }
           if (col !== "notes") {
-            try {
-              if (!$("html /deep/ " + fieldSelector).exists()) {
-                throw "Bad Selector Error";
-              }
-              return $("html /deep/ " + fieldSelector).attr("value", d);
-            } catch (_error) {
-              e = _error;
-              try {
-                if (!$("html >>> " + fieldSelector).exists()) {
-                  throw "Bad combinator selector";
-                }
-                return $("html >>> " + fieldSelector).attr("value", d);
-              } catch (_error) {
-                e = _error;
-                return $("" + fieldSelector).attr("value", d);
-              }
-            }
+            return d$(fieldSelector).attr("value", d);
           } else {
-            try {
-              if (!$("html /deep/ " + fieldSelector).exists()) {
-                throw "Bad selector error";
-              }
-              return $("html /deep/ " + fieldSelector).text(d);
-            } catch (_error) {
-              e = _error;
-              try {
-                if (!$("html >>> " + fieldSelector).exists()) {
-                  throw "Bad combinator selector";
-                }
-                return $("html >>> " + fieldSelector).text(d);
-              } catch (_error) {
-                e = _error;
-                return $("" + fieldSelector).text(d);
-              }
-            }
+            return d$(fieldSelector).text(d);
           }
         }
       });
       try {
-        noteArea = $("html /deep/ #edit-notes").get(0);
-        $("html /deep/ #edit-notes-autogrow").get(0).update(noteArea);
+        noteArea = d$("#edit-notes").get(0);
+        d$("#edit-notes-autogrow").get(0).update(noteArea);
       } catch (_error) {
         e = _error;
-        try {
-          noteArea = $("html >>> #edit-notes").get(0);
-          $("html >>> #edit-notes-autogrow").get(0).update(noteArea);
-        } catch (_error) {
-          e = _error;
-          try {
-            noteArea = $("#edit-notes").get(0);
-            $("#edit-notes-autogrow").get(0).update(noteArea);
-          } catch (_error) {
-            e = _error;
-            console.error("Couldn't update autogrow size. Possibly related to", "https://github.com/Polymer/paper-input/issues/182");
-          }
-        }
+        console.error("Couldn't update autogrow size. Possibly related to", "https://github.com/Polymer/paper-input/issues/182");
       }
       $("#modal-taxon-edit")[0].open();
       return stopLoad();
