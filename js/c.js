@@ -598,7 +598,7 @@ lookupEditorSpecies = function(taxon) {
 };
 
 saveEditorEntry = function(performMode) {
-  var args, auth, authYearString, dep, depA, depS, depString, e, examineIds, gYear, hash, link, s64, sYear, saveObject, saveString, secret, userVerification;
+  var args, auth, authYearString, dep, depA, depS, depString, e, escapeCompletion, examineIds, gYear, hash, link, s64, sYear, saveObject, saveString, secret, userVerification;
   if (performMode == null) {
     performMode = "save";
   }
@@ -653,6 +653,7 @@ saveEditorEntry = function(performMode) {
     depString = "";
   }
   saveObject["deprecated_scientific"] = depString;
+  escapeCompletion = false;
   $.each(examineIds, function(k, id) {
     var col, thisSelector, val;
     console.log(k, id);
@@ -670,8 +671,20 @@ saveEditorEntry = function(performMode) {
     if (col !== "notes" && col !== "taxon_credit") {
       val = val.toLowerCase();
     }
+    if (col === "genus" || col === "species" || col === "subspecies") {
+      if (/[^A-Za-z]/m.test(val)) {
+        animateLoad();
+        stopLoadError("The " + col + " has illegal characters. Please fix it and try again.");
+        escapeCompletion = true;
+        return false;
+      }
+    }
     return saveObject[col] = val;
   });
+  if (escapeCompletion) {
+    console.error("Bad characters in entry. Stopping ...");
+    return false;
+  }
   try {
     saveObject["id"] = $("html /deep/ #taxon-id").val();
   } catch (_error) {
@@ -691,6 +704,10 @@ saveEditorEntry = function(performMode) {
   return $.post(adminParams.apiTarget, args, "json").done(function(result) {
     if (result.status === true) {
       console.log("Server returned", result);
+      if (escapeCompletion) {
+        console.error("Warning! The item saved, even though it wasn't supposed to.");
+        return false;
+      }
       try {
         $("html /deep/ #modal-taxon-edit")[0].close();
       } catch (_error) {

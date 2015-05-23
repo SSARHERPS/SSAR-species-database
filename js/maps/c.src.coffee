@@ -599,6 +599,7 @@ saveEditorEntry = (performMode = "save") ->
     depString = ""
   saveObject["deprecated_scientific"] = depString
   # For the rest of the items, iterate over and put on saveObject
+  escapeCompletion = false
   $.each examineIds, (k,id) ->
     console.log(k,id)
     try
@@ -609,9 +610,23 @@ saveEditorEntry = (performMode = "save") ->
     col = id.replace(/-/g,"_")
     val = $(thisSelector).val().trim()
     if col isnt "notes" and col isnt "taxon_credit"
-      # We want these to be as literally typed, rather than smart-formatted.
+      # We want these to be as literally typed, rather than
+      # smart-formatted.
+      # Deprecated scientifics are already taken care of.
       val = val.toLowerCase()
+    if col is "genus" or col is "species" or col is "subspecies"
+      # Check the formatting
+      # If it's bad, spit an error
+      if /[^A-Za-z]/m.test(val)
+        animateLoad()
+        stopLoadError("The #{col} has illegal characters. Please fix it and try again.")
+        # Keep it from proceeding -- a return here just stops the loop
+        escapeCompletion = true
+        return false
     saveObject[col] = val
+  if escapeCompletion
+    console.error("Bad characters in entry. Stopping ...")
+    return false
   try
     saveObject["id"] = $("html /deep/ #taxon-id").val()
   catch e
@@ -630,6 +645,9 @@ saveEditorEntry = (performMode = "save") ->
   .done (result) ->
     if result.status is true
       console.log("Server returned",result)
+      if escapeCompletion
+        console.error("Warning! The item saved, even though it wasn't supposed to.")
+        return false
       try
         $("html /deep/ #modal-taxon-edit")[0].close()
       catch e
