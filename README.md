@@ -265,4 +265,8 @@ species_authority # eg, "Attenborough"
 authority_year # eg, {2013:2014} in the format {"Genus Authority Year":"Species Authority Year"}
 notes # Miscellaneous notes
 image # hit calphotos api if this field is empty
+image_credit # If not in public domain
+image_license # If not in public domain
+taxon_author # Last editor of entry
+taxon_credit # Credit for `notes`
 ```
