@@ -651,12 +651,13 @@ saveEditorEntry = (performMode = "save") ->
     console.error("Bad characters in entry. Stopping ...")
     return false
   saveObject.id = d$("#taxon-id").val()
-  unless isNumber(saveObject.id)
-    animateLoad()
-    stopLoadError("The system was unable to generate a valid taxon ID for this entry. Please see the console for more details.")
-    console.error("Unable to get a valid, numeric taxon id! We got '#{saveObject.id}'.")
-    console.warn("The total save object so far is:",saveObject)
-    return false
+  if performMode is "save"
+    unless isNumber(saveObject.id)
+      animateLoad()
+      stopLoadError("The system was unable to generate a valid taxon ID for this entry. Please see the console for more details.")
+      console.error("Unable to get a valid, numeric taxon id! We got '#{saveObject.id}'.")
+      console.warn("The total save object so far is:",saveObject)
+      return false
   saveString = JSON.stringify(saveObject)
   s64 = Base64.encodeURI(saveString)
   if isNull(saveString) or isNull(s64)

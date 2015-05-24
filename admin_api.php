@@ -147,7 +147,10 @@ function newEntry($get)
    * @param data a base 64-encoded JSON string of the data to insert
    ***/
   $data64 = $get["data"];
-  $data_string = base64_decode($data64);
+  $enc = strtr($data64, '-_', '+/');
+  $enc = chunk_split(preg_replace('!\015\012|\015|\012!','',$enc));
+  $enc = str_replace(' ','+',$enc);
+  $data_string = base64_decode($enc);
   $data = json_decode($data_string,true);
   # Add the perform key
   global $db;

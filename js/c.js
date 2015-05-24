@@ -670,12 +670,14 @@ saveEditorEntry = function(performMode) {
     return false;
   }
   saveObject.id = d$("#taxon-id").val();
-  if (!isNumber(saveObject.id)) {
-    animateLoad();
-    stopLoadError("The system was unable to generate a valid taxon ID for this entry. Please see the console for more details.");
-    console.error("Unable to get a valid, numeric taxon id! We got '" + saveObject.id + "'.");
-    console.warn("The total save object so far is:", saveObject);
-    return false;
+  if (performMode === "save") {
+    if (!isNumber(saveObject.id)) {
+      animateLoad();
+      stopLoadError("The system was unable to generate a valid taxon ID for this entry. Please see the console for more details.");
+      console.error("Unable to get a valid, numeric taxon id! We got '" + saveObject.id + "'.");
+      console.warn("The total save object so far is:", saveObject);
+      return false;
+    }
   }
   saveString = JSON.stringify(saveObject);
   s64 = Base64.encodeURI(saveString);
