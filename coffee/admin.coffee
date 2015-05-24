@@ -392,17 +392,17 @@ lookupEditorSpecies = (taxon = undefined) ->
           genusArray = v.split("(")
           console.log("Looking at genus array",genusArray)
           originalNames.genus = genusArray[0].trim()
-          replacementNames.genus = if genusArray[1]? then genusArray[1].trim().slice(0,-1) else genusArray[0]
+          replacementNames.genus = if genusArray[1]? then genusArray[1].trim()[... -1] else genusArray[0]
         when 1
           speciesArray = v.split("(")
           console.log("Looking at species array",speciesArray)
           originalNames.species = speciesArray[0].trim()
-          replacementNames.species = if speciesArray[1]? then speciesArray[1].trim().slice(0,-1) else speciesArray[0]
+          replacementNames.species = if speciesArray[1]? then speciesArray[1].trim()[... -1] else speciesArray[0]
         when 2
           subspeciesArray = v.split("(")
           console.log("Looking at ssp array",subspeciesArray)
           originalNames.subspecies = subspeciesArray[0].trim()
-          replacementNames.subspecies = if subspeciesArray[1]? then subspeciesArray[1].trim().slice(0,-1) else subspeciesArray[0]
+          replacementNames.subspecies = if subspeciesArray[1]? then subspeciesArray[1].trim()[... -1] else subspeciesArray[0]
         else
           console.error("K value of '#{k}' didn't match 0,1,2!")
       taxonArray[k] = v.trim()

@@ -252,7 +252,7 @@ parseTaxonYear = (taxonYearString,strict = true) ->
     # attempt to fix it
     console.warn("There was an error parsing '#{taxonYearString}', attempting to fix - ",e.message)
     split = taxonYearString.split(":")
-    year = split[1].slice(split[1].search("\"")+1,-2)
+    year = split[1].slice(split[1].search('"')+1,-2)
     console.log("Examining #{year}")
     year = year.replace(/"/g,"'")
     split[1] = "\"#{year}\"}"
@@ -353,38 +353,6 @@ checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "#nea
   false
 
 
-deferCalPhotos = (selector = ".calphoto") ->
-  ###
-  # Defer renders of calphoto linkouts
-  # Hit targets of form
-  # http://calphotos.berkeley.edu/cgi-bin/img_query?getthumbinfo=1&num=all&taxon=Acris+crepitans&format=xml
-  ###
-  count = $(selector).length
-  cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query"
-  i = 0
-  $(selector).each ->
-    i++
-    thisLinkout = $(this)
-    taxon = thisLinkout.attr("data-taxon")
-    args = "getthumbinfo=1&num=all&cconly=1&taxon=#{taxon}&format=xml"
-    $.get(cpUrl,args)
-    .done (resultXml) ->
-      result = xmlToJSON.parseString(resultXml)
-      data = result.xml.calphotos
-      thumb = data.thumb_url
-      large = data.enlarge_jpeg_url
-      link = data.enlarge_url
-      # Render a thumbnail that onclick will lightbox
-      html = "<a href='#{large}' class='calphoto-img-anchor'><img src='#{thumb}' data-href='#{link}' class='calphoto-img-thumb' data-taxon='#{taxon}'/></a>"
-      thisLinkout.replaceWith(html)
-      false
-    .fail (result,status) ->
-      false
-    .always ->
-      if i is count
-        lightboxImages(".calphoto-image-anchor")
-  false
-
 
 insertModalImage = (imageUrl = ssar.taxonImage, taxon = ssar.activeTaxon, callback = undefined) ->
   ###
@@ -407,8 +375,12 @@ insertModalImage = (imageUrl = ssar.taxonImage, taxon = ssar.activeTaxon, callba
       defaultImage: ssar.taxonImage
     console.warn(warnArgs)
     return false
-
+  # Image insertion helper
   insertImage = (thumbnail, largeImg, largeImgLink, taxonQueryString, classPrefix = "calphoto") ->
+    ###
+    # Insert a lightboxed image into the modal taxon dialog. This must
+    # be shadow-piercing, since the modal dialog is a paper-action-dialog.
+    ###
     html = """
     <a href="#{largeImg}" class="#{classPrefix}-img-anchor" style="float:right; margin-top:-1em;">
       <img src="#{thumbnail}"
@@ -419,32 +391,48 @@ insertModalImage = (imageUrl = ssar.taxonImage, taxon = ssar.activeTaxon, callba
     """
     d$("#meta-taxon-info").before(html)
     try
+      # Call lightboxImages with the second argument "true" to do a
+      # shadow-piercing lookup
       lightboxImages(".#{classPrefix}-img-anchor", true)
     catch e
       console.error("Error lightboxing images")
     if typeof callback is "function"
       callback()
     false
-
+  # Now that that's out of the way, we actually check the information
+  # and process it 
   taxonArray = [taxon.genus,taxon.species]
   if taxon.subspecies?
     taxonArray.push(taxon.subspecies)
   taxonString = taxonArray.join("+")
 
   if imageUrl?
-    # Insert it
+    # The image URI is valid, so insert it
+    # Construct the thumb URI from the provided full-sized path
     imgArray = imageUrl.split(".")
     extension = imgArray.pop()
+    # In case the uploaded file has "." in it's name, we want to re-join
     imgPath = imgArray.join(".")
     thumbUrl = "#{uri.urlString}#{imgPath}-thumb.#{extension}"
     fullUrl = "#{uri.urlString}#{imgPath}.#{extension}"
+    # And finally, call our helper function
     insertImage(thumbUrl, fullUrl, fullUrl, taxonString, "ssarimg")
     return false
-
+  ###
   # OK, we don't have it, do CalPhotos
+  #
+  # Hit targets of form
+  # http://calphotos.berkeley.edu/cgi-bin/img_query?getthumbinfo=1&num=all&taxon=Acris+crepitans&format=xml
+  #
+  # See
+  # http://calphotos.berkeley.edu/thumblink.html
+  # for API reference.
+  ###
   cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query"
   args = "getthumbinfo=1&num=all&cconly=1&taxon=#{taxonString}&format=xml"
   console.log("Looking at","#{cpUrl}?#{args}")
+  ## CalPhotos doesn't have good headers set up. Try a CORS request.
+  # CORS success callback
   doneCORS = (resultXml) ->
     result = xmlToJSON.parseString(resultXml)
     data = result.xml.calphotos
@@ -457,13 +445,15 @@ insertModalImage = (imageUrl = ssar.taxonImage, taxon = ssar.activeTaxon, callba
       return false
     large = data.enlarge_jpeg_url
     link = data.enlarge_url
-    # Do the image insertion
+    # Do the image insertion via our helper function
     insertImage(thumb,link,large,taxonSring)
     false
+  # CORS failure callback
   failCORS = (result,status) ->
     console.log(result,status)
     console.error("Couldn't load an image to insert!")
     false
+  # The actual call attempts.
   try
     doCORSget(cpUrl, args, doneCORS, failCORS)
   catch e
@@ -565,7 +555,7 @@ modalTaxon = (taxon = undefined) ->
       openTab("http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{taxon}")
     formatScientificNames()
     # Set the heading
-    humanTaxon = taxon.charAt(0).toUpperCase()+taxon.slice(1)
+    humanTaxon = taxon.charAt(0).toUpperCase()+taxon[1...]
     humanTaxon = humanTaxon.replace(/\+/g," ")
     $("#modal-taxon").attr("heading",humanTaxon)
     # Open it

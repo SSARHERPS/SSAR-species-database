@@ -3,7 +3,7 @@
  * The main coffeescript file for administrative stuff
  * Triggered from admin-page.html
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createDuplicateTaxon, createNewTaxon, d$, deepJQuery, deferCalPhotos, delay, deleteTaxon, doCORSget, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createDuplicateTaxon, createNewTaxon, d$, deepJQuery, delay, deleteTaxon, doCORSget, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
   __slice = [].slice;
 
 adminParams = new Object();
@@ -1963,7 +1963,7 @@ parseTaxonYear = function(taxonYearString, strict) {
     e = _error;
     console.warn("There was an error parsing '" + taxonYearString + "', attempting to fix - ", e.message);
     split = taxonYearString.split(":");
-    year = split[1].slice(split[1].search("\"") + 1, -2);
+    year = split[1].slice(split[1].search('"') + 1, -2);
     console.log("Examining " + year);
     year = year.replace(/"/g, "'");
     split[1] = "\"" + year + "\"}";
@@ -2077,47 +2077,6 @@ checkTaxonNear = function(taxonQuery, callback, selector) {
   return false;
 };
 
-deferCalPhotos = function(selector) {
-  var count, cpUrl, i;
-  if (selector == null) {
-    selector = ".calphoto";
-  }
-
-  /*
-   * Defer renders of calphoto linkouts
-   * Hit targets of form
-   * http://calphotos.berkeley.edu/cgi-bin/img_query?getthumbinfo=1&num=all&taxon=Acris+crepitans&format=xml
-   */
-  count = $(selector).length;
-  cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query";
-  i = 0;
-  $(selector).each(function() {
-    var args, taxon, thisLinkout;
-    i++;
-    thisLinkout = $(this);
-    taxon = thisLinkout.attr("data-taxon");
-    args = "getthumbinfo=1&num=all&cconly=1&taxon=" + taxon + "&format=xml";
-    return $.get(cpUrl, args).done(function(resultXml) {
-      var data, html, large, link, result, thumb;
-      result = xmlToJSON.parseString(resultXml);
-      data = result.xml.calphotos;
-      thumb = data.thumb_url;
-      large = data.enlarge_jpeg_url;
-      link = data.enlarge_url;
-      html = "<a href='" + large + "' class='calphoto-img-anchor'><img src='" + thumb + "' data-href='" + link + "' class='calphoto-img-thumb' data-taxon='" + taxon + "'/></a>";
-      thisLinkout.replaceWith(html);
-      return false;
-    }).fail(function(result, status) {
-      return false;
-    }).always(function() {
-      if (i === count) {
-        return lightboxImages(".calphoto-image-anchor");
-      }
-    });
-  });
-  return false;
-};
-
 insertModalImage = function(imageUrl, taxon, callback) {
   var args, cpUrl, doneCORS, e, extension, failCORS, fullUrl, imgArray, imgPath, insertImage, taxonArray, taxonString, thumbUrl, warnArgs;
   if (imageUrl == null) {
@@ -2157,6 +2116,11 @@ insertModalImage = function(imageUrl, taxon, callback) {
     if (classPrefix == null) {
       classPrefix = "calphoto";
     }
+
+    /*
+     * Insert a lightboxed image into the modal taxon dialog. This must
+     * be shadow-piercing, since the modal dialog is a paper-action-dialog.
+     */
     html = "<a href=\"" + largeImg + "\" class=\"" + classPrefix + "-img-anchor\" style=\"float:right; margin-top:-1em;\">\n  <img src=\"" + thumbnail + "\"\n    data-href=\"" + largeImgLink + "\"\n    class=\"" + classPrefix + "-img-thumb\"\n    data-taxon=\"" + taxonQueryString + "\" />\n</a>";
     d$("#meta-taxon-info").before(html);
     try {
@@ -2184,6 +2148,17 @@ insertModalImage = function(imageUrl, taxon, callback) {
     insertImage(thumbUrl, fullUrl, fullUrl, taxonString, "ssarimg");
     return false;
   }
+
+  /*
+   * OK, we don't have it, do CalPhotos
+   *
+   * Hit targets of form
+   * http://calphotos.berkeley.edu/cgi-bin/img_query?getthumbinfo=1&num=all&taxon=Acris+crepitans&format=xml
+   *
+   * See
+   * http://calphotos.berkeley.edu/thumblink.html
+   * for API reference.
+   */
   cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query";
   args = "getthumbinfo=1&num=all&cconly=1&taxon=" + taxonString + "&format=xml";
   console.log("Looking at", "" + cpUrl + "?" + args);
