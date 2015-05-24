@@ -1817,14 +1817,12 @@ getFilters = function(selector, booleanType) {
     return filterList[col] = val.toLowerCase();
   });
   if (Object.size(filterList) === 0) {
-    console.log("Got back an empty filter list.");
     return "";
   }
   try {
     filterList["BOOLEAN_TYPE"] = booleanType;
     jsonString = JSON.stringify(filterList);
     encodedFilter = Base64.encodeURI(jsonString);
-    console.log("Returning " + encodedFilter + " from", filterList);
     return encodedFilter;
   } catch (_error) {
     e = _error;
@@ -1887,7 +1885,6 @@ formatSearchResults = function(result, container) {
         if (j === Object.size(row)) {
           htmlHead += "\n\t</tr>";
           htmlHead += "\n<!-- End Table Headers -->";
-          console.log("Got " + bootstrapColCount + " display columns.");
           bootstrapColSize = roundNumber(12 / bootstrapColCount, 0);
           return colClass = "col-md-" + bootstrapColSize;
         }
@@ -1956,7 +1953,6 @@ formatSearchResults = function(result, container) {
     });
     if (toInt(i) === targetCount) {
       html = htmlHead + html + htmlClose;
-      console.log("Processed " + (toInt(i) + 1) + " rows");
       $(container).html(html);
       mapNewWindows();
       lightboxImages();
@@ -2200,7 +2196,6 @@ insertModalImage = function(imageUrl, taxon, callback) {
     return false;
   };
   failCORS = function(result, status) {
-    console.log(result, status);
     console.error("Couldn't load an image to insert!");
     return false;
   };
@@ -2241,7 +2236,6 @@ modalTaxon = function(taxon) {
       stopLoadError();
       return false;
     }
-    console.log("Got", data);
     year = parseTaxonYear(data.authority_year);
     yearHtml = "";
     if (year !== false) {
@@ -2392,7 +2386,6 @@ $(function() {
   var devHello, e, f64, filterObj, fuzzyState, loadArgs, looseState, openFilters, queryUrl, temp;
   devHello = "****************************************************************************\nHello developer!\nIf you're looking for hints on our API information, this site is open-source\nand released under the GPL. Just click on the GitHub link on the bottom of\nthe page, or check out https://github.com/SSARHERPS\n****************************************************************************";
   console.log(devHello);
-  console.log("Doing onloads ...");
   animateLoad();
   window.addEventListener("popstate", function(e) {
     var loadArgs, temp;
@@ -2493,7 +2486,6 @@ $(function() {
     console.log("Doing initial search with '" + loadArgs + "', hitting", "" + searchParams.apiPath + "?q=" + loadArgs);
     return $.get(searchParams.targetApi, "q=" + loadArgs, "json").done(function(result) {
       if (result.status === true && result.count > 0) {
-        console.log("Got a valid result, formatting " + result.count + " results.");
         formatSearchResults(result);
         return false;
       }

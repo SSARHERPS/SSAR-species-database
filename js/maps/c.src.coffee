@@ -1520,13 +1520,13 @@ getFilters = (selector = ".cndb-filter",booleanType = "AND") ->
     filterList[col] = val.toLowerCase()
   if Object.size(filterList) is 0
     # Pass back an empty string
-    console.log("Got back an empty filter list.")
+    # console.log("Got back an empty filter list.")
     return ""
   try
     filterList["BOOLEAN_TYPE"] = booleanType
     jsonString = JSON.stringify(filterList)
     encodedFilter = Base64.encodeURI(jsonString)
-    console.log("Returning #{encodedFilter} from",filterList)
+    # console.log("Returning #{encodedFilter} from",filterList)
     return encodedFilter
   catch e
     return false
@@ -1578,7 +1578,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
         if j is Object.size(row)
           htmlHead += "\n\t</tr>"
           htmlHead += "\n<!-- End Table Headers -->"
-          console.log("Got #{bootstrapColCount} display columns.")
+          # console.log("Got #{bootstrapColCount} display columns.")
           bootstrapColSize = roundNumber(12/bootstrapColCount,0)
           colClass = "col-md-#{bootstrapColSize}"
     taxonQuery = "#{row.genus}+#{row.species}"
@@ -1638,7 +1638,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
     # Check if we're done
     if toInt(i) is targetCount
       html = htmlHead + html + htmlClose
-      console.log("Processed #{toInt(i)+1} rows")
+      # console.log("Processed #{toInt(i)+1} rows")
       $(container).html(html)
       mapNewWindows()
       lightboxImages()
@@ -1856,7 +1856,6 @@ insertModalImage = (imageUrl = ssar.taxonImage, taxon = ssar.activeTaxon, callba
     false
   # CORS failure callback
   failCORS = (result,status) ->
-    console.log(result,status)
     console.error("Couldn't load an image to insert!")
     false
   # The actual call attempts.
@@ -1898,7 +1897,7 @@ modalTaxon = (taxon = undefined) ->
       toastStatusMessage("There was an error fetching the entry details. Please try again later.")
       stopLoadError()
       return false
-    console.log("Got",data)
+    # console.log("Got",data)
     year = parseTaxonYear(data.authority_year)
     yearHtml = ""
     if year isnt false
@@ -2071,7 +2070,7 @@ $ ->
   """
   console.log(devHello)
   # Do bindings
-  console.log("Doing onloads ...")
+  # console.log("Doing onloads ...")
   animateLoad()
   # Set up popstate
   window.addEventListener "popstate", (e) ->
@@ -2157,7 +2156,7 @@ $ ->
     .done (result) ->
       # Populate the result container
       if result.status is true and result.count > 0
-        console.log("Got a valid result, formatting #{result.count} results.")
+        # console.log("Got a valid result, formatting #{result.count} results.")
         formatSearchResults(result)
         return false
       if result.count is 0
