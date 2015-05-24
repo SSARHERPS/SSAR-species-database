@@ -543,42 +543,81 @@ saveEditorEntry = (performMode = "save") ->
   ## Manual parses
   try
     # Authority year
-    linnaeusYear = 1707 # Linnaeus's birth year
-    d = new Date()
-    nextYear = d.getUTCFullYear() + 1 # So we can honestly say "between" and mean it
+    testAuthorityYear = (authYearDeepInputSelector) ->
+      ###
+      # Helper function!
+      # Take in a deep element selector, then run it through match
+      # patterns for the authority year.
+      #
+      # @param authYearDeepInputSelector -- Selector for a shadow DOM
+      #          element, ideally a paper-input.
+      ###
+      yearString = d$(authYearDeepInputSelector).val()
+      error = undefined
+      linnaeusYear = 1707 # Linnaeus's birth year
+      d = new Date()
+      nextYear = d.getUTCFullYear() + 1 # So we can honestly say "between" and mean it
+      # Authority date regex
+      # From
+      # https://github.com/tigerhawkvok/SSAR-species-database/issues/37
+      authorityRegex = /^\d{4}$|^\d{4} (\"|')\d{4}\1$/
+      unless isNumber(yearString) and linnaeusYear < yearString < nextYear
+        unless authorityRegex.test(yearString)
+          # It's definitely bad, we just need to decide how bad
+          if yearString.search(" ") is -1
+            error = "This must be a valid year between #{linnaeusYear} and #{nextYear}"
+          else
+            error = "Nonstandard years must be of the form: YYYY 'YYYY', eg, 1801 '1802'"
+        else
+          # It matches the regex, but fails the check
+          # So, it may be valid, but we need to check
+          if yearString.search(" ") is -1
+            # It's a simple year, but fails the check.
+            # Therefore, it's out of range.
+            error = "This must be a valid year between #{linnaeusYear} and #{nextYear}"
+          else
+            # There's a space, so it's of format:
+            #   1801 '1802'
+            # So we need to parse that out for a valid year check
+            # The format is otherwise assured by the regex
+            years = yearString.split(" ")
+            unless linnaeusYear < years[0] < nextYear
+              error = "The first year must be a valid year between #{linnaeusYear} and #{nextYear}"
+            altYear = years[1].replace(/(\"|')/g,"")
+            unless linnaeusYear < altYear < nextYear
+              error = "The second year must be a valid year between #{linnaeusYear} and #{nextYear}"
+            # Now, for input consistency, replace single-quotes with
+            # double-quotes
+            yearString = yearString.replace(/\"/g,'"')
+      # If there were any error strings assigned, display an error.      
+      if error?
+        escapeCompletion = true
+        console.warn("#{authYearDeepInputSelector} failed its validity checks for #{yearString}!")
+        # Populate the paper-input errors
+        try
+          $("html /deep/ #{authYearDeepInputSelector} /deep/ paper-input-decorator")
+          .attr("error",error)
+          .attr("isinvalid","isinvalid")
+        catch e
+          $("html >>> #{authYearDeepInputSelector} >>> paper-input-decorator")
+          .attr("error",error)
+          .attr("isinvalid","isinvalid")
+      # Return the value for assignment
+      return yearString
+    # Test and assign all in one go
     try
-      gYear = $("html /deep/ #edit-gauthyear").val()
-      sYear = $("html /deep/ #edit-sauthyear").val()
+      gYear = testAuthorityYear("#edit-gauthyear")
+      sYear = testAuthorityYear("#edit-sauthyear")
+      console.log("Escape Completion State:",escapeCompletion)
     catch e
-      gYear = $("html >>> #edit-gauthyear").val()
-      sYear = $("html >>> #edit-sauthyear").val()
-    error = "This must be a valid year between #{linnaeusYear} and #{nextYear}"
-    unless isNumber(gYear) and linnaeusYear < gYear < nextYear
-      escapeCompletion = true
-      try
-        $("html /deep/ #edit-gauthyear /deep/ paper-input-decorator")
-        .attr("error",error)
-        .attr("isinvalid","isinvalid")
-      catch e
-        $("html >>> #edit-gauthyear >>> paper-input-decorator")
-        .attr("error",error)
-        .attr("isinvalid","isinvalid")
-    unless isNumber(sYear) and linnaeusYear < sYear < nextYear
-      escapeCompletion = true
-      try
-        $("html /deep/ #edit-sauthyear /deep/ paper-input-decorator")
-        .attr("error",error)
-        .attr("isinvalid","isinvalid")
-      catch e
-        $("html >>> #edit-sauthyear >>> paper-input-decorator")
-        .attr("error",error)
-        .attr("isinvalid","isinvalid")
+      console.error("Unable to parse authority year! #{e.message}")
+      authYearString = ""
     auth = new Object()
     auth[gYear] = sYear
     authYearString = JSON.stringify(auth)
   catch e
     # Didn't work
-    console.log("Failed to parase the authority year")
+    console.error("Failed to JSON parse the authority year - #{e.message}")
     authYearString = ""
   saveObject["authority_year"] = authYearString
   try
@@ -596,12 +635,12 @@ saveEditorEntry = (performMode = "save") ->
       dep[item[0].replace(/"/g,"")] = item[1].replace(/"/g,"")
     depString = JSON.stringify(dep)
   catch e
-    console.log("Failed to parse the deprecated scientifics")
+    console.warn("Failed to parse the deprecated scientifics. They may be empty.")
     depString = ""
   saveObject["deprecated_scientific"] = depString
   # For the rest of the items, iterate over and put on saveObject
   $.each examineIds, (k,id) ->
-    console.log(k,id)
+    # console.log(k,id)
     try
       thisSelector = "html /deep/ #edit-#{id}"
       if isNull($(thisSelector)) then throw("Invalid Selector")

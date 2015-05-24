@@ -528,7 +528,7 @@ lookupEditorSpecies = function(taxon) {
 };
 
 saveEditorEntry = function(performMode) {
-  var args, auth, authYearString, d, dep, depA, depS, depString, e, error, escapeCompletion, examineIds, gYear, hash, link, linnaeusYear, nextYear, s64, sYear, saveObject, saveString, secret, userVerification;
+  var args, auth, authYearString, dep, depA, depS, depString, e, escapeCompletion, examineIds, gYear, hash, link, s64, sYear, saveObject, saveString, secret, testAuthorityYear, userVerification;
   if (performMode == null) {
     performMode = "save";
   }
@@ -547,42 +547,73 @@ saveEditorEntry = function(performMode) {
     $("html >>> paper-input-button >>> paper-input-decorator").removeAttr("isinvalid");
   }
   try {
-    linnaeusYear = 1707;
-    d = new Date();
-    nextYear = d.getUTCFullYear() + 1;
+    testAuthorityYear = function(authYearDeepInputSelector) {
+
+      /*
+       * Helper function!
+       * Take in a deep element selector, then run it through match
+       * patterns for the authority year.
+       *
+       * @param authYearDeepInputSelector -- Selector for a shadow DOM
+       *          element, ideally a paper-input.
+       */
+      var altYear, authorityRegex, d, error, linnaeusYear, nextYear, yearString, years, _ref;
+      yearString = d$(authYearDeepInputSelector).val();
+      error = void 0;
+      linnaeusYear = 1707;
+      d = new Date();
+      nextYear = d.getUTCFullYear() + 1;
+      authorityRegex = /^\d{4}$|^\d{4} (\"|')\d{4}\1$/;
+      if (!(isNumber(yearString) && (linnaeusYear < yearString && yearString < nextYear))) {
+        if (!authorityRegex.test(yearString)) {
+          if (yearString.search(" ") === -1) {
+            error = "This must be a valid year between " + linnaeusYear + " and " + nextYear;
+          } else {
+            error = "Nonstandard years must be of the form: YYYY 'YYYY', eg, 1801 '1802'";
+          }
+        } else {
+          if (yearString.search(" ") === -1) {
+            error = "This must be a valid year between " + linnaeusYear + " and " + nextYear;
+          } else {
+            years = yearString.split(" ");
+            if (!((linnaeusYear < (_ref = years[0]) && _ref < nextYear))) {
+              error = "The first year must be a valid year between " + linnaeusYear + " and " + nextYear;
+            }
+            altYear = years[1].replace(/(\"|')/g, "");
+            if (!((linnaeusYear < altYear && altYear < nextYear))) {
+              error = "The second year must be a valid year between " + linnaeusYear + " and " + nextYear;
+            }
+            yearString = yearString.replace(/\"/g, '"');
+          }
+        }
+      }
+      if (error != null) {
+        escapeCompletion = true;
+        console.warn("" + authYearDeepInputSelector + " failed its validity checks for " + yearString + "!");
+        try {
+          $("html /deep/ " + authYearDeepInputSelector + " /deep/ paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
+        } catch (_error) {
+          e = _error;
+          $("html >>> " + authYearDeepInputSelector + " >>> paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
+        }
+      }
+      return yearString;
+    };
     try {
-      gYear = $("html /deep/ #edit-gauthyear").val();
-      sYear = $("html /deep/ #edit-sauthyear").val();
+      gYear = testAuthorityYear("#edit-gauthyear");
+      sYear = testAuthorityYear("#edit-sauthyear");
+      console.log("Escape Completion State:", escapeCompletion);
     } catch (_error) {
       e = _error;
-      gYear = $("html >>> #edit-gauthyear").val();
-      sYear = $("html >>> #edit-sauthyear").val();
-    }
-    error = "This must be a valid year between " + linnaeusYear + " and " + nextYear;
-    if (!(isNumber(gYear) && (linnaeusYear < gYear && gYear < nextYear))) {
-      escapeCompletion = true;
-      try {
-        $("html /deep/ #edit-gauthyear /deep/ paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
-      } catch (_error) {
-        e = _error;
-        $("html >>> #edit-gauthyear >>> paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
-      }
-    }
-    if (!(isNumber(sYear) && (linnaeusYear < sYear && sYear < nextYear))) {
-      escapeCompletion = true;
-      try {
-        $("html /deep/ #edit-sauthyear /deep/ paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
-      } catch (_error) {
-        e = _error;
-        $("html >>> #edit-sauthyear >>> paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
-      }
+      console.error("Unable to parse authority year! " + e.message);
+      authYearString = "";
     }
     auth = new Object();
     auth[gYear] = sYear;
     authYearString = JSON.stringify(auth);
   } catch (_error) {
     e = _error;
-    console.log("Failed to parase the authority year");
+    console.error("Failed to JSON parse the authority year - " + e.message);
     authYearString = "";
   }
   saveObject["authority_year"] = authYearString;
@@ -608,13 +639,12 @@ saveEditorEntry = function(performMode) {
     depString = JSON.stringify(dep);
   } catch (_error) {
     e = _error;
-    console.log("Failed to parse the deprecated scientifics");
+    console.warn("Failed to parse the deprecated scientifics. They may be empty.");
     depString = "";
   }
   saveObject["deprecated_scientific"] = depString;
   $.each(examineIds, function(k, id) {
-    var col, nullTest, thisSelector, val;
-    console.log(k, id);
+    var col, error, nullTest, thisSelector, val;
     try {
       thisSelector = "html /deep/ #edit-" + id;
       if (isNull($(thisSelector))) {
