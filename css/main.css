@@ -253,6 +253,9 @@ html >>> .small {
 .cndb-result-entry {
     cursor: pointer;
 }
+.cndb-result-entry paper-icon-button {
+    margin-top: -0.75em;
+}
 #search {
     position:relative;
     /* top:-3em; */
@@ -462,8 +465,8 @@ html >>> #modal-taxon-editor::-webkit-scrollbar-thumb, .showScroll::-webkit-scro
     margin:0;
     padding:0;
     position:relative;
-    left:25%;
-    top:25%;
+    left:0.0625em;
+    top:0.0625em;
 
     -webkit-animation: imagelightbox-loading .5s ease infinite;
     animation: imagelightbox-loading .5s ease infinite;

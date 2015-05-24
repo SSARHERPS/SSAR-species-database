@@ -1124,7 +1124,10 @@ function loadJS(src, callback) {
 }
 ;
 
-mapNewWindows = function() {
+mapNewWindows = function(stopPropagation) {
+  if (stopPropagation == null) {
+    stopPropagation = true;
+  }
   return $(".newwindow").each(function() {
     var curHref, openInNewWindow;
     curHref = $(this).attr("href");
@@ -1138,7 +1141,11 @@ mapNewWindows = function() {
       window.open(url);
       return false;
     };
-    $(this).click(function() {
+    $(this).click(function(e) {
+      if (stopPropagation) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       return openInNewWindow(curHref);
     });
     return $(this).keypress(function() {
@@ -1410,7 +1417,7 @@ d$ = function(selector) {
 };
 
 lightboxImages = function(selector, lookDeeply) {
-  var e, jqo, options;
+  var jqo, options;
   if (selector == null) {
     selector = ".lightboximage";
   }
@@ -1427,31 +1434,6 @@ lightboxImages = function(selector, lookDeeply) {
    * Plays nice with layzr.js
    * https://callmecavs.github.io/layzr.js/
    */
-  jqo = lookDeeply ? d$(selector) : $(selector);
-  jqo.each(function() {
-    var imgUrl, tagHtml;
-    if ($(this).prop("tagName").toLowerCase() === "img" && $(this).parent().prop("tagName").toLowerCase() !== "a") {
-      tagHtml = $(this).removeClass("lightboximage").prop("outerHTML");
-      imgUrl = (function() {
-        switch (false) {
-          case !!isNull($(this).attr("data-layzr-retina")):
-            return $(this).attr("data-layzr-retina");
-          case !!isNull($(this).attr("data-layzr")):
-            return $(this).attr("data-layzr");
-          default:
-            return $(this).attr("src");
-        }
-      }).call(this);
-      return $(this).replaceWith("<a href='" + imgUrl + "' class='lightboximage'>" + tagHtml + "</a>");
-    }
-  });
-
-  /*
-   *try
-   *  layzr = new Layzr()
-   *catch e
-   *  console.warn("The Layzr library couldn't be loaded.")
-   */
   options = {
     onStart: function() {
       return overlayOn();
@@ -1466,20 +1448,44 @@ lightboxImages = function(selector, lookDeeply) {
     onLoadEnd: function() {
       return activityIndicatorOff();
     },
-    allowedTypes: 'png|jpg|jpeg|gif|bmp|webp'
+    allowedTypes: 'png|jpg|jpeg|gif|bmp|webp',
+    quitOnDocClick: true,
+    quitOnImgClick: true
   };
-
-  /*
-  $(selector).has("img").each ->
-    if not $(this).attr("nolightbox")?
-      $(this).imageLightbox(options)
-   */
-  try {
-    return jqo.imageLightbox(options);
-  } catch (_error) {
-    e = _error;
-    return console.error("Unable to lightbox images!");
-  }
+  jqo = lookDeeply ? d$(selector) : $(selector);
+  return jqo.click(function(e) {
+    try {
+      $(this).imageLightbox(options).startImageLightbox();
+      e.preventDefault();
+      e.stopPropagation();
+      return console.warn("Event propagation was stopped when clicking on this.");
+    } catch (_error) {
+      e = _error;
+      return console.error("Unable to lightbox this image!");
+    }
+  }).each(function() {
+    var e, imgUrl, tagHtml;
+    console.log("Using selectors '" + selector + "' / '" + this + "' for lightboximages");
+    try {
+      if ($(this).prop("tagName").toLowerCase() === "img" && $(this).parent().prop("tagName").toLowerCase() !== "a") {
+        tagHtml = $(this).removeClass("lightboximage").prop("outerHTML");
+        imgUrl = (function() {
+          switch (false) {
+            case !!isNull($(this).attr("data-layzr-retina")):
+              return $(this).attr("data-layzr-retina");
+            case !!isNull($(this).attr("data-layzr")):
+              return $(this).attr("data-layzr");
+            default:
+              return $(this).attr("src");
+          }
+        }).call(this);
+        return $(this).replaceWith("<a href='" + imgUrl + "' class='lightboximage'>" + tagHtml + "</a>");
+      }
+    } catch (_error) {
+      e = _error;
+      return console.log("Couldn't parse through the elements");
+    }
+  });
 };
 
 activityIndicatorOn = function() {
@@ -1487,7 +1493,10 @@ activityIndicatorOn = function() {
 };
 
 activityIndicatorOff = function() {
-  return $('#imagelightbox-loading').remove();
+  $('#imagelightbox-loading').remove();
+  return $("#imagelightbox-overlay").click(function() {
+    return $("#imagelightbox").click();
+  });
 };
 
 overlayOn = function() {
@@ -1879,7 +1888,7 @@ formatSearchResults = function(result, container) {
         if (k !== alt) {
           if (k === "image") {
             if (isNull(col)) {
-              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=" + taxonQuery + "' class='newwindow calphoto' data-taxon=\"" + taxonQuery + "\"></paper-icon-button>";
+              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=" + taxonQuery + "' class='newwindow calphoto click' data-taxon=\"" + taxonQuery + "\"></paper-icon-button>";
             } else {
               col = "<paper-icon-button icon='image:image' data-lightbox='" + uri.urlString + col + "' class='lightboximage'></paper-icon-button>";
             }
@@ -2112,13 +2121,18 @@ insertModalImage = function(imageUrl, taxon, callback) {
     return false;
   }
   insertImage = function(thumbnail, largeImg, largeImgLink, taxonQueryString, classPrefix) {
-    var html;
+    var e, html;
     if (classPrefix == null) {
       classPrefix = "calphoto";
     }
     html = "<a href=\"" + largeImg + "\" class=\"" + classPrefix + "-img-anchor\" style=\"float:right; margin-top:-1em;\">\n  <img src=\"" + thumbnail + "\"\n    data-href=\"" + largeImgLink + "\"\n    class=\"" + classPrefix + "-img-thumb\"\n    data-taxon=\"" + taxonQueryString + "\" />\n</a>";
     d$("#meta-taxon-info").before(html);
-    lightboxImages("." + classPrefix + "-img-anchor", true);
+    try {
+      lightboxImages("." + classPrefix + "-img-anchor", true);
+    } catch (_error) {
+      e = _error;
+      console.error("Error lightboxing images");
+    }
     if (typeof callback === "function") {
       callback();
     }

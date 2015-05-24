@@ -218,7 +218,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
             if isNull(col)
               # Get a CalPhotos link as
               # http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=batrachoseps+attenuatus
-              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{taxonQuery}' class='newwindow calphoto' data-taxon=\"#{taxonQuery}\"></paper-icon-button>"
+              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{taxonQuery}' class='newwindow calphoto click' data-taxon=\"#{taxonQuery}\"></paper-icon-button>"
             else
               col = "<paper-icon-button icon='image:image' data-lightbox='#{uri.urlString}#{col}' class='lightboximage'></paper-icon-button>"
           # What should be centered, and what should be left-aligned?
@@ -418,7 +418,10 @@ insertModalImage = (imageUrl = ssar.taxonImage, taxon = ssar.activeTaxon, callba
     </a>
     """
     d$("#meta-taxon-info").before(html)
-    lightboxImages(".#{classPrefix}-img-anchor", true)
+    try
+      lightboxImages(".#{classPrefix}-img-anchor", true)
+    catch e
+      console.error("Error lightboxing images")
     if typeof callback is "function"
       callback()
     false

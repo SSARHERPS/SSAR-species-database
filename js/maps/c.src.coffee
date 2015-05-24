@@ -979,7 +979,7 @@ function loadJS(src, callback) {
 }
 `
 
-mapNewWindows = ->
+mapNewWindows = (stopPropagation = true) ->
   # Do new windows
   $(".newwindow").each ->
     # Add a click and keypress listener to
@@ -992,7 +992,10 @@ mapNewWindows = ->
       if not url? then return false
       window.open(url)
       return false
-    $(this).click ->
+    $(this).click (e) ->
+      if stopPropagation
+        e.preventDefault()
+        e.stopPropagation()
       openInNewWindow(curHref)
     $(this).keypress ->
       openInNewWindow(curHref)
@@ -1189,24 +1192,7 @@ lightboxImages = (selector = ".lightboximage", lookDeeply = false) ->
   # Plays nice with layzr.js
   # https://callmecavs.github.io/layzr.js/
   ###
-  jqo = if lookDeeply then d$(selector) else $(selector)
-  jqo.each ->
-    if $(this).prop("tagName").toLowerCase() is "img" and $(this).parent().prop("tagName").toLowerCase() isnt "a"
-      tagHtml = $(this).removeClass("lightboximage").prop("outerHTML")
-      imgUrl = switch
-        when not isNull($(this).attr("data-layzr-retina"))
-          $(this).attr("data-layzr-retina")
-        when not isNull($(this).attr("data-layzr"))
-          $(this).attr("data-layzr")
-        else
-          $(this).attr("src")
-      $(this).replaceWith("<a href='#{imgUrl}' class='lightboximage'>#{tagHtml}</a>")
-  ###
-  #try
-  #  layzr = new Layzr()
-  #catch e
-  #  console.warn("The Layzr library couldn't be loaded.")
-  ###
+  # The options!
   options =
       onStart: ->
         overlayOn()
@@ -1218,22 +1204,47 @@ lightboxImages = (selector = ".lightboximage", lookDeeply = false) ->
       onLoadEnd: ->
         activityIndicatorOff()
       allowedTypes: 'png|jpg|jpeg|gif|bmp|webp'
-  ###
-  $(selector).has("img").each ->
-    if not $(this).attr("nolightbox")?
-      $(this).imageLightbox(options)
-  ###
-  # Until these narrower selectors work, let's use this
-  try
-    jqo.imageLightbox(options)
-  catch e
-    console.error("Unable to lightbox images!")
+      quitOnDocClick: true
+      quitOnImgClick: true
+  jqo = if lookDeeply then d$(selector) else $(selector)
+  jqo
+  .click (e) ->
+    try
+      $(this).imageLightbox(options).startImageLightbox()
+      # We want to stop the events propogating up for these
+      e.preventDefault()
+      e.stopPropagation()
+      console.warn("Event propagation was stopped when clicking on this.")
+    catch e
+      console.error("Unable to lightbox this image!")
+  # Set up the items
+  .each ->
+    console.log("Using selectors '#{selector}' / '#{this}' for lightboximages")
+    try
+      if $(this).prop("tagName").toLowerCase() is "img" and $(this).parent().prop("tagName").toLowerCase() isnt "a"
+        tagHtml = $(this).removeClass("lightboximage").prop("outerHTML")
+        imgUrl = switch
+          when not isNull($(this).attr("data-layzr-retina"))
+            $(this).attr("data-layzr-retina")
+          when not isNull($(this).attr("data-layzr"))
+            $(this).attr("data-layzr")
+          else
+            $(this).attr("src")
+        $(this).replaceWith("<a href='#{imgUrl}' class='lightboximage'>#{tagHtml}</a>")
+    catch e
+      console.log("Couldn't parse through the elements")
+
+
 
 
 activityIndicatorOn = ->
   $('<div id="imagelightbox-loading"><div></div></div>' ).appendTo('body')
 activityIndicatorOff = ->
   $('#imagelightbox-loading').remove()
+  $("#imagelightbox-overlay").click ->
+    # Clicking anywhere on the overlay clicks on the image
+    # It loads too late to let the quitOnDocClick work
+    $("#imagelightbox").click()
 overlayOn = ->
   $('<div id="imagelightbox-overlay"></div>').appendTo('body')
 overlayOff = ->
@@ -1552,7 +1563,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
             if isNull(col)
               # Get a CalPhotos link as
               # http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=batrachoseps+attenuatus
-              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{taxonQuery}' class='newwindow calphoto' data-taxon=\"#{taxonQuery}\"></paper-icon-button>"
+              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{taxonQuery}' class='newwindow calphoto click' data-taxon=\"#{taxonQuery}\"></paper-icon-button>"
             else
               col = "<paper-icon-button icon='image:image' data-lightbox='#{uri.urlString}#{col}' class='lightboximage'></paper-icon-button>"
           # What should be centered, and what should be left-aligned?
@@ -1752,7 +1763,10 @@ insertModalImage = (imageUrl = ssar.taxonImage, taxon = ssar.activeTaxon, callba
     </a>
     """
     d$("#meta-taxon-info").before(html)
-    lightboxImages(".#{classPrefix}-img-anchor", true)
+    try
+      lightboxImages(".#{classPrefix}-img-anchor", true)
+    catch e
+      console.error("Error lightboxing images")
     if typeof callback is "function"
       callback()
     false
