@@ -1670,6 +1670,13 @@ searchParams.apiPath = uri.urlString + searchParams.targetApi;
 
 ssar = new Object();
 
+ssar.affiliateQueryUrl = {
+  amphibiaWeb: "http://amphibiaweb.org/cgi/amphib_query",
+  reptileDatabase: "http://reptile-database.reptarium.cz/species",
+  calPhotos: "http://calphotos.berkeley.edu/cgi/img_query",
+  iNaturalist: "https://www.inaturalist.org/taxa/search"
+};
+
 performSearch = function(stateArgs) {
   var args, filters, s, sOrig;
   if (stateArgs == null) {
@@ -1830,6 +1837,14 @@ formatSearchResults = function(result, container) {
   if (container == null) {
     container = searchParams.targetContainer;
   }
+
+  /*
+   * Take a result object from the server's lookup, and format it to
+   * display search results.
+   * See
+   * http://ssarherps.org/cndb/commonnames_api.php?q=batrachoseps+attenuatus&loose=true
+   * for a sample search result return.
+   */
   data = result.result;
   searchParams.result = data;
   headers = new Array();
@@ -1920,7 +1935,7 @@ formatSearchResults = function(result, container) {
         if (k !== alt) {
           if (k === "image") {
             if (isNull(col)) {
-              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=" + taxonQuery + "' class='newwindow calphoto click' data-taxon=\"" + taxonQuery + "\"></paper-icon-button>";
+              col = "<paper-icon-button icon='launch' data-href='" + ssar.affiliateQueryUrl.calPhotos + "?rel-taxon=contains&where-taxon=" + taxonQuery + "' class='newwindow calphoto click' data-taxon=\"" + taxonQuery + "\"></paper-icon-button>";
             } else {
               col = "<paper-icon-button icon='image:image' data-lightbox='" + uri.urlString + col + "' class='lightboximage'></paper-icon-button>";
             }
@@ -1957,6 +1972,11 @@ parseTaxonYear = function(taxonYearString, strict) {
   if (strict == null) {
     strict = true;
   }
+
+  /*
+   * Take the (theoretically nicely JSON-encoded) taxon year/authority
+   * string and turn it into a canonical object for the modal dialog to use
+   */
   try {
     d = JSON.parse(taxonYearString);
   } catch (_error) {
@@ -2078,7 +2098,7 @@ checkTaxonNear = function(taxonQuery, callback, selector) {
 };
 
 insertModalImage = function(imageUrl, taxon, callback) {
-  var args, cpUrl, doneCORS, e, extension, failCORS, fullUrl, imgArray, imgPath, insertImage, taxonArray, taxonString, thumbUrl, warnArgs;
+  var args, doneCORS, e, extension, failCORS, fullUrl, imgArray, imgPath, insertImage, taxonArray, taxonString, thumbUrl, warnArgs;
   if (imageUrl == null) {
     imageUrl = ssar.taxonImage;
   }
@@ -2159,9 +2179,8 @@ insertModalImage = function(imageUrl, taxon, callback) {
    * http://calphotos.berkeley.edu/thumblink.html
    * for API reference.
    */
-  cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query";
   args = "getthumbinfo=1&num=all&cconly=1&taxon=" + taxonString + "&format=xml";
-  console.log("Looking at", "" + cpUrl + "?" + args);
+  console.log("Looking at", "" + ssar.affiliateQueryUrl.calPhotos + "?" + args);
   doneCORS = function(resultXml) {
     var data, large, link, result, thumb;
     result = xmlToJSON.parseString(resultXml);
@@ -2186,7 +2205,7 @@ insertModalImage = function(imageUrl, taxon, callback) {
     return false;
   };
   try {
-    doCORSget(cpUrl, args, doneCORS, failCORS);
+    doCORSget(ssar.affiliateQueryUrl.calPhotos, args, doneCORS, failCORS);
   } catch (_error) {
     e = _error;
     console.error(e.message);
@@ -2199,6 +2218,10 @@ modalTaxon = function(taxon) {
   if (taxon == null) {
     taxon = void 0;
   }
+
+  /*
+   * Pop up the modal taxon dialog for a given species
+   */
   if (taxon == null) {
     $(".cndb-result-entry").click(function() {
       return modalTaxon($(this).attr("data-taxon"));
@@ -2207,11 +2230,11 @@ modalTaxon = function(taxon) {
   }
   animateLoad();
   if (!$("#modal-taxon").exists()) {
-    html = "<paper-action-dialog backdrop layered closeSelector=\"[affirmative]\" id='modal-taxon'>\n  <div id='modal-taxon-content'></div>\n  <paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button>\n  <paper-button dismissive id='modal-calphotos-linkout'>CalPhotos</paper-button>\n  <paper-button affirmative autofocus>Close</paper-button>\n</paper-action-dialog>";
+    html = "<paper-action-dialog backdrop layered closeSelector=\"[affirmative]\" id='modal-taxon'>\n  <div id='modal-taxon-content'></div>\n  <paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button>\n  <paper-button dismissive id='modal-calphotos-linkout'>CalPhotos</paper-button>\n  <paper-button dismissive id='modal-alt-linkout'></paper-button>\n  <paper-button affirmative autofocus>Close</paper-button>\n</paper-action-dialog>";
     $("#result_container").after(html);
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
-    var commonType, data, deprecatedHtml, e, humanTaxon, i, minorTypeHtml, notes, sn, taxonArray, year, yearHtml;
+    var buttonText, commonType, data, deprecatedHtml, e, humanTaxon, i, minorTypeHtml, notes, outboundLink, sn, taxonArray, year, yearHtml, _ref;
     data = result.result[0];
     if (data == null) {
       toastStatusMessage("There was an error fetching the entry details. Please try again later.");
@@ -2271,11 +2294,27 @@ modalTaxon = function(taxon) {
     html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type'>" + data.major_type + "</span>\n    " + commonType + "\n    <core-icon icon='arrow-forward'></core-icon>\n    <span id='taxon-subtype'>" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_credit + "</p>";
     $("#modal-taxon-content").html(html);
     $("#modal-inat-linkout").unbind().click(function() {
-      return openTab("http://www.inaturalist.org/taxa/search?q=" + taxon);
+      return openTab("" + ssar.affiliateQueryUrl.iNaturalist + "?q=" + taxon);
     });
     $("#modal-calphotos-linkout").unbind().click(function() {
-      return openTab("http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=" + taxon);
+      return openTab("" + ssar.affiliateQueryUrl.calPhotos + "?rel-taxon=contains&where-taxon=" + taxon);
     });
+    outboundLink = null;
+    buttonText = null;
+    if ((_ref = data.linnean_order.toLowerCase()) === "caudata" || _ref === "anura" || _ref === "gymnophiona") {
+      buttonText = "AmphibiaWeb";
+      outboundLink = "" + ssar.affiliateQueryUrl.amphibiaWeb + "?where-genus=" + data.genus + "&where-species=" + data.species;
+    } else if (!isNull(data.linnean_order)) {
+      buttonText = "Reptile Database";
+      outboundLink = "" + ssar.affiliateQueryUrl.reptileDatabase + "?genus=" + data.genus + "&species=" + data.species;
+    }
+    if (outboundLink != null) {
+      $("#modal-alt-linkout").removeClass("hidden").text(buttonText).unbind().click(function() {
+        return openTab(outboundLink);
+      });
+    } else {
+      $("#modal-alt-linkout").addClass("hidden").unbind();
+    }
     formatScientificNames();
     humanTaxon = taxon.charAt(0).toUpperCase() + taxon.slice(1);
     humanTaxon = humanTaxon.replace(/\+/g, " ");
@@ -2335,7 +2374,7 @@ clearSearch = function(partialReset) {
    * Clear out the search and reset it to a "fresh" state.
    */
   $("#result-count").text("");
-  calloutHtml = "<div class=\"bs-callout bs-callout-info center-block col-xs-12 col-sm-8 col-md-5\"> Search for a common or scientific name above to begin. </div>";
+  calloutHtml = "<div class=\"bs-callout bs-callout-info center-block col-xs-12 col-sm-8 col-md-5\">\n  Search for a common or scientific name above to begin, eg, \"California slender salamander\" or \"<span class=\"sciname\">Batrachoseps attenuatus</span>\"\n</div>";
   $("#result_container").html(calloutHtml);
   if (partialReset === true) {
     return false;
@@ -2345,11 +2384,14 @@ clearSearch = function(partialReset) {
   $("#collapse-advanced").collapse('hide');
   $("#search").attr("value", "");
   $("#linnean-order").polymerSelected("any");
+  formatScientificNames();
   return false;
 };
 
 $(function() {
-  var e, f64, filterObj, fuzzyState, loadArgs, looseState, openFilters, queryUrl, temp;
+  var devHello, e, f64, filterObj, fuzzyState, loadArgs, looseState, openFilters, queryUrl, temp;
+  devHello = "****************************************************************************\nHello developer!\nIf you're looking for hints on our API information, this site is open-source\nand released under the GPL. Just click on the GitHub link on the bottom of\nthe page, or check out https://github.com/SSARHERPS\n****************************************************************************";
+  console.log(devHello);
   console.log("Doing onloads ...");
   animateLoad();
   window.addEventListener("popstate", function(e) {

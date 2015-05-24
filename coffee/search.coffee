@@ -4,6 +4,17 @@ searchParams.targetContainer = "#result_container"
 searchParams.apiPath = uri.urlString + searchParams.targetApi
 
 ssar = new Object()
+# Base query URLs for out-of-site linkouts
+ssar.affiliateQueryUrl =
+  # As of 2015.05.24, no SSL connection
+  amphibiaWeb: "http://amphibiaweb.org/cgi/amphib_query"
+  # As of 2015.05.24, no SSL connection
+  reptileDatabase: "http://reptile-database.reptarium.cz/species"
+  # As of 2015.05.24, no SSL connection
+  calPhotos: "http://calphotos.berkeley.edu/cgi/img_query"
+  # As of 2015.05.24, the SSL cert is only for www.inaturalist.org
+  iNaturalist: "https://www.inaturalist.org/taxa/search"
+
 
 performSearch = (stateArgs = undefined) ->
   ###
@@ -137,6 +148,13 @@ getFilters = (selector = ".cndb-filter",booleanType = "AND") ->
 
 
 formatSearchResults = (result,container = searchParams.targetContainer) ->
+  ###
+  # Take a result object from the server's lookup, and format it to
+  # display search results.
+  # See
+  # http://ssarherps.org/cndb/commonnames_api.php?q=batrachoseps+attenuatus&loose=true
+  # for a sample search result return.
+  ###
   data = result.result
   searchParams.result = data
   headers = new Array()
@@ -218,7 +236,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
             if isNull(col)
               # Get a CalPhotos link as
               # http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=batrachoseps+attenuatus
-              col = "<paper-icon-button icon='launch' data-href='http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{taxonQuery}' class='newwindow calphoto click' data-taxon=\"#{taxonQuery}\"></paper-icon-button>"
+              col = "<paper-icon-button icon='launch' data-href='#{ssar.affiliateQueryUrl.calPhotos}?rel-taxon=contains&where-taxon=#{taxonQuery}' class='newwindow calphoto click' data-taxon=\"#{taxonQuery}\"></paper-icon-button>"
             else
               col = "<paper-icon-button icon='image:image' data-lightbox='#{uri.urlString}#{col}' class='lightboximage'></paper-icon-button>"
           # What should be centered, and what should be left-aligned?
@@ -242,10 +260,14 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       modalTaxon()
       $("#result-count").text(" - #{result.count} entries")
       stopLoad()
-      # Lazy-replace linkout calphotos with images. Each one needs a hit!
-      # deferCalPhotos()
+
+
 
 parseTaxonYear = (taxonYearString,strict = true) ->
+  ###
+  # Take the (theoretically nicely JSON-encoded) taxon year/authority
+  # string and turn it into a canonical object for the modal dialog to use
+  ###
   try
     d = JSON.parse(taxonYearString)
   catch e
@@ -400,7 +422,7 @@ insertModalImage = (imageUrl = ssar.taxonImage, taxon = ssar.activeTaxon, callba
       callback()
     false
   # Now that that's out of the way, we actually check the information
-  # and process it 
+  # and process it
   taxonArray = [taxon.genus,taxon.species]
   if taxon.subspecies?
     taxonArray.push(taxon.subspecies)
@@ -428,9 +450,8 @@ insertModalImage = (imageUrl = ssar.taxonImage, taxon = ssar.activeTaxon, callba
   # http://calphotos.berkeley.edu/thumblink.html
   # for API reference.
   ###
-  cpUrl = "http://calphotos.berkeley.edu/cgi-bin/img_query"
   args = "getthumbinfo=1&num=all&cconly=1&taxon=#{taxonString}&format=xml"
-  console.log("Looking at","#{cpUrl}?#{args}")
+  console.log("Looking at","#{ssar.affiliateQueryUrl.calPhotos}?#{args}")
   ## CalPhotos doesn't have good headers set up. Try a CORS request.
   # CORS success callback
   doneCORS = (resultXml) ->
@@ -455,14 +476,19 @@ insertModalImage = (imageUrl = ssar.taxonImage, taxon = ssar.activeTaxon, callba
     false
   # The actual call attempts.
   try
-    doCORSget(cpUrl, args, doneCORS, failCORS)
+    doCORSget(ssar.affiliateQueryUrl.calPhotos, args, doneCORS, failCORS)
   catch e
     console.error(e.message)
   false
 
 
 modalTaxon = (taxon = undefined) ->
+  ###
+  # Pop up the modal taxon dialog for a given species
+  ###
   if not taxon?
+    # If we have no taxon defined at all, bind all the result entries
+    # from a search into popping one of these up
     $(".cndb-result-entry").click ->
       modalTaxon($(this).attr("data-taxon"))
     return false
@@ -475,6 +501,7 @@ modalTaxon = (taxon = undefined) ->
       <div id='modal-taxon-content'></div>
       <paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button>
       <paper-button dismissive id='modal-calphotos-linkout'>CalPhotos</paper-button>
+      <paper-button dismissive id='modal-alt-linkout'></paper-button>
       <paper-button affirmative autofocus>Close</paper-button>
     </paper-action-dialog>
     """
@@ -545,14 +572,47 @@ modalTaxon = (taxon = undefined) ->
     <p class="text-right small text-muted">#{data.taxon_credit}</p>
     """
     $("#modal-taxon-content").html(html)
+    ## Bind the dismissive buttons
+    # iNaturalist
     $("#modal-inat-linkout")
     .unbind()
     .click ->
-      openTab("http://www.inaturalist.org/taxa/search?q=#{taxon}")
+      openTab("#{ssar.affiliateQueryUrl.iNaturalist}?q=#{taxon}")
+    # CalPhotos
     $("#modal-calphotos-linkout")
     .unbind()
     .click ->
-      openTab("http://calphotos.berkeley.edu/cgi/img_query?rel-taxon=contains&where-taxon=#{taxon}")
+      openTab("#{ssar.affiliateQueryUrl.calPhotos}?rel-taxon=contains&where-taxon=#{taxon}")
+    # AmphibiaWeb or Reptile Database
+    # See
+    # https://github.com/tigerhawkvok/SSAR-species-database/issues/35
+    outboundLink = null
+    buttonText = null
+    if data.linnean_order.toLowerCase() in ["caudata","anura","gymnophiona"]
+      # Hey, we can always HOPE to find a North American caecilian ...
+      # And, if you're reading this, here's some fun for you:
+      # https://www.youtube.com/watch?v=xxsUQtfQ5Ew
+      # Anyway, here we want a link to AmphibiaWeb
+      buttonText = "AmphibiaWeb"
+      outboundLink = "#{ssar.affiliateQueryUrl.amphibiaWeb}?where-genus=#{data.genus}&where-species=#{data.species}"
+    else unless isNull(data.linnean_order)
+      # It's not an amphibian -- so we want a link to Reptile Database
+      buttonText = "Reptile Database"
+      outboundLink = "#{ssar.affiliateQueryUrl.reptileDatabase}?genus=#{data.genus}&species=#{data.species}"
+    if outboundLink?
+      # First, un-hide it in case it was hidden
+      $("#modal-alt-linkout")
+      .removeClass("hidden")
+      .text(buttonText)
+      .unbind()
+      .click ->
+        openTab(outboundLink)
+    else
+      # Well, wasn't expecting this! But we'll handle it anyway.
+      # Hide the link
+      $("#modal-alt-linkout")
+      .addClass("hidden")
+      .unbind()
     formatScientificNames()
     # Set the heading
     humanTaxon = taxon.charAt(0).toUpperCase()+taxon[1...]
@@ -597,7 +657,11 @@ clearSearch = (partialReset = false) ->
   # Clear out the search and reset it to a "fresh" state.
   ###
   $("#result-count").text("")
-  calloutHtml = "<div class=\"bs-callout bs-callout-info center-block col-xs-12 col-sm-8 col-md-5\"> Search for a common or scientific name above to begin. </div>"
+  calloutHtml = """
+  <div class="bs-callout bs-callout-info center-block col-xs-12 col-sm-8 col-md-5">
+    Search for a common or scientific name above to begin, eg, "California slender salamander" or "<span class="sciname">Batrachoseps attenuatus</span>"
+  </div>
+  """
   $("#result_container").html(calloutHtml)
   if partialReset is true then return false
   # Do a history breakpoint
@@ -607,10 +671,20 @@ clearSearch = (partialReset = false) ->
   $("#collapse-advanced").collapse('hide')
   $("#search").attr("value","")
   $("#linnean-order").polymerSelected("any")
+  formatScientificNames()
   false
 
 
 $ ->
+  devHello = """
+  ****************************************************************************
+  Hello developer!
+  If you're looking for hints on our API information, this site is open-source
+  and released under the GPL. Just click on the GitHub link on the bottom of
+  the page, or check out https://github.com/SSARHERPS
+  ****************************************************************************
+  """
+  console.log(devHello)
   # Do bindings
   console.log("Doing onloads ...")
   animateLoad()

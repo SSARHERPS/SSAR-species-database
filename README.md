@@ -4,7 +4,27 @@ SSAR Species Name Database
 You can find the most current version at http://ssarherps.org/cndb/
 
 The adminstrative page can be accessed by going to
-http://ssarherps.org/cndb/admin-page.html
+http://ssarherps.org/cndb/admin
+
+
+## Stateful URI
+
+The URIs are stateful! You can always use the same link to recreate the exact parameters.
+
+Specifically, the URI is a Base-64 encoded query string of what is loaded asynchronously.
+
+Therefore,
+
+http://ssarherps.org/cndb/#YmF0cmFjaG9zZXBzJmxvb3NlPXRydWU
+
+has the query string reconstructed from the bit after the hash:
+
+```javascript
+Base64.decode("YmF0cmFjaG9zZXBzJmxvb3NlPXRydWU")
+// returns "batrachoseps&loose=true"
+```
+
+You can generate links that way, corresponding to the options given in the following API section. 
 
 ## API
 

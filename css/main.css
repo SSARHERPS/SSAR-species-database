@@ -414,6 +414,14 @@ html >>> #modal-taxon-editor::-webkit-scrollbar-thumb, .showScroll::-webkit-scro
     box-shadow: 0 0 1px rgba(255,255,255,.5);
 }
 
+html /deep/ .hidden {
+  display: none !important;
+}
+
+html >>> .hidden {
+  display: none !important;
+}
+
 /************
  * Lightbox
  ***************/
