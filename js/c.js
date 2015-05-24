@@ -583,7 +583,7 @@ saveEditorEntry = function(performMode) {
             if (!((linnaeusYear < altYear && altYear < nextYear))) {
               error = "The second year must be a valid year between " + linnaeusYear + " and " + nextYear;
             }
-            yearString = yearString.replace(/\"/g, '"');
+            yearString = yearString.replace(/'/g, '"');
           }
         }
       }

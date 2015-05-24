@@ -588,7 +588,7 @@ saveEditorEntry = (performMode = "save") ->
               error = "The second year must be a valid year between #{linnaeusYear} and #{nextYear}"
             # Now, for input consistency, replace single-quotes with
             # double-quotes
-            yearString = yearString.replace(/\"/g,'"')
+            yearString = yearString.replace(/'/g,'"')
       # If there were any error strings assigned, display an error.      
       if error?
         escapeCompletion = true
