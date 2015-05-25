@@ -564,7 +564,8 @@ saveEditorEntry = (performMode = "save") ->
       # Authority date regex
       # From
       # https://github.com/tigerhawkvok/SSAR-species-database/issues/37
-      authorityRegex = /^\d{4}$|^\d{4} (\"|')\d{4}\1$/
+      #authorityRegex = /^\d{4}$|^\d{4} (\"|')\d{4}\1$/
+      authorityRegex = /^[1-2][07-9]\d{2}$|^[1-2][07-9]\d{2} (\"|')[1-2][07-9]\d{2}\1$/
       unless isNumber(yearString) and linnaeusYear < yearString < nextYear
         unless authorityRegex.test(yearString)
           # It's definitely bad, we just need to decide how bad

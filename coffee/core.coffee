@@ -49,9 +49,9 @@ toInt = (str) ->
     return rv;
 }`
 
-String::toBool = -> this.toString() is 'true'
+String::toBool = -> @toString() is 'true'
 
-Boolean::toBool = -> this.toString() is 'true' # In case lazily tested
+Boolean::toBool = -> @toString() is 'true' # In case lazily tested
 
 Number::toBool = -> this is 1
 
