@@ -149,6 +149,17 @@ footer {
     box-shadow: 5px 5px 8px 5px rgba(0,0,0,.5);
 }
 
+
+.force-lower {
+    text-transform: lowercase !important;
+}
+html /deep/ .force-lower {
+    text-transform: lowercase !important;
+}
+html >>> .force-lower {
+    text-transform: lowercase !important;
+}
+
 .capitalize,
 html /deep/ .capitalize,
 html /deep/ .genus,

@@ -1964,6 +1964,9 @@ formatSearchResults = function(result, container) {
           } else {
             kClass = k;
           }
+          if (k === "genus_authority" || k === "species_authority") {
+            kClass += " authority";
+          }
           htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='" + kClass + " " + colClass + "'>" + col + "</td>";
         }
       }
@@ -1979,6 +1982,7 @@ formatSearchResults = function(result, container) {
       mapNewWindows();
       lightboxImages();
       modalTaxon();
+      doFontExceptions();
       $("#result-count").text(" - " + result.count + " entries");
       return stopLoad();
     }
@@ -2278,7 +2282,7 @@ modalTaxon = function(taxon) {
     year = parseTaxonYear(data.authority_year);
     yearHtml = "";
     if (year !== false) {
-      yearHtml = "<div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div><p><span class='genus'>" + data.genus + "</span>, <span class='genus_authority'>" + data.genus_authority + "</span> " + year.genus + "; <span class='species'>" + data.species + "</span>, <span class='species_authority'>" + data.species_authority + "</span> " + year.species + "</p>";
+      yearHtml = "<div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div><p><span class='genus'>" + data.genus + "</span>, <span class='genus_authority authority'>" + data.genus_authority + "</span> " + year.genus + "; <span class='species'>" + data.species + "</span>, <span class='species_authority authority'>" + data.species_authority + "</span> " + year.species + "</p>";
     }
     deprecatedHtml = "";
     if (!isNull(data.deprecated_scientific)) {
@@ -2349,6 +2353,7 @@ modalTaxon = function(taxon) {
       $("#modal-alt-linkout").addClass("hidden").unbind();
     }
     formatScientificNames();
+    doFontExceptions();
     humanTaxon = taxon.charAt(0).toUpperCase() + taxon.slice(1);
     humanTaxon = humanTaxon.replace(/\+/g, " ");
     $("#modal-taxon").attr("heading", humanTaxon);
@@ -2383,10 +2388,24 @@ doFontExceptions = function() {
    * Look for certain keywords to force into capitalized, or force
    * uncapitalized, overriding display CSS rules
    */
-  var alwaysLowerCase;
+  var alwaysLowerCase, forceSpecialToLower;
   alwaysLowerCase = ["de", "and"];
-  $.each(alwaysLowerCase, function(i, word) {
-    return false;
+  forceSpecialToLower = function(authorityText) {
+    $.each(alwaysLowerCase, function(i, word) {
+      var search;
+      search = " " + word + " ";
+      if (authorityText != null) {
+        return authorityText = authorityText.replace(search, " <span class='force-lower'>" + word + "</span> ");
+      }
+    });
+    return authorityText;
+  };
+  d$(".authority").each(function() {
+    var authorityText;
+    authorityText = $(this).text();
+    if (!isNull(authorityText)) {
+      return $(this).html(forceSpecialToLower(authorityText));
+    }
   });
   return false;
 };

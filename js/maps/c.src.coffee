@@ -1683,6 +1683,8 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
           else
             # Left-aligned
             kClass = k
+          if k is "genus_authority" or k is "species_authority"
+            kClass += " authority"
           htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{kClass} #{colClass}'>#{col}</td>"
       l++
       if l is Object.size(row)
@@ -1696,6 +1698,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       mapNewWindows()
       lightboxImages()
       modalTaxon()
+      doFontExceptions()
       $("#result-count").text(" - #{result.count} entries")
       stopLoad()
 
@@ -1979,7 +1982,7 @@ modalTaxon = (taxon = undefined) ->
     year = parseTaxonYear(data.authority_year)
     yearHtml = ""
     if year isnt false
-      yearHtml = "<div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div><p><span class='genus'>#{data.genus}</span>, <span class='genus_authority'>#{data.genus_authority}</span> #{year.genus}; <span class='species'>#{data.species}</span>, <span class='species_authority'>#{data.species_authority}</span> #{year.species}</p>"
+      yearHtml = "<div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div><p><span class='genus'>#{data.genus}</span>, <span class='genus_authority authority'>#{data.genus_authority}</span> #{year.genus}; <span class='species'>#{data.species}</span>, <span class='species_authority authority'>#{data.species_authority}</span> #{year.species}</p>"
     deprecatedHtml = ""
     if not isNull(data.deprecated_scientific)
       deprecatedHtml = "<p>Deprecated names:"
@@ -2076,6 +2079,7 @@ modalTaxon = (taxon = undefined) ->
       .addClass("hidden")
       .unbind()
     formatScientificNames()
+    doFontExceptions()
     # Set the heading
     humanTaxon = taxon.charAt(0).toUpperCase()+taxon[1...]
     humanTaxon = humanTaxon.replace(/\+/g," ")
@@ -2113,9 +2117,22 @@ doFontExceptions = ->
     "de"
     "and"
     ]
-  $.each alwaysLowerCase, (i,word) ->
-    # Do this to each
-    false
+
+  forceSpecialToLower = (authorityText) ->
+    # Returns HTML
+    $.each alwaysLowerCase, (i,word) ->
+      # Do this to each
+      #console.log("Checking #{authorityText} for #{word}")
+      search = " #{word} "
+      if authorityText?
+        authorityText = authorityText.replace(search, " <span class='force-lower'>#{word}</span> ")
+    return authorityText
+  
+  d$(".authority").each ->    
+    authorityText = $(this).text()
+    unless isNull(authorityText)
+      #console.log("Forcing format of #{authorityText}")
+      $(this).html(forceSpecialToLower(authorityText))
   false
 
 
