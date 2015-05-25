@@ -213,6 +213,8 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <span class="help-block" id="notes-help">You can write your notes in Markdown. (<a href="https://daringfireball.net/projects/markdown/syntax" "onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'">Official Full Syntax Guide</a>)</span>
   <paper-input label="Image" id="edit-image" name="edit-image" floatingLabel aria-describedby="imagehelp"></paper-input>
     <span class="help-block" id="imagehelp">The image path here should be relative to the <span class="code">public_html/cndb/</span> directory.</span>
+  <paper-input label="Image Credit" id="edit-image-credit" name="edit-image-credit" floatingLabel></paper-input>
+  <paper-input label="Image License" id="edit-image-license" name="edit-image-license" floatingLabel></paper-input>
   <paper-input label="Taxon Credit" id="edit-taxon-credit" name="edit-taxon-credit" floatingLabel aria-describedby="taxon-credit-help"></paper-input>
     <span class="help-block" id="taxon-credit-help">This will be displayed as "Taxon information by [your entry]."</span>
   #{extraHtml}
@@ -531,6 +533,8 @@ saveEditorEntry = (performMode = "save") ->
     "species-authority"
     "notes"
     "image"
+    "image-credit"
+    "image-license"
     "taxon-author"
     "taxon-credit"
     ]
@@ -589,7 +593,7 @@ saveEditorEntry = (performMode = "save") ->
             # Now, for input consistency, replace single-quotes with
             # double-quotes
             yearString = yearString.replace(/'/g,'"')
-      # If there were any error strings assigned, display an error.      
+      # If there were any error strings assigned, display an error.
       if error?
         escapeCompletion = true
         console.warn("#{authYearDeepInputSelector} failed its validity checks for #{yearString}!")
@@ -648,7 +652,14 @@ saveEditorEntry = (performMode = "save") ->
       thisSelector = "html >>> #edit-#{id}"
     col = id.replace(/-/g,"_")
     val = $(thisSelector).val().trim()
-    if col isnt "notes" and col isnt "taxon_credit" and col isnt "image"
+    keepCase = [
+      "notes"
+      "taxon_credit"
+      "image"
+      "image_credit"
+      "image_license"
+      ]
+    unless col in keepCase
       # We want these to be as literally typed, rather than
       # smart-formatted.
       # Deprecated scientifics are already taken care of.
