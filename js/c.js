@@ -2264,7 +2264,7 @@ modalTaxon = function(taxon) {
   }
   animateLoad();
   if (!$("#modal-taxon").exists()) {
-    html = "<paper-action-dialog backdrop layered closeSelector=\"[affirmative]\" id='modal-taxon'>\n  <div id='modal-taxon-content'></div>\n  <paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button>\n  <paper-button dismissive id='modal-calphotos-linkout'>CalPhotos</paper-button>\n  <paper-button dismissive id='modal-alt-linkout'></paper-button>\n  <paper-button affirmative autofocus>Close</paper-button>\n</paper-action-dialog>";
+    html = "<paper-action-dialog backdrop layered closeSelector=\"[affirmative]\" id='modal-taxon'>\n  <div id='modal-taxon-content'></div>\n  <paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button>\n  <paper-button dismissive id='modal-calphotos-linkout' class=\"hidden-xs\">CalPhotos</paper-button>\n  <paper-button dismissive id='modal-alt-linkout' class=\"hidden-xs\"></paper-button>\n  <paper-button affirmative autofocus>Close</paper-button>\n</paper-action-dialog>";
     $("#result_container").after(html);
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {

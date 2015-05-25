@@ -259,19 +259,30 @@ html >>> .text-center {
 .modal-img-container {
     float: right;
     margin-top: -1em;
-    max-width: 25%;
+    width: 256px;
+    overflow:hidden;
 }
 html /deep/ .modal-img-container {
     float: right;
     margin-top: -1em;
-    max-width: 25%;
+    width: 256px;
+    overflow:hidden;
 }
 html >>> .modal-img-container {
     float: right;
     margin-top: -1em;
-    max-width: 25%;
+    width: 256px;
+    overflow:hidden;
 }
-
+@media (max-width: 767px) {
+  html >>> .hidden-xs {
+    display: none !important;
+  }
+    html /deep/ .hidden-xs {
+    display: none !important;
+  }
+    
+}
 .genus, .species, .subspecies{
     font-style:italic;
 }

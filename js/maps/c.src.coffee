@@ -1956,12 +1956,14 @@ modalTaxon = (taxon = undefined) ->
   # https://www.polymer-project.org/docs/elements/paper-elements.html#paper-action-dialog
   animateLoad()
   if not $("#modal-taxon").exists()
+    # On very small devices, for both real-estate and
+    # optimization-related reasons, we'll hide calphotos and the alternate
     html = """
     <paper-action-dialog backdrop layered closeSelector="[affirmative]" id='modal-taxon'>
       <div id='modal-taxon-content'></div>
       <paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button>
-      <paper-button dismissive id='modal-calphotos-linkout'>CalPhotos</paper-button>
-      <paper-button dismissive id='modal-alt-linkout'></paper-button>
+      <paper-button dismissive id='modal-calphotos-linkout' class="hidden-xs">CalPhotos</paper-button>
+      <paper-button dismissive id='modal-alt-linkout' class="hidden-xs"></paper-button>
       <paper-button affirmative autofocus>Close</paper-button>
     </paper-action-dialog>
     """
