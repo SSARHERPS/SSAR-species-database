@@ -236,6 +236,42 @@ html >>> .small {
   font-size: 85%;
 }
 
+
+html /deep/ .center-block {
+  display: block;
+  margin-right: auto;
+  margin-left: auto;
+}
+html /deep/ .text-center {
+  text-align: center;
+}
+
+
+html >>> .center-block {
+  display: block;
+  margin-right: auto;
+  margin-left: auto;
+}
+html >>> .text-center {
+  text-align: center;
+}
+
+.modal-img-container {
+    float: right;
+    margin-top: -1em;
+    max-width: 25%;
+}
+html /deep/ .modal-img-container {
+    float: right;
+    margin-top: -1em;
+    max-width: 25%;
+}
+html >>> .modal-img-container {
+    float: right;
+    margin-top: -1em;
+    max-width: 25%;
+}
+
 .genus, .species, .subspecies{
     font-style:italic;
 }

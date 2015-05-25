@@ -1833,7 +1833,7 @@ getFilters = function(selector, booleanType) {
 };
 
 formatSearchResults = function(result, container) {
-  var bootstrapColCount, colClass, data, headers, html, htmlClose, htmlHead, targetCount;
+  var bootstrapColCount, colClass, data, dontShowColumns, headers, html, htmlClose, htmlHead, targetCount;
   if (container == null) {
     container = searchParams.targetContainer;
   }
@@ -1854,6 +1854,7 @@ formatSearchResults = function(result, container) {
   targetCount = toInt(result.count) - 1;
   colClass = null;
   bootstrapColCount = 0;
+  dontShowColumns = ["id", "minor_type", "notes", "major_type", "taxon_author", "taxon_credit", "image_license", "image_credit"];
   return $.each(data, function(i, row) {
     var htmlRow, j, l, taxonQuery;
     if (toInt(i) === 0) {
@@ -1862,7 +1863,7 @@ formatSearchResults = function(result, container) {
       $.each(row, function(k, v) {
         var alt, bootstrapColSize, niceKey;
         niceKey = k.replace(/_/g, " ");
-        if (!(k === "id" || k === "minor_type" || k === "notes" || k === "major_type" || k === "taxon_author" || k === "taxon_credit")) {
+        if (__indexOf.call(dontShowColumns, k) < 0) {
           if ($("#show-deprecated").polymerSelected() !== true) {
             alt = "deprecated_scientific";
           } else {
@@ -1900,7 +1901,7 @@ formatSearchResults = function(result, container) {
     l = 0;
     $.each(row, function(k, col) {
       var alt, d, e, genus, kClass, species, split, year;
-      if (k !== "id" && k !== "minor_type" && k !== "notes" && k !== "major_type" && k !== "taxon_author" && k !== "taxon_credit") {
+      if (__indexOf.call(dontShowColumns, k) < 0) {
         if (k === "authority_year") {
           try {
             try {
@@ -2148,7 +2149,7 @@ insertModalImage = function(imageObject, taxon, callback) {
     largeImgLink = typeof image.imageLinkUri === "function" ? image.imageLinkUri(image.imageUri) : void 0;
     imgLicense = image.imageLicense;
     imgCredit = image.imageCredit;
-    html = "<a href=\"" + largeImg + "\" class=\"" + classPrefix + "-img-anchor\" style=\"float:right; margin-top:-1em;\">\n  <img src=\"" + thumbnail + "\"\n    data-href=\"" + largeImgLink + "\"\n    class=\"" + classPrefix + "-img-thumb\"\n    data-taxon=\"" + taxonQueryString + "\" />\n</a>";
+    html = "<div class=\"modal-img-container\">\n  <a href=\"" + largeImg + "\" class=\"" + classPrefix + "-img-anchor center-block text-center\">\n    <img src=\"" + thumbnail + "\"\n      data-href=\"" + largeImgLink + "\"\n      class=\"" + classPrefix + "-img-thumb\"\n      data-taxon=\"" + taxonQueryString + "\" />\n  </a>\n  <p class=\"small text-muted text-center\">\n    Image by " + imgCredit + " under " + imgLicense + "\n  </p>\n</div>";
     d$("#meta-taxon-info").before(html);
     try {
       lightboxImages("." + classPrefix + "-img-anchor", true);

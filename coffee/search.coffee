@@ -165,13 +165,23 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
   targetCount = toInt(result.count)-1
   colClass = null
   bootstrapColCount = 0
+  dontShowColumns = [
+    "id"
+    "minor_type"
+    "notes"
+    "major_type"
+    "taxon_author"
+    "taxon_credit"
+    "image_license"
+    "image_credit"
+    ]
   $.each data, (i,row) ->
     if toInt(i) is 0
       j = 0
       htmlHead += "\n<!-- Table Headers - #{Object.size(row)} entries -->"
       $.each row, (k,v) ->
         niceKey = k.replace(/_/g," ")
-        unless k is "id" or k is "minor_type" or k is "notes" or k is "major_type" or k is "taxon_author" or k is "taxon_credit"
+        unless k in dontShowColumns
           # or niceKey is "image" ...
           if $("#show-deprecated").polymerSelected() isnt true
             alt = "deprecated_scientific"
@@ -202,7 +212,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
     htmlRow = "\n\t<tr id='cndb-row#{i}' class='cndb-result-entry' data-taxon=\"#{taxonQuery}\">"
     l = 0
     $.each row, (k,col) ->
-      if k isnt "id" and k isnt "minor_type" and k isnt "notes" and k isnt "major_type" and k isnt "taxon_author" and k isnt "taxon_credit"
+      unless k in dontShowColumns
         if k is "authority_year"
           try
             try
@@ -412,14 +422,19 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     largeImg = image.imageUri
     largeImgLink = image.imageLinkUri? image.imageUri
     imgLicense = image.imageLicense
-    imgCredit = image.imageCredit
+    imgCredit = image.imageCredit    
     html = """
-    <a href="#{largeImg}" class="#{classPrefix}-img-anchor" style="float:right; margin-top:-1em;">
-      <img src="#{thumbnail}"
-        data-href="#{largeImgLink}"
-        class="#{classPrefix}-img-thumb"
-        data-taxon="#{taxonQueryString}" />
-    </a>
+    <div class="modal-img-container">
+      <a href="#{largeImg}" class="#{classPrefix}-img-anchor center-block text-center">
+        <img src="#{thumbnail}"
+          data-href="#{largeImgLink}"
+          class="#{classPrefix}-img-thumb"
+          data-taxon="#{taxonQueryString}" />
+      </a>
+      <p class="small text-muted text-center">
+        Image by #{imgCredit} under #{imgLicense}
+      </p>
+    </div>
     """
     d$("#meta-taxon-info").before(html)
     try
