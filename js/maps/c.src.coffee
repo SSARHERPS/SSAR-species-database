@@ -1881,7 +1881,7 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     taxonArray.push(taxon.subspecies)
   taxonString = taxonArray.join("+")
 
-  if imageObject?
+  if imageObject.imageUri?
     # The image URI is valid, so insert it
     if typeof imageObject is "string"
       # Make it conform to expectations

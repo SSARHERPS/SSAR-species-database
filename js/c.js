@@ -2186,7 +2186,7 @@ insertModalImage = function(imageObject, taxon, callback) {
     taxonArray.push(taxon.subspecies);
   }
   taxonString = taxonArray.join("+");
-  if (imageObject != null) {
+  if (imageObject.imageUri != null) {
     if (typeof imageObject === "string") {
       imageUrl = imageObject;
       imageObject = new Object();
