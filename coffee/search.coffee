@@ -376,7 +376,7 @@ checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "#nea
 
 
 
-insertModalImage = (imageUrl = ssar.taxonImage, taxon = ssar.activeTaxon, callback = undefined) ->
+insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, callback = undefined) ->
   ###
   # Insert into the taxon modal a lightboxable photo. If none exists,
   # load from CalPhotos
@@ -398,11 +398,21 @@ insertModalImage = (imageUrl = ssar.taxonImage, taxon = ssar.activeTaxon, callba
     console.warn(warnArgs)
     return false
   # Image insertion helper
-  insertImage = (thumbnail, largeImg, largeImgLink, taxonQueryString, classPrefix = "calphoto") ->
+  insertImage = (image, taxonQueryString, classPrefix = "calphoto") ->
     ###
     # Insert a lightboxed image into the modal taxon dialog. This must
-    # be shadow-piercing, since the modal dialog is a paper-action-dialog.
+    # be shadow-piercing, since the modal dialog is a
+    # paper-action-dialog.
+    #
+    # @param image an object with parameters [thumbUri, imageUri,
+    #   imageLicense, imageCredit], and optionally imageLinkUri
     ###
+    # Build individual args from object
+    thumbnail = image.thumbUri
+    largeImg = image.imageUri
+    largeImgLink = image.imageLinkUri? image.imageUri
+    imgLicense = image.imageLicense
+    imgCredit = image.imageCredit
     html = """
     <a href="#{largeImg}" class="#{classPrefix}-img-anchor" style="float:right; margin-top:-1em;">
       <img src="#{thumbnail}"
@@ -428,17 +438,22 @@ insertModalImage = (imageUrl = ssar.taxonImage, taxon = ssar.activeTaxon, callba
     taxonArray.push(taxon.subspecies)
   taxonString = taxonArray.join("+")
 
-  if imageUrl?
+  if imageObject?
     # The image URI is valid, so insert it
+    if typeof imageObject is "string"
+      # Make it conform to expectations
+      imageUrl = imageObject
+      imageObject = new Object()
+      imageObject.imageUri = imageUrl
     # Construct the thumb URI from the provided full-sized path
-    imgArray = imageUrl.split(".")
+    imgArray = imageObject.imageUri.split(".")
     extension = imgArray.pop()
     # In case the uploaded file has "." in it's name, we want to re-join
     imgPath = imgArray.join(".")
-    thumbUrl = "#{uri.urlString}#{imgPath}-thumb.#{extension}"
-    fullUrl = "#{uri.urlString}#{imgPath}.#{extension}"
+    imageObject.thumbUri = "#{uri.urlString}#{imgPath}-thumb.#{extension}"
+    imageObject.imageUri = "#{uri.urlString}#{imgPath}.#{extension}"
     # And finally, call our helper function
-    insertImage(thumbUrl, fullUrl, fullUrl, taxonString, "ssarimg")
+    insertImage(imageObject, taxonString, "ssarimg")
     return false
   ###
   # OK, we don't have it, do CalPhotos
@@ -460,14 +475,17 @@ insertModalImage = (imageUrl = ssar.taxonImage, taxon = ssar.activeTaxon, callba
     unless data?
       console.warn("CalPhotos didn't return any valid images for this search!")
       return false
-    thumb = data.thumb_url
+    imageObject = new Object()
+    imageObject.thumbUri = data.thumb_url
     unless thumb?
       console.warn("CalPhotos didn't return any valid images for this search!")
       return false
-    large = data.enlarge_jpeg_url
-    link = data.enlarge_url
+    imageObject.imageUri = data.enlarge_jpeg_url
+    imageObject.imageLinkUri = data.enlarge_url
+    imageObject.imageLicense = imageObject.license
+    imageObject.imageCredit = imageObject.copyright
     # Do the image insertion via our helper function
-    insertImage(thumb,link,large,taxonSring)
+    insertImage(imageObject,taxonSring)
     false
   # CORS failure callback
   failCORS = (result,status) ->
@@ -624,7 +642,10 @@ modalTaxon = (taxon = undefined) ->
       species: taxonArray[1]
       subspecies: taxonArray[2]
     if isNull(data.image) then data.image = undefined
-    ssar.taxonImage = data.image
+    ssar.taxonImage =
+      imageUri: data.image
+      imageCredit: data.image_credit
+      imageLicense: data.image_license
     # Insert the image
     insertModalImage()
     checkTaxonNear taxon, ->

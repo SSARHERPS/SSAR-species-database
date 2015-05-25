@@ -2093,10 +2093,10 @@ checkTaxonNear = function(taxonQuery, callback, selector) {
   return false;
 };
 
-insertModalImage = function(imageUrl, taxon, callback) {
-  var args, doneCORS, e, extension, failCORS, fullUrl, imgArray, imgPath, insertImage, taxonArray, taxonString, thumbUrl, warnArgs;
-  if (imageUrl == null) {
-    imageUrl = ssar.taxonImage;
+insertModalImage = function(imageObject, taxon, callback) {
+  var args, doneCORS, e, extension, failCORS, imageUrl, imgArray, imgPath, insertImage, taxonArray, taxonString, warnArgs;
+  if (imageObject == null) {
+    imageObject = ssar.taxonImage;
   }
   if (taxon == null) {
     taxon = ssar.activeTaxon;
@@ -2127,16 +2127,25 @@ insertModalImage = function(imageUrl, taxon, callback) {
     console.warn(warnArgs);
     return false;
   }
-  insertImage = function(thumbnail, largeImg, largeImgLink, taxonQueryString, classPrefix) {
-    var e, html;
+  insertImage = function(image, taxonQueryString, classPrefix) {
+    var e, html, imgCredit, imgLicense, largeImg, largeImgLink, thumbnail;
     if (classPrefix == null) {
       classPrefix = "calphoto";
     }
 
     /*
      * Insert a lightboxed image into the modal taxon dialog. This must
-     * be shadow-piercing, since the modal dialog is a paper-action-dialog.
+     * be shadow-piercing, since the modal dialog is a
+     * paper-action-dialog.
+     *
+     * @param image an object with parameters [thumbUri, imageUri,
+     *   imageLicense, imageCredit], and optionally imageLinkUri
      */
+    thumbnail = image.thumbUri;
+    largeImg = image.imageUri;
+    largeImgLink = typeof image.imageLinkUri === "function" ? image.imageLinkUri(image.imageUri) : void 0;
+    imgLicense = image.imageLicense;
+    imgCredit = image.imageCredit;
     html = "<a href=\"" + largeImg + "\" class=\"" + classPrefix + "-img-anchor\" style=\"float:right; margin-top:-1em;\">\n  <img src=\"" + thumbnail + "\"\n    data-href=\"" + largeImgLink + "\"\n    class=\"" + classPrefix + "-img-thumb\"\n    data-taxon=\"" + taxonQueryString + "\" />\n</a>";
     d$("#meta-taxon-info").before(html);
     try {
@@ -2155,13 +2164,18 @@ insertModalImage = function(imageUrl, taxon, callback) {
     taxonArray.push(taxon.subspecies);
   }
   taxonString = taxonArray.join("+");
-  if (imageUrl != null) {
-    imgArray = imageUrl.split(".");
+  if (imageObject != null) {
+    if (typeof imageObject === "string") {
+      imageUrl = imageObject;
+      imageObject = new Object();
+      imageObject.imageUri = imageUrl;
+    }
+    imgArray = imageObject.imageUri.split(".");
     extension = imgArray.pop();
     imgPath = imgArray.join(".");
-    thumbUrl = "" + uri.urlString + imgPath + "-thumb." + extension;
-    fullUrl = "" + uri.urlString + imgPath + "." + extension;
-    insertImage(thumbUrl, fullUrl, fullUrl, taxonString, "ssarimg");
+    imageObject.thumbUri = "" + uri.urlString + imgPath + "-thumb." + extension;
+    imageObject.imageUri = "" + uri.urlString + imgPath + "." + extension;
+    insertImage(imageObject, taxonString, "ssarimg");
     return false;
   }
 
@@ -2178,21 +2192,24 @@ insertModalImage = function(imageUrl, taxon, callback) {
   args = "getthumbinfo=1&num=all&cconly=1&taxon=" + taxonString + "&format=xml";
   console.log("Looking at", "" + ssar.affiliateQueryUrl.calPhotos + "?" + args);
   doneCORS = function(resultXml) {
-    var data, large, link, result, thumb;
+    var data, result;
     result = xmlToJSON.parseString(resultXml);
     data = result.xml.calphotos;
     if (data == null) {
       console.warn("CalPhotos didn't return any valid images for this search!");
       return false;
     }
-    thumb = data.thumb_url;
-    if (thumb == null) {
+    imageObject = new Object();
+    imageObject.thumbUri = data.thumb_url;
+    if (typeof thumb === "undefined" || thumb === null) {
       console.warn("CalPhotos didn't return any valid images for this search!");
       return false;
     }
-    large = data.enlarge_jpeg_url;
-    link = data.enlarge_url;
-    insertImage(thumb, link, large, taxonSring);
+    imageObject.imageUri = data.enlarge_jpeg_url;
+    imageObject.imageLinkUri = data.enlarge_url;
+    imageObject.imageLicense = imageObject.license;
+    imageObject.imageCredit = imageObject.copyright;
+    insertImage(imageObject, taxonSring);
     return false;
   };
   failCORS = function(result, status) {
@@ -2322,7 +2339,11 @@ modalTaxon = function(taxon) {
     if (isNull(data.image)) {
       data.image = void 0;
     }
-    ssar.taxonImage = data.image;
+    ssar.taxonImage = {
+      imageUri: data.image,
+      imageCredit: data.image_credit,
+      imageLicense: data.image_license
+    };
     insertModalImage();
     return checkTaxonNear(taxon, function() {
       stopLoad();
