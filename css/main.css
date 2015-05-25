@@ -278,7 +278,7 @@ html >>> .text-center {
 
 .modal-img-container {
     float: right;
-    margin-top: -1em;
+    margin-top: -3em;
     width: 256px;
     overflow:hidden;
 }
@@ -305,6 +305,10 @@ html >>> .modal-img-container {
 }
 .genus, .species, .subspecies{
     font-style:italic;
+}
+#cndb-result-list {
+    margin-bottom: 5em;
+    border-bottom: 2px solid #ddd;
 }
 /* .cndb-result-entry:nth-child(2n) { */
 /*     background:rgba(50,50,50,.1); */
