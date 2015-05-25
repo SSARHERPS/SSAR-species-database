@@ -159,6 +159,10 @@ html /deep/ .species_authority,
 html /deep/ .species_authority::shadow input,
 html /deep/ .common_name,
 html /deep/ .common_name::shadow input,
+html /deep/ .major_subtype,
+html /deep/ .major_subtype::shadow input,
+html /deep/ .major_type,
+html /deep/ .major_type::shadow input,
 html /deep/ .linnean_order,
 html /deep/ .linnean_order::shadow input {
     /* We need this seperate for Firefox */
@@ -175,6 +179,10 @@ html >>> .species_authority,
 html >>> .species_authority::shadow input,
 html >>> .common_name,
 html >>> .common_name::shadow input,
+html >>> .major_subtype,
+html >>> .major_subtype::shadow input,
+html >>> .major_type,
+html >>> .major_type::shadow input,
 html >>> .linnean_order,
 html >>> .linnean_order::shadow input {
     /* We need this seperate for Firefox */
@@ -188,6 +196,7 @@ html >>> .linnean_order::shadow input {
 .species_authority,
 .common_name,
 .major_subtype,
+.major_type,
 .linnean_order,
 .cndb-row-headers th {
     text-transform:capitalize;
@@ -281,7 +290,7 @@ html >>> .modal-img-container {
     html /deep/ .hidden-xs {
     display: none !important;
   }
-    
+
 }
 .genus, .species, .subspecies{
     font-style:italic;

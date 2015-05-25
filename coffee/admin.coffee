@@ -197,8 +197,8 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-input label="Common Name" id="edit-common-name" name="edit-common-name"  class="common_name" floatingLabel></paper-input>
   <paper-input label="Deprecated Scientific Names" id="edit-deprecated-scientific" name="edit-depreated-scientific" floatingLabel aria-describedby="deprecatedHelp"></paper-input>
     <span class="help-block" id="deprecatedHelp">List names here in the form <span class="code">"Genus species":"Authority: year",...</span>. If not, it may not save correctly.</span>
-  <paper-input label="Clade" id="edit-major-type" name="edit-major-type" floatingLabel></paper-input>
-  <paper-input label="Subtype" id="edit-major-subtype" name="edit-major-subtype" floatingLabel></paper-input>
+  <paper-input label="Clade" class="capitalize" id="edit-major-type" name="edit-major-type" floatingLabel></paper-input>
+  <paper-input label="Subtype" class="capitalize" id="edit-major-subtype" name="edit-major-subtype" floatingLabel></paper-input>
   <paper-input label="Minor clade / 'Family'" id="edit-minor-type" name="edit-minor-type" floatingLabel></paper-input>
   <paper-input label="Linnean Order" id="edit-linnean-order" name="edit-linnean-order" class="linnean_order" floatingLabel></paper-input>
   <paper-input label="Common Type (eg., 'lizard')" id="edit-major-common-type" name="edit-major-common-type" class="major_common_type" floatingLabel></paper-input>

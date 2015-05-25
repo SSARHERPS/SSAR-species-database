@@ -197,8 +197,8 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-input label="Common Name" id="edit-common-name" name="edit-common-name"  class="common_name" floatingLabel></paper-input>
   <paper-input label="Deprecated Scientific Names" id="edit-deprecated-scientific" name="edit-depreated-scientific" floatingLabel aria-describedby="deprecatedHelp"></paper-input>
     <span class="help-block" id="deprecatedHelp">List names here in the form <span class="code">"Genus species":"Authority: year",...</span>. If not, it may not save correctly.</span>
-  <paper-input label="Clade" id="edit-major-type" name="edit-major-type" floatingLabel></paper-input>
-  <paper-input label="Subtype" id="edit-major-subtype" name="edit-major-subtype" floatingLabel></paper-input>
+  <paper-input label="Clade" class="capitalize" id="edit-major-type" name="edit-major-type" floatingLabel></paper-input>
+  <paper-input label="Subtype" class="capitalize" id="edit-major-subtype" name="edit-major-subtype" floatingLabel></paper-input>
   <paper-input label="Minor clade / 'Family'" id="edit-minor-type" name="edit-minor-type" floatingLabel></paper-input>
   <paper-input label="Linnean Order" id="edit-linnean-order" name="edit-linnean-order" class="linnean_order" floatingLabel></paper-input>
   <paper-input label="Common Type (eg., 'lizard')" id="edit-major-common-type" name="edit-major-common-type" class="major_common_type" floatingLabel></paper-input>
@@ -1850,7 +1850,7 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     largeImg = image.imageUri
     largeImgLink = image.imageLinkUri? image.imageUri
     imgLicense = image.imageLicense
-    imgCredit = image.imageCredit    
+    imgCredit = image.imageCredit
     html = """
     <div class="modal-img-container">
       <a href="#{largeImg}" class="#{classPrefix}-img-anchor center-block text-center">
@@ -2022,10 +2022,10 @@ modalTaxon = (taxon = undefined) ->
         English name: <span id='taxon-common-name' class='common_name'>#{data.common_name}</span>
       </p>
       <p>
-        Type: <span id='taxon-type'>#{data.major_type}</span>
+        Type: <span id='taxon-type' class="major_type">#{data.major_type}</span>
         #{commonType}
         <core-icon icon='arrow-forward'></core-icon>
-        <span id='taxon-subtype'>#{data.major_subtype}</span>#{minorTypeHtml}
+        <span id='taxon-subtype' class="major_subtype">#{data.major_subtype}</span>#{minorTypeHtml}
       </p>
       #{deprecatedHtml}
     </div>
@@ -2099,6 +2099,26 @@ modalTaxon = (taxon = undefined) ->
   .fail (result,status) ->
     stopLoadError()
   false
+
+
+
+
+
+doFontExceptions = ->
+  ###
+  # Look for certain keywords to force into capitalized, or force
+  # uncapitalized, overriding display CSS rules
+  ###
+  alwaysLowerCase = [
+    "de"
+    "and"
+    ]
+  $.each alwaysLowerCase, (i,word) ->
+    # Do this to each
+    false
+  false
+
+
 
 sortResults = (by_column) ->
   # Somethign clever -- look at each of the by_column points, then
