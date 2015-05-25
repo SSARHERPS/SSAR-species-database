@@ -498,13 +498,13 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     imageObject.imageUri = data.enlarge_jpeg_url
     imageObject.imageLinkUri = data.enlarge_url
     imageObject.imageLicense = imageObject.license
-    imageObject.imageCredit = imageObject.copyright
+    imageObject.imageCredit = "#{imageObject.copyright} (via CalPhotos)"
     # Do the image insertion via our helper function
     insertImage(imageObject,taxonSring)
     false
   # CORS failure callback
   failCORS = (result,status) ->
-    console.error("Couldn't load an image to insert!")
+    console.error("Couldn't load a CalPhotos image to insert!")
     false
   # The actual call attempts.
   try

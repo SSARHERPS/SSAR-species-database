@@ -529,7 +529,7 @@ lookupEditorSpecies = function(taxon) {
 };
 
 saveEditorEntry = function(performMode) {
-  var args, auth, authYearString, dep, depA, depS, depString, e, escapeCompletion, examineIds, gYear, hash, link, s64, sYear, saveObject, saveString, secret, testAuthorityYear, userVerification;
+  var args, auth, authYearString, dep, depA, depS, depString, e, escapeCompletion, examineIds, gYear, hash, keepCase, link, requiredNotEmpty, s64, sYear, saveObject, saveString, secret, testAuthorityYear, userVerification;
   if (performMode == null) {
     performMode = "save";
   }
@@ -644,8 +644,14 @@ saveEditorEntry = function(performMode) {
     depString = "";
   }
   saveObject["deprecated_scientific"] = depString;
+  keepCase = ["notes", "taxon_credit", "image", "image_credit", "image_license"];
+  requiredNotEmpty = ["common-name", "major-type", "linnean-order", "genus-authority", "species-authority"];
+  if (!isNull(d$("#edit-image").val())) {
+    requiredNotEmpty.push("image-credit");
+    requiredNotEmpty.push("image-license");
+  }
   $.each(examineIds, function(k, id) {
-    var col, error, keepCase, nullTest, thisSelector, val;
+    var col, error, nullTest, thisSelector, val;
     try {
       thisSelector = "html /deep/ #edit-" + id;
       if (isNull($(thisSelector))) {
@@ -657,7 +663,6 @@ saveEditorEntry = function(performMode) {
     }
     col = id.replace(/-/g, "_");
     val = $(thisSelector).val().trim();
-    keepCase = ["notes", "taxon_credit", "image", "image_credit", "image_license"];
     if (__indexOf.call(keepCase, col) < 0) {
       val = val.toLowerCase();
     }
@@ -691,6 +696,20 @@ saveEditorEntry = function(performMode) {
             $("html >>> #edit-" + id + " >>> paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
           }
           escapeCompletion = true;
+        }
+        break;
+      default:
+        if (__indexOf.call(requiredNotEmpty, id) >= 0) {
+          error = "This cannot be empty if an image is provided";
+          if (isNull(val)) {
+            try {
+              $("html /deep/ #edit-" + id + " /deep/ paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
+            } catch (_error) {
+              e = _error;
+              $("html >>> #edit-" + id + " >>> paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
+            }
+            escapeCompletion = true;
+          }
         }
     }
     return saveObject[col] = val;
@@ -2211,12 +2230,12 @@ insertModalImage = function(imageObject, taxon, callback) {
     imageObject.imageUri = data.enlarge_jpeg_url;
     imageObject.imageLinkUri = data.enlarge_url;
     imageObject.imageLicense = imageObject.license;
-    imageObject.imageCredit = imageObject.copyright;
+    imageObject.imageCredit = "" + imageObject.copyright + " (via CalPhotos)";
     insertImage(imageObject, taxonSring);
     return false;
   };
   failCORS = function(result, status) {
-    console.error("Couldn't load an image to insert!");
+    console.error("Couldn't load a CalPhotos image to insert!");
     return false;
   };
   try {

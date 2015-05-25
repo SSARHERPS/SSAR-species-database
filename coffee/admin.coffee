@@ -643,6 +643,27 @@ saveEditorEntry = (performMode = "save") ->
     depString = ""
   saveObject["deprecated_scientific"] = depString
   # For the rest of the items, iterate over and put on saveObject
+  keepCase = [
+    "notes"
+    "taxon_credit"
+    "image"
+    "image_credit"
+    "image_license"
+    ]
+  # List of IDs that can't be empty
+  # Reserved use pending
+  # https://github.com/jashkenas/coffeescript/issues/3594
+  requiredNotEmpty = [
+    "common-name"
+    "major-type"
+    "linnean-order"
+    "genus-authority"
+    "species-authority"
+    ]
+  unless isNull(d$("#edit-image").val())
+    # We have an image, need a credit
+    requiredNotEmpty.push("image-credit")
+    requiredNotEmpty.push("image-license")
   $.each examineIds, (k,id) ->
     # console.log(k,id)
     try
@@ -652,13 +673,6 @@ saveEditorEntry = (performMode = "save") ->
       thisSelector = "html >>> #edit-#{id}"
     col = id.replace(/-/g,"_")
     val = $(thisSelector).val().trim()
-    keepCase = [
-      "notes"
-      "taxon_credit"
-      "image"
-      "image_credit"
-      "image_license"
-      ]
     unless col in keepCase
       # We want these to be as literally typed, rather than
       # smart-formatted.
@@ -681,6 +695,10 @@ saveEditorEntry = (performMode = "save") ->
             .attr("isinvalid","isinvalid")
           escapeCompletion = true
       when "common-name", "major-type", "linnean-order", "genus-authority", "species-authority"
+        # I'd love to syntactically clean this up via the empty array
+        # requiredNotEmpty above, but that's pending
+        # https://github.com/jashkenas/coffeescript/issues/3594
+        #
         # These must just exist
         error = "This cannot be empty"
         if isNull(val)
@@ -693,8 +711,22 @@ saveEditorEntry = (performMode = "save") ->
             .attr("error",error)
             .attr("isinvalid","isinvalid")
           escapeCompletion = true
-
+      else
+        if id in requiredNotEmpty
+          error = "This cannot be empty if an image is provided"
+          if isNull(val)
+            try
+              $("html /deep/ #edit-#{id} /deep/ paper-input-decorator")
+              .attr("error",error)
+              .attr("isinvalid","isinvalid")
+            catch e
+              $("html >>> #edit-#{id} >>> paper-input-decorator")
+              .attr("error",error)
+              .attr("isinvalid","isinvalid")
+            escapeCompletion = true
+    # Finally, tack it on to the saveObject
     saveObject[col] = val
+  # We've ended the loop! Did we hit an escape condition?
   if escapeCompletion
     animateLoad()
     stopLoadError("There was a problem with your entry. Please correct your entry and try again.")
