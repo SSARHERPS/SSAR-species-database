@@ -123,7 +123,7 @@ to generate the desired case.
 **Please note that the example JSON results may not have all of the
   fields or data in the `result` key of the most recent version. There
   will be no compatability breaking. All the correct fields are listed
-  above**
+  above.**
 
 The search algorithm behaves as follows:
 
