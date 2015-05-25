@@ -89,7 +89,11 @@ The JSON result gives the following parameters:
     species_authority # eg, "Attenborough"
     authority_year # eg, {2013:2014} in the format {"Genus Authority Year":"Species Authority Year"}
     notes # Miscellaneous notes
-    image # Path to an image, if it exists
+    image # Path to an image, relative to ssarherps.org/cndb/, if it exists
+    image_credit
+    image_license
+    taxon_author # Last edited by ...
+    taxon_credit # Cite taxon info
     ```
 5. `count`: The number of results
 6. `method`: The way the search was executed
@@ -115,6 +119,11 @@ formatting is left up to the application to correctly apply CSS styles
 to generate the desired case.
 
 ### Search behaviour
+
+**Please note that the example JSON results may not have all of the
+  fields or data in the `result` key of the most recent version. There
+  will be no compatability breaking. All the correct fields are listed
+  above**
 
 The search algorithm behaves as follows:
 
