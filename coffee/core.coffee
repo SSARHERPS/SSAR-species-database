@@ -396,6 +396,8 @@ doCORSget = (url, args, callback = undefined, callbackFail = undefined) ->
   xhr.send()
   false
 
+
+
 deepJQuery = (selector) ->
   ###
   # Do a shadow-piercing selector
@@ -404,16 +406,27 @@ deepJQuery = (selector) ->
   # Falls back to standard jQuery selector when everything fails.
   ###
   try
+    # Chrome uses /deep/ which has been deprecated
+    # See http://dev.w3.org/csswg/css-scoping/#deep-combinator
+    # https://w3c.github.io/webcomponents/spec/shadow/#composed-trees
+    # This is current as of Chrome 44.0.2391.0 dev-m
+    # See https://code.google.com/p/chromium/issues/detail?id=446051
     unless $("html /deep/ #{selector}").exists()
       throw("Bad /deep/ selector")
     return $("html /deep/ #{selector}")
   catch e
     try
+      # Firefox uses >>> instead of "deep"
+      # https://developer.mozilla.org/en-US/docs/Web/Web_Components/Shadow_DOM
+      # This is actually the correct selector
       unless $("html >>> #{selector}").exists()
         throw("Bad >>> selector")
       return $("html >>> #{selector}")
     catch e
+      # These don't match at all -- do the normal jQuery selector
       return $(selector)
+
+
 
 d$ = (selector) ->
   deepJQuery(selector)
