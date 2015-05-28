@@ -284,13 +284,13 @@ html >>> .text-center {
 }
 html /deep/ .modal-img-container {
     float: right;
-    margin-top: -1em;
+    margin-top: -3em;
     width: 256px;
     overflow:hidden;
 }
 html >>> .modal-img-container {
     float: right;
-    margin-top: -1em;
+    margin-top: -3em;
     width: 256px;
     overflow:hidden;
 }
