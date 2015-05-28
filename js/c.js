@@ -3,7 +3,7 @@
  * The main coffeescript file for administrative stuff
  * Triggered from admin-page.html
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createDuplicateTaxon, createNewTaxon, d$, deepJQuery, delay, deleteTaxon, doCORSget, doFontExceptions, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, goTo, handleDragDropImage, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toastStatusMessage, uri, verifyLoginCredentials,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createDuplicateTaxon, createNewTaxon, d$, deepJQuery, delay, deleteTaxon, doCORSget, doFontExceptions, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, handleDragDropImage, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadJS, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri, verifyLoginCredentials,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __slice = [].slice;
 
@@ -564,7 +564,7 @@ saveEditorEntry = function(performMode) {
       linnaeusYear = 1707;
       d = new Date();
       nextYear = d.getUTCFullYear() + 1;
-      authorityRegex = /^\d{4}$|^\d{4} (\"|')\d{4}\1$/;
+      authorityRegex = /^[1-2][07-9]\d{2}$|^[1-2][07-9]\d{2} (\"|')[1-2][07-9]\d{2}\1$/;
       if (!(isNumber(yearString) && (linnaeusYear < yearString && yearString < nextYear))) {
         if (!authorityRegex.test(yearString)) {
           if (yearString.search(" ") === -1) {
@@ -920,11 +920,16 @@ toInt = function(str) {
   return parseInt(str);
 };
 
-function toObject(arr) {
-    var rv = {};
-    for (var i = 0; i < arr.length; ++i)
-        if (arr[i] !== undefined) rv[i] = arr[i];
-    return rv;
+toObject = function(array) {
+  var element, index, rv;
+  rv = new Object();
+  for (index in array) {
+    element = array[index];
+    if (element !== void 0) {
+      rv[index] = element;
+    }
+  }
+  return rv;
 };
 
 String.prototype.toBool = function() {
@@ -1132,50 +1137,112 @@ Function.prototype.debounce = function() {
   return window.debounce_timer = setTimeout(delayed, threshold);
 };
 
+loadJS = function(src, callback, doCallbackOnError) {
+  var e, errorFunction, onLoadFunction, s;
+  if (callback == null) {
+    callback = new Object();
+  }
+  if (doCallbackOnError == null) {
+    doCallbackOnError = true;
+  }
 
-function loadJS(src, callback) {
-    console.log("Entering loadjs for",src);
-    var s = document.createElement('script');
-    s.setAttribute('src',src);
-    s.setAttribute('async','async');
-    s.setAttribute('type','text/javascript');
-    s.src = src;
-    s.async = true;
-    var onloadfunction = function() {
-        console.log("Entering readystate function");
-        var state = s.readyState;
-        try {
-            console.log("Loaded",src);
-            if (!callback.done && (!state || /loaded|complete/.test(state))) {
-                callback.done = true;
-                callback();
-            }
-        } catch (e) {
-            // do nothing, no callback function passed
-            console.log("Callback error");
+  /*
+   * Load a new javascript file
+   *
+   * If it's already been loaded, jump straight to the callback
+   *
+   * @param string src The source URL of the file
+   * @param function callback Function to execute after the script has
+   *                          been loaded
+   * @param bool doCallbackOnError Should the callback be executed if
+   *                               loading the script produces an error?
+   */
+  if ($("script[src='" + src + "']").exists()) {
+    if (typeof callback === "function") {
+      try {
+        callback();
+      } catch (_error) {
+        e = _error;
+        console.error("Script is already loaded, but there was an error executing the callback function - " + e.message);
+      }
+    }
+    return true;
+  }
+  s = document.createElement("script");
+  s.setAttribute("src", src);
+  s.setAttribute("async", "async");
+  s.setAttribute("type", "text/javascript");
+  s.src = src;
+  s.async = true;
+  onLoadFunction = function() {
+    var state;
+    state = s.readyState;
+    try {
+      if (!callback.done && (!state || /loaded|complete/.test(state))) {
+        callback.done = true;
+        if (typeof callback === "function") {
+          try {
+            return callback();
+          } catch (_error) {
+            e = _error;
+            return console.error("Postload callback error - " + e.message);
+          }
         }
-    };
-    var errorfunction = function() {
-        try {
-            console.warn("There may have been a problem loading",src);
-            if (!callback.done) {
-                callback.done = true;
-                callback();
-            }
-        } catch (e) {
-            // do nothing, no callback function passed
-            console.log("Error and error");
+      }
+    } catch (_error) {
+      e = _error;
+      return console.error("Onload error - " + e.message);
+    }
+  };
+  errorFunction = function() {
+    console.warn("There may have been a problem loading " + src);
+    try {
+      if (!callback.done) {
+        callback.done = true;
+        if (typeof callback === "function" && doCallbackOnError) {
+          try {
+            return callback();
+          } catch (_error) {
+            e = _error;
+            return console.error("Post error callback error - " + e.message);
+          }
         }
-    };
-    s.setAttribute('onload',onloadfunction);
-    s.setAttribute('onreadystate',onloadfunction);
-    s.setAttribute('onerror',errorfunction);
-    s.onload = s.onreadystate = onloadfunction;
-    s.onerror = errorfunction;
-    document.getElementsByTagName('head')[0].appendChild(s);
-    console.log("Exiting with",s);
-}
-;
+      }
+    } catch (_error) {
+      e = _error;
+      return console.error("There was an error in the error handler! " + e.message);
+    }
+  };
+  s.setAttribute("onload", onLoadFunction);
+  s.setAttribute("onreadystate", onLoadFunction);
+  s.setAttribute("onerror", errorFunction);
+  s.onload = s.onreadystate = onLoadFunction;
+  s.onerror = errorFunction;
+  document.getElementsByTagName('head')[0].appendChild(s);
+  return true;
+};
+
+String.prototype.toTitleCase = function() {
+  var lower, lowerRegEx, lowers, str, upper, upperRegEx, uppers, _i, _j, _len, _len1;
+  str = this.replace(/([^\W_]+[^\s-]*) */g, function(txt) {
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
+  lowers = ["A", "An", "The", "And", "But", "Or", "For", "Nor", "As", "At", "By", "For", "From", "In", "Into", "Near", "Of", "On", "Onto", "To", "With"];
+  for (_i = 0, _len = lowers.length; _i < _len; _i++) {
+    lower = lowers[_i];
+    lowerRegEx = new RegExp("\\s" + lower + "\\s", "g");
+    str = str.replace(lowerRegEx, function(txt) {
+      return txt.toLowerCase();
+    });
+  }
+  uppers = ["Id", "Tv"];
+  for (_j = 0, _len1 = uppers.length; _j < _len1; _j++) {
+    upper = uppers[_j];
+    upperRegEx = new RegExp("\\b" + upper + "\\b", "g");
+    str = str.replace(upperRegEx, upper.toUpperCase());
+  }
+  return str;
+};
 
 mapNewWindows = function(stopPropagation) {
   if (stopPropagation == null) {
@@ -1625,6 +1692,18 @@ bindClickTargets = function() {
   return $(".click").unbind().click(function() {
     return openTab($(this).attr("data-url"));
   });
+};
+
+getMaxZ = function() {
+  var mapFunction;
+  mapFunction = function() {
+    return $.map($("body *"), function(e, n) {
+      if ($(e).css("position") !== "static") {
+        return parseInt($(e).css("z-index") || 1);
+      }
+    });
+  };
+  return Math.max.apply(null, mapFunction());
 };
 
 browserBeware = function() {
@@ -2219,23 +2298,26 @@ insertModalImage = function(imageObject, taxon, callback) {
   console.log("Looking at", "" + ssar.affiliateQueryUrl.calPhotos + "?" + args);
   doneCORS = function(resultXml) {
     var data, result;
+    console.log("Got ", resultXml);
     result = xmlToJSON.parseString(resultXml);
-    data = result.xml.calphotos;
+    console.log("Parsed", result, result.calphotos, result.calphotos[0]);
+    window.testData = result;
+    data = result.calphotos[0];
     if (data == null) {
       console.warn("CalPhotos didn't return any valid images for this search!");
       return false;
     }
     imageObject = new Object();
-    imageObject.thumbUri = data.thumb_url;
-    if (typeof thumb === "undefined" || thumb === null) {
+    imageObject.thumbUri = data.thumb_url[0]["_text"];
+    if (imageObject.thumbUri == null) {
       console.warn("CalPhotos didn't return any valid images for this search!");
       return false;
     }
-    imageObject.imageUri = data.enlarge_jpeg_url;
-    imageObject.imageLinkUri = data.enlarge_url;
-    imageObject.imageLicense = imageObject.license;
-    imageObject.imageCredit = "" + imageObject.copyright + " (via CalPhotos)";
-    insertImage(imageObject, taxonSring);
+    imageObject.imageUri = data.enlarge_jpeg_url[0]["_text"];
+    imageObject.imageLinkUri = data.enlarge_url[0]["_text"];
+    imageObject.imageLicense = data.license[0]["_text"];
+    imageObject.imageCredit = "" + data.copyright[0]["_text"] + " (via CalPhotos)";
+    insertImage(imageObject, taxonString);
     return false;
   };
   failCORS = function(result, status) {

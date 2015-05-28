@@ -488,22 +488,25 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
   ## CalPhotos doesn't have good headers set up. Try a CORS request.
   # CORS success callback
   doneCORS = (resultXml) ->
+    console.log("Got ",resultXml)
     result = xmlToJSON.parseString(resultXml)
-    data = result.xml.calphotos
+    console.log("Parsed",result, result.calphotos, result.calphotos[0])
+    window.testData = result
+    data = result.calphotos[0]
     unless data?
       console.warn("CalPhotos didn't return any valid images for this search!")
       return false
     imageObject = new Object()
-    imageObject.thumbUri = data.thumb_url
-    unless thumb?
+    imageObject.thumbUri = data.thumb_url[0]["_text"]
+    unless imageObject.thumbUri?
       console.warn("CalPhotos didn't return any valid images for this search!")
       return false
-    imageObject.imageUri = data.enlarge_jpeg_url
-    imageObject.imageLinkUri = data.enlarge_url
-    imageObject.imageLicense = imageObject.license
-    imageObject.imageCredit = "#{imageObject.copyright} (via CalPhotos)"
+    imageObject.imageUri = data.enlarge_jpeg_url[0]["_text"]
+    imageObject.imageLinkUri = data.enlarge_url[0]["_text"]
+    imageObject.imageLicense = data.license[0]["_text"]
+    imageObject.imageCredit = "#{data.copyright[0]["_text"]} (via CalPhotos)"
     # Do the image insertion via our helper function
-    insertImage(imageObject,taxonSring)
+    insertImage(imageObject,taxonString)
     false
   # CORS failure callback
   failCORS = (result,status) ->

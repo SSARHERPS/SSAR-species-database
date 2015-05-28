@@ -42,12 +42,13 @@ toInt = (str) ->
   if not isNumber(str) or isNull(str) then return 0
   parseInt(str)
 
-`function toObject(arr) {
-    var rv = {};
-    for (var i = 0; i < arr.length; ++i)
-        if (arr[i] !== undefined) rv[i] = arr[i];
-    return rv;
-}`
+
+
+toObject = (array) ->
+  rv = new Object()
+  for index, element of array
+    if element isnt undefined then rv[index] = element
+  rv
 
 String::toBool = -> @toString() is 'true'
 
@@ -171,50 +172,116 @@ Function::debounce = (threshold = 300, execAsap = false, timeout = window.deboun
     console.log("Executed immediately")
   window.debounce_timer = setTimeout(delayed, threshold)
 
-`
-function loadJS(src, callback) {
-    console.log("Entering loadjs for",src);
-    var s = document.createElement('script');
-    s.setAttribute('src',src);
-    s.setAttribute('async','async');
-    s.setAttribute('type','text/javascript');
-    s.src = src;
-    s.async = true;
-    var onloadfunction = function() {
-        console.log("Entering readystate function");
-        var state = s.readyState;
-        try {
-            console.log("Loaded",src);
-            if (!callback.done && (!state || /loaded|complete/.test(state))) {
-                callback.done = true;
-                callback();
-            }
-        } catch (e) {
-            // do nothing, no callback function passed
-            console.log("Callback error");
-        }
-    };
-    var errorfunction = function() {
-        try {
-            console.warn("There may have been a problem loading",src);
-            if (!callback.done) {
-                callback.done = true;
-                callback();
-            }
-        } catch (e) {
-            // do nothing, no callback function passed
-            console.log("Error and error");
-        }
-    };
-    s.setAttribute('onload',onloadfunction);
-    s.setAttribute('onreadystate',onloadfunction);
-    s.setAttribute('onerror',errorfunction);
-    s.onload = s.onreadystate = onloadfunction;
-    s.onerror = errorfunction;
-    document.getElementsByTagName('head')[0].appendChild(s);
-    console.log("Exiting with",s);
-}
-`
+
+loadJS = (src, callback = new Object(), doCallbackOnError = true) ->
+  ###
+  # Load a new javascript file
+  #
+  # If it's already been loaded, jump straight to the callback
+  #
+  # @param string src The source URL of the file
+  # @param function callback Function to execute after the script has
+  #                          been loaded
+  # @param bool doCallbackOnError Should the callback be executed if
+  #                               loading the script produces an error?
+  ###
+  if $("script[src='#{src}']").exists()
+    if typeof callback is "function"
+      try
+        callback()
+      catch e
+        console.error "Script is already loaded, but there was an error executing the callback function - #{e.message}"
+    # Whether or not there was a callback, end the script
+    return true
+  # Create a new DOM selement
+  s = document.createElement("script")
+  # Set all the attributes. We can be a bit redundant about this
+  s.setAttribute("src",src)
+  s.setAttribute("async","async")
+  s.setAttribute("type","text/javascript")
+  s.src = src
+  s.async = true
+  # Onload function
+  onLoadFunction = ->
+    state = s.readyState
+    try
+      if not callback.done and (not state or /loaded|complete/.test(state))
+        callback.done = true
+        if typeof callback is "function"
+          try
+            callback()
+          catch e
+            console.error "Postload callback error - #{e.message}"
+    catch e
+      console.error "Onload error - #{e.message}"
+  # Error function
+  errorFunction = ->
+    console.warn "There may have been a problem loading #{src}"
+    try
+      unless callback.done
+        callback.done = true
+        if typeof callback is "function" and doCallbackOnError
+          try
+            callback()
+          catch e
+            console.error "Post error callback error - #{e.message}"
+    catch e
+      console.error "There was an error in the error handler! #{e.message}"
+  # Set the attributes
+  s.setAttribute("onload",onLoadFunction)
+  s.setAttribute("onreadystate",onLoadFunction)
+  s.setAttribute("onerror",errorFunction)
+  s.onload = s.onreadystate = onLoadFunction
+  s.onerror = errorFunction
+  document.getElementsByTagName('head')[0].appendChild(s)
+  true
+
+
+String::toTitleCase = ->
+  # From http://stackoverflow.com/a/6475125/1877527
+  str =
+    @replace /([^\W_]+[^\s-]*) */g, (txt) ->
+      txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+
+  # Certain minor words should be left lowercase unless
+  # they are the first or last words in the string
+  lowers = [
+    "A"
+    "An"
+    "The"
+    "And"
+    "But"
+    "Or"
+    "For"
+    "Nor"
+    "As"
+    "At"
+    "By"
+    "For"
+    "From"
+    "In"
+    "Into"
+    "Near"
+    "Of"
+    "On"
+    "Onto"
+    "To"
+    "With"
+    ]
+  for lower in lowers
+    lowerRegEx = new RegExp("\\s#{lower}\\s","g")
+    str = str.replace lowerRegEx, (txt) -> txt.toLowerCase()
+
+  # Certain words such as initialisms or acronyms should be left
+  # uppercase
+  uppers = [
+    "Id"
+    "Tv"
+    ]
+  for upper in uppers
+    upperRegEx = new RegExp("\\b#{upper}\\b","g")
+    str = str.replace upperRegEx, upper.toUpperCase()
+  str
 
 mapNewWindows = (stopPropagation = true) ->
   # Do new windows
@@ -542,6 +609,13 @@ bindClickTargets = ->
   .unbind()
   .click ->
     openTab($(this).attr("data-url"))
+
+getMaxZ = ->
+  mapFunction = ->
+    $.map $("body *"), (e,n) ->
+      if $(e).css("position") isnt "static"
+        return parseInt $(e).css("z-index") or 1
+  Math.max.apply null, mapFunction()
 
 browserBeware = ->
   unless window.hasCheckedBrowser?

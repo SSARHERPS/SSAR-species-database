@@ -564,7 +564,8 @@ saveEditorEntry = (performMode = "save") ->
       # Authority date regex
       # From
       # https://github.com/tigerhawkvok/SSAR-species-database/issues/37
-      authorityRegex = /^\d{4}$|^\d{4} (\"|')\d{4}\1$/
+      #authorityRegex = /^\d{4}$|^\d{4} (\"|')\d{4}\1$/
+      authorityRegex = /^[1-2][07-9]\d{2}$|^[1-2][07-9]\d{2} (\"|')[1-2][07-9]\d{2}\1$/
       unless isNumber(yearString) and linnaeusYear < yearString < nextYear
         unless authorityRegex.test(yearString)
           # It's definitely bad, we just need to decide how bad
@@ -888,16 +889,17 @@ toInt = (str) ->
   if not isNumber(str) or isNull(str) then return 0
   parseInt(str)
 
-`function toObject(arr) {
-    var rv = {};
-    for (var i = 0; i < arr.length; ++i)
-        if (arr[i] !== undefined) rv[i] = arr[i];
-    return rv;
-}`
 
-String::toBool = -> this.toString() is 'true'
 
-Boolean::toBool = -> this.toString() is 'true' # In case lazily tested
+toObject = (array) ->
+  rv = new Object()
+  for index, element of array
+    if element isnt undefined then rv[index] = element
+  rv
+
+String::toBool = -> @toString() is 'true'
+
+Boolean::toBool = -> @toString() is 'true' # In case lazily tested
 
 Number::toBool = -> this is 1
 
@@ -1017,50 +1019,116 @@ Function::debounce = (threshold = 300, execAsap = false, timeout = window.deboun
     console.log("Executed immediately")
   window.debounce_timer = setTimeout(delayed, threshold)
 
-`
-function loadJS(src, callback) {
-    console.log("Entering loadjs for",src);
-    var s = document.createElement('script');
-    s.setAttribute('src',src);
-    s.setAttribute('async','async');
-    s.setAttribute('type','text/javascript');
-    s.src = src;
-    s.async = true;
-    var onloadfunction = function() {
-        console.log("Entering readystate function");
-        var state = s.readyState;
-        try {
-            console.log("Loaded",src);
-            if (!callback.done && (!state || /loaded|complete/.test(state))) {
-                callback.done = true;
-                callback();
-            }
-        } catch (e) {
-            // do nothing, no callback function passed
-            console.log("Callback error");
-        }
-    };
-    var errorfunction = function() {
-        try {
-            console.warn("There may have been a problem loading",src);
-            if (!callback.done) {
-                callback.done = true;
-                callback();
-            }
-        } catch (e) {
-            // do nothing, no callback function passed
-            console.log("Error and error");
-        }
-    };
-    s.setAttribute('onload',onloadfunction);
-    s.setAttribute('onreadystate',onloadfunction);
-    s.setAttribute('onerror',errorfunction);
-    s.onload = s.onreadystate = onloadfunction;
-    s.onerror = errorfunction;
-    document.getElementsByTagName('head')[0].appendChild(s);
-    console.log("Exiting with",s);
-}
-`
+
+loadJS = (src, callback = new Object(), doCallbackOnError = true) ->
+  ###
+  # Load a new javascript file
+  #
+  # If it's already been loaded, jump straight to the callback
+  #
+  # @param string src The source URL of the file
+  # @param function callback Function to execute after the script has
+  #                          been loaded
+  # @param bool doCallbackOnError Should the callback be executed if
+  #                               loading the script produces an error?
+  ###
+  if $("script[src='#{src}']").exists()
+    if typeof callback is "function"
+      try
+        callback()
+      catch e
+        console.error "Script is already loaded, but there was an error executing the callback function - #{e.message}"
+    # Whether or not there was a callback, end the script
+    return true
+  # Create a new DOM selement
+  s = document.createElement("script")
+  # Set all the attributes. We can be a bit redundant about this
+  s.setAttribute("src",src)
+  s.setAttribute("async","async")
+  s.setAttribute("type","text/javascript")
+  s.src = src
+  s.async = true
+  # Onload function
+  onLoadFunction = ->
+    state = s.readyState
+    try
+      if not callback.done and (not state or /loaded|complete/.test(state))
+        callback.done = true
+        if typeof callback is "function"
+          try
+            callback()
+          catch e
+            console.error "Postload callback error - #{e.message}"
+    catch e
+      console.error "Onload error - #{e.message}"
+  # Error function
+  errorFunction = ->
+    console.warn "There may have been a problem loading #{src}"
+    try
+      unless callback.done
+        callback.done = true
+        if typeof callback is "function" and doCallbackOnError
+          try
+            callback()
+          catch e
+            console.error "Post error callback error - #{e.message}"
+    catch e
+      console.error "There was an error in the error handler! #{e.message}"
+  # Set the attributes
+  s.setAttribute("onload",onLoadFunction)
+  s.setAttribute("onreadystate",onLoadFunction)
+  s.setAttribute("onerror",errorFunction)
+  s.onload = s.onreadystate = onLoadFunction
+  s.onerror = errorFunction
+  document.getElementsByTagName('head')[0].appendChild(s)
+  true
+
+
+String::toTitleCase = ->
+  # From http://stackoverflow.com/a/6475125/1877527
+  str =
+    @replace /([^\W_]+[^\s-]*) */g, (txt) ->
+      txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+
+  # Certain minor words should be left lowercase unless
+  # they are the first or last words in the string
+  lowers = [
+    "A"
+    "An"
+    "The"
+    "And"
+    "But"
+    "Or"
+    "For"
+    "Nor"
+    "As"
+    "At"
+    "By"
+    "For"
+    "From"
+    "In"
+    "Into"
+    "Near"
+    "Of"
+    "On"
+    "Onto"
+    "To"
+    "With"
+    ]
+  for lower in lowers
+    lowerRegEx = new RegExp("\\s#{lower}\\s","g")
+    str = str.replace lowerRegEx, (txt) -> txt.toLowerCase()
+
+  # Certain words such as initialisms or acronyms should be left
+  # uppercase
+  uppers = [
+    "Id"
+    "Tv"
+    ]
+  for upper in uppers
+    upperRegEx = new RegExp("\\b#{upper}\\b","g")
+    str = str.replace upperRegEx, upper.toUpperCase()
+  str
 
 mapNewWindows = (stopPropagation = true) ->
   # Do new windows
@@ -1242,6 +1310,8 @@ doCORSget = (url, args, callback = undefined, callbackFail = undefined) ->
   xhr.send()
   false
 
+
+
 deepJQuery = (selector) ->
   ###
   # Do a shadow-piercing selector
@@ -1250,16 +1320,27 @@ deepJQuery = (selector) ->
   # Falls back to standard jQuery selector when everything fails.
   ###
   try
+    # Chrome uses /deep/ which has been deprecated
+    # See http://dev.w3.org/csswg/css-scoping/#deep-combinator
+    # https://w3c.github.io/webcomponents/spec/shadow/#composed-trees
+    # This is current as of Chrome 44.0.2391.0 dev-m
+    # See https://code.google.com/p/chromium/issues/detail?id=446051
     unless $("html /deep/ #{selector}").exists()
       throw("Bad /deep/ selector")
     return $("html /deep/ #{selector}")
   catch e
     try
+      # Firefox uses >>> instead of "deep"
+      # https://developer.mozilla.org/en-US/docs/Web/Web_Components/Shadow_DOM
+      # This is actually the correct selector
       unless $("html >>> #{selector}").exists()
         throw("Bad >>> selector")
       return $("html >>> #{selector}")
     catch e
+      # These don't match at all -- do the normal jQuery selector
       return $(selector)
+
+
 
 d$ = (selector) ->
   deepJQuery(selector)
@@ -1375,6 +1456,13 @@ bindClickTargets = ->
   .unbind()
   .click ->
     openTab($(this).attr("data-url"))
+
+getMaxZ = ->
+  mapFunction = ->
+    $.map $("body *"), (e,n) ->
+      if $(e).css("position") isnt "static"
+        return parseInt $(e).css("z-index") or 1
+  Math.max.apply null, mapFunction()
 
 browserBeware = ->
   unless window.hasCheckedBrowser?
@@ -1916,22 +2004,25 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
   ## CalPhotos doesn't have good headers set up. Try a CORS request.
   # CORS success callback
   doneCORS = (resultXml) ->
+    console.log("Got ",resultXml)
     result = xmlToJSON.parseString(resultXml)
-    data = result.xml.calphotos
+    console.log("Parsed",result, result.calphotos, result.calphotos[0])
+    window.testData = result
+    data = result.calphotos[0]
     unless data?
       console.warn("CalPhotos didn't return any valid images for this search!")
       return false
     imageObject = new Object()
-    imageObject.thumbUri = data.thumb_url
-    unless thumb?
+    imageObject.thumbUri = data.thumb_url[0]["_text"]
+    unless imageObject.thumbUri?
       console.warn("CalPhotos didn't return any valid images for this search!")
       return false
-    imageObject.imageUri = data.enlarge_jpeg_url
-    imageObject.imageLinkUri = data.enlarge_url
-    imageObject.imageLicense = imageObject.license
-    imageObject.imageCredit = "#{imageObject.copyright} (via CalPhotos)"
+    imageObject.imageUri = data.enlarge_jpeg_url[0]["_text"]
+    imageObject.imageLinkUri = data.enlarge_url[0]["_text"]
+    imageObject.imageLicense = data.license[0]["_text"]
+    imageObject.imageCredit = "#{data.copyright[0]["_text"]} (via CalPhotos)"
     # Do the image insertion via our helper function
-    insertImage(imageObject,taxonSring)
+    insertImage(imageObject,taxonString)
     false
   # CORS failure callback
   failCORS = (result,status) ->
