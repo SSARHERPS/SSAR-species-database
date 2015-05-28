@@ -1216,7 +1216,7 @@ animateLoad = (elId = "loader") ->
       $(selector).attr("active",true)
     false
   catch e
-    console.log('Could not animate loader', e.message)
+    console.warn('Could not animate loader', e.message)
 
 stopLoad = (elId = "loader", fadeOut = 1000) ->
   if elId.slice(0,1) is "#"
@@ -1231,7 +1231,7 @@ stopLoad = (elId = "loader", fadeOut = 1000) ->
         $(selector).removeClass("good")
         $(selector).attr("active",false)
   catch e
-    console.log('Could not stop load animation', e.message)
+    console.warn('Could not stop load animation', e.message)
 
 
 stopLoadError = (message, elId = "loader", fadeOut = 7500) ->
@@ -1248,7 +1248,7 @@ stopLoadError = (message, elId = "loader", fadeOut = 7500) ->
         $(selector).removeClass("bad")
         $(selector).attr("active",false)
   catch e
-    console.log('Could not stop load error animation', e.message)
+    console.warn('Could not stop load error animation', e.message)
 
 
 
@@ -1270,7 +1270,6 @@ doCORSget = (url, args, callback = undefined, callbackFail = undefined) ->
       if typeof callback is "function"
         callback()
         return false
-      console.log(response)
     .fail (result,status) ->
       console.warn("Couldn't perform jQuery AJAX CORS. Attempting manually.")
   catch e
@@ -1301,7 +1300,6 @@ doCORSget = (url, args, callback = undefined, callbackFail = undefined) ->
     response = xhr.responseText
     if typeof callback is "function"
       callback(response)
-    console.log(response)
     return false
   xhr.onerror = ->
     console.warn("Couldn't do manual XMLHttp CORS request")
@@ -1383,7 +1381,7 @@ lightboxImages = (selector = ".lightboximage", lookDeeply = false) ->
       console.error("Unable to lightbox this image!")
   # Set up the items
   .each ->
-    console.log("Using selectors '#{selector}' / '#{this}' for lightboximages")
+    # console.log("Using selectors '#{selector}' / '#{this}' for lightboximages")
     try
       if $(this).prop("tagName").toLowerCase() is "img" and $(this).parent().prop("tagName").toLowerCase() isnt "a"
         tagHtml = $(this).removeClass("lightboximage").prop("outerHTML")
@@ -1396,7 +1394,7 @@ lightboxImages = (selector = ".lightboximage", lookDeeply = false) ->
             $(this).attr("src")
         $(this).replaceWith("<a href='#{imgUrl}' class='lightboximage'>#{tagHtml}</a>")
     catch e
-      console.log("Couldn't parse through the elements")
+      console.warn("Couldn't parse through the elements")
 
 
 
@@ -2001,7 +1999,7 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
   # for API reference.
   ###
   args = "getthumbinfo=1&num=all&cconly=1&taxon=#{taxonString}&format=xml"
-  console.log("Looking at","#{ssar.affiliateQueryUrl.calPhotos}?#{args}")
+  # console.log("Looking at","#{ssar.affiliateQueryUrl.calPhotos}?#{args}")
   ## CalPhotos doesn't have good headers set up. Try a CORS request.
   # CORS success callback
   doneCORS = (resultXml) ->
@@ -2012,14 +2010,18 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
       console.warn("CalPhotos didn't return any valid images for this search!")
       return false
     imageObject = new Object()
-    imageObject.thumbUri = data.thumb_url[0]["_text"]
-    unless imageObject.thumbUri?
-      console.warn("CalPhotos didn't return any valid images for this search!")
+    try
+      imageObject.thumbUri = data.thumb_url[0]["_text"]
+      unless imageObject.thumbUri?
+        console.warn("CalPhotos didn't return any valid images for this search!")
+        return false
+      imageObject.imageUri = data.enlarge_jpeg_url[0]["_text"]
+      imageObject.imageLinkUri = data.enlarge_url[0]["_text"]
+      imageObject.imageLicense = data.license[0]["_text"]
+      imageObject.imageCredit = "#{data.copyright[0]["_text"]} (via CalPhotos)"
+    catch e
+      console.warn("CalPhotos didn't return any valid images for this search!","#{ssar.affiliateQueryUrl.calPhotos}?#{args}")
       return false
-    imageObject.imageUri = data.enlarge_jpeg_url[0]["_text"]
-    imageObject.imageLinkUri = data.enlarge_url[0]["_text"]
-    imageObject.imageLicense = data.license[0]["_text"]
-    imageObject.imageCredit = "#{data.copyright[0]["_text"]} (via CalPhotos)"
     # Do the image insertion via our helper function
     insertImage(imageObject,taxonString)
     false
@@ -2217,8 +2219,8 @@ doFontExceptions = ->
       if authorityText?
         authorityText = authorityText.replace(search, " <span class='force-lower'>#{word}</span> ")
     return authorityText
-  
-  d$(".authority").each ->    
+
+  d$(".authority").each ->
     authorityText = $(this).text()
     unless isNull(authorityText)
       #console.log("Forcing format of #{authorityText}")
@@ -2292,7 +2294,7 @@ insertCORSWorkaround = ->
       """
     else ""
   html = """
-  <div class="alert alert-info alert-dismissible center-block" role="alert">
+  <div class="alert alert-info alert-dismissible center-block fade in" role="alert">
     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
     <strong>Want CalPhotos images in your species dialogs?</strong> #{browserExtensionLink}
     We're working with CalPhotos to enable this natively, but it's a server change on their side.

@@ -369,7 +369,7 @@ animateLoad = (elId = "loader") ->
       $(selector).attr("active",true)
     false
   catch e
-    console.log('Could not animate loader', e.message)
+    console.warn('Could not animate loader', e.message)
 
 stopLoad = (elId = "loader", fadeOut = 1000) ->
   if elId.slice(0,1) is "#"
@@ -384,7 +384,7 @@ stopLoad = (elId = "loader", fadeOut = 1000) ->
         $(selector).removeClass("good")
         $(selector).attr("active",false)
   catch e
-    console.log('Could not stop load animation', e.message)
+    console.warn('Could not stop load animation', e.message)
 
 
 stopLoadError = (message, elId = "loader", fadeOut = 7500) ->
@@ -401,7 +401,7 @@ stopLoadError = (message, elId = "loader", fadeOut = 7500) ->
         $(selector).removeClass("bad")
         $(selector).attr("active",false)
   catch e
-    console.log('Could not stop load error animation', e.message)
+    console.warn('Could not stop load error animation', e.message)
 
 
 
@@ -423,7 +423,6 @@ doCORSget = (url, args, callback = undefined, callbackFail = undefined) ->
       if typeof callback is "function"
         callback()
         return false
-      console.log(response)
     .fail (result,status) ->
       console.warn("Couldn't perform jQuery AJAX CORS. Attempting manually.")
   catch e
@@ -454,7 +453,6 @@ doCORSget = (url, args, callback = undefined, callbackFail = undefined) ->
     response = xhr.responseText
     if typeof callback is "function"
       callback(response)
-    console.log(response)
     return false
   xhr.onerror = ->
     console.warn("Couldn't do manual XMLHttp CORS request")
@@ -536,7 +534,7 @@ lightboxImages = (selector = ".lightboximage", lookDeeply = false) ->
       console.error("Unable to lightbox this image!")
   # Set up the items
   .each ->
-    console.log("Using selectors '#{selector}' / '#{this}' for lightboximages")
+    # console.log("Using selectors '#{selector}' / '#{this}' for lightboximages")
     try
       if $(this).prop("tagName").toLowerCase() is "img" and $(this).parent().prop("tagName").toLowerCase() isnt "a"
         tagHtml = $(this).removeClass("lightboximage").prop("outerHTML")
@@ -549,7 +547,7 @@ lightboxImages = (selector = ".lightboximage", lookDeeply = false) ->
             $(this).attr("src")
         $(this).replaceWith("<a href='#{imgUrl}' class='lightboximage'>#{tagHtml}</a>")
     catch e
-      console.log("Couldn't parse through the elements")
+      console.warn("Couldn't parse through the elements")
 
 
 

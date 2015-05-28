@@ -1368,7 +1368,7 @@ animateLoad = function(elId) {
     return false;
   } catch (_error) {
     e = _error;
-    return console.log('Could not animate loader', e.message);
+    return console.warn('Could not animate loader', e.message);
   }
 };
 
@@ -1396,7 +1396,7 @@ stopLoad = function(elId, fadeOut) {
     }
   } catch (_error) {
     e = _error;
-    return console.log('Could not stop load animation', e.message);
+    return console.warn('Could not stop load animation', e.message);
   }
 };
 
@@ -1427,7 +1427,7 @@ stopLoadError = function(message, elId, fadeOut) {
     }
   } catch (_error) {
     e = _error;
-    return console.log('Could not stop load error animation', e.message);
+    return console.warn('Could not stop load error animation', e.message);
   }
 };
 
@@ -1458,7 +1458,6 @@ doCORSget = function(url, args, callback, callbackFail) {
         callback();
         return false;
       }
-      return console.log(response);
     }).fail(function(result, status) {
       return console.warn("Couldn't perform jQuery AJAX CORS. Attempting manually.");
     });
@@ -1493,7 +1492,6 @@ doCORSget = function(url, args, callback, callbackFail) {
     if (typeof callback === "function") {
       callback(response);
     }
-    console.log(response);
     return false;
   };
   xhr.onerror = function() {
@@ -1585,7 +1583,6 @@ lightboxImages = function(selector, lookDeeply) {
     }
   }).each(function() {
     var e, imgUrl, tagHtml;
-    console.log("Using selectors '" + selector + "' / '" + this + "' for lightboximages");
     try {
       if ($(this).prop("tagName").toLowerCase() === "img" && $(this).parent().prop("tagName").toLowerCase() !== "a") {
         tagHtml = $(this).removeClass("lightboximage").prop("outerHTML");
@@ -1603,7 +1600,7 @@ lightboxImages = function(selector, lookDeeply) {
       }
     } catch (_error) {
       e = _error;
-      return console.log("Couldn't parse through the elements");
+      return console.warn("Couldn't parse through the elements");
     }
   });
 };
@@ -2294,9 +2291,8 @@ insertModalImage = function(imageObject, taxon, callback) {
    * for API reference.
    */
   args = "getthumbinfo=1&num=all&cconly=1&taxon=" + taxonString + "&format=xml";
-  console.log("Looking at", "" + ssar.affiliateQueryUrl.calPhotos + "?" + args);
   doneCORS = function(resultXml) {
-    var data, result;
+    var data, e, result;
     result = xmlToJSON.parseString(resultXml);
     window.testData = result;
     data = result.calphotos[0];
@@ -2305,15 +2301,21 @@ insertModalImage = function(imageObject, taxon, callback) {
       return false;
     }
     imageObject = new Object();
-    imageObject.thumbUri = data.thumb_url[0]["_text"];
-    if (imageObject.thumbUri == null) {
-      console.warn("CalPhotos didn't return any valid images for this search!");
+    try {
+      imageObject.thumbUri = data.thumb_url[0]["_text"];
+      if (imageObject.thumbUri == null) {
+        console.warn("CalPhotos didn't return any valid images for this search!");
+        return false;
+      }
+      imageObject.imageUri = data.enlarge_jpeg_url[0]["_text"];
+      imageObject.imageLinkUri = data.enlarge_url[0]["_text"];
+      imageObject.imageLicense = data.license[0]["_text"];
+      imageObject.imageCredit = "" + data.copyright[0]["_text"] + " (via CalPhotos)";
+    } catch (_error) {
+      e = _error;
+      console.warn("CalPhotos didn't return any valid images for this search!", "" + ssar.affiliateQueryUrl.calPhotos + "?" + args);
       return false;
     }
-    imageObject.imageUri = data.enlarge_jpeg_url[0]["_text"];
-    imageObject.imageLinkUri = data.enlarge_url[0]["_text"];
-    imageObject.imageLicense = data.license[0]["_text"];
-    imageObject.imageCredit = "" + data.copyright[0]["_text"] + " (via CalPhotos)";
     insertImage(imageObject, taxonString);
     return false;
   };
@@ -2563,7 +2565,7 @@ insertCORSWorkaround = function() {
         return "";
     }
   })();
-  html = "<div class=\"alert alert-info alert-dismissible center-block\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Want CalPhotos images in your species dialogs?</strong> " + browserExtensionLink + "\n  We're working with CalPhotos to enable this natively, but it's a server change on their side.\n</div>";
+  html = "<div class=\"alert alert-info alert-dismissible center-block fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Want CalPhotos images in your species dialogs?</strong> " + browserExtensionLink + "\n  We're working with CalPhotos to enable this natively, but it's a server change on their side.\n</div>";
   $("#result_container").before(html);
   $(".alert").alert();
   ssar.hasShownWorkaround = true;
