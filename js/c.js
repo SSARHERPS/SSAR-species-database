@@ -2299,9 +2299,7 @@ insertModalImage = function(imageObject, taxon, callback) {
   console.log("Looking at", "" + ssar.affiliateQueryUrl.calPhotos + "?" + args);
   doneCORS = function(resultXml) {
     var data, result;
-    console.log("Got ", resultXml);
     result = xmlToJSON.parseString(resultXml);
-    console.log("Parsed", result, result.calphotos, result.calphotos[0]);
     window.testData = result;
     data = result.calphotos[0];
     if (data == null) {
