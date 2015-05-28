@@ -272,6 +272,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       modalTaxon()
       doFontExceptions()
       $("#result-count").text(" - #{result.count} entries")
+      insertCORSWorkaround()
       stopLoad()
 
 
@@ -749,6 +750,43 @@ clearSearch = (partialReset = false) ->
   $("#search").attr("value","")
   $("#linnean-order").polymerSelected("any")
   formatScientificNames()
+  false
+
+
+insertCORSWorkaround = ->
+  unless ssar.hasShownWorkaround?
+    ssar.hasShownWorkaround = false
+  if ssar.hasShownWorkaround
+    return false
+  try
+    browsers = new WhichBrowser()
+  catch e
+    # Defer it till next time
+    return false
+  browserExtensionLink = switch browsers.browser.name
+    when "Chrome"
+      """
+      Install the extension "<a class='alert-link' href='https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi?utm_source=chrome-app-launcher-info-dialog'>Allow-Control-Allow-Origin: *</a>", activate it on this domain, and you'll see them in your popups!
+      """
+    when "Firefox"
+      """
+      Follow the instructions <a class='alert-link' href='http://www-jo.se/f.pfleger/forcecors-workaround'>for this ForceCORS add-on</a>, or try Chrome for a simpler extension. Once you've done so, you'll see photos in your popups!
+      """
+    when "Internet Explorer"
+      """
+      Follow these <a class='alert-link' href='http://stackoverflow.com/a/20947828'>StackOverflow instructions</a> while on this site, and you'll see them in your popups!
+      """
+    else ""
+  html = """
+  <div class="alert alert-info alert-dismissible center-block" role="alert">
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <strong>Want CalPhotos images in your species dialogs?</strong> #{browserExtensionLink}
+    We're working with CalPhotos to enable this natively, but it's a server change on their side.
+  </div>
+  """
+  $("#result_container").before(html)
+  $(".alert").alert()
+  ssar.hasShownWorkaround = true
   false
 
 

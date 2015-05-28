@@ -3,7 +3,7 @@
  * The main coffeescript file for administrative stuff
  * Triggered from admin-page.html
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createDuplicateTaxon, createNewTaxon, d$, deepJQuery, delay, deleteTaxon, doCORSget, doFontExceptions, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, handleDragDropImage, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadJS, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri, verifyLoginCredentials,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createDuplicateTaxon, createNewTaxon, d$, deepJQuery, delay, deleteTaxon, doCORSget, doFontExceptions, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, handleDragDropImage, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadJS, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri, verifyLoginCredentials,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __slice = [].slice;
 
@@ -1714,7 +1714,7 @@ browserBeware = function() {
   try {
     browsers = new WhichBrowser();
     if (browsers.isBrowser("Firefox")) {
-      warnBrowserHtml = "<div id=\"firefox-warning\" class=\"alert alert-warning alert-dismissible fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Warning!</strong> Firefox has buggy support for <a href=\"http://webcomponents.org/\" class=\"alert-link\">webcomponents</a> and the <a href=\"https://www.polymer-project.org\" class=\"alert-link\">Polymer project</a>. If you encounter bugs, try using Chrome (reccommended), Opera, Safari, Internet Explorer, or your phone instead &#8212; they'll all be faster, too.\n</div>";
+      warnBrowserHtml = "<div id=\"firefox-warning\" class=\"alert alert-warning alert-dismissible fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Warning!</strong> Firefox has buggy support for <a href=\"http://webcomponents.org/\" class=\"alert-link\">webcomponents</a> and the <a href=\"https://www.polymer-project.org\" class=\"alert-link\">Polymer project</a>. If you encounter bugs, try using Chrome (recommended), Opera, Safari, Internet Explorer, or your phone instead &#8212; they'll all be faster, too.\n</div>";
       $("#title").after(warnBrowserHtml);
       $(".alert").alert();
       console.warn("We've noticed you're using Firefox. Firefox has problems with this site, we recommend trying Google Chrome instead:", "https://www.google.com/chrome/");
@@ -2063,6 +2063,7 @@ formatSearchResults = function(result, container) {
       modalTaxon();
       doFontExceptions();
       $("#result-count").text(" - " + result.count + " entries");
+      insertCORSWorkaround();
       return stopLoad();
     }
   });
@@ -2537,6 +2538,39 @@ clearSearch = function(partialReset) {
   $("#search").attr("value", "");
   $("#linnean-order").polymerSelected("any");
   formatScientificNames();
+  return false;
+};
+
+insertCORSWorkaround = function() {
+  var browserExtensionLink, browsers, e, html;
+  if (ssar.hasShownWorkaround == null) {
+    ssar.hasShownWorkaround = false;
+  }
+  if (ssar.hasShownWorkaround) {
+    return false;
+  }
+  try {
+    browsers = new WhichBrowser();
+  } catch (_error) {
+    e = _error;
+    return false;
+  }
+  browserExtensionLink = (function() {
+    switch (browsers.browser.name) {
+      case "Chrome":
+        return "Install the extension \"<a class='alert-link' href='https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi?utm_source=chrome-app-launcher-info-dialog'>Allow-Control-Allow-Origin: *</a>\", activate it on this domain, and you'll see them in your popups!";
+      case "Firefox":
+        return "Follow the instructions <a class='alert-link' href='http://www-jo.se/f.pfleger/forcecors-workaround'>for this ForceCORS add-on</a>, or try Chrome for a simpler extension. Once you've done so, you'll see photos in your popups!";
+      case "Internet Explorer":
+        return "Follow these <a class='alert-link' href='http://stackoverflow.com/a/20947828'>StackOverflow instructions</a> while on this site, and you'll see them in your popups!";
+      default:
+        return "";
+    }
+  })();
+  html = "<div class=\"alert alert-info alert-dismissible center-block\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Want CalPhotos images in your species dialogs?</strong> " + browserExtensionLink + "\n  We're working with CalPhotos to enable this natively, but it's a server change on their side.\n</div>";
+  $("#result_container").before(html);
+  $(".alert").alert();
+  ssar.hasShownWorkaround = true;
   return false;
 };
 
