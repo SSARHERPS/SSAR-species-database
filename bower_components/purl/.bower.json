@@ -23,6 +23,5 @@
   },
   "_source": "git://github.com/allmarkedup/purl.git",
   "_target": "~2.3.1",
-  "_originalSource": "purl",
-  "_direct": true
+  "_originalSource": "purl"
 }
