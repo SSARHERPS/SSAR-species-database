@@ -59,11 +59,11 @@ performSearch = (stateArgs = undefined) ->
   if s is "#" or (isNull(s) and isNull(args)) or (args is "q=" and stateArgs isnt true)
     return false
   animateLoad()
-  console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
+  # console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
   $.get(searchParams.targetApi,args,"json")
   .done (result) ->
     # Populate the result container
-    console.log("Search executed by #{result.method} with #{result.count} results.")
+    # console.log("Search executed by #{result.method} with #{result.count} results.")
     if toInt(result.count) is 0
       if result.status is true
         if result.query_params.filter.had_filter is true
@@ -880,7 +880,7 @@ $ ->
       loadArgs = ""
   # Perform the initial search
   if not isNull(loadArgs) and loadArgs isnt "#"
-    console.log("Doing initial search with '#{loadArgs}', hitting","#{searchParams.apiPath}?q=#{loadArgs}")
+    # console.log("Doing initial search with '#{loadArgs}', hitting","#{searchParams.apiPath}?q=#{loadArgs}")
     $.get(searchParams.targetApi,"q=#{loadArgs}","json")
     .done (result) ->
       # Populate the result container

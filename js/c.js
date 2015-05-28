@@ -1824,10 +1824,8 @@ performSearch = function(stateArgs) {
     return false;
   }
   animateLoad();
-  console.log("Got search value " + s + ", hitting", "" + searchParams.apiPath + "?" + args);
   return $.get(searchParams.targetApi, args, "json").done(function(result) {
     var filterText, i, text;
-    console.log("Search executed by " + result.method + " with " + result.count + " results.");
     if (toInt(result.count) === 0) {
       if (result.status === true) {
         if (result.query_params.filter.had_filter === true) {
@@ -2673,7 +2671,6 @@ $(function() {
     }
   }
   if (!isNull(loadArgs) && loadArgs !== "#") {
-    console.log("Doing initial search with '" + loadArgs + "', hitting", "" + searchParams.apiPath + "?q=" + loadArgs);
     return $.get(searchParams.targetApi, "q=" + loadArgs, "json").done(function(result) {
       if (result.status === true && result.count > 0) {
         formatSearchResults(result);
