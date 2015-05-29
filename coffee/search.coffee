@@ -540,13 +540,15 @@ modalTaxon = (taxon = undefined) ->
     # On very small devices, for both real-estate and
     # optimization-related reasons, we'll hide calphotos and the alternate
     html = """
-    <paper-action-dialog backdrop layered closeSelector="[affirmative]" id='modal-taxon'>
-      <div id='modal-taxon-content'></div>
-      <paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button>
-      <paper-button dismissive id='modal-calphotos-linkout' class="hidden-xs">CalPhotos</paper-button>
-      <paper-button dismissive id='modal-alt-linkout' class="hidden-xs"></paper-button>
-      <paper-button affirmative autofocus>Close</paper-button>
-    </paper-action-dialog>
+    <paper-dialog modal closeSelector="[dialog-confirm]" id='modal-taxon'>
+      <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>
+      <div class="buttons">
+        <paper-button dialog-dismiss id='modal-inat-linkout'>iNaturalist</paper-button>
+        <paper-button dialog-dismiss id='modal-calphotos-linkout' class="hidden-xs">CalPhotos</paper-button>
+        <paper-button dialog-dismiss id='modal-alt-linkout' class="hidden-xs"></paper-button>
+        <paper-button dialog-confirm autofocus>Close</paper-button>
+      </div>
+    </paper-dialog>
     """
     $("#result_container").after(html)
   $.get(searchParams.targetApi,"q=#{taxon}","json")
@@ -615,7 +617,7 @@ modalTaxon = (taxon = undefined) ->
     <p class="text-right small text-muted">#{data.taxon_credit}</p>
     """
     $("#modal-taxon-content").html(html)
-    ## Bind the dismissive buttons
+    ## Bind the dialog-dismiss buttons
     # iNaturalist
     $("#modal-inat-linkout")
     .unbind()

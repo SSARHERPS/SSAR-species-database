@@ -185,7 +185,7 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
     stopLoadError()
 
 
-loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
+loadModalTaxonEditor = (extraHtml = "", dialog-confirmText = "Save") ->
   ###
   # Load a modal taxon editor
   ###
@@ -221,13 +221,16 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <input type="hidden" name="edit-taxon-author" id="edit-taxon-author" value="" />
   """
   html = """
-  <paper-action-dialog backdrop layered autoCloseDisabled closeSelector="#close-editor" id='modal-taxon-edit'>
-    <div id='modal-taxon-editor'>
+  <paper-dialog modal autoCloseDisabled closeSelector="#close-editor" id='modal-taxon-edit'>
+    <paper-dialog-scrollable id='modal-taxon-editor'>
       #{editHtml}
+    </paper-dialog-scrollable>
+    <div class="buttons">
+      <paper-button id='close-editor' dialog-dismiss>Cancel</paper-button>
+      <paper-button id='duplicate-taxon' dialog-dismiss>Duplicate</paper-button>
+      <paper-button id='save-editor' dialog-confirm>#{dialog-confirmText}</paper-button>
     </div>
-    <paper-button id='close-editor' dismissive>Cancel</paper-button>
-    <paper-button id='duplicate-taxon' dismissive>Duplicate</paper-button>
-    <paper-button id='save-editor' affirmative>#{affirmativeText}</paper-button></paper-action-dialog>
+  </paper-dialog>
   """
   if $("#modal-taxon-edit").exists()
     $("#modal-taxon-edit").remove()
