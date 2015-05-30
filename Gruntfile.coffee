@@ -15,7 +15,6 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-bootlint')
   grunt.loadNpmTasks('grunt-html')
   grunt.loadNpmTasks('grunt-string-replace')
-  grunt.loadNpmTasks('grunt-postcss')
   grunt.initConfig
     pkg: grunt.file.readJSON('package.json')
     shell:
@@ -39,13 +38,6 @@ module.exports = (grunt) ->
             ]
         files:
           "index.html":"app-prerelease.html"
-    postcss:
-      options:
-        processors: [
-          require('autoprefixer-core')({browsers: 'last 1 version'})
-          ]
-      dist:
-        src: "css/*.css"
     uglify:
       options:
         mangle:
@@ -112,7 +104,7 @@ module.exports = (grunt) ->
         tasks: ["coffee:compile","uglify:dist","shell:movesrc"]
       styles:
         files: ["css/main.css"]
-        tasks: ["postcss","cssmin"]
+        tasks: ["cssmin"]
       html:
         files: ["app.html"]
         tasks: ["bootlint","shell:vulcanize","uglify:vulcanize","string-replace:vulcanize"]
@@ -133,7 +125,7 @@ module.exports = (grunt) ->
   # Part 1
   grunt.registerTask("minifyIndependent","Minify Bower components that aren't distributed min'd",["uglify:minpurl","uglify:minxmljson","uglify:minjcookie"])
   # Part 2
-  grunt.registerTask("minifyBulk","Minify all the things",["uglify:combine","uglify:dist","postcss","cssmin"])
+  grunt.registerTask("minifyBulk","Minify all the things",["uglify:combine","uglify:dist","cssmin:dist"])
   # Main call
   grunt.registerTask "minify","Minify all the things",->
     grunt.task.run("minifyIndependent","minifyBulk")
@@ -146,5 +138,4 @@ module.exports = (grunt) ->
     grunt.task.run("updateNPM","updateBower","minify")
   ## Deploy
   grunt.registerTask "build","Compile and update, then watch", ->
-    # ,"vulcanize"
-    grunt.task.run("updateNPM","updateBower","compile","minify")
+    grunt.task.run("updateNPM","updateBower","compile","minify","vulcanize")
