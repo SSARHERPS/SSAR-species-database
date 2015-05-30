@@ -540,18 +540,6 @@ modalTaxon = (taxon = undefined) ->
     # On very small devices, for both real-estate and
     # optimization-related reasons, we'll hide calphotos and the alternate
     html = """
-<<<<<<< HEAD
-    <paper-dialog modal closeSelector="[dialog-confirm]" id='modal-taxon' style="padding:1em">
-      <h2 id="modal-taxon-heading"></h2>
-      <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>
-      <div class="buttons">
-        <paper-button dialog-dismiss id='modal-inat-linkout'>iNaturalist</paper-button>
-        <paper-button dialog-dismiss id='modal-calphotos-linkout' class="hidden-xs">CalPhotos</paper-button>
-        <paper-button dialog-dismiss id='modal-alt-linkout' class="hidden-xs"></paper-button>
-        <paper-button dialog-confirm autofocus>Close</paper-button>
-      </div>
-    </paper-dialog>
-=======
     <paper-action-dialog backdrop layered closeSelector="[affirmative]" id='modal-taxon'>
       <div id='modal-taxon-content'></div>
       <paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button>
@@ -559,7 +547,6 @@ modalTaxon = (taxon = undefined) ->
       <paper-button dismissive id='modal-alt-linkout' class="hidden-xs"></paper-button>
       <paper-button affirmative autofocus>Close</paper-button>
     </paper-action-dialog>
->>>>>>> parent of 68b994c... Change some paper elements to Polymer 1.0
     """
     $("#result_container").after(html)
   $.get(searchParams.targetApi,"q=#{taxon}","json")
@@ -675,7 +662,6 @@ modalTaxon = (taxon = undefined) ->
     humanTaxon = taxon.charAt(0).toUpperCase()+taxon[1...]
     humanTaxon = humanTaxon.replace(/\+/g," ")
     $("#modal-taxon").attr("heading",humanTaxon)
-    $("#modal-taxon-heading").text(humanTaxon)
     # Open it
     taxonArray = taxon.split("+")
     ssar.activeTaxon =

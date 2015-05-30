@@ -207,9 +207,9 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-input label="Species authority" id="edit-species-authority" name="edit-species-authority" class="species_authority" floatingLabel></paper-input>
   <paper-input label="Species authority year" id="edit-sauthyear" name="edit-sauthyear" floatingLabel></paper-input>
   <br/><br/>
-  <iron-autogrow-textarea id="edit-notes-autogrow" rows="5">
+  <paper-autogrow-textarea id="edit-notes-autogrow" rows="5">
     <textarea placeholder="Notes" id="edit-notes" name="edit-notes" aria-describedby="notes-help" rows="5"></textarea>
-  </iron-autogrow-textarea>
+  </paper-autogrow-textarea>
   <span class="help-block" id="notes-help">You can write your notes in Markdown. (<a href="https://daringfireball.net/projects/markdown/syntax" "onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'">Official Full Syntax Guide</a>)</span>
   <paper-input label="Image" id="edit-image" name="edit-image" floatingLabel aria-describedby="imagehelp"></paper-input>
     <span class="help-block" id="imagehelp">The image path here should be relative to the <span class="code">public_html/cndb/</span> directory.</span>
@@ -224,14 +224,6 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-action-dialog backdrop layered autoCloseDisabled closeSelector="#close-editor" id='modal-taxon-edit'>
     <div id='modal-taxon-editor'>
       #{editHtml}
-<<<<<<< HEAD
-    </paper-dialog-scrollable>
-    <div class="buttons">
-      <paper-button id='close-editor' dialog-dismiss>Cancel</paper-button>
-      <paper-button id='duplicate-taxon' dialog-dismiss>Duplicate</paper-button>
-      <paper-button id='save-editor' dialog-confirm>#{affirmativeText}</paper-button>
-=======
->>>>>>> parent of 68b994c... Change some paper elements to Polymer 1.0
     </div>
     <paper-button id='close-editor' dismissive>Cancel</paper-button>
     <paper-button id='duplicate-taxon' dismissive>Duplicate</paper-button>
@@ -548,7 +540,6 @@ saveEditorEntry = (performMode = "save") ->
     ]
   saveObject = new Object()
   escapeCompletion = false
-  # New invalidator! https://elements.polymer-project.org/elements/paper-input?view=demo:demo/index.html&active=paper-textarea
   try
     $("html /deep/ paper-input /deep/ paper-input-decorator").removeAttr("isinvalid")
   catch e

@@ -133,7 +133,7 @@ module.exports = (grunt) ->
   # Part 1
   grunt.registerTask("minifyIndependent","Minify Bower components that aren't distributed min'd",["uglify:minpurl","uglify:minxmljson","uglify:minjcookie"])
   # Part 2
-  grunt.registerTask("minifyBulk","Minify all the things",["uglify:combine","uglify:dist","cssmin:dist"])
+  grunt.registerTask("minifyBulk","Minify all the things",["uglify:combine","uglify:dist","postcss","cssmin"])
   # Main call
   grunt.registerTask "minify","Minify all the things",->
     grunt.task.run("minifyIndependent","minifyBulk")

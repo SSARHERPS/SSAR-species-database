@@ -207,9 +207,9 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-input label="Species authority" id="edit-species-authority" name="edit-species-authority" class="species_authority" floatingLabel></paper-input>
   <paper-input label="Species authority year" id="edit-sauthyear" name="edit-sauthyear" floatingLabel></paper-input>
   <br/><br/>
-  <iron-autogrow-textarea id="edit-notes-autogrow" rows="5">
+  <paper-autogrow-textarea id="edit-notes-autogrow" rows="5">
     <textarea placeholder="Notes" id="edit-notes" name="edit-notes" aria-describedby="notes-help" rows="5"></textarea>
-  </iron-autogrow-textarea>
+  </paper-autogrow-textarea>
   <span class="help-block" id="notes-help">You can write your notes in Markdown. (<a href="https://daringfireball.net/projects/markdown/syntax" "onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'">Official Full Syntax Guide</a>)</span>
   <paper-input label="Image" id="edit-image" name="edit-image" floatingLabel aria-describedby="imagehelp"></paper-input>
     <span class="help-block" id="imagehelp">The image path here should be relative to the <span class="code">public_html/cndb/</span> directory.</span>
@@ -221,16 +221,13 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <input type="hidden" name="edit-taxon-author" id="edit-taxon-author" value="" />
   """
   html = """
-  <paper-dialog modal autoCloseDisabled closeSelector="#close-editor" id='modal-taxon-edit'>
-    <paper-dialog-scrollable id='modal-taxon-editor'>
+  <paper-action-dialog backdrop layered autoCloseDisabled closeSelector="#close-editor" id='modal-taxon-edit'>
+    <div id='modal-taxon-editor'>
       #{editHtml}
-    </paper-dialog-scrollable>
-    <div class="buttons">
-      <paper-button id='close-editor' dialog-dismiss>Cancel</paper-button>
-      <paper-button id='duplicate-taxon' dialog-dismiss>Duplicate</paper-button>
-      <paper-button id='save-editor' dialog-confirm>#{affirmativeText}</paper-button>
     </div>
-  </paper-dialog>
+    <paper-button id='close-editor' dismissive>Cancel</paper-button>
+    <paper-button id='duplicate-taxon' dismissive>Duplicate</paper-button>
+    <paper-button id='save-editor' affirmative>#{affirmativeText}</paper-button></paper-action-dialog>
   """
   if $("#modal-taxon-edit").exists()
     $("#modal-taxon-edit").remove()
@@ -543,7 +540,6 @@ saveEditorEntry = (performMode = "save") ->
     ]
   saveObject = new Object()
   escapeCompletion = false
-  # New invalidator! https://elements.polymer-project.org/elements/paper-input?view=demo:demo/index.html&active=paper-textarea
   try
     $("html /deep/ paper-input /deep/ paper-input-decorator").removeAttr("isinvalid")
   catch e
@@ -2059,16 +2055,13 @@ modalTaxon = (taxon = undefined) ->
     # On very small devices, for both real-estate and
     # optimization-related reasons, we'll hide calphotos and the alternate
     html = """
-    <paper-dialog modal closeSelector="[dialog-confirm]" id='modal-taxon' style="padding:1em">
-      <h2 id="modal-taxon-heading"></h2>
-      <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>
-      <div class="buttons">
-        <paper-button dialog-dismiss id='modal-inat-linkout'>iNaturalist</paper-button>
-        <paper-button dialog-dismiss id='modal-calphotos-linkout' class="hidden-xs">CalPhotos</paper-button>
-        <paper-button dialog-dismiss id='modal-alt-linkout' class="hidden-xs"></paper-button>
-        <paper-button dialog-confirm autofocus>Close</paper-button>
-      </div>
-    </paper-dialog>
+    <paper-action-dialog backdrop layered closeSelector="[affirmative]" id='modal-taxon'>
+      <div id='modal-taxon-content'></div>
+      <paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button>
+      <paper-button dismissive id='modal-calphotos-linkout' class="hidden-xs">CalPhotos</paper-button>
+      <paper-button dismissive id='modal-alt-linkout' class="hidden-xs"></paper-button>
+      <paper-button affirmative autofocus>Close</paper-button>
+    </paper-action-dialog>
     """
     $("#result_container").after(html)
   $.get(searchParams.targetApi,"q=#{taxon}","json")
@@ -2137,7 +2130,7 @@ modalTaxon = (taxon = undefined) ->
     <p class="text-right small text-muted">#{data.taxon_credit}</p>
     """
     $("#modal-taxon-content").html(html)
-    ## Bind the dialog-dismiss buttons
+    ## Bind the dismissive buttons
     # iNaturalist
     $("#modal-inat-linkout")
     .unbind()
@@ -2184,7 +2177,6 @@ modalTaxon = (taxon = undefined) ->
     humanTaxon = taxon.charAt(0).toUpperCase()+taxon[1...]
     humanTaxon = humanTaxon.replace(/\+/g," ")
     $("#modal-taxon").attr("heading",humanTaxon)
-    $("#modal-taxon-heading").text(humanTaxon)
     # Open it
     taxonArray = taxon.split("+")
     ssar.activeTaxon =
