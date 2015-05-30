@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
 The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
@@ -13,7 +13,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 }
 
 :host(:focus) {
-  outline: none;
+  outline: 0;
 }
 
 .hidden {
@@ -21,36 +21,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 }
 
 #checkboxContainer {
-  display: inline-block;
   position: relative;
   width: 18px;
   height: 18px;
   cursor: pointer;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
+}
+
+#checkboxContainer.labeled {
+  display: inline-block;
   vertical-align: middle;
 }
 
-:host #ink {
+#ink {
   position: absolute;
   top: -15px;
   left: -15px;
   width: 48px;
   height: 48px;
-  color: var(--paper-checkbox-unchecked-ink-color);
-  opacity: 0.6;
+  color: #5a5f5a;
 }
 
-:host #ink[checked] {
-  color: var(--paper-checkbox-checked-ink-color);
+#ink[checked] {
+  color: #B2DFDB;
 }
 
-:host #checkbox {
+#checkbox {
   position: relative;
   box-sizing: border-box;
   height: 100%;
-  border: solid 2px;
-  border-color: var(--paper-checkbox-unchecked-color);
+  border: solid 2px #5a5a5a;
   border-radius: 2px;
   pointer-events: none;
   -webkit-transition: background-color 140ms, border-color 140ms;
@@ -58,7 +59,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 }
 
 /* checkbox checked animations */
-#checkbox.checked #checkmark {
+:host([checked]) #checkmark {
   -webkit-animation: checkmark-expand 140ms ease-out forwards;
   animation: checkmark-expand 140ms ease-out forwards;
 }
@@ -93,12 +94,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   }
 }
 
-:host #checkbox.checked {
-  background-color: var(--paper-checkbox-checked-color);
-  border-color: var(--paper-checkbox-checked-color);
+#checkbox.checked {
+  background-color: #009688;
+  border-color: #009688;
 }
 
-:host #checkmark {
+#checkmark {
   -webkit-transform: rotate(45deg);
   transform: rotate(45deg);
   position: absolute;
@@ -122,7 +123,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   padding-left: 8px;
   white-space: normal;
   pointer-events: none;
-  color: var(--paper-checkbox-label-color);
 }
 
 #checkboxLabel[hidden] {
@@ -135,15 +135,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 }
 
 :host([disabled]) #checkbox {
-  opacity: 0.5;
-  border-color: var(--paper-checkbox-unchecked-color);
+  opacity: 0.33;
+  border-color: #5a5a5a;
 }
 
 :host([disabled][checked]) #checkbox {
-  background-color: var(--paper-checkbox-unchecked-color);
-  opacity: 0.5;
-}
-
-:host([disabled]) #checkboxLabel  {
-  opacity: 0.65;
+  background-color: #5a5a5a;
 }

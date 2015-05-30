@@ -272,7 +272,7 @@
 							$this->camouflage = false;
 						}
 
-						/* EdgeHTML rendering engine also appears to be WebKit */
+						/* IE / Spartan EdgeHTML rendering engine also appears to be WebKit */
 						if (isset($this->engine->name) && $this->engine->name == 'EdgeHTML') {
 							$this->camouflage = false;
 						}
@@ -4348,7 +4348,6 @@
 						case '39.0.2171':
 						case '40.0.2214':
 						case '41.0.2272':
-						case '42.0.2311':
 							$this->browser->version->details = 1;
 							break;
 						default:
@@ -4484,8 +4483,6 @@
 						case '39.0.2171':
 						case '40.0.2214':
 						case '41.0.2272':
-						case '42.0.2311':
-						case '43.0.2357':
 							$this->browser->version->details = 1;
 							break;
 						default:
@@ -4542,10 +4539,6 @@
 
 				if ($this->device->type == TYPE_MOBILE) {
 					$this->browser->name = 'Opera Mobile';
-				}
-
-				if (preg_match('/OMI\//u', $ua)) {
-					$this->device->type = TYPE_TELEVISION;
 				}
 			}
 
@@ -5854,7 +5847,7 @@
 			}
 
 			if (preg_match('/Edge\/([0-9.]*)/u', $ua, $match)) {
-				$this->browser->name = 'Edge';
+				$this->browser->name = 'Project Spartan';
 				$this->browser->version = null;
 			}
 

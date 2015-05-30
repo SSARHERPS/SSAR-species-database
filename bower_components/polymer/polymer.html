@@ -1,19 +1,11 @@
 <!--
-@license
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
---><!--
-@license
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
 The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
 Code distributed by Google as part of the polymer project is also
 subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+<<<<<<< HEAD
 --><link rel="import" href="polymer-mini.html">
 
 <script>Polymer.nar = [];
@@ -3716,64 +3708,10 @@ this._callbacks = [];
 window.addEventListener("load", function() {
 Polymer.ImportStatus._importsLoaded();
 });
+=======
+-->
+>>>>>>> parent of 19ad6cb... Update to Polymer 1.0.0
 
-if (window.HTMLImports) {
-HTMLImports.whenReady(function() {
-Polymer.ImportStatus._importsLoaded();
-});
-}
+<link rel="import" href="layout.html">
 
-Polymer({
-is: "dom-bind",
-"extends": "template",
-created: function() {
-Polymer.ImportStatus.whenLoaded(this._readySelf.bind(this));
-},
-_registerFeatures: function() {
-this._prepExtends();
-this._prepConstructor();
-},
-_insertChildren: function() {
-var parentDom = Polymer.dom(Polymer.dom(this).parentNode);
-parentDom.insertBefore(this.root, this);
-},
-_removeChildren: function() {
-if (this._children) {
-for (var i = 0; i < this._children.length; i++) {
-this.root.appendChild(this._children[i]);
-}
-}
-},
-_initFeatures: function() {},
-_scopeElementClass: function(element, selector) {
-if (this.dataHost) {
-return this.dataHost._scopeElementClass(element, selector);
-} else {
-return selector;
-}
-},
-_prepConfigure: function() {
-var config = {};
-for (var prop in this._propertyEffects) {
-config[prop] = this[prop];
-}
-this._setupConfigure = this._setupConfigure.bind(this, config);
-},
-attached: function() {
-if (!this._children) {
-this._template = this;
-this._prepAnnotations();
-this._prepEffects();
-this._prepBehaviors();
-this._prepConfigure();
-this._prepBindings();
-Polymer.Base._initFeatures.call(this);
-this._children = Array.prototype.slice.call(this.root.childNodes);
-}
-this._insertChildren();
-this.fire("dom-change");
-},
-detached: function() {
-this._removeChildren();
-}
-});</script>
+<script src="polymer.js"></script>

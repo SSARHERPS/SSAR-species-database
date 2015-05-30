@@ -1,3 +1,4 @@
-# paper-dialog
+paper-dialog
+===================
 
-A Material Design dialog
+See the [component page](https://www.polymer-project.org/0.5/docs/elements/paper-dialog.html) for more information.

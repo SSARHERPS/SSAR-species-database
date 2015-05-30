@@ -48,5 +48,6 @@
   },
   "_source": "git://github.com/zeroclipboard/zeroclipboard.git",
   "_target": "~2.2.0",
-  "_originalSource": "zeroclipboard"
+  "_originalSource": "zeroclipboard",
+  "_direct": true
 }

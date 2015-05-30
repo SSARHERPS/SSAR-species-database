@@ -1,5 +1,7 @@
-# paper-input
+paper-input
+===================
 
-`<paper-input>` is a Material Design text field.
+**This element is compatible with Polymer 0.5 and lower only, and will be deprecated.**  
+You can check out a similar 0.8-compatible version of this element at [https://github.com/polymerelements/paper-input](https://github.com/polymerelements/paper-input)
 
-Contains a number of different features for validation, character counting, and more.
+See the [component page](https://www.polymer-project.org/0.5/docs/elements/paper-input.html) for more information.

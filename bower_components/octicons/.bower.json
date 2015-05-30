@@ -33,5 +33,6 @@
   },
   "_source": "git://github.com/github/octicons.git",
   "_target": "~2.1.2",
-  "_originalSource": "octicons"
+  "_originalSource": "octicons",
+  "_direct": true
 }
