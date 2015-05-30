@@ -221,16 +221,21 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <input type="hidden" name="edit-taxon-author" id="edit-taxon-author" value="" />
   """
   html = """
-  <paper-dialog modal autoCloseDisabled closeSelector="#close-editor" id='modal-taxon-edit'>
-    <paper-dialog-scrollable id='modal-taxon-editor'>
+  <paper-action-dialog backdrop layered autoCloseDisabled closeSelector="#close-editor" id='modal-taxon-edit'>
+    <div id='modal-taxon-editor'>
       #{editHtml}
+<<<<<<< HEAD
     </paper-dialog-scrollable>
     <div class="buttons">
       <paper-button id='close-editor' dialog-dismiss>Cancel</paper-button>
       <paper-button id='duplicate-taxon' dialog-dismiss>Duplicate</paper-button>
       <paper-button id='save-editor' dialog-confirm>#{affirmativeText}</paper-button>
+=======
+>>>>>>> parent of 68b994c... Change some paper elements to Polymer 1.0
     </div>
-  </paper-dialog>
+    <paper-button id='close-editor' dismissive>Cancel</paper-button>
+    <paper-button id='duplicate-taxon' dismissive>Duplicate</paper-button>
+    <paper-button id='save-editor' affirmative>#{affirmativeText}</paper-button></paper-action-dialog>
   """
   if $("#modal-taxon-edit").exists()
     $("#modal-taxon-edit").remove()
