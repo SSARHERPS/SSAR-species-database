@@ -942,7 +942,7 @@ Boolean.prototype.toBool = function() {
 };
 
 Number.prototype.toBool = function() {
-  return this === 1;
+  return this.toString() === "1";
 };
 
 Object.size = function(obj) {
@@ -1949,7 +1949,7 @@ formatSearchResults = function(result, container) {
   targetCount = toInt(result.count) - 1;
   colClass = null;
   bootstrapColCount = 0;
-  dontShowColumns = ["id", "minor_type", "notes", "major_type", "taxon_author", "taxon_credit", "image_license", "image_credit"];
+  dontShowColumns = ["id", "minor_type", "notes", "major_type", "taxon_author", "taxon_credit", "image_license", "image_credit", "taxon_credit_date", "parens_auth_genus", "parens_auth_species"];
   return $.each(data, function(i, row) {
     var htmlRow, j, l, taxonQuery;
     if (toInt(i) === 0) {
@@ -2365,7 +2365,7 @@ modalTaxon = function(taxon) {
     year = parseTaxonYear(data.authority_year);
     yearHtml = "";
     if (year !== false) {
-      genusAuthBlock = "<span class='genus_authority authority'>" + data.genus_authority + "</span> " + year.genus + ";";
+      genusAuthBlock = "<span class='genus_authority authority'>" + data.genus_authority + "</span> " + year.genus;
       speciesAuthBlock = "<span class='species_authority authority'>" + data.species_authority + "</span> " + year.species;
       if (toInt(data.parens_auth_genus).toBool()) {
         genusAuthBlock = "(" + genusAuthBlock + ")";
@@ -2373,7 +2373,7 @@ modalTaxon = function(taxon) {
       if (toInt(data.parens_auth_species).toBool()) {
         speciesAuthBlock = "(" + speciesAuthBlock + ")";
       }
-      yearHtml = "<div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div>\n<p>\n  <span class='genus'>" + data.genus + "</span>,\n  " + genusAuthBlock + "\n  <span class='species'>" + data.species + "</span>,\n  " + speciesAuthBlock + "\n</p>";
+      yearHtml = "<div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div>\n<p>\n  <span class='genus'>" + data.genus + "</span>,\n  " + genusAuthBlock + ";\n  <span class='species'>" + data.species + "</span>,\n  " + speciesAuthBlock + "\n</p>";
     }
     deprecatedHtml = "";
     if (!isNull(data.deprecated_scientific)) {

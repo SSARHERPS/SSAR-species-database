@@ -174,6 +174,9 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
     "taxon_credit"
     "image_license"
     "image_credit"
+    "taxon_credit_date"
+    "parens_auth_genus"
+    "parens_auth_species"
     ]
   $.each data, (i,row) ->
     if toInt(i) is 0
@@ -561,7 +564,7 @@ modalTaxon = (taxon = undefined) ->
     yearHtml = ""
     if year isnt false
       genusAuthBlock = """
-      <span class='genus_authority authority'>#{data.genus_authority}</span> #{year.genus};
+      <span class='genus_authority authority'>#{data.genus_authority}</span> #{year.genus}
       """
       speciesAuthBlock = """
       <span class='species_authority authority'>#{data.species_authority}</span> #{year.species}
@@ -574,7 +577,7 @@ modalTaxon = (taxon = undefined) ->
       <div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div>
       <p>
         <span class='genus'>#{data.genus}</span>,
-        #{genusAuthBlock}
+        #{genusAuthBlock};
         <span class='species'>#{data.species}</span>,
         #{speciesAuthBlock}
       </p>

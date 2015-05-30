@@ -54,7 +54,7 @@ String::toBool = -> @toString() is 'true'
 
 Boolean::toBool = -> @toString() is 'true' # In case lazily tested
 
-Number::toBool = -> this is 1
+Number::toBool = -> @toString() is "1"
 
 Object.size = (obj) ->
   size = 0
