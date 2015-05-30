@@ -225,6 +225,7 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-input label="Image License" id="edit-image-license" name="edit-image-license" floatingLabel></paper-input>
   <paper-input label="Taxon Credit" id="edit-taxon-credit" name="edit-taxon-credit" floatingLabel aria-describedby="taxon-credit-help"></paper-input>
     <span class="help-block" id="taxon-credit-help">This will be displayed as "Taxon information by [your entry]."</span>
+  <paper-input label="Taxon Credit Date" id="edit-taxon-credit-date" name="edit-taxon-credit-date" floatingLabel></paper-input>
   #{extraHtml}
   <input type="hidden" name="edit-taxon-author" id="edit-taxon-author" value="" />
   """
@@ -546,6 +547,7 @@ saveEditorEntry = (performMode = "save") ->
     "image-license"
     "taxon-author"
     "taxon-credit"
+    "taxon-credit-date"
     ]
   saveObject = new Object()
   escapeCompletion = false
@@ -636,13 +638,7 @@ saveEditorEntry = (performMode = "save") ->
   saveObject["authority_year"] = authYearString
   try
     dep = new Object()
-    try
-      depS = $("html /deep/ #edit-deprecated-scientific").val()
-    catch e
-      try
-        depS = $("html >>> #edit-deprecated-scientific").val()
-      catch e
-        depS = $("#edit-deprecated-scientific").val()
+    depS = d$("#edit-deprecated-scientific").val()
     depA = depS.split(",")
     $.each depA, (i,k) ->
       item = k.split("\":\"")
@@ -670,10 +666,17 @@ saveEditorEntry = (performMode = "save") ->
     "genus-authority"
     "species-authority"
     ]
+  # If multiple conditions are true, this will have issues. Fix it.
+  spilloverError = "This must not be empty"
   unless isNull(d$("#edit-image").val())
     # We have an image, need a credit
+    spilloverError = "This cannot be empty if an image is provided"
     requiredNotEmpty.push("image-credit")
     requiredNotEmpty.push("image-license")
+  unless isNull(d$("#edit-taxon-credit").val())
+    # We have a taxon credit, need a date for it
+    spilloverError = "If you have a taxon credit, it also needs a date"
+    requiredNotEmpty.push("taxon-credit-date")
   $.each examineIds, (k,id) ->
     # console.log(k,id)
     try
@@ -722,16 +725,15 @@ saveEditorEntry = (performMode = "save") ->
             .attr("isinvalid","isinvalid")
           escapeCompletion = true
       else
-        if id in requiredNotEmpty
-          error = "This cannot be empty if an image is provided"
+        if id in requiredNotEmpty          
           if isNull(val)
             try
               $("html /deep/ #edit-#{id} /deep/ paper-input-decorator")
-              .attr("error",error)
+              .attr("error",spilloverError)
               .attr("isinvalid","isinvalid")
             catch e
               $("html >>> #edit-#{id} >>> paper-input-decorator")
-              .attr("error",error)
+              .attr("error",spilloverError)
               .attr("isinvalid","isinvalid")
             escapeCompletion = true
     # Finally, tack it on to the saveObject
