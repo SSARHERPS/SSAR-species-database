@@ -478,7 +478,7 @@ lookupEditorSpecies = function(taxon) {
           return $("#edit-sauthyear").attr("value", year.species);
         } else if (col === "paren_auth_genus" || col === "paren_auth_species") {
           category = col.split("_").pop();
-          return d$("" + category + "-authority-parens").attr("checked", true);
+          return d$("#" + category + "-authority-parens").polymerChecked(d.toBool());
         } else if (col === "taxon_author") {
           if (d === "null" || isNull(d)) {
             $("#last-edited-by").remove();
@@ -719,6 +719,8 @@ saveEditorEntry = function(performMode) {
     return false;
   }
   saveObject.id = d$("#taxon-id").val();
+  saveObject.parens_auth_genus = d$("#genus-authority-parens").polymerChecked();
+  saveObject.parens_auth_species = d$("#species-authority-parens").polymerChecked();
   if (performMode === "save") {
     if (!isNumber(saveObject.id)) {
       animateLoad();

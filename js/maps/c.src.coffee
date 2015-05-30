@@ -480,7 +480,7 @@ lookupEditorSpecies = (taxon = undefined) ->
         else if col is "paren_auth_genus" or col is "paren_auth_species"
           # Check the paper-toggle-button
           category = col.split("_").pop()
-          d$("#{category}-authority-parens").attr("checked",true)
+          d$("##{category}-authority-parens").polymerChecked(d.toBool())
         else if col is "taxon_author"
           if d is "null" or isNull(d)
             $("#last-edited-by").remove()
@@ -743,6 +743,9 @@ saveEditorEntry = (performMode = "save") ->
     console.error("Bad characters in entry. Stopping ...")
     return false
   saveObject.id = d$("#taxon-id").val()
+  # The parens checks
+  saveObject.parens_auth_genus = d$("#genus-authority-parens").polymerChecked()
+  saveObject.parens_auth_species = d$("#species-authority-parens").polymerChecked()
   if performMode is "save"
     unless isNumber(saveObject.id)
       animateLoad()
