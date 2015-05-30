@@ -540,7 +540,8 @@ modalTaxon = (taxon = undefined) ->
     # On very small devices, for both real-estate and
     # optimization-related reasons, we'll hide calphotos and the alternate
     html = """
-    <paper-dialog modal closeSelector="[dialog-confirm]" id='modal-taxon'>
+    <paper-dialog modal closeSelector="[dialog-confirm]" id='modal-taxon' style="padding:1em">
+      <h2 id="modal-taxon-heading"></h2>
       <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>
       <div class="buttons">
         <paper-button dialog-dismiss id='modal-inat-linkout'>iNaturalist</paper-button>
@@ -664,6 +665,7 @@ modalTaxon = (taxon = undefined) ->
     humanTaxon = taxon.charAt(0).toUpperCase()+taxon[1...]
     humanTaxon = humanTaxon.replace(/\+/g," ")
     $("#modal-taxon").attr("heading",humanTaxon)
+    $("#modal-taxon-heading").text(humanTaxon)
     # Open it
     taxonArray = taxon.split("+")
     ssar.activeTaxon =

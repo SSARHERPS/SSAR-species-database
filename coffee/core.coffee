@@ -383,6 +383,7 @@ stopLoad = (elId = "loader", fadeOut = 1000) ->
       delay fadeOut, ->
         $(selector).removeClass("good")
         $(selector).attr("active",false)
+        $(selector).removeAttr("active")
   catch e
     console.warn('Could not stop load animation', e.message)
 

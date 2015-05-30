@@ -1391,7 +1391,8 @@ stopLoad = function(elId, fadeOut) {
       $(selector).addClass("good");
       return delay(fadeOut, function() {
         $(selector).removeClass("good");
-        return $(selector).attr("active", false);
+        $(selector).attr("active", false);
+        return $(selector).removeAttr("active");
       });
     }
   } catch (_error) {
@@ -2349,7 +2350,7 @@ modalTaxon = function(taxon) {
   }
   animateLoad();
   if (!$("#modal-taxon").exists()) {
-    html = "<paper-dialog modal closeSelector=\"[dialog-confirm]\" id='modal-taxon'>\n  <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button dialog-dismiss id='modal-inat-linkout'>iNaturalist</paper-button>\n    <paper-button dialog-dismiss id='modal-calphotos-linkout' class=\"hidden-xs\">CalPhotos</paper-button>\n    <paper-button dialog-dismiss id='modal-alt-linkout' class=\"hidden-xs\"></paper-button>\n    <paper-button dialog-confirm autofocus>Close</paper-button>\n  </div>\n</paper-dialog>";
+    html = "<paper-dialog modal closeSelector=\"[dialog-confirm]\" id='modal-taxon' style=\"padding:1em\">\n  <h2 id=\"modal-taxon-heading\"></h2>\n  <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button dialog-dismiss id='modal-inat-linkout'>iNaturalist</paper-button>\n    <paper-button dialog-dismiss id='modal-calphotos-linkout' class=\"hidden-xs\">CalPhotos</paper-button>\n    <paper-button dialog-dismiss id='modal-alt-linkout' class=\"hidden-xs\"></paper-button>\n    <paper-button dialog-confirm autofocus>Close</paper-button>\n  </div>\n</paper-dialog>";
     $("#result_container").after(html);
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
@@ -2438,6 +2439,7 @@ modalTaxon = function(taxon) {
     humanTaxon = taxon.charAt(0).toUpperCase() + taxon.slice(1);
     humanTaxon = humanTaxon.replace(/\+/g, " ");
     $("#modal-taxon").attr("heading", humanTaxon);
+    $("#modal-taxon-heading").text(humanTaxon);
     taxonArray = taxon.split("+");
     ssar.activeTaxon = {
       genus: taxonArray[0],
