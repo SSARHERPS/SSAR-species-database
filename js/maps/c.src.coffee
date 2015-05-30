@@ -480,7 +480,6 @@ lookupEditorSpecies = (taxon = undefined) ->
         else if col is "parens_auth_genus" or col is "parens_auth_species"
           # Check the paper-toggle-button
           category = col.split("_").pop()
-          console.log("Marking ##{category}-authority-parens as",toInt(d).toBool(), "from '#{d}' -> '#{toInt(d)}'")
           d$("##{category}-authority-parens").polymerChecked(toInt(d).toBool())
         else if col is "taxon_author"
           if d is "null" or isNull(d)

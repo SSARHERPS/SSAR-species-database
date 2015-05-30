@@ -478,7 +478,6 @@ lookupEditorSpecies = function(taxon) {
           return $("#edit-sauthyear").attr("value", year.species);
         } else if (col === "parens_auth_genus" || col === "parens_auth_species") {
           category = col.split("_").pop();
-          console.log("Marking #" + category + "-authority-parens as", toInt(d).toBool(), "from '" + d + "' -> '" + (toInt(d)) + "'");
           return d$("#" + category + "-authority-parens").polymerChecked(toInt(d).toBool());
         } else if (col === "taxon_author") {
           if (d === "null" || isNull(d)) {
