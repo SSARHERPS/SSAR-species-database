@@ -560,10 +560,28 @@ modalTaxon = (taxon = undefined) ->
     year = parseTaxonYear(data.authority_year)
     yearHtml = ""
     if year isnt false
-      yearHtml = "<div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div><p><span class='genus'>#{data.genus}</span>, <span class='genus_authority authority'>#{data.genus_authority}</span> #{year.genus}; <span class='species'>#{data.species}</span>, <span class='species_authority authority'>#{data.species_authority}</span> #{year.species}</p>"
+      genusAuthBlock = """
+      <span class='genus_authority authority'>#{data.genus_authority}</span> #{year.genus};
+      """
+      speciesAuthBlock = """
+      <span class='species_authority authority'>#{data.species_authority}</span> #{year.species}
+      """
+      if toInt(data.parens_auth_genus).toBool()
+        genusAuthBlock = "(#{genusAuthBlock})"
+      if toInt(data.parens_auth_species).toBool()
+        speciesAuthBlock = "(#{speciesAuthBlock})"
+      yearHtml = """
+      <div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div>
+      <p>
+        <span class='genus'>#{data.genus}</span>,
+        #{genusAuthBlock}
+        <span class='species'>#{data.species}</span>,
+        #{speciesAuthBlock}
+      </p>
+      """
     deprecatedHtml = ""
     if not isNull(data.deprecated_scientific)
-      deprecatedHtml = "<p>Deprecated names:"
+      deprecatedHtml = "<p>Deprecated names: "
       try
         sn = JSON.parse(data.deprecated_scientific)
         i = 0

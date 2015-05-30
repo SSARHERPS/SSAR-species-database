@@ -456,8 +456,8 @@ lookupEditorSpecies = (taxon = undefined) ->
           data.deprecated_scientific = new Object()
         speciesString = originalNames.species
         unless isNull(originalNames.subspecies)
-          speciesString += originalNames.subspecies
-        data.deprecated_scientific["#{originalNames.genus} #{speciesString}"] = "AUTHORITY: YEAR"
+          speciesString += " #{originalNames.subspecies}"
+        data.deprecated_scientific["#{originalNames.genus.toTitleCase()} #{speciesString}"] = "AUTHORITY: YEAR"
       # We've finished cleaning up the data from the server, time to
       # actually populate the edior.
       $.each data, (col,d) ->
@@ -477,10 +477,11 @@ lookupEditorSpecies = (taxon = undefined) ->
           year = parseTaxonYear(d)
           $("#edit-gauthyear").attr("value",year.genus)
           $("#edit-sauthyear").attr("value",year.species)
-        else if col is "paren_auth_genus" or col is "paren_auth_species"
+        else if col is "parens_auth_genus" or col is "parens_auth_species"
           # Check the paper-toggle-button
           category = col.split("_").pop()
-          d$("##{category}-authority-parens").polymerChecked(d.toBool())
+          console.log("Marking ##{category}-authority-parens as",toInt(d).toBool(), "from '#{d}' -> '#{toInt(d)}'")
+          d$("##{category}-authority-parens").polymerChecked(toInt(d).toBool())
         else if col is "taxon_author"
           if d is "null" or isNull(d)
             $("#last-edited-by").remove()
@@ -2087,10 +2088,28 @@ modalTaxon = (taxon = undefined) ->
     year = parseTaxonYear(data.authority_year)
     yearHtml = ""
     if year isnt false
-      yearHtml = "<div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div><p><span class='genus'>#{data.genus}</span>, <span class='genus_authority authority'>#{data.genus_authority}</span> #{year.genus}; <span class='species'>#{data.species}</span>, <span class='species_authority authority'>#{data.species_authority}</span> #{year.species}</p>"
+      genusAuthBlock = """
+      <span class='genus_authority authority'>#{data.genus_authority}</span> #{year.genus};
+      """
+      speciesAuthBlock = """
+      <span class='species_authority authority'>#{data.species_authority}</span> #{year.species}
+      """
+      if toInt(data.parens_auth_genus).toBool()
+        genusAuthBlock = "(#{genusAuthBlock})"
+      if toInt(data.parens_auth_species).toBool()
+        speciesAuthBlock = "(#{speciesAuthBlock})"
+      yearHtml = """
+      <div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div>
+      <p>
+        <span class='genus'>#{data.genus}</span>,
+        #{genusAuthBlock}
+        <span class='species'>#{data.species}</span>,
+        #{speciesAuthBlock}
+      </p>
+      """
     deprecatedHtml = ""
     if not isNull(data.deprecated_scientific)
-      deprecatedHtml = "<p>Deprecated names:"
+      deprecatedHtml = "<p>Deprecated names: "
       try
         sn = JSON.parse(data.deprecated_scientific)
         i = 0

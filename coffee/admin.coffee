@@ -456,8 +456,8 @@ lookupEditorSpecies = (taxon = undefined) ->
           data.deprecated_scientific = new Object()
         speciesString = originalNames.species
         unless isNull(originalNames.subspecies)
-          speciesString += originalNames.subspecies
-        data.deprecated_scientific["#{originalNames.genus} #{speciesString}"] = "AUTHORITY: YEAR"
+          speciesString += " #{originalNames.subspecies}"
+        data.deprecated_scientific["#{originalNames.genus.toTitleCase()} #{speciesString}"] = "AUTHORITY: YEAR"
       # We've finished cleaning up the data from the server, time to
       # actually populate the edior.
       $.each data, (col,d) ->
@@ -477,10 +477,11 @@ lookupEditorSpecies = (taxon = undefined) ->
           year = parseTaxonYear(d)
           $("#edit-gauthyear").attr("value",year.genus)
           $("#edit-sauthyear").attr("value",year.species)
-        else if col is "paren_auth_genus" or col is "paren_auth_species"
+        else if col is "parens_auth_genus" or col is "parens_auth_species"
           # Check the paper-toggle-button
           category = col.split("_").pop()
-          d$("##{category}-authority-parens").polymerChecked(d.toBool())
+          console.log("Marking ##{category}-authority-parens as",toInt(d).toBool(), "from '#{d}' -> '#{toInt(d)}'")
+          d$("##{category}-authority-parens").polymerChecked(toInt(d).toBool())
         else if col is "taxon_author"
           if d is "null" or isNull(d)
             $("#last-edited-by").remove()

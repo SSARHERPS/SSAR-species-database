@@ -456,9 +456,9 @@ lookupEditorSpecies = function(taxon) {
         }
         speciesString = originalNames.species;
         if (!isNull(originalNames.subspecies)) {
-          speciesString += originalNames.subspecies;
+          speciesString += " " + originalNames.subspecies;
         }
-        data.deprecated_scientific["" + originalNames.genus + " " + speciesString] = "AUTHORITY: YEAR";
+        data.deprecated_scientific["" + (originalNames.genus.toTitleCase()) + " " + speciesString] = "AUTHORITY: YEAR";
       }
       $.each(data, function(col, d) {
         var category, fieldSelector, whoEdited, year;
@@ -476,9 +476,10 @@ lookupEditorSpecies = function(taxon) {
           year = parseTaxonYear(d);
           $("#edit-gauthyear").attr("value", year.genus);
           return $("#edit-sauthyear").attr("value", year.species);
-        } else if (col === "paren_auth_genus" || col === "paren_auth_species") {
+        } else if (col === "parens_auth_genus" || col === "parens_auth_species") {
           category = col.split("_").pop();
-          return d$("#" + category + "-authority-parens").polymerChecked(d.toBool());
+          console.log("Marking #" + category + "-authority-parens as", toInt(d).toBool(), "from '" + d + "' -> '" + (toInt(d)) + "'");
+          return d$("#" + category + "-authority-parens").polymerChecked(toInt(d).toBool());
         } else if (col === "taxon_author") {
           if (d === "null" || isNull(d)) {
             $("#last-edited-by").remove();
@@ -2354,7 +2355,7 @@ modalTaxon = function(taxon) {
     $("#result_container").after(html);
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
-    var buttonText, commonType, data, deprecatedHtml, e, humanTaxon, i, minorTypeHtml, notes, outboundLink, sn, taxonArray, year, yearHtml, _ref;
+    var buttonText, commonType, data, deprecatedHtml, e, genusAuthBlock, humanTaxon, i, minorTypeHtml, notes, outboundLink, sn, speciesAuthBlock, taxonArray, year, yearHtml, _ref;
     data = result.result[0];
     if (data == null) {
       toastStatusMessage("There was an error fetching the entry details. Please try again later.");
@@ -2364,11 +2365,19 @@ modalTaxon = function(taxon) {
     year = parseTaxonYear(data.authority_year);
     yearHtml = "";
     if (year !== false) {
-      yearHtml = "<div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div><p><span class='genus'>" + data.genus + "</span>, <span class='genus_authority authority'>" + data.genus_authority + "</span> " + year.genus + "; <span class='species'>" + data.species + "</span>, <span class='species_authority authority'>" + data.species_authority + "</span> " + year.species + "</p>";
+      genusAuthBlock = "<span class='genus_authority authority'>" + data.genus_authority + "</span> " + year.genus + ";";
+      speciesAuthBlock = "<span class='species_authority authority'>" + data.species_authority + "</span> " + year.species;
+      if (toInt(data.parens_auth_genus).toBool()) {
+        genusAuthBlock = "(" + genusAuthBlock + ")";
+      }
+      if (toInt(data.parens_auth_species).toBool()) {
+        speciesAuthBlock = "(" + speciesAuthBlock + ")";
+      }
+      yearHtml = "<div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div>\n<p>\n  <span class='genus'>" + data.genus + "</span>,\n  " + genusAuthBlock + "\n  <span class='species'>" + data.species + "</span>,\n  " + speciesAuthBlock + "\n</p>";
     }
     deprecatedHtml = "";
     if (!isNull(data.deprecated_scientific)) {
-      deprecatedHtml = "<p>Deprecated names:";
+      deprecatedHtml = "<p>Deprecated names: ";
       try {
         sn = JSON.parse(data.deprecated_scientific);
         i = 0;
