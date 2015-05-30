@@ -204,8 +204,16 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-input label="Common Type (eg., 'lizard')" id="edit-major-common-type" name="edit-major-common-type" class="major_common_type" floatingLabel></paper-input>
   <paper-input label="Genus authority" id="edit-genus-authority" name="edit-genus-authority" class="genus_authority" floatingLabel></paper-input>
   <paper-input label="Genus authority year" id="edit-gauthyear" name="edit-gauthyear" floatingLabel></paper-input>
+  <core-label>
+    Use Parenthesis for Genus Authority
+    <paper-toggle-button id="genus-authority-parens"  checked="false"></paper-toggle-button>
+  </core-label>
   <paper-input label="Species authority" id="edit-species-authority" name="edit-species-authority" class="species_authority" floatingLabel></paper-input>
   <paper-input label="Species authority year" id="edit-sauthyear" name="edit-sauthyear" floatingLabel></paper-input>
+  <core-label>
+    Use Parenthesis for Species Authority
+    <paper-toggle-button id="species-authority-parens" checked="false"></paper-toggle-button>
+  </core-label>
   <br/><br/>
   <paper-autogrow-textarea id="edit-notes-autogrow" rows="5">
     <textarea placeholder="Notes" id="edit-notes" name="edit-notes" aria-describedby="notes-help" rows="5"></textarea>
@@ -469,6 +477,10 @@ lookupEditorSpecies = (taxon = undefined) ->
           year = parseTaxonYear(d)
           $("#edit-gauthyear").attr("value",year.genus)
           $("#edit-sauthyear").attr("value",year.species)
+        else if col is "paren_auth_genus" or col is "paren_auth_species"
+          # Check the paper-toggle-button
+          category = col.split("_").pop()
+          d$("#{category}-authority-parens").attr("checked",true)
         else if col is "taxon_author"
           if d is "null" or isNull(d)
             $("#last-edited-by").remove()
@@ -476,10 +488,7 @@ lookupEditorSpecies = (taxon = undefined) ->
           else
             d$("#taxon-author-last").text(d)
           whoEdited = if isNull($.cookie("ssarherps_fullname")) then $.cookie("ssarherps_user") else $.cookie("ssarherps_fullname")
-          try
-            $("html /deep/ #edit-taxon-author").attr("value",whoEdited)
-          catch e
-            $("html >>> #edit-taxon-author").attr("value",whoEdited)
+          d$("#edit-taxon-author").attr("value",whoEdited)
         else
           fieldSelector = "#edit-#{col.replace(/_/g,"-")}"
           if col is "deprecated_scientific"
