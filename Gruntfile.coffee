@@ -15,6 +15,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-bootlint')
   grunt.loadNpmTasks('grunt-html')
   grunt.loadNpmTasks('grunt-string-replace')
+  grunt.loadNpmTasks('grunt-postcss')
   grunt.initConfig
     pkg: grunt.file.readJSON('package.json')
     shell:
@@ -38,6 +39,13 @@ module.exports = (grunt) ->
             ]
         files:
           "index.html":"app-prerelease.html"
+    postcss:
+      options:
+        processors: [
+          require('autoprefixer-core')({browsers: 'last 1 version'})
+          ]
+      dist:
+        src: "css/main.css"
     uglify:
       options:
         mangle:
@@ -104,7 +112,7 @@ module.exports = (grunt) ->
         tasks: ["coffee:compile","uglify:dist","shell:movesrc"]
       styles:
         files: ["css/main.css"]
-        tasks: ["cssmin"]
+        tasks: ["postcss","cssmin"]
       html:
         files: ["app.html"]
         tasks: ["bootlint","shell:vulcanize","uglify:vulcanize","string-replace:vulcanize"]
@@ -138,4 +146,5 @@ module.exports = (grunt) ->
     grunt.task.run("updateNPM","updateBower","minify")
   ## Deploy
   grunt.registerTask "build","Compile and update, then watch", ->
-    grunt.task.run("updateNPM","updateBower","compile","minify","vulcanize")
+    # ,"vulcanize"
+    grunt.task.run("updateNPM","updateBower","compile","minify")
