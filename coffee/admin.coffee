@@ -185,7 +185,7 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
     stopLoadError()
 
 
-loadModalTaxonEditor = (extraHtml = "", dialog-confirmText = "Save") ->
+loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   ###
   # Load a modal taxon editor
   ###
@@ -207,9 +207,9 @@ loadModalTaxonEditor = (extraHtml = "", dialog-confirmText = "Save") ->
   <paper-input label="Species authority" id="edit-species-authority" name="edit-species-authority" class="species_authority" floatingLabel></paper-input>
   <paper-input label="Species authority year" id="edit-sauthyear" name="edit-sauthyear" floatingLabel></paper-input>
   <br/><br/>
-  <paper-autogrow-textarea id="edit-notes-autogrow" rows="5">
+  <iron-autogrow-textarea id="edit-notes-autogrow" rows="5">
     <textarea placeholder="Notes" id="edit-notes" name="edit-notes" aria-describedby="notes-help" rows="5"></textarea>
-  </paper-autogrow-textarea>
+  </iron-autogrow-textarea>
   <span class="help-block" id="notes-help">You can write your notes in Markdown. (<a href="https://daringfireball.net/projects/markdown/syntax" "onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'">Official Full Syntax Guide</a>)</span>
   <paper-input label="Image" id="edit-image" name="edit-image" floatingLabel aria-describedby="imagehelp"></paper-input>
     <span class="help-block" id="imagehelp">The image path here should be relative to the <span class="code">public_html/cndb/</span> directory.</span>
@@ -228,7 +228,7 @@ loadModalTaxonEditor = (extraHtml = "", dialog-confirmText = "Save") ->
     <div class="buttons">
       <paper-button id='close-editor' dialog-dismiss>Cancel</paper-button>
       <paper-button id='duplicate-taxon' dialog-dismiss>Duplicate</paper-button>
-      <paper-button id='save-editor' dialog-confirm>#{dialog-confirmText}</paper-button>
+      <paper-button id='save-editor' dialog-confirm>#{affirmativeText}</paper-button>
     </div>
   </paper-dialog>
   """
@@ -543,6 +543,7 @@ saveEditorEntry = (performMode = "save") ->
     ]
   saveObject = new Object()
   escapeCompletion = false
+  # New invalidator! https://elements.polymer-project.org/elements/paper-input?view=demo:demo/index.html&active=paper-textarea
   try
     $("html /deep/ paper-input /deep/ paper-input-decorator").removeAttr("isinvalid")
   catch e
