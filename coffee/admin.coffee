@@ -666,16 +666,12 @@ saveEditorEntry = (performMode = "save") ->
     "genus-authority"
     "species-authority"
     ]
-  # If multiple conditions are true, this will have issues. Fix it.
-  spilloverError = "This must not be empty"
   unless isNull(d$("#edit-image").val())
     # We have an image, need a credit
-    spilloverError = "This cannot be empty if an image is provided"
     requiredNotEmpty.push("image-credit")
     requiredNotEmpty.push("image-license")
   unless isNull(d$("#edit-taxon-credit").val())
     # We have a taxon credit, need a date for it
-    spilloverError = "If you have a taxon credit, it also needs a date"
     requiredNotEmpty.push("taxon-credit-date")
   $.each examineIds, (k,id) ->
     # console.log(k,id)
@@ -725,7 +721,16 @@ saveEditorEntry = (performMode = "save") ->
             .attr("isinvalid","isinvalid")
           escapeCompletion = true
       else
-        if id in requiredNotEmpty          
+        if id in requiredNotEmpty
+          selectorSample = "#edit-#{id}"
+          spilloverError = "This must not be empty"
+          # console.log("Checking '#{selectorSample}'")
+          if selectorSample is "#edit-image-credit" or selectorSample is "#edit-image-license"
+            # We have an image, need a credit
+            spilloverError = "This cannot be empty if an image is provided"
+          if selectorSample is "#edit-taxon-credit-date"
+            # We have a taxon credit, need a date for it
+            spilloverError = "If you have a taxon credit, it also needs a date"
           if isNull(val)
             try
               $("html /deep/ #edit-#{id} /deep/ paper-input-decorator")

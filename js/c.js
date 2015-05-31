@@ -527,7 +527,7 @@ lookupEditorSpecies = function(taxon) {
 };
 
 saveEditorEntry = function(performMode) {
-  var args, auth, authYearString, dep, depA, depS, depString, e, escapeCompletion, examineIds, gYear, hash, keepCase, link, requiredNotEmpty, s64, sYear, saveObject, saveString, secret, spilloverError, testAuthorityYear, userVerification;
+  var args, auth, authYearString, dep, depA, depS, depString, e, escapeCompletion, examineIds, gYear, hash, keepCase, link, requiredNotEmpty, s64, sYear, saveObject, saveString, secret, testAuthorityYear, userVerification;
   if (performMode == null) {
     performMode = "save";
   }
@@ -634,18 +634,15 @@ saveEditorEntry = function(performMode) {
   saveObject["deprecated_scientific"] = depString;
   keepCase = ["notes", "taxon_credit", "image", "image_credit", "image_license"];
   requiredNotEmpty = ["common-name", "major-type", "linnean-order", "genus-authority", "species-authority"];
-  spilloverError = "This must not be empty";
   if (!isNull(d$("#edit-image").val())) {
-    spilloverError = "This cannot be empty if an image is provided";
     requiredNotEmpty.push("image-credit");
     requiredNotEmpty.push("image-license");
   }
   if (!isNull(d$("#edit-taxon-credit").val())) {
-    spilloverError = "If you have a taxon credit, it also needs a date";
     requiredNotEmpty.push("taxon-credit-date");
   }
   $.each(examineIds, function(k, id) {
-    var col, error, nullTest, thisSelector, val;
+    var col, error, nullTest, selectorSample, spilloverError, thisSelector, val;
     try {
       thisSelector = "html /deep/ #edit-" + id;
       if (isNull($(thisSelector))) {
@@ -694,6 +691,14 @@ saveEditorEntry = function(performMode) {
         break;
       default:
         if (__indexOf.call(requiredNotEmpty, id) >= 0) {
+          selectorSample = "#edit-" + id;
+          spilloverError = "This must not be empty";
+          if (selectorSample === "#edit-image-credit" || selectorSample === "#edit-image-license") {
+            spilloverError = "This cannot be empty if an image is provided";
+          }
+          if (selectorSample === "#edit-taxon-credit-date") {
+            spilloverError = "If you have a taxon credit, it also needs a date";
+          }
           if (isNull(val)) {
             try {
               $("html /deep/ #edit-" + id + " /deep/ paper-input-decorator").attr("error", spilloverError).attr("isinvalid", "isinvalid");
