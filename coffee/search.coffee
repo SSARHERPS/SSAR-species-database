@@ -178,7 +178,14 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
     "parens_auth_genus"
     "parens_auth_species"
     ]
+  externalCounter = 0
+  renderTimeout = delay 5000, ->
+    stopLoadError("There was a problem parsing the search results.")
+    console.error("Couldn't finish parsing the results! Expecting #{targetCount} elements, timed out on #{externalCounter}.")
+    console.warn(data)
+    return false
   $.each data, (i,row) ->
+    externalCounter = i
     if toInt(i) is 0
       j = 0
       htmlHead += "\n<!-- Table Headers - #{Object.size(row)} entries -->"
@@ -270,6 +277,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       html = htmlHead + html + htmlClose
       # console.log("Processed #{toInt(i)+1} rows")
       $(container).html(html)
+      clearTimeout(renderTimeout)
       mapNewWindows()
       lightboxImages()
       modalTaxon()

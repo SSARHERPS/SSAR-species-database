@@ -254,7 +254,7 @@ function doSearch($overrideSearch = null)
     if(!empty($overrideSearch))
     {
         $search = $overrideSearch;
-         
+
     }
     $result_vector = array();
     if(empty($params) || !empty($search))
@@ -677,12 +677,18 @@ if ($search == "mohave" || $search == "mojave")
     $result2 = doSearch($search);
     $result["query"] = $result["query"] . " && " . $result2["query"];
     $result["method"] = $result["method"] . " && " . $result2["method"];
-    $result["count"] = $result["count"] + $result2["count"];
-    $result["alt_query_params"] = $result2["query_params"];
-    $result["alt_params"] = $result2["params"];
-    $result["result"] = array_merge($result["result"],$result2["result"]);
+    $final_array = array();
+    foreach($result["result"] as $key=>$value)
+    {
+        if(!in_array($value,$result2["result"]))
+        {
+            $final_array[] = $value;
+        }
+    }
+    $result["result"] = array_merge($result2["result"],$final_array);
+    $result["count"] = sizeof($result["result"]);
     $result["original_alt"] = $result2;
-    $result["alt_try_query"] = $search;
+
 }
 returnAjax($result);
 

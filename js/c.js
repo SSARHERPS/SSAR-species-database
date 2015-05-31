@@ -1927,7 +1927,7 @@ getFilters = function(selector, booleanType) {
 };
 
 formatSearchResults = function(result, container) {
-  var bootstrapColCount, colClass, data, dontShowColumns, headers, html, htmlClose, htmlHead, targetCount;
+  var bootstrapColCount, colClass, data, dontShowColumns, externalCounter, headers, html, htmlClose, htmlHead, renderTimeout, targetCount;
   if (container == null) {
     container = searchParams.targetContainer;
   }
@@ -1949,8 +1949,16 @@ formatSearchResults = function(result, container) {
   colClass = null;
   bootstrapColCount = 0;
   dontShowColumns = ["id", "minor_type", "notes", "major_type", "taxon_author", "taxon_credit", "image_license", "image_credit", "taxon_credit_date", "parens_auth_genus", "parens_auth_species"];
+  externalCounter = 0;
+  renderTimeout = delay(5000, function() {
+    stopLoadError("There was a problem parsing the search results.");
+    console.error("Couldn't finish parsing the results! Expecting " + targetCount + " elements, timed out on " + externalCounter + ".");
+    console.warn(data);
+    return false;
+  });
   return $.each(data, function(i, row) {
     var htmlRow, j, l, taxonQuery;
+    externalCounter = i;
     if (toInt(i) === 0) {
       j = 0;
       htmlHead += "\n<!-- Table Headers - " + (Object.size(row)) + " entries -->";
@@ -2054,6 +2062,7 @@ formatSearchResults = function(result, container) {
     if (toInt(i) === targetCount) {
       html = htmlHead + html + htmlClose;
       $(container).html(html);
+      clearTimeout(renderTimeout);
       mapNewWindows();
       lightboxImages();
       modalTaxon();
