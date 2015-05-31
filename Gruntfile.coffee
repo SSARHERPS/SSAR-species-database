@@ -80,6 +80,9 @@ module.exports = (grunt) ->
             if_return: true
             drop_console: false
             warnings: true
+            properties: true
+            sequences: true
+            cascade: true
         files:
           "js/c.min.js":["js/c.js"]
       minpurl:
