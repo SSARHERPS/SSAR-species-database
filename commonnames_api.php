@@ -164,7 +164,7 @@ if(isset($_REQUEST['filter']))
   }
 
 
-$search = $db->sanitize(deEscape(urldecode($_REQUEST['q'])));
+$search = strtolower($db->sanitize(deEscape(urldecode($_REQUEST['q']))));
 
 
 
@@ -242,418 +242,444 @@ function handleParamSearch($filter_params,$loose = false,$boolean_type = "AND", 
   return $result_vector;
 }
 
-/****
+/*********************************************************
+ *
  * The actual main search loop
- ****/
+ *
+ *********************************************************/
 
-$result_vector = array();
-if(empty($params) || !empty($search))
-  {
-    # There was either a parsing failure, or no filter set.
-    if(empty($search))
-      {
-        # For the full list, just return scientific data
-        $search_list = $order_by;
-        $col = "species";
-        $params[$col] = $search;
-        $loose = true;
-        $method = "full_simple_list";
-        $l = $db->openDB();
-        $query = "SELECT ".$search_list." FROM `".$db->getTable()."` ORDER BY ".$order_by;
-        $r = mysqli_query($l,$query);
-        try
-          {
-            while($row = mysqli_fetch_assoc($r))
-              {
-                $result_vector[] = $row;
-              }
-          }
-        catch(Exception $e)
-          {
-            if(is_string($r)) $error = $r;
-            else $error = $e;
-          }
-      }
-    else if(is_numeric($search))
-      {
-        $method="year_search";
-        $col = "authority_year";
-        $loose = true; # Always true because of the way data is stored
-        $params[$col] = $search;
-        $r = $db->doQuery($params,"*","or",$loose,true,$order_by);
-        try
-          {
-            while($row = mysqli_fetch_assoc($r))
-              {
-                $result_vector[] = $row;
-              }
-          }
-        catch(Exception $e)
-          {
-            if(is_string($r)) $error = $r;
-            else $error = $e;
-          }
-      }
-    else if (strpos($search," ") === false)
-      {
-        $method="spaceless_search";
-        # No space in search
-        if($boolean_type !== false)
-          {
-            # Handle the complicated statement. It'll need to be
-            # escaped from normal handling.
-              $method = "spaceless_search_param";
-            $extra_params = array();
-            $extra_boolean_type = " OR ";
-            if(!isset($_REQUEST['only']))
-              {
-                $extra_params["common_name"] = $search;
-                $extra_params["genus"] = $search;
-                $extra_params["species"] = $search;
-                $extra_params["subspecies"] = $search;
-                $extra_params["major_common_type"] = $search;
-                $extra_params["major_subtype"] = $search;
-                $extra_params["deprecated_scientific"] = $search;
-              }
-            else
-              {
-                foreach(explode(",",$_REQUEST['only']) as $column)
-                  {
-                    $extra_params[$db->sanitize($column)] = $search;
-                  }
-              }
-            if(isset($_REQUEST['include']))
-              {
-                foreach(explode(",",$_REQUEST['include']) as $column)
-                  {
-                    $extra_params[$db->sanitize($column)] = $search;
-                  }
-              }
-            foreach($extra_params as $col => $search)
-              {
-                $extra_params[$col] = $loose ? "LOWER(`".$col."`) LIKE '%".$search."%'":"`".$col."`='".$search."'";
-              }
-            $extra_filter = implode($extra_boolean_type,$extra_params);
-            $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);
-          }
-        else
-          {
-              $method = "spaceless_search_direct";
-            $boolean_type = "OR";
-            if(!isset($_REQUEST['only']))
-              {
-                $params["common_name"] = $search;
-                $params["genus"] = $search;
-                $params["species"] = $search;
-                $params["subspecies"] = $search;
-                $params["major_common_type"] = $search;
-                $params["major_subtype"] = $search;
-                $params["deprecated_scientific"] = $search;
-              }
-            else
-              {
-                foreach(explode(",",$_REQUEST['only']) as $column)
-                  {
-                    $params[$db->sanitize($column)] = $search;
-                  }
-              }
-            if(isset($_REQUEST['include']))
-              {
-                foreach(explode(",",$_REQUEST['include']) as $column)
-                  {
-                    $params[$db->sanitize($column)] = $search;
-                  }
-              }
-            if(!$flag_fuzzy)
-              {
-                $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
-                try {
-                  while($row = mysqli_fetch_assoc($r))
+function doSearch($overrideSearch = null)
+{
+    global $search, $flag_fuzzy, $loose, $limit, $order_by, $params, $boolean_type, $filter_params, $db, $method;
+    if(!empty($overrideSearch))
+    {
+        $search = $overrideSearch;
+    }
+    $result_vector = array();
+    if(empty($params) || !empty($search))
+    {
+        # There was either a parsing failure, or no filter set.
+        if(empty($search))
+        {
+            # For the full list, just return scientific data
+            $search_list = $order_by;
+            $col = "species";
+            $params[$col] = $search;
+            $loose = true;
+            $method = "full_simple_list";
+            $l = $db->openDB();
+            $query = "SELECT ".$search_list." FROM `".$db->getTable()."` ORDER BY ".$order_by;
+            $r = mysqli_query($l,$query);
+            try
+            {
+                while($row = mysqli_fetch_assoc($r))
+                {
+                    $result_vector[] = $row;
+                }
+            }
+            catch(Exception $e)
+            {
+                if(is_string($r)) $error = $r;
+                else $error = $e;
+            }
+        }
+        else if(is_numeric($search))
+        {
+            $method="year_search";
+            $col = "authority_year";
+            $loose = true; # Always true because of the way data is stored
+            $params[$col] = $search;
+            $r = $db->doQuery($params,"*","or",$loose,true,$order_by);
+            try
+            {
+                while($row = mysqli_fetch_assoc($r))
+                {
+                    $result_vector[] = $row;
+                }
+            }
+            catch(Exception $e)
+            {
+                if(is_string($r)) $error = $r;
+                else $error = $e;
+            }
+        }
+        else if (strpos($search," ") === false)
+        {
+            $method="spaceless_search";
+            # No space in search
+            if($boolean_type !== false)
+            {
+                # Handle the complicated statement. It'll need to be
+                # escaped from normal handling.
+                $method = "spaceless_search_param";
+                $extra_params = array();
+                $extra_boolean_type = " OR ";
+                if(!isset($_REQUEST['only']))
+                {
+                    $extra_params["common_name"] = $search;
+                    $extra_params["genus"] = $search;
+                    $extra_params["species"] = $search;
+                    $extra_params["subspecies"] = $search;
+                    $extra_params["major_common_type"] = $search;
+                    $extra_params["major_subtype"] = $search;
+                    $extra_params["deprecated_scientific"] = $search;
+                }
+                else
+                {
+                    foreach(explode(",",$_REQUEST['only']) as $column)
                     {
-                      $result_vector[] = $row;
+                        $extra_params[$db->sanitize($column)] = $search;
                     }
                 }
-                catch(Exception $e)
-                  {
-                    if(is_string($r)) $error = $r;
-                    else $error = $e;
-                  }
-                if($show_debug === true) $result_vector["debug"] = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by,true);
-              }
+                if(isset($_REQUEST['include']))
+                {
+                    foreach(explode(",",$_REQUEST['include']) as $column)
+                    {
+                        $extra_params[$db->sanitize($column)] = $search;
+                    }
+                }
+                foreach($extra_params as $col => $search)
+                {
+                    $extra_params[$col] = $loose ? "LOWER(`".$col."`) LIKE '%".$search."%'":"`".$col."`='".$search."'";
+                }
+                $extra_filter = implode($extra_boolean_type,$extra_params);
+                $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);
+            }
             else
-              {
-                foreach($params as $search_column=>$search_criteria)
-                  {
-                    $r = $db->doSoundex(array($search_column=>$search_criteria),"*",true,$order_by);
-                    try
-                      {
+            {
+                $method = "spaceless_search_direct";
+                $boolean_type = "OR";
+                if(!isset($_REQUEST['only']))
+                {
+                    $params["common_name"] = $search;
+                    $params["genus"] = $search;
+                    $params["species"] = $search;
+                    $params["subspecies"] = $search;
+                    $params["major_common_type"] = $search;
+                    $params["major_subtype"] = $search;
+                    $params["deprecated_scientific"] = $search;
+                }
+                else
+                {
+                    foreach(explode(",",$_REQUEST['only']) as $column)
+                    {
+                        $params[$db->sanitize($column)] = $search;
+                    }
+                }
+                if(isset($_REQUEST['include']))
+                {
+                    foreach(explode(",",$_REQUEST['include']) as $column)
+                    {
+                        $params[$db->sanitize($column)] = $search;
+                    }
+                }
+                if(!$flag_fuzzy)
+                {
+                    $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
+                    try {
                         while($row = mysqli_fetch_assoc($r))
-                          {
+                        {
                             $result_vector[] = $row;
-                          }
-                      }
+                        }
+                    }
                     catch(Exception $e)
-                      {
+                    {
                         if(is_string($r)) $error = $r;
                         else $error = $e;
-                      }
-                  }
-              }
-          }
-      }
-    else
-      {
-        # Spaces in search
-        ###############################
-        ## Not convinced this makes sense here .... maybe only with
-        ## common names?
-        if(isset($_REQUEST['only']))
-          {
-            foreach(explode(",",$_REQUEST['only']) as $column)
-              {
-                $params[$db->sanitize($column)] = $search;
-              }
-          }
-        if(isset($_REQUEST['include']))
-          {
-            foreach(explode(",",$_REQUEST['include']) as $column)
-              {
-                $params[$db->sanitize($column)] = $search;
-              }
-          }
-        ###################################
-        if($boolean_type !== false)
-          {
-            # Handle the complicated statement. It'll need to be
-            # escaped from normal handling.
-            $extra_params = array();
-            $exp = explode(" ",$search);
-            $fallback = true;
-            $method = "scientific";
-            if(sizeof($exp) == 2 || sizeof($exp) == 3)
-              {
-                $extra_boolean_type = " AND ";
-                $extra_params["genus"] = $exp[0];
-                $extra_params["species"] = $exp[1];
-                if(sizeof($exp) == 3) $extra_params["subspecies"] = $exp[2];
-                $where_arr = array();
-                foreach($extra_params as $col=>$crit)
-                  {
-                    $where_arr[] = $loose ? "LOWER(`".$col."`) LIKE '%".$crit."%'":"`".$col."`='".$crit."'";
-                  }
-                $extra_filter = implode($extra_boolean_type,$where_arr);
-              }
-            $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);
-            if(sizeof($result_vector) == 0)
-              {
-                $result_vector = handleParamSearch($params,$loose,$boolean_type,"`deprecated_scientific` LIKE '%".$search."%'");
-                $method = "deprecated_scientific";
-                if(sizeof($result_vector) == 0)
-                  {
-                    $col = "common_name";
-                    $method = "no_scientific_common";
-                    $extra_filter = $loose ? "LOWER(`".$col."`) LIKE '%".$search."%'":"`".$col."`='".$search."'";
-                    $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);
-                  }
-              }
-          }
+                    }
+                    if($show_debug === true) $result_vector["debug"] = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by,true);
+                }
+                else
+                {
+                    foreach($params as $search_column=>$search_criteria)
+                    {
+                        $r = $db->doSoundex(array($search_column=>$search_criteria),"*",true,$order_by);
+                        try
+                        {
+                            while($row = mysqli_fetch_assoc($r))
+                            {
+                                $result_vector[] = $row;
+                            }
+                        }
+                        catch(Exception $e)
+                        {
+                            if(is_string($r)) $error = $r;
+                            else $error = $e;
+                        }
+                    }
+                }
+            }
+        }
         else
-          {
-            $exp = explode(" ",$search);
-            $fallback = true;
-            if(sizeof($exp) == 2 || sizeof($exp) == 3)
-              {
-                $boolean_type = "and";
-                $params["genus"] = $exp[0];
-                $params["species"] = $exp[1];
-                if(sizeof($exp) == 3) $params["subspecies"] = $exp[2];
-                $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
-                try
-                  {
-                    $method = "scientific_raw";
-                    $fallback = false;
-                    if(mysqli_num_rows($r) > 0)
-                      {
-                        while($row = mysqli_fetch_assoc($r))
-                          {
-                            $result_vector[] = $row;
-                          }
-                      }
-                    else
-                      {
-                        # Always has to be a loose query
-                        $method = "deprecated_scientific_raw";
-                        $fallback = false;
-                        $r = $db->doQuery(array("deprecated_scientific"=>$search),"*",$boolean_type,true,true,$order_by);
-                        try
-                          {
-                            while($row = mysqli_fetch_assoc($r))
-                              {
-                                $result_vector[] = $row;
-                              }
-                            if(sizeof($result_vector) == 0)
-                              {
-                                # Fall back one last time to a common
-                                # name search
-                                $fallback = true;
-                                $boolean_type = "or";
-                              }
-                          }
-                        catch(Exception $e)
-                          {
-                            if(is_string($r)) $error = $r;
-                            else $error = $e;
-                          }
-                      }
-                  }
-                catch(Exception $e)
-                  {
-                    if(is_string($r)) $error = $r;
-                    else $error = $e;
-                  }
-              }
-            if($fallback)
-              {
-                if(!$flag_fuzzy)
-                  {
-                    /*
-                     * If we're doing a fuzzy search, we'll just fall
-                     * straight back to the grabby/loose fallback and
-                     * skip this block.
-                     */
-                    $method = "space_common_fallback";
-                    $params["common_name"] = $search;
-                    if($boolean_type === false)
-                      {
-                        # If it hasn't been assigned already, use the
-                        # loose "or" search
-                        $boolean_type = "or";
-                      }
+        {
+            # Spaces in search
+            ###############################
+            ## Not convinced this makes sense here .... maybe only with
+            ## common names?
+            if(isset($_REQUEST['only']))
+            {
+                foreach(explode(",",$_REQUEST['only']) as $column)
+                {
+                    $params[$db->sanitize($column)] = $search;
+                }
+            }
+            if(isset($_REQUEST['include']))
+            {
+                foreach(explode(",",$_REQUEST['include']) as $column)
+                {
+                    $params[$db->sanitize($column)] = $search;
+                }
+            }
+            ###################################
+            if($boolean_type !== false)
+            {
+                # Handle the complicated statement. It'll need to be
+                # escaped from normal handling.
+                $extra_params = array();
+                $exp = explode(" ",$search);
+                $fallback = true;
+                $method = "scientific";
+                if(sizeof($exp) == 2 || sizeof($exp) == 3)
+                {
+                    $extra_boolean_type = " AND ";
+                    $extra_params["genus"] = $exp[0];
+                    $extra_params["species"] = $exp[1];
+                    if(sizeof($exp) == 3) $extra_params["subspecies"] = $exp[2];
+                    $where_arr = array();
+                    foreach($extra_params as $col=>$crit)
+                    {
+                        $where_arr[] = $loose ? "LOWER(`".$col."`) LIKE '%".$crit."%'":"`".$col."`='".$crit."'";
+                    }
+                    $extra_filter = implode($extra_boolean_type,$where_arr);
+                }
+                $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);
+                if(sizeof($result_vector) == 0)
+                {
+                    $result_vector = handleParamSearch($params,$loose,$boolean_type,"`deprecated_scientific` LIKE '%".$search."%'");
+                    $method = "deprecated_scientific";
+                    if(sizeof($result_vector) == 0)
+                    {
+                        $col = "common_name";
+                        $method = "no_scientific_common";
+                        $extra_filter = $loose ? "LOWER(`".$col."`) LIKE '%".$search."%'":"`".$col."`='".$search."'";
+                        $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);
+                    }
+                }
+            }
+            else
+            {
+                $exp = explode(" ",$search);
+                $fallback = true;
+                if(sizeof($exp) == 2 || sizeof($exp) == 3)
+                {
+                    $boolean_type = "and";
+                    $params["genus"] = $exp[0];
+                    $params["species"] = $exp[1];
+                    if(sizeof($exp) == 3) $params["subspecies"] = $exp[2];
                     $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
-                    #if($show_debug === true) $result_vector["debug"] =
-                    $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by,true);
-                  }
-                else $r = false;
-                try
-                  {
-                    while($row = mysqli_fetch_assoc($r))
-                      {
-                        $result_vector[] = $row;
-                      }
-                    if((sizeof($result_vector) == 0 && $loose) || $flag_fuzzy)
-                      {
-                        /*
-                         * At this point, we've exhausted all literal
-                         * search combinations for specific
-                         * animals. Now, we'll split up the spaces and
-                         * look for all common names and common types
-                         * that have all the individual words in them.
-                         *
-                         * If we're not loose, we just fail.
-                         * We always hit this condition if we're fuzzy.
-                         */
-                        $method = "space_loose_fallback";
-                        $where = array();
-                        $search_cols = array("common_name","major_common_type","major_subtype");
-                        $search_words = explode(" ",$search);
-                        $where_glue = " or ";
-                        $match_glue = " and ";
-                        foreach($search_cols as $col)
-                          {
-                            # Reset params
-                            $params = array();
-                            $fuzzy_params = array();
-                            foreach($search_words as $word)
-                              {
-                                if($flag_fuzzy)
-                                  {
-                                    $fuzzy_params[] = "STRCMP(SUBSTR(SOUNDEX(".$col."),1,LENGTH(SOUNDEX('".$word."'))),SOUNDEX('".$word."'))=0";
-                                  }
-                                $params[] = "(`".$col."` LIKE '%".$word."%')";
-                              }
-                            $where[] = "(".implode($match_glue,$params).")";
-                            if($flag_fuzzy)
-                              {
-                                /*
-                                 * @note this isn't doing much right
-                                 * now - substring soundex matches
-                                 * just don't behave nicely. It's here
-                                 * for edge cases, but I need to write
-                                 * something smarter.
-                                 */
-                                $where[] = "(".implode($match_glue,$fuzzy_params).")";
-                              }
-                          }
-                        $params = null; # Clear it out for the return
-                        $where_statement = implode($where_glue,$where);
-                        $l = $db->openDB();
-                        $query = "SELECT * FROM `".$db->getTable()."` WHERE ";
-                        $query .= $where_statement . " ORDER BY ".$order_by;
-                        $r = mysqli_query($l,$query);
-                        try
-                          {
+                    try
+                    {
+                        $method = "scientific_raw";
+                        $fallback = false;
+                        if(mysqli_num_rows($r) > 0)
+                        {
                             while($row = mysqli_fetch_assoc($r))
-                              {
+                            {
                                 $result_vector[] = $row;
-                              }
-                          }
-                        catch(Exception $e)
-                          {
-                            if(is_string($r)) $error = $r;
-                            else $error = $e;
-                          }
-                      }
-                  }
-                catch(Exception $e)
-                  {
-                    if(is_string($r)) $error = $r;
-                    else $error = $e;
-                  }
-              }
-          }
-      }
-  }
-else
-  {
-    $result_vector = handleParamSearch($params,$loose,$boolean_type);
-  }
-if(isset($error))
-  {
-    returnAjax(array("status"=>false,"error"=>$error,"human_error"=>"There was a problem performing this query. Please try again.","method"=>$method));
-  }
-else
-{
-  foreach($result_vector as $k=>$v) {
-    if (is_array($v)) {
-    foreach($v as $rk=>$vk) {
-      $v[$rk] = html_entity_decode($vk,ENT_HTML5,"UTF-8");
+                            }
+                        }
+                        else
+                        {
+                            # Always has to be a loose query
+                            $method = "deprecated_scientific_raw";
+                            $fallback = false;
+                            $r = $db->doQuery(array("deprecated_scientific"=>$search),"*",$boolean_type,true,true,$order_by);
+                            try
+                            {
+                                while($row = mysqli_fetch_assoc($r))
+                                {
+                                    $result_vector[] = $row;
+                                }
+                                if(sizeof($result_vector) == 0)
+                                {
+                                    # Fall back one last time to a common
+                                    # name search
+                                    $fallback = true;
+                                    $boolean_type = "or";
+                                }
+                            }
+                            catch(Exception $e)
+                            {
+                                if(is_string($r)) $error = $r;
+                                else $error = $e;
+                            }
+                        }
+                    }
+                    catch(Exception $e)
+                    {
+                        if(is_string($r)) $error = $r;
+                        else $error = $e;
+                    }
+                }
+                if($fallback)
+                {
+                    if(!$flag_fuzzy)
+                    {
+                        /*
+                         * If we're doing a fuzzy search, we'll just fall
+                         * straight back to the grabby/loose fallback and
+                         * skip this block.
+                         */
+                        $method = "space_common_fallback";
+                        $params["common_name"] = $search;
+                        if($boolean_type === false)
+                        {
+                            # If it hasn't been assigned already, use the
+                            # loose "or" search
+                            $boolean_type = "or";
+                        }
+                        $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
+                        #if($show_debug === true) $result_vector["debug"] =
+                        $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by,true);
+                    }
+                    else $r = false;
+                    try
+                    {
+                        while($row = mysqli_fetch_assoc($r))
+                        {
+                            $result_vector[] = $row;
+                        }
+                        if((sizeof($result_vector) == 0 && $loose) || $flag_fuzzy)
+                        {
+                            /*
+                             * At this point, we've exhausted all literal
+                             * search combinations for specific
+                             * animals. Now, we'll split up the spaces and
+                             * look for all common names and common types
+                             * that have all the individual words in them.
+                             *
+                             * If we're not loose, we just fail.
+                             * We always hit this condition if we're fuzzy.
+                             */
+                            $method = "space_loose_fallback";
+                            $where = array();
+                            $search_cols = array("common_name","major_common_type","major_subtype");
+                            $search_words = explode(" ",$search);
+                            $where_glue = " or ";
+                            $match_glue = " and ";
+                            foreach($search_cols as $col)
+                            {
+                                # Reset params
+                                $params = array();
+                                $fuzzy_params = array();
+                                foreach($search_words as $word)
+                                {
+                                    if($flag_fuzzy)
+                                    {
+                                        $fuzzy_params[] = "STRCMP(SUBSTR(SOUNDEX(".$col."),1,LENGTH(SOUNDEX('".$word."'))),SOUNDEX('".$word."'))=0";
+                                    }
+                                    $params[] = "(`".$col."` LIKE '%".$word."%')";
+                                }
+                                $where[] = "(".implode($match_glue,$params).")";
+                                if($flag_fuzzy)
+                                {
+                                    /*
+                                     * @note this isn't doing much right
+                                     * now - substring soundex matches
+                                     * just don't behave nicely. It's here
+                                     * for edge cases, but I need to write
+                                     * something smarter.
+                                     */
+                                    $where[] = "(".implode($match_glue,$fuzzy_params).")";
+                                }
+                            }
+                            $params = null; # Clear it out for the return
+                            $where_statement = implode($where_glue,$where);
+                            $l = $db->openDB();
+                            $query = "SELECT * FROM `".$db->getTable()."` WHERE ";
+                            $query .= $where_statement . " ORDER BY ".$order_by;
+                            $r = mysqli_query($l,$query);
+                            try
+                            {
+                                while($row = mysqli_fetch_assoc($r))
+                                {
+                                    $result_vector[] = $row;
+                                }
+                            }
+                            catch(Exception $e)
+                            {
+                                if(is_string($r)) $error = $r;
+                                else $error = $e;
+                            }
+                        }
+                    }
+                    catch(Exception $e)
+                    {
+                        if(is_string($r)) $error = $r;
+                        else $error = $e;
+                    }
+                }
+            }
+        }
     }
+    else
+    {
+        $result_vector = handleParamSearch($params,$loose,$boolean_type);
     }
-    else {
-      $v = html_entity_decode($v);
+    if(isset($error))
+    {
+        return array("status"=>false,"error"=>$error,"human_error"=>"There was a problem performing this query. Please try again.","method"=>$method);
     }
-    $result_vector[$k] = $v;
-  }
-  returnAjax(array(
-  "status"=>true,
-  "result"=>$result_vector,
-  "count"=>sizeof($result_vector),
-  "method"=>$method,
-  "query"=>$search,
-  "params"=>$params,
-  "query_params"=>array(
-    "bool"=>$boolean_type,
-    "loose"=>$loose,
-    "fuzzy"=>$flag_fuzzy,
-    "order_by"=>$order_by,
-    "filter"=>array(
-      "had_filter"=>isset($_REQUEST['filter']),
-      "filter_params"=>$filter_params,
-      "filter_literal"=>$_REQUEST["filter"]
-    )
-  )
-));
+    else
+    {
+        foreach($result_vector as $k=>$v) {
+            if (is_array($v)) {
+                foreach($v as $rk=>$vk) {
+                    $v[$rk] = html_entity_decode($vk,ENT_HTML5,"UTF-8");
+                }
+            }
+            else {
+                $v = html_entity_decode($v);
+            }
+            $result_vector[$k] = $v;
+        }
+        return array(
+            "status"=>true,
+            "result"=>$result_vector,
+            "count"=>sizeof($result_vector),
+            "method"=>$method,
+            "query"=>$search,
+            "params"=>$params,
+            "query_params"=>array(
+                "bool"=>$boolean_type,
+                "loose"=>$loose,
+                "fuzzy"=>$flag_fuzzy,
+                "order_by"=>$order_by,
+                "filter"=>array(
+                    "had_filter"=>isset($_REQUEST['filter']),
+                    "filter_params"=>$filter_params,
+                    "filter_literal"=>$_REQUEST["filter"]
+                )
+            )
+        );
+    }
 }
 
+$result = doSearch();
+if ($search == "mohave" || $search == "mojave")
+{
+    if ($search == "mohave") $search = "mojave";
+    else $search = "mohave";
+    $result2 = doSearch($search);
+    $result["query"] = $result["query"] . " && " . $result2["query"];
+    $result["method"] = $result["method"] . " && " . $result2["method"];
+    $result["count"] = $result["count"] + $result2["count"];
+    $result["alt_query_params"] = $result2["query_params"];
+    $result["alt_params"] = $result2["params"];
+    $result["result"] = array_merge($result["result"],$result2["result"]);
+    $result["original_alt"] = $result2;
+    $result["alt_try_query"] = $search;
+}
+returnAjax($result);
 
 ?>
