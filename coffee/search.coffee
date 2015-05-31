@@ -610,7 +610,8 @@ modalTaxon = (taxon = undefined) ->
       if isNull(data.taxon_credit) or data.taxon_credit is "null"
         data.taxon_credit = "This taxon information is uncredited."
       else
-        data.taxon_credit = "Taxon information by #{data.taxon_credit}."
+        taxonCreditDate = if isNull(data.taxon_credit_date) or data.taxon_credit_date is "null" then "" else " (#{data.taxon_credit_date})"
+        data.taxon_credit = "Taxon information by #{data.taxon_credit}.#{taxonCreditDate}"
     try
       notes = markdown.toHTML(data.notes)
     catch e

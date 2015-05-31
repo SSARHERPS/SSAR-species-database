@@ -2354,7 +2354,7 @@ modalTaxon = function(taxon) {
     $("#result_container").after(html);
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
-    var buttonText, commonType, data, deprecatedHtml, e, genusAuthBlock, humanTaxon, i, minorTypeHtml, notes, outboundLink, sn, speciesAuthBlock, taxonArray, year, yearHtml, _ref;
+    var buttonText, commonType, data, deprecatedHtml, e, genusAuthBlock, humanTaxon, i, minorTypeHtml, notes, outboundLink, sn, speciesAuthBlock, taxonArray, taxonCreditDate, year, yearHtml, _ref;
     data = result.result[0];
     if (data == null) {
       toastStatusMessage("There was an error fetching the entry details. Please try again later.");
@@ -2407,7 +2407,8 @@ modalTaxon = function(taxon) {
       if (isNull(data.taxon_credit) || data.taxon_credit === "null") {
         data.taxon_credit = "This taxon information is uncredited.";
       } else {
-        data.taxon_credit = "Taxon information by " + data.taxon_credit + ".";
+        taxonCreditDate = isNull(data.taxon_credit_date) || data.taxon_credit_date === "null" ? "" : " (" + data.taxon_credit_date + ")";
+        data.taxon_credit = "Taxon information by " + data.taxon_credit + "." + taxonCreditDate;
       }
     }
     try {
