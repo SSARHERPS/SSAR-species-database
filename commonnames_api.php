@@ -254,6 +254,7 @@ function doSearch($overrideSearch = null)
     if(!empty($overrideSearch))
     {
         $search = $overrideSearch;
+         
     }
     $result_vector = array();
     if(empty($params) || !empty($search))
@@ -670,6 +671,9 @@ if ($search == "mohave" || $search == "mojave")
 {
     if ($search == "mohave") $search = "mojave";
     else $search = "mohave";
+    foreach($params as $key=>$param) {
+        $params[$key] = $search;
+    }
     $result2 = doSearch($search);
     $result["query"] = $result["query"] . " && " . $result2["query"];
     $result["method"] = $result["method"] . " && " . $result2["method"];
