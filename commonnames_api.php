@@ -117,6 +117,7 @@ $order_by = isset($_REQUEST['order']) ? $_REQUEST['order']:"genus,species,subspe
 $params = array();
 $boolean_type = false; # This is always set by the filter
 $filter_params = null;
+$extra_deprecated_params = null;
 if(isset($_REQUEST['filter']))
   {
     $params = smart_decode64($_REQUEST['filter']);
@@ -129,6 +130,7 @@ if(isset($_REQUEST['filter']))
             $params = array();
             foreach($params_temp as $col=>$lookup)
               {
+                  # Smart_decode takes care of this for us
                 $params[$db->sanitize(deEscape($col))] = $db->sanitize(deEscape($lookup));
               }
           }
@@ -153,8 +155,28 @@ if(isset($_REQUEST['filter']))
         if(!array_key_exists("BOOLEAN_TYPE",$params)) returnAjax(array("status"=>false,"error"=>"Missing required parameter","human_error"=>"The key 'BOOLEAN_TYPE' must exist and be either 'AND' or 'OR' when the \"filter\" parameter is specified.","given"=>$params));
         # Is it valid?
         if(strtoupper($params['BOOLEAN_TYPE']) != "AND" && strtoupper($params['BOOLEAN_TYPE']) != "OR") returnAjax(array("status"=>false,"error"=>"Missing required parameter","human_error"=>"The key 'BOOLEAN_TYPE' must be either 'AND' or 'OR'.","given"=>$params));
-        $boolean_type = $params['BOOLEAN_TYPE'];
+        $boolean_type = strtoupper($params['BOOLEAN_TYPE']);
         unset($params['BOOLEAN_TYPE']);
+        if($boolean_type == "OR")
+        {
+            # If the params include an authority, check the deprecated
+            if(isset($params["genus_authority"]) || isset($param["species_authority"]))
+            {
+                if(!isset($params["deprecated_scientific"]))
+                {
+                    $params["deprecated_scientific"] = isset($params["genus_authority"]) ? $params["genus_authority"]:$params["species_authority"];
+                }
+            }
+        }
+        else
+        {
+            # AND search. If the params include an authority, check the deprecated
+            if(isset($params["genus_authority"]) || isset($param["species_authority"]))
+            {
+                $deprecated_params = isset($params["genus_authority"]) ? $params["genus_authority"]:$params["species_authority"];
+                $extra_deprecated_params = "LOWER(`deprecated_scientific`) LIKE '%".$deprecated_params."%'";
+            }
+        }
         # Do all the columns exist?
         foreach($params as $col=>$lookup)
           {
@@ -216,9 +238,18 @@ function handleParamSearch($filter_params,$loose = false,$boolean_type = "AND", 
   $where = "".implode(" ".strtoupper($boolean_type)." ",$where_arr)."";
   if(!empty($extra_params))
     {
+        global $extra_deprecated_params;
+        if(!empty($extra_deprecated_params))
+        {
+            $where =  "(".$where." OR " . $extra_deprecated_params .")";
+        }
       $where .= " AND (".$extra_params.")";
       # $where .= " " . strtoupper($boolean_type) . " (".$extra_params.")";
     }
+  else if(!empty($extra_deprecated_params))
+  {
+      $where .= " OR (".$extra_deprecated_params.")";
+  }
   $where = "(".$where.")";
   $query .= $where;
   global $order_by;
