@@ -196,7 +196,7 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-input label="Subspecies" id="edit-subspecies" name="edit-subspecies" class="subspecies" floatingLabel></paper-input>
   <paper-input label="Common Name" id="edit-common-name" name="edit-common-name"  class="common_name" floatingLabel></paper-input>
   <paper-input label="Deprecated Scientific Names" id="edit-deprecated-scientific" name="edit-depreated-scientific" floatingLabel aria-describedby="deprecatedHelp"></paper-input>
-    <span class="help-block" id="deprecatedHelp">List names here in the form <span class="code">"Genus species":"Authority: year",...</span>. If not, it may not save correctly.</span>
+    <span class="help-block" id="deprecatedHelp">List names here in the form <span class="code">"Genus species":"Authority: year","Genus species":"Authority: year",[...]</span>. There should be no spaces between the quotes and comma or colon. If there are, it may not save correctly.</span>
   <paper-input label="Clade" class="capitalize" id="edit-major-type" name="edit-major-type" floatingLabel></paper-input>
   <paper-input label="Subtype" class="capitalize" id="edit-major-subtype" name="edit-major-subtype" floatingLabel></paper-input>
   <paper-input label="Minor clade / 'Family'" id="edit-minor-type" name="edit-minor-type" floatingLabel></paper-input>
@@ -639,14 +639,31 @@ saveEditorEntry = (performMode = "save") ->
   try
     dep = new Object()
     depS = d$("#edit-deprecated-scientific").val()
-    depA = depS.split(",")
-    $.each depA, (i,k) ->
-      item = k.split("\":\"")
-      dep[item[0].replace(/"/g,"")] = item[1].replace(/"/g,"")
-    depString = JSON.stringify(dep)
+    unless isNull(depS)
+      depA = depS.split('","')
+      $.each depA, (i,k) ->
+        item = k.split("\":\"")
+        dep[item[0].replace(/"/g,"")] = item[1].replace(/"/g,"")
+      depString = JSON.stringify(dep)
+      if depString.replace(/[{}]/g,"") isnt depS
+        throw("Bad formatted deprecated scientific")
+    else
+      # We have an empty deprecated field
+      depString = ""
   catch e
-    console.warn("Failed to parse the deprecated scientifics. They may be empty.")
+    console.error("Failed to parse the deprecated scientifics - #{e.message}. They may be empty.")
     depString = ""
+    error = "Check your formatting! Remember, no spaces between names."
+    try
+      $("html /deep/ #edit-deprecated-scientific /deep/ paper-input-decorator")
+      .attr("error",error)
+      .attr("isinvalid","isinvalid")
+    catch e
+      $("html >>> #edit-deprecated-scientific >>> paper-input-decorator")
+      .attr("error",error)
+      .attr("isinvalid","isinvalid")
+    escapeCompletion = true
+    completionErrorMessage = "There was a problem with your formatting for the deprecated scientifics. Please check it and try again."
   saveObject["deprecated_scientific"] = depString
   # For the rest of the items, iterate over and put on saveObject
   keepCase = [
@@ -746,8 +763,10 @@ saveEditorEntry = (performMode = "save") ->
   # We've ended the loop! Did we hit an escape condition?
   if escapeCompletion
     animateLoad()
-    stopLoadError("There was a problem with your entry. Please correct your entry and try again.")
-    console.error("Bad characters in entry. Stopping ...")
+    consoleError = completionErrorMessage ? "Bad characters in entry. Stopping ..."
+    completionErrorMessage ?= "There was a problem with your entry. Please correct your entry and try again."
+    stopLoadError(completionErrorMessage)
+    console.error(consoleError)
     return false
   saveObject.id = d$("#taxon-id").val()
   # The parens checks
