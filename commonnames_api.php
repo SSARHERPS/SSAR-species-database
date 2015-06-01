@@ -456,7 +456,7 @@ function doSearch($overrideSearch = null)
                 $result_vector = handleParamSearch($params,$loose,$boolean_type,$extra_filter);
                 if(sizeof($result_vector) == 0)
                 {
-                    $result_vector = handleParamSearch($params,$loose,$boolean_type,"`deprecated_scientific` LIKE '%".$search."%'");
+                    $result_vector = handleParamSearch($params,$loose,$boolean_type,"LOWER(`deprecated_scientific`) LIKE '%".$search."%'");
                     $method = "deprecated_scientific";
                     if(sizeof($result_vector) == 0)
                     {
