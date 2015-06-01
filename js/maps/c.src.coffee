@@ -196,7 +196,7 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-input label="Subspecies" id="edit-subspecies" name="edit-subspecies" class="subspecies" floatingLabel></paper-input>
   <paper-input label="Common Name" id="edit-common-name" name="edit-common-name"  class="common_name" floatingLabel></paper-input>
   <paper-input label="Deprecated Scientific Names" id="edit-deprecated-scientific" name="edit-depreated-scientific" floatingLabel aria-describedby="deprecatedHelp"></paper-input>
-    <span class="help-block" id="deprecatedHelp">List names here in the form <span class="code">"Genus species":"Authority: year","Genus species":"Authority: year",[...]</span>. There should be no spaces between the quotes and comma or colon. If there are, it may not save correctly.</span>
+    <span class="help-block" id="deprecatedHelp">List names here in the form <span class="code">"Genus species":"Authority: year","Genus species":"Authority: year",[...]</span>.<br/>There should be no spaces between the quotes and comma or colon. If there are, it may not save correctly.</span>
   <paper-input label="Clade" class="capitalize" id="edit-major-type" name="edit-major-type" floatingLabel></paper-input>
   <paper-input label="Subtype" class="capitalize" id="edit-major-subtype" name="edit-major-subtype" floatingLabel></paper-input>
   <paper-input label="Minor clade / 'Family'" id="edit-minor-type" name="edit-minor-type" floatingLabel></paper-input>
@@ -558,7 +558,7 @@ saveEditorEntry = (performMode = "save") ->
   ## Manual parses
   try
     # Authority year
-    testAuthorityYear = (authYearDeepInputSelector) ->
+    testAuthorityYear = (authYearDeepInputSelector, directYear = false) ->
       ###
       # Helper function!
       # Take in a deep element selector, then run it through match
@@ -567,7 +567,10 @@ saveEditorEntry = (performMode = "save") ->
       # @param authYearDeepInputSelector -- Selector for a shadow DOM
       #          element, ideally a paper-input.
       ###
-      yearString = d$(authYearDeepInputSelector).val()
+      if directYear
+        yearString = authYearDeepInputSelector
+      else
+        yearString = d$(authYearDeepInputSelector).val()
       error = undefined
       linnaeusYear = 1707 # Linnaeus's birth year
       d = new Date()
@@ -609,15 +612,18 @@ saveEditorEntry = (performMode = "save") ->
       if error?
         escapeCompletion = true
         console.warn("#{authYearDeepInputSelector} failed its validity checks for #{yearString}!")
-        # Populate the paper-input errors
-        try
-          $("html /deep/ #{authYearDeepInputSelector} /deep/ paper-input-decorator")
-          .attr("error",error)
-          .attr("isinvalid","isinvalid")
-        catch e
-          $("html >>> #{authYearDeepInputSelector} >>> paper-input-decorator")
-          .attr("error",error)
-          .attr("isinvalid","isinvalid")
+        unless directYear
+          # Populate the paper-input errors
+          try
+            $("html /deep/ #{authYearDeepInputSelector} /deep/ paper-input-decorator")
+            .attr("error",error)
+            .attr("isinvalid","isinvalid")
+          catch e
+            $("html >>> #{authYearDeepInputSelector} >>> paper-input-decorator")
+            .attr("error",error)
+            .attr("isinvalid","isinvalid")
+        else
+          throw Error(error)
       # Return the value for assignment
       return yearString
     # Test and assign all in one go
@@ -641,19 +647,38 @@ saveEditorEntry = (performMode = "save") ->
     depS = d$("#edit-deprecated-scientific").val()
     unless isNull(depS)
       depA = depS.split('","')
-      $.each depA, (i,k) ->
+      for k in depA
         item = k.split("\":\"")
         dep[item[0].replace(/"/g,"")] = item[1].replace(/"/g,"")
+      # We now have an object representing the deprecated
+      # scientific. Check the internal values.
+      console.log("Validating",dep)
+      for taxon, authority of dep
+        # We're going to assume the taxon is right.
+        # Check the authority.
+        authorityA = authority.split(":")
+        console.log("Testing #{authority}",authorityA)
+        unless authorityA.length is 2
+          throw Error("Authority string should have an authority and year seperated by a colon.")
+        auth = authorityA[0].trim()
+        trimmedYearString = authorityA[1].trim()
+        if trimmedYearString.search(",") isnt -1
+          throw Error("Looks like there may be an extra space, or forgotten \", near '#{trimmedYearString}'")
+        year = testAuthorityYear(trimmedYearString,true)
+        console.log("Validated",auth,year)
+      # Stringify it for the database saving
       depString = JSON.stringify(dep)
+      # Compare the pretty string against the input string. Let's be
+      # sure they match.
       if depString.replace(/[{}]/g,"") isnt depS
-        throw("Bad formatted deprecated scientific")
+        throw Error("Badly formatted entry - generated doesn't match read")
     else
       # We have an empty deprecated field
       depString = ""
   catch e
     console.error("Failed to parse the deprecated scientifics - #{e.message}. They may be empty.")
     depString = ""
-    error = "Check your formatting! Remember, no spaces between names."
+    error = "#{e.message}. Check your formatting!"
     try
       $("html /deep/ #edit-deprecated-scientific /deep/ paper-input-decorator")
       .attr("error",error)

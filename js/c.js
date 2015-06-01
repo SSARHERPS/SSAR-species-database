@@ -218,7 +218,7 @@ loadModalTaxonEditor = function(extraHtml, affirmativeText) {
   /*
    * Load a modal taxon editor
    */
-  editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" class=\"genus\" floatingLabel></paper-input>\n<paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" class=\"species\" floatingLabel></paper-input>\n<paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" class=\"subspecies\" floatingLabel></paper-input>\n<paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\"  class=\"common_name\" floatingLabel></paper-input>\n<paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input>\n  <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",[...]</span>. There should be no spaces between the quotes and comma or colon. If there are, it may not save correctly.</span>\n<paper-input label=\"Clade\" class=\"capitalize\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input>\n<paper-input label=\"Subtype\" class=\"capitalize\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input>\n<paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input>\n<paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" class=\"linnean_order\" floatingLabel></paper-input>\n<paper-input label=\"Common Type (eg., 'lizard')\" id=\"edit-major-common-type\" name=\"edit-major-common-type\" class=\"major_common_type\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" class=\"genus_authority\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input>\n<core-label>\n  Use Parenthesis for Genus Authority\n  <paper-toggle-button id=\"genus-authority-parens\"  checked=\"false\"></paper-toggle-button>\n</core-label>\n<paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" class=\"species_authority\" floatingLabel></paper-input>\n<paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input>\n<core-label>\n  Use Parenthesis for Species Authority\n  <paper-toggle-button id=\"species-authority-parens\" checked=\"false\"></paper-toggle-button>\n</core-label>\n<br/><br/>\n<paper-autogrow-textarea id=\"edit-notes-autogrow\" rows=\"5\">\n  <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\" aria-describedby=\"notes-help\" rows=\"5\"></textarea>\n</paper-autogrow-textarea>\n<span class=\"help-block\" id=\"notes-help\">You can write your notes in Markdown. (<a href=\"https://daringfireball.net/projects/markdown/syntax\" \"onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'\">Official Full Syntax Guide</a>)</span>\n<paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input>\n  <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>\n<paper-input label=\"Image Credit\" id=\"edit-image-credit\" name=\"edit-image-credit\" floatingLabel></paper-input>\n<paper-input label=\"Image License\" id=\"edit-image-license\" name=\"edit-image-license\" floatingLabel></paper-input>\n<paper-input label=\"Taxon Credit\" id=\"edit-taxon-credit\" name=\"edit-taxon-credit\" floatingLabel aria-describedby=\"taxon-credit-help\"></paper-input>\n  <span class=\"help-block\" id=\"taxon-credit-help\">This will be displayed as \"Taxon information by [your entry].\"</span>\n<paper-input label=\"Taxon Credit Date\" id=\"edit-taxon-credit-date\" name=\"edit-taxon-credit-date\" floatingLabel></paper-input>\n" + extraHtml + "\n<input type=\"hidden\" name=\"edit-taxon-author\" id=\"edit-taxon-author\" value=\"\" />";
+  editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" class=\"genus\" floatingLabel></paper-input>\n<paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" class=\"species\" floatingLabel></paper-input>\n<paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" class=\"subspecies\" floatingLabel></paper-input>\n<paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\"  class=\"common_name\" floatingLabel></paper-input>\n<paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input>\n  <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",[...]</span>.<br/>There should be no spaces between the quotes and comma or colon. If there are, it may not save correctly.</span>\n<paper-input label=\"Clade\" class=\"capitalize\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input>\n<paper-input label=\"Subtype\" class=\"capitalize\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input>\n<paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input>\n<paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" class=\"linnean_order\" floatingLabel></paper-input>\n<paper-input label=\"Common Type (eg., 'lizard')\" id=\"edit-major-common-type\" name=\"edit-major-common-type\" class=\"major_common_type\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" class=\"genus_authority\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input>\n<core-label>\n  Use Parenthesis for Genus Authority\n  <paper-toggle-button id=\"genus-authority-parens\"  checked=\"false\"></paper-toggle-button>\n</core-label>\n<paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" class=\"species_authority\" floatingLabel></paper-input>\n<paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input>\n<core-label>\n  Use Parenthesis for Species Authority\n  <paper-toggle-button id=\"species-authority-parens\" checked=\"false\"></paper-toggle-button>\n</core-label>\n<br/><br/>\n<paper-autogrow-textarea id=\"edit-notes-autogrow\" rows=\"5\">\n  <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\" aria-describedby=\"notes-help\" rows=\"5\"></textarea>\n</paper-autogrow-textarea>\n<span class=\"help-block\" id=\"notes-help\">You can write your notes in Markdown. (<a href=\"https://daringfireball.net/projects/markdown/syntax\" \"onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'\">Official Full Syntax Guide</a>)</span>\n<paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input>\n  <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>\n<paper-input label=\"Image Credit\" id=\"edit-image-credit\" name=\"edit-image-credit\" floatingLabel></paper-input>\n<paper-input label=\"Image License\" id=\"edit-image-license\" name=\"edit-image-license\" floatingLabel></paper-input>\n<paper-input label=\"Taxon Credit\" id=\"edit-taxon-credit\" name=\"edit-taxon-credit\" floatingLabel aria-describedby=\"taxon-credit-help\"></paper-input>\n  <span class=\"help-block\" id=\"taxon-credit-help\">This will be displayed as \"Taxon information by [your entry].\"</span>\n<paper-input label=\"Taxon Credit Date\" id=\"edit-taxon-credit-date\" name=\"edit-taxon-credit-date\" floatingLabel></paper-input>\n" + extraHtml + "\n<input type=\"hidden\" name=\"edit-taxon-author\" id=\"edit-taxon-author\" value=\"\" />";
   html = "<paper-action-dialog backdrop layered autoCloseDisabled closeSelector=\"#close-editor\" id='modal-taxon-edit'>\n  <div id='modal-taxon-editor'>\n    " + editHtml + "\n  </div>\n  <paper-button id='close-editor' dismissive>Cancel</paper-button>\n  <paper-button id='duplicate-taxon' dismissive>Duplicate</paper-button>\n  <paper-button id='save-editor' affirmative>" + affirmativeText + "</paper-button></paper-action-dialog>";
   if ($("#modal-taxon-edit").exists()) {
     $("#modal-taxon-edit").remove();
@@ -527,7 +527,7 @@ lookupEditorSpecies = function(taxon) {
 };
 
 saveEditorEntry = function(performMode) {
-  var args, auth, authYearString, completionErrorMessage, consoleError, dep, depA, depS, depString, e, error, escapeCompletion, examineIds, gYear, hash, keepCase, link, requiredNotEmpty, s64, sYear, saveObject, saveString, secret, testAuthorityYear, userVerification;
+  var args, auth, authYearString, authority, authorityA, completionErrorMessage, consoleError, dep, depA, depS, depString, e, error, escapeCompletion, examineIds, gYear, hash, item, k, keepCase, link, requiredNotEmpty, s64, sYear, saveObject, saveString, secret, taxon, testAuthorityYear, trimmedYearString, userVerification, year, _i, _len;
   if (performMode == null) {
     performMode = "save";
   }
@@ -546,7 +546,11 @@ saveEditorEntry = function(performMode) {
     $("html >>> paper-input-button >>> paper-input-decorator").removeAttr("isinvalid");
   }
   try {
-    testAuthorityYear = function(authYearDeepInputSelector) {
+    testAuthorityYear = function(authYearDeepInputSelector, directYear) {
+      var altYear, authorityRegex, d, error, linnaeusYear, nextYear, yearString, years, _ref;
+      if (directYear == null) {
+        directYear = false;
+      }
 
       /*
        * Helper function!
@@ -556,8 +560,11 @@ saveEditorEntry = function(performMode) {
        * @param authYearDeepInputSelector -- Selector for a shadow DOM
        *          element, ideally a paper-input.
        */
-      var altYear, authorityRegex, d, error, linnaeusYear, nextYear, yearString, years, _ref;
-      yearString = d$(authYearDeepInputSelector).val();
+      if (directYear) {
+        yearString = authYearDeepInputSelector;
+      } else {
+        yearString = d$(authYearDeepInputSelector).val();
+      }
       error = void 0;
       linnaeusYear = 1707;
       d = new Date();
@@ -589,11 +596,15 @@ saveEditorEntry = function(performMode) {
       if (error != null) {
         escapeCompletion = true;
         console.warn("" + authYearDeepInputSelector + " failed its validity checks for " + yearString + "!");
-        try {
-          $("html /deep/ " + authYearDeepInputSelector + " /deep/ paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
-        } catch (_error) {
-          e = _error;
-          $("html >>> " + authYearDeepInputSelector + " >>> paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
+        if (!directYear) {
+          try {
+            $("html /deep/ " + authYearDeepInputSelector + " /deep/ paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
+          } catch (_error) {
+            e = _error;
+            $("html >>> " + authYearDeepInputSelector + " >>> paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
+          }
+        } else {
+          throw Error(error);
         }
       }
       return yearString;
@@ -621,14 +632,30 @@ saveEditorEntry = function(performMode) {
     depS = d$("#edit-deprecated-scientific").val();
     if (!isNull(depS)) {
       depA = depS.split('","');
-      $.each(depA, function(i, k) {
-        var item;
+      for (_i = 0, _len = depA.length; _i < _len; _i++) {
+        k = depA[_i];
         item = k.split("\":\"");
-        return dep[item[0].replace(/"/g, "")] = item[1].replace(/"/g, "");
-      });
+        dep[item[0].replace(/"/g, "")] = item[1].replace(/"/g, "");
+      }
+      console.log("Validating", dep);
+      for (taxon in dep) {
+        authority = dep[taxon];
+        authorityA = authority.split(":");
+        console.log("Testing " + authority, authorityA);
+        if (authorityA.length !== 2) {
+          throw Error("Authority string should have an authority and year seperated by a colon.");
+        }
+        auth = authorityA[0].trim();
+        trimmedYearString = authorityA[1].trim();
+        if (trimmedYearString.search(",") !== -1) {
+          throw Error("Looks like there may be an extra space, or forgotten \", near '" + trimmedYearString + "'");
+        }
+        year = testAuthorityYear(trimmedYearString, true);
+        console.log("Validated", auth, year);
+      }
       depString = JSON.stringify(dep);
       if (depString.replace(/[{}]/g, "") !== depS) {
-        throw "Bad formatted deprecated scientific";
+        throw Error("Badly formatted entry - generated doesn't match read");
       }
     } else {
       depString = "";
@@ -637,7 +664,7 @@ saveEditorEntry = function(performMode) {
     e = _error;
     console.error("Failed to parse the deprecated scientifics - " + e.message + ". They may be empty.");
     depString = "";
-    error = "Check your formatting! Remember, no spaces between names.";
+    error = "" + e.message + ". Check your formatting!";
     try {
       $("html /deep/ #edit-deprecated-scientific /deep/ paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
     } catch (_error) {
