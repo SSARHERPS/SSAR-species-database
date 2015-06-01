@@ -24,7 +24,7 @@ Base64.decode("YmF0cmFjaG9zZXBzJmxvb3NlPXRydWU")
 // returns "batrachoseps&loose=true"
 ```
 
-You can generate links that way, corresponding to the options given in the following API section. 
+You can generate links that way, corresponding to the options given in the following API section.
 
 ## API
 
@@ -195,6 +195,8 @@ The search algorithm behaves as follows:
          {"status":true,"result":{"0":{"id":"480","genus":"aneides","species":"flavipunctatus","subspecies":"","common_name":"black salamander","image":"","major_type":"caudata","major_common_type":"salamanders","major_subtype":"climbing salamanders","minor_type":"","linnean_order":"caudata","genus_authority":"baird","species_authority":"strauch","authority_year":"{\"1851\": \"1870\"}","deprecated_scientific":"","notes":""},"1":{"id":"481","genus":"aneides","species":"flavipunctatus","subspecies":"flavipunctatus","common_name":"speckled black salamander","image":"","major_type":"caudata","major_common_type":"salamanders","major_subtype":"climbing salamanders","minor_type":"","linnean_order":"caudata","genus_authority":"baird","species_authority":"strauch","authority_year":"{\"1851\": \"1870\"}","deprecated_scientific":"","notes":""},"2":{"id":"482","genus":"aneides","species":"flavipunctatus","subspecies":"niger","common_name":"santa cruz black salamander","image":"","major_type":"caudata","major_common_type":"salamanders","major_subtype":"climbing salamanders","minor_type":"","linnean_order":"caudata","genus_authority":"baird","species_authority":"myers and maslin","authority_year":"{\"1851\": \"1948\"}","deprecated_scientific":"","notes":""},"3":{"id":"501","genus":"batrachoseps","species":"nigriventris","subspecies":"","common_name":"black- bellied slender salamander","image":"","major_type":"caudata","major_common_type":"salamanders","major_subtype":"slender salamanders","minor_type":"","linnean_order":"caudata","genus_authority":"bonaparte","species_authority":"cope","authority_year":"{\"1839\": \"1869\"}","deprecated_scientific":"","notes":""},"4":{"id":"519","genus":"desmognathus","species":"folkertsi","subspecies":"","common_name":"dwarf black-bellied salamander","image":"","major_type":"caudata","major_common_type":"salamanders","major_subtype":"dusky salamanders","minor_type":"","linnean_order":"caudata","genus_authority":"baird","species_authority":"camp, tilley, austin, and marshall","authority_year":"{\"1850\": \"2002\"}","deprecated_scientific":"","notes":""},"5":{"id":"529","genus":"desmognathus","species":"quadramaculatus","subspecies":"","common_name":"black-bellied salamander","image":"","major_type":"caudata","major_common_type":"salamanders","major_subtype":"dusky salamanders","minor_type":"","linnean_order":"caudata","genus_authority":"baird","species_authority":"holbrook","authority_year":"{\"1850\": \"1840\"}","deprecated_scientific":"","notes":""},"6":{"id":"531","genus":"desmognathus","species":"welteri","subspecies":"","common_name":"black mountain salamander","image":"","major_type":"caudata","major_common_type":"salamanders","major_subtype":"dusky salamanders","minor_type":"","linnean_order":"caudata","genus_authority":"baird","species_authority":"barbour","authority_year":"{\"1850\": \"1950\"}","deprecated_scientific":"","notes":""},"7":{"id":"670","genus":"pseudotriton","species":"ruber","subspecies":"schencki","common_name":"black-chinned red salamander","image":"","major_type":"caudata","major_common_type":"salamanders","major_subtype":"red and mud salamanders","minor_type":"","linnean_order":"caudata","genus_authority":"tschudi","species_authority":"brimley","authority_year":"{\"1846\": \"1912\"}","deprecated_scientific":"","notes":""}},"count":8,"method":"space_loose_fallback","query":"salamander black","params":null,"query_params":{"bool":"or","loose":true,"fuzzy":false,"order_by":"genus,species,subspecies","filter":{"had_filter":false,"filter_params":null,"filter_literal":null}},"execution_time":1.25002861023}
          ```
 
+
+
 ## Building the application
 
 ### Grunt
@@ -270,7 +272,9 @@ major_subtype # eg, snake v. non-snake, aquatic vs. tortoise. Only common, publi
 minor_type # eg, lacertid, boa, pleurodire, dendrobatid; roughly a ranked "family", scientific only
 linnean_order # Deprecated, included for compatibility
 genus_authority #  eg, "Linnaeus"
+parens_auth_genus # Boolean -- show genus authority in parenthesis. See #46
 species_authority # eg, "Attenborough"
+parens_auth_genus # Boolean -- show species authority in parenthesis. See #46
 authority_year # eg, {2013:2014} in the format {"Genus Authority Year":"Species Authority Year"}
 notes # Miscellaneous notes
 image # hit calphotos api if this field is empty
@@ -278,4 +282,5 @@ image_credit # If not in public domain
 image_license # If not in public domain
 taxon_author # Last editor of entry
 taxon_credit # Credit for `notes`
+taxon_credit_date # The date for the taxon credit
 ```
