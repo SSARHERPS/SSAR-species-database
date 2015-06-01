@@ -44,7 +44,7 @@ $login_status = getLoginState($get);
 if($login_status["status"] !== true) {
   $login_status["error"] = "Invalid user";
   $login_status["human_error"] = "You're not logged in as a valid user to edit this. Please log in and try again.";
-  return $login_status;
+  returnAjax($login_status);
 }
 
 switch($admin_req)
