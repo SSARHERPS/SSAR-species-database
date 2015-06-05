@@ -785,6 +785,31 @@ clearSearch = (partialReset = false) ->
   false
 
 
+
+downloadCSVList = ->
+  ###
+  # Download a CSV file list
+  #
+  # See
+  # https://github.com/tigerhawkvok/SSAR-species-database/issues/39
+  ###
+  foo()
+  false
+
+
+
+
+downloadHTMLList = ->
+  ###
+  # Download a HTML file list
+  #
+  # See
+  # https://github.com/tigerhawkvok/SSAR-species-database/issues/40
+  ###
+  foo()
+  false
+
+
 insertCORSWorkaround = ->
   unless ssar.hasShownWorkaround?
     ssar.hasShownWorkaround = false

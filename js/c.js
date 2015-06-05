@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
   __slice = [].slice,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -843,9 +843,69 @@ getLocation = function(callback) {
 };
 
 bindClickTargets = function() {
-  return $(".click").unbind().click(function() {
-    return openTab($(this).attr("data-url"));
+  bindClicks();
+  return false;
+};
+
+bindClicks = function(selector) {
+  if (selector == null) {
+    selector = ".click";
+  }
+
+  /*
+   * Helper function. Bind everything with a selector
+   * to execute a function data-function or to go to a
+   * URL data-href.
+   */
+  $(selector).each(function() {
+    var callable, e, url;
+    try {
+      url = $(this).attr("data-href");
+      if (isNull(url)) {
+        url = $(this).attr("data-url");
+        if (url != null) {
+          $(this).attr("data-newtab", "true");
+        }
+      }
+      if (!isNull(url)) {
+        $(this).unbind();
+        try {
+          if (url === uri.o.attr("path") && $(this).prop("tagName").toLowerCase() === "paper-tab") {
+            $(this).parent().prop("selected", $(this).index());
+          }
+        } catch (_error) {
+          e = _error;
+          console.warn("tagname lower case error");
+        }
+        $(this).click(function() {
+          var _ref, _ref1, _ref2;
+          if (((_ref = $(this).attr("newTab")) != null ? _ref.toBool() : void 0) || ((_ref1 = $(this).attr("newtab")) != null ? _ref1.toBool() : void 0) || ((_ref2 = $(this).attr("data-newtab")) != null ? _ref2.toBool() : void 0)) {
+            return openTab(url);
+          } else {
+            return goTo(url);
+          }
+        });
+        return url;
+      } else {
+        callable = $(this).attr("data-function");
+        if (callable != null) {
+          $(this).unbind();
+          return $(this).click(function() {
+            try {
+              return window[callable]();
+            } catch (_error) {
+              e = _error;
+              return console.error("'" + callable + "()' is a bad function - " + e.message);
+            }
+          });
+        }
+      }
+    } catch (_error) {
+      e = _error;
+      return console.error("There was a problem binding to #" + ($(this).attr("id")) + " - " + e.message);
+    }
   });
+  return false;
 };
 
 getMaxZ = function() {
@@ -943,9 +1003,15 @@ checkFileVersion = function(forceNow) {
   return false;
 };
 
+foo = function() {
+  toastStatusMessage("Sorry, this feature is not yet finished");
+  stopLoad();
+  return false;
+};
+
 $(function() {
   var e;
-  bindClickTargets();
+  bindClicks();
   formatScientificNames();
   try {
     $('[data-toggle="tooltip"]').tooltip();
@@ -955,7 +1021,7 @@ $(function() {
   }
   try {
     checkAdmin();
-    if (adminParams.loadAdminUi === true) {
+    if ((typeof adminParams !== "undefined" && adminParams !== null ? adminParams.loadAdminUi : void 0) === true) {
       loadJS("js/admin.min.js", function() {
         return loadAdminUi();
       });
@@ -963,6 +1029,16 @@ $(function() {
   } catch (_error) {
     e = _error;
     getLocation();
+    loadJS("js/jquery.cookie.min.js", function() {
+      var html;
+      if ($.cookie("ssarherps_user") != null) {
+        html = "<paper-icon-button icon=\"create\" class=\"click\" data-href=\"" + uri.urlString + "admin/\" data-toggle=\"tooltip\" title=\"Go to administration\" id=\"goto-admin\"></paper-icon-button>";
+        $("#bug-footer").append(html);
+        $("#goto-admin").tooltip();
+        bindClicks("#goto-admin");
+      }
+      return false;
+    });
   }
   browserBeware();
   return checkFileVersion();
@@ -1765,6 +1841,30 @@ clearSearch = function(partialReset) {
   $("#search").attr("value", "");
   $("#linnean-order").polymerSelected("any");
   formatScientificNames();
+  return false;
+};
+
+downloadCSVList = function() {
+
+  /*
+   * Download a CSV file list
+   *
+   * See
+   * https://github.com/tigerhawkvok/SSAR-species-database/issues/39
+   */
+  foo();
+  return false;
+};
+
+downloadHTMLList = function() {
+
+  /*
+   * Download a HTML file list
+   *
+   * See
+   * https://github.com/tigerhawkvok/SSAR-species-database/issues/40
+   */
+  foo();
   return false;
 };
 

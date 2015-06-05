@@ -604,10 +604,52 @@ getLocation = (callback = undefined) ->
       callback(false)
 
 bindClickTargets = ->
-  $(".click")
-  .unbind()
-  .click ->
-    openTab($(this).attr("data-url"))
+  bindClicks()
+  false
+
+
+bindClicks = (selector = ".click") ->
+  ###
+  # Helper function. Bind everything with a selector
+  # to execute a function data-function or to go to a
+  # URL data-href.
+  ###
+  $(selector).each ->
+    try
+      url = $(this).attr("data-href")
+      if isNull(url)
+        url = $(this).attr("data-url")
+        if url?
+          $(this).attr("data-newtab","true")
+      unless isNull(url)
+        $(this).unbind()
+        # console.log("Binding a url to ##{$(this).attr("id")}")
+        try
+          if url is uri.o.attr("path") and $(this).prop("tagName").toLowerCase() is "paper-tab"
+            $(this).parent().prop("selected",$(this).index())
+        catch e
+          console.warn("tagname lower case error")
+        $(this).click ->
+          if $(this).attr("newTab")?.toBool() or $(this).attr("newtab")?.toBool() or $(this).attr("data-newtab")?.toBool()
+            openTab(url)
+          else
+            goTo(url)
+        return url
+      else
+        # Check for onclick function
+        callable = $(this).attr("data-function")
+        if callable?
+          $(this).unbind()
+          # console.log("Binding #{callable}() to ##{$(this).attr("id")}")
+          $(this).click ->
+            try
+              # console.log("Executing bound function #{callable}()")
+              window[callable]()
+            catch e
+              console.error("'#{callable}()' is a bad function - #{e.message}")
+    catch e
+      console.error("There was a problem binding to ##{$(this).attr("id")} - #{e.message}")
+  false
 
 getMaxZ = ->
   mapFunction = ->
@@ -654,7 +696,7 @@ checkFileVersion = (forceNow = false) ->
   # Check to see if the file on the server is up-to-date with what the
   # user sees.
   #
-  # @param bool forceNow force a check now 
+  # @param bool forceNow force a check now
   ###
   checkVersion = ->
     $.get("#{uri.urlString}meta.php","do=get_last_mod","json")
@@ -691,8 +733,14 @@ checkFileVersion = (forceNow = false) ->
     return true
   false
 
+
+foo = ->
+  toastStatusMessage("Sorry, this feature is not yet finished")
+  stopLoad()
+  false
+
 $ ->
-  bindClickTargets()
+  bindClicks()
   formatScientificNames()
   try
     $('[data-toggle="tooltip"]').tooltip()
@@ -700,11 +748,24 @@ $ ->
     console.warn("Tooltips were attempted to be set up, but do not exist")
   try
     checkAdmin()
-    if adminParams.loadAdminUi is true
+    if adminParams?.loadAdminUi is true
       loadJS "js/admin.min.js", ->
         loadAdminUi()
   catch e
     # If we're not in admin, get the location
     getLocation()
+    # However, we can lazy-load to see if the user is an admin
+    loadJS "js/jquery.cookie.min.js", ->
+      # Now see if the user is an admin
+      if $.cookie("ssarherps_user")?
+        # Someone has logged in to this device before, offer the admin
+        # link.
+        html = """
+        <paper-icon-button icon="create" class="click" data-href="#{uri.urlString}admin/" data-toggle="tooltip" title="Go to administration" id="goto-admin"></paper-icon-button>
+        """
+        $("#bug-footer").append(html)
+        $("#goto-admin").tooltip()
+        bindClicks("#goto-admin")
+      false
   browserBeware()
   checkFileVersion()

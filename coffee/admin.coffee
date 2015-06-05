@@ -977,10 +977,6 @@ handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
     ssar.dropzone = fileUploadDropzone
   false
 
-foo = ->
-  toastStatusMessage("Sorry, this feature is not yet finished")
-  stopLoad()
-  false
 
 $ ->
   if $("#next").exists()

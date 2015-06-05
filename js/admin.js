@@ -3,7 +3,7 @@
  * The main coffeescript file for administrative stuff
  * Triggered from admin-page.html
  */
-var adminParams, createDuplicateTaxon, createNewTaxon, deleteTaxon, foo, handleDragDropImage, loadAdminUi, loadModalTaxonEditor, lookupEditorSpecies, renderAdminSearchResults, saveEditorEntry, verifyLoginCredentials,
+var adminParams, createDuplicateTaxon, createNewTaxon, deleteTaxon, handleDragDropImage, loadAdminUi, loadModalTaxonEditor, lookupEditorSpecies, renderAdminSearchResults, saveEditorEntry, verifyLoginCredentials,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 adminParams = new Object();
@@ -963,12 +963,6 @@ handleDragDropImage = function(uploadTargetSelector, callback) {
     fileUploadDropzone = new Dropzone(d$(uploadTargetSelector).get(0), dropzoneConfig);
     return ssar.dropzone = fileUploadDropzone;
   });
-  return false;
-};
-
-foo = function() {
-  toastStatusMessage("Sorry, this feature is not yet finished");
-  stopLoad();
   return false;
 };
 
