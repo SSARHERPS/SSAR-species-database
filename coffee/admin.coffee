@@ -936,17 +936,38 @@ handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
     document.getElementsByTagName('head')[0].appendChild(c)
     Dropzone.autoDiscover = false
     # See http://www.dropzonejs.com/#configuration
+    defaultText = "Drop a high-resolution image for the taxon here."
+    dragCancel = ->
+      d$(uploadTargetSelector)
+      .css("box-shadow","")
+      .css("border","")
+      d$("#{uploadTargetSelector} .dz-message span").text(defaultText)
     dropzoneConfig =
       url: "#{uri.urlString}meta.php?do=upload_image"
       acceptedFiles: "image/*"
       autoProcessQueue: true
       maxFiles: 1
-      dictDefaultMessage: "Drop a high-resolution image for the taxon here."
+      dictDefaultMessage: defaultText
       init: ->
         @on "error", ->
           toastStatusMessage("An error occured sending your image to the server.")
         @on "canceled", ->
           toastStatusMessage("Upload canceled.")
+        @on "dragover", ->
+          d$("#{uploadTargetSelector} .dz-message span").text("Drop here to upload the image")
+          ###
+          # box-shadow: 0px 0px 15px rgba(15,157,88,.8);
+          # border: 1px solid #0F9D58;
+          ###
+          d$(uploadTargetSelector)
+          .css("box-shadow","0px 0px 15px rgba(15,157,88,.8)")
+          .css("border","1px solid #0F9D58")
+        @on "dragleave", ->
+          dragCancel()
+        @on "dragend", ->
+          dragCancel()
+        @on "drop", ->
+          dragCancel()
         @on "success", (file, result) ->
           callback(file, result)
     # Create the upload target
@@ -954,7 +975,6 @@ handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
       d$(uploadTargetSelector).addClass("dropzone")
     fileUploadDropzone = new Dropzone(d$(uploadTargetSelector).get(0), dropzoneConfig)
     ssar.dropzone = fileUploadDropzone
-    foo()
   false
 
 foo = ->

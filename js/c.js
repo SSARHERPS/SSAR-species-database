@@ -910,25 +910,48 @@ handleDragDropImage = function(uploadTargetSelector, callback) {
   }
   loadJS("bower_components/JavaScript-MD5/js/md5.min.js");
   loadJS("bower_components/dropzone/dist/min/dropzone.min.js", function() {
-    var c, dropzoneConfig, fileUploadDropzone;
+    var c, defaultText, dragCancel, dropzoneConfig, fileUploadDropzone;
     c = document.createElement("link");
     c.setAttribute("rel", "stylesheet");
     c.setAttribute("type", "text/css");
     c.setAttribute("href", "css/dropzone.min.css");
     document.getElementsByTagName('head')[0].appendChild(c);
     Dropzone.autoDiscover = false;
+    defaultText = "Drop a high-resolution image for the taxon here.";
+    dragCancel = function() {
+      d$(uploadTargetSelector).css("box-shadow", "").css("border", "");
+      return d$("" + uploadTargetSelector + " .dz-message span").text(defaultText);
+    };
     dropzoneConfig = {
       url: "" + uri.urlString + "meta.php?do=upload_image",
       acceptedFiles: "image/*",
       autoProcessQueue: true,
       maxFiles: 1,
-      dictDefaultMessage: "Drop a high-resolution image for the taxon here.",
+      dictDefaultMessage: defaultText,
       init: function() {
         this.on("error", function() {
           return toastStatusMessage("An error occured sending your image to the server.");
         });
         this.on("canceled", function() {
           return toastStatusMessage("Upload canceled.");
+        });
+        this.on("dragover", function() {
+          d$("" + uploadTargetSelector + " .dz-message span").text("Drop here to upload the image");
+
+          /*
+           * box-shadow: 0px 0px 15px rgba(15,157,88,.8);
+           * border: 1px solid #0F9D58;
+           */
+          return d$(uploadTargetSelector).css("box-shadow", "0px 0px 15px rgba(15,157,88,.8)").css("border", "1px solid #0F9D58");
+        });
+        this.on("dragleave", function() {
+          return dragCancel();
+        });
+        this.on("dragend", function() {
+          return dragCancel();
+        });
+        this.on("drop", function() {
+          return dragCancel();
         });
         return this.on("success", function(file, result) {
           return callback(file, result);
@@ -939,8 +962,7 @@ handleDragDropImage = function(uploadTargetSelector, callback) {
       d$(uploadTargetSelector).addClass("dropzone");
     }
     fileUploadDropzone = new Dropzone(d$(uploadTargetSelector).get(0), dropzoneConfig);
-    ssar.dropzone = fileUploadDropzone;
-    return foo();
+    return ssar.dropzone = fileUploadDropzone;
   });
   return false;
 };

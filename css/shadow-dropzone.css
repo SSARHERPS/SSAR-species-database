@@ -67,13 +67,16 @@
         -webkit-transform: scale(1);
         transform: scale(1); } }
 .dropzone, .dropzone * {
-    box-sizing: border-box; }
+    box-sizing: border-box;
+    transition: all .1s ease-out;
+}
 
 .dropzone {
     min-height: 150px;
     border: 2px solid rgba(0, 0, 0, 0.3);
     background: white;
-    padding: 20px 20px; }
+    padding: 20px 20px;
+}
 .dropzone.dz-clickable {
     cursor: pointer; }
 .dropzone.dz-clickable * {
@@ -254,13 +257,16 @@
 /*** Deep ***/
 
 html /deep/ .dropzone, .dropzone * {
-    box-sizing: border-box; }
+    box-sizing: border-box;
+    transition: all .1s ease-out;
+}
 
 html /deep/ .dropzone {
     min-height: 150px;
     border: 2px solid rgba(0, 0, 0, 0.3);
     background: white;
-    padding: 20px 20px; }
+    padding: 20px 20px;
+}
 html /deep/ .dropzone.dz-clickable {
     cursor: pointer; }
 html /deep/ .dropzone.dz-clickable * {
@@ -442,13 +448,16 @@ html /deep/ .dropzone .dz-preview .dz-error-message:after {
 /*** >>> ***/
 
 html >>> .dropzone, .dropzone * {
-    box-sizing: border-box; }
+    box-sizing: border-box;
+    transition: all .1s ease-out;
+}
 
 html >>> .dropzone {
     min-height: 150px;
     border: 2px solid rgba(0, 0, 0, 0.3);
     background: white;
-    padding: 20px 20px; }
+    padding: 20px 20px;
+}
 html >>> .dropzone.dz-clickable {
     cursor: pointer; }
 html >>> .dropzone.dz-clickable * {
