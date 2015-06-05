@@ -132,6 +132,9 @@ module.exports = (grunt) ->
         files: ["css/main.css"]
         tasks: ["postcss","cssmin"]
       html:
+        files: ["index.html","admin-page.html"]
+        tasks: ["bootlint","htmllint"]
+      app:
         files: ["app.html"]
         tasks: ["bootlint","shell:vulcanize","uglify:vulcanize","string-replace:vulcanize"]
     bootlint:
@@ -142,7 +145,8 @@ module.exports = (grunt) ->
     htmllint:
       all:
         src: ["index.html","admin-page.html"]
-        ignore: [/XHTML element “[a-z-]+” not allowed as child of XHTML element.*/]
+      options:
+        ignore: [/XHTML element “[a-z-]+” not allowed as child of XHTML element.*/,"Bad value “X-UA-Compatible” for attribute “http-equiv” on XHTML element “meta”.",/Bad value “theme-color”.*/]
   ## Now the tasks
   grunt.registerTask("default",["watch"])
   grunt.registerTask("vulcanize","Vulcanize web components",["shell:vulcanize","uglify:vulcanize","string-replace:vulcanize"])
