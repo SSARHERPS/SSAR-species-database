@@ -282,6 +282,7 @@ html >>> .text-center {
     width: 256px;
     overflow:hidden;
 }
+
 html /deep/ .modal-img-container {
     float: right;
     margin-top: -3em;
@@ -294,6 +295,18 @@ html >>> .modal-img-container {
     width: 256px;
     overflow:hidden;
 }
+@media (max-width: 767px) {
+    .modal-img-container {
+        margin-top: -1em;
+    }
+    html /deep/ .modal-img-container {
+        margin-top: -1em;
+    }
+    html >>> .modal-img-container {
+        margin-top: -1em;
+    }
+}
+
 @media (max-width: 767px) {
   html >>> .hidden-xs {
     display: none !important;
