@@ -272,7 +272,7 @@
 							$this->camouflage = false;
 						}
 
-						/* IE / Spartan EdgeHTML rendering engine also appears to be WebKit */
+						/* EdgeHTML rendering engine also appears to be WebKit */
 						if (isset($this->engine->name) && $this->engine->name == 'EdgeHTML') {
 							$this->camouflage = false;
 						}
@@ -1722,6 +1722,17 @@
 				}
 			}
 
+			if (preg_match('/Linux\; U\; Android [0-9.]+\; ko\-kr\; SAMSUNG\; (NX[0-9]+[^\)]]*)/u', $ua, $match)) {
+				$this->os->name = 'Tizen';
+				$this->os->version = null;
+
+				$this->device->type = TYPE_CAMERA;
+				$this->device->manufacturer = 'Samsung';
+				$this->device->model = $match[1];
+				$this->device->identified = ID_PATTERN;
+			}
+
+
 			/****************************************************
 			 *		Jolla Sailfish
 			 */
@@ -1983,7 +1994,7 @@
 					$this->device->identified = ID_PATTERN;
 				}
 
-				if ($this->device->model) {
+				if (isset($this->device->model) && $this->device->model) {
 					$device = DeviceModels::identify('palmos', $this->device->model);
 
 					if ($device->identified) {
@@ -2524,10 +2535,11 @@
 						case 'Panasonic':		$this->device->manufacturer = 'Panasonic';
 
 												switch($modelName) {
-													case 'VIERA 2011':		$this->device->series = 'Smart Viera 2011'; break;
-													case 'VIERA 2012':		$this->device->series = 'Smart Viera 2012'; break;
-													case 'VIERA 2013':		$this->device->series = 'Smart Viera 2013'; break;
-													case 'VIERA 2014':		$this->device->series = 'Smart Viera 2014'; break;
+													case 'VIERA 2011':		$this->device->series = 'Viera 2011'; break;
+													case 'VIERA 2012':		$this->device->series = 'Viera 2012'; break;
+													case 'VIERA 2013':		$this->device->series = 'Viera 2013'; break;
+													case 'VIERA 2014':		$this->device->series = 'Viera 2014'; break;
+													case 'VIERA 2015':		$this->device->series = 'Viera 2015'; break;
 													default:				$this->device->model = $modelName; break;
 												}
 
@@ -2582,16 +2594,20 @@
 
 			if (preg_match('/Viera/u', $ua)) {
 				$this->device->manufacturer = 'Panasonic';
-				$this->device->series = 'Smart Viera';
+				$this->device->series = 'Viera';
 				$this->device->type = TYPE_TELEVISION;
 				$this->device->identified |= ID_MATCH_UA;
 
 				if (preg_match('/Panasonic\.tv\.([0-9]+)/u', $ua, $match)) {
-					$this->device->series = 'Smart Viera ' . $match[1];
+					$this->device->series = 'Viera ' . $match[1];
 				}
 
 				if (preg_match('/\(Panasonic, ([0-9]+),/u', $ua, $match)) {
-					$this->device->series = 'Smart Viera ' . $match[1];
+					$this->device->series = 'Viera ' . $match[1];
+				}
+
+				if (preg_match('/Viera\; rv\:34/u', $ua, $match)) {
+					$this->device->series = 'Viera 2015';
 				}
 			}
 
@@ -2788,6 +2804,16 @@
 					}
 				}
 			}
+
+			/* NetCast */
+
+			if ($ua == "Mozilla/5.0 (X11; Linux; ko-KR) AppleWebKit/534.26+ (KHTML, like Gecko) Version/5.0 Safari/534.26+") {
+				$this->device->manufacturer = 'LG';
+				$this->device->series = 'NetCast TV';
+				$this->device->type = TYPE_TELEVISION;
+				$this->device->identified |= ID_MATCH_UA;
+			}
+
 
 			/* NetCast or WebOS */
 
@@ -3096,7 +3122,7 @@
 			if ($this->device->type == TYPE_TELEVISION) {
 
 				/* Drop OS */
-				if (isset($this->os->name) && !in_array($this->os->name, array('Tizen', 'Android', 'Google TV'))) {
+				if (isset($this->os->name) && !in_array($this->os->name, array('Tizen', 'Android', 'Google TV', 'Firefox OS'))) {
 					unset($this->os->name);
 					unset($this->os->version);
 				}
@@ -4202,6 +4228,11 @@
 					}
 				}
 
+				if (preg_match('/Viera;(?: ([^;]+);)? rv/u', $ua, $match)) {
+					$this->device->type = TYPE_TELEVISION;
+					$this->os->name = 'Firefox OS';
+				}
+
 				if ($this->device->type == TYPE_MOBILE || $this->device->type == TYPE_TABLET) {
 					$this->browser->name = 'Firefox Mobile';
 				}
@@ -4263,6 +4294,21 @@
 					$this->browser->version = new Version(array('value' => $match[1]));
 				}
 			}
+
+			if (isset($this->os->name) && $this->os->name == 'Firefox OS') {
+				if (preg_match('/rv:([0-9.]*)/u', $ua, $match)) {
+					switch($match[1]) {
+						case '18.0': $this->os->version = new Version(array('value' => '1.0.1')); break;
+						case '18.1': $this->os->version = new Version(array('value' => '1.1')); break;
+						case '26.0': $this->os->version = new Version(array('value' => '1.2')); break;
+						case '28.0': $this->os->version = new Version(array('value' => '1.3')); break;
+						case '30.0': $this->os->version = new Version(array('value' => '1.4')); break;
+						case '32.0': $this->os->version = new Version(array('value' => '2.0')); break;
+						case '34.0': $this->os->version = new Version(array('value' => '2.1')); break;
+					}
+				}
+			}
+
 
 			/****************************************************
 			 *		SeaMonkey
@@ -4348,6 +4394,7 @@
 						case '39.0.2171':
 						case '40.0.2214':
 						case '41.0.2272':
+						case '42.0.2311':
 							$this->browser->version->details = 1;
 							break;
 						default:
@@ -4357,6 +4404,14 @@
 
 					/* Webview for Android 4.4 and higher */
 					if (implode('.', array_splice((explode('.', $match[1])), 1, 2)) == '0.0' && preg_match('/Version\//u', $ua)) {
+						$this->browser->stock = true;
+						$this->browser->name = null;
+						$this->browser->version = null;
+						$this->browser->channel = null;
+					}
+
+					/* Webview for Android 5 */
+					if (preg_match('/; wv\)/u', $ua)) {
 						$this->browser->stock = true;
 						$this->browser->name = null;
 						$this->browser->version = null;
@@ -4483,6 +4538,8 @@
 						case '39.0.2171':
 						case '40.0.2214':
 						case '41.0.2272':
+						case '42.0.2311':
+						case '43.0.2357':
 							$this->browser->version->details = 1;
 							break;
 						default:
@@ -4539,6 +4596,10 @@
 
 				if ($this->device->type == TYPE_MOBILE) {
 					$this->browser->name = 'Opera Mobile';
+				}
+
+				if (preg_match('/OMI\//u', $ua)) {
+					$this->device->type = TYPE_TELEVISION;
 				}
 			}
 
@@ -5576,7 +5637,7 @@
 				array('name' => 'Orca', 				'regexp' => '/Orca\/([0-9.]*)/u'),
 				array('name' => 'Origyn', 				'regexp' => '/Origyn Web Browser/u'),
 				array('name' => 'Otter', 				'regexp' => '/Otter Browser\/([0-9.]*)/u'),
-				array('name' => 'Palemoon', 			'regexp' => '/Pale[mM]oon\/([0-9.]*)/u'),
+				array('name' => 'Pale Moon', 			'regexp' => '/Pale[mM]oon\/([0-9.]*)/u'),
 				array('name' => 'Phantom', 				'regexp' => '/Phantom\/V([0-9.]*)/u'),
 				array('name' => 'Polaris', 				'regexp' => '/Polaris[\/ ]v?([0-9.]*)/iu', 'details' => 2),
 				array('name' => 'Polaris', 				'regexp' => '/POLARIS([0-9.]+)/u', 'details' => 2),
@@ -5610,7 +5671,7 @@
 				array('name' => 'Tencent Traveler', 	'regexp' => '/TencentTraveler ([0-9.]*)/u', 'details' => 2),
 				array('name' => 'UP.Browser', 			'regexp' => '/UP\.Browser\/([a-z0-9.]*)/u', 'details' => 2),
 				array('name' => 'Uzbl', 				'regexp' => '/^Uzbl/u'),
-				array('name' => 'Viera', 				'regexp' => '/Viera\/([0-9.]*)/u'),
+				array('name' => 'Viera Browser', 		'regexp' => '/Viera\/([0-9.]*)/u'),
 				array('name' => 'Villanova', 			'regexp' => '/Villanova\/([0-9.]*)/u', 'details' => 3),
 				array('name' => 'Vimb', 				'regexp' => '/vimb\/([0-9.]*)/u'),
 				array('name' => 'Vivaldi', 				'regexp' => '/Vivaldi\/([0-9.]*)/u', 'details' => 2),
@@ -5821,6 +5882,11 @@
 					$this->browser->name = null;
 					$this->browser->version = null;
 				}
+
+				if ($this->os->name == 'Tizen' && $this->browser->name == 'Chrome') {
+					$this->browser->name = null;
+					$this->browser->version = null;
+				}
 			}
 
 			if (isset($this->browser->name) && isset($this->engine->name)) {
@@ -5847,7 +5913,7 @@
 			}
 
 			if (preg_match('/Edge\/([0-9.]*)/u', $ua, $match)) {
-				$this->browser->name = 'Project Spartan';
+				$this->browser->name = 'Edge';
 				$this->browser->version = null;
 			}
 
@@ -5946,6 +6012,13 @@
 				$this->os->family = 'Android';
 
 				unset($this->os->version);
+				unset($this->device->flag);
+			}
+
+			if (isset($this->device->flag) && $this->device->flag == FLAG_ANDROIDTV) {
+				$this->os->name = 'Android TV';
+				$this->os->family = 'Android';
+
 				unset($this->device->flag);
 			}
 

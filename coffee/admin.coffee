@@ -888,12 +888,36 @@ deleteTaxon = (taxaId) ->
     toastStatusMessage("Failed to communicate with the server.")
     false
 
-handleDragDropImage = ->
+handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
   ###
   # Take a drag-and-dropped image, and save it out to the database.
   # If we trigger this, we need to disable #edit-image
   ###
+  unless typeof callback is "function"
+    callback = (fileName) ->
+      false
+  # See http://www.dropzonejs.com/#configuration
+  dropzoneConfig =
+    url: "#{uri.urlString}meta.php?do=upload_image"
+    acceptedFiles: "image/*"
+    autoProcessQueue: true
+  # Create the upload target
+  fileUploadDropzone = d$(uploadTargetSelector).dropzone(dropzoneConfig)
+  fileUploadDropzone.on "success", (file, result) ->
+    unless result.success is true
+      # Yikes! Didn't work
+      result.human_error ?= "There was a problem uploading your image."
+      toastStatusMessage(result.human_error)
+      return false
+    # Disable the selector
+    d$(uploadTargetSelector).disable()
+    # Now, process the rename and insert it into the file area
+    # Get the MD5 of the original filename
+    ext = fileName.split(".").pop()
+    # MD5.extension is the goal
+    false
   foo()
+  false
 
 foo = ->
   toastStatusMessage("Sorry, this feature is not yet finished")

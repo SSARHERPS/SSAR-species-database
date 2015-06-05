@@ -1,10 +1,5 @@
 {
   "name": "polymer",
-<<<<<<< HEAD
-  "version": "1.0.2",
-  "main": [
-    "polymer.html"
-=======
   "description": "Polymer is a new type of library for the web, built on top of Web Components, and designed to leverage the evolving web platform on modern browsers.",
   "homepage": "http://www.polymer-project.org/",
   "keywords": [
@@ -13,7 +8,6 @@
     "browser",
     "web components",
     "web-components"
->>>>>>> parent of 19ad6cb... Update to Polymer 1.0.0
   ],
   "author": "Polymer Authors <polymer-dev@googlegroups.com>",
   "private": true,
