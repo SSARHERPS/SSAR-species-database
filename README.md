@@ -3,9 +3,6 @@ SSAR Species Name Database
 
 You can find the most current version at http://ssarherps.org/cndb/
 
-The adminstrative page can be accessed by going to
-http://ssarherps.org/cndb/admin
-
 
 ## Stateful URI
 
@@ -215,6 +212,14 @@ Therefore, each deprecated scientific name is to be written as `"Genus species":
 - The `"Authority: YEAR"` string is optional in the space around the colon. The year has to match the rules [established in Issue #37](https://github.com/tigerhawkvok/SSAR-species-database/issues/37#issuecomment-105041048)
 
 - The validity of the taxon information is not checked.
+
+
+## Reporting bugs
+
+Please use the issue tracker here to report all bugs.
+
+**If you find a security bug**, please practice responsible disclosure! Email `support@velociraptorsystems.com` with the issue. The administrative page uses a fork of [tigerhawkvok/php-userhandler](https://github.com/tigerhawkvok/php-userhandler/tree/ssar-fork), As appropriate, report bugs or offer pull requests on the right branch.
+
 
 ## Building the application
 
