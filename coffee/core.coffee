@@ -649,32 +649,47 @@ browserBeware = ->
       browserBeware()
 
 
-checkFileVersion = ->
+checkFileVersion = (forceNow = false) ->
+  ###
+  # Check to see if the file on the server is up-to-date with what the
+  # user sees.
+  #
+  # @param bool forceNow force a check now 
+  ###
   checkVersion = ->
     $.get("#{uri.urlString}meta.php","do=get_last_mod","json")
     .done (result) ->
+      if forceNow
+        console.log("Forced version check:",result)
       unless isNumber result.last_mod
         return false
       unless ssar.lastMod?
         ssar.lastMod = result.last_mod
-      if result.last_mod > ssar.last_mod
+      if result.last_mod > ssar.lastMod
         # File has updated
         html = """
         <div id="outdated-warning" class="alert alert-info alert-dismissible fade in" role="alert">
           <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <strong>We have page updates!</strong> This page has been updated since you last refreshed. <a href="#" class="alert-link" id="refresh-page">Click here to refresh now</a> and get bugfixes and updates.
+          <strong>We have page updates!</strong> This page has been updated since you last refreshed. <a class="alert-link" id="refresh-page">Click here to refresh now</a> and get bugfixes and updates.
         </div>
         """
-        $("body").append(html)
-        $("#refresh-page").click ->
-          document.location.reload(true)
+        unless $("#outdated-warning").exists()
+          $("body").append(html)
+          $("#refresh-page").click ->
+            document.location.reload(true)
+        console.warn("Your current version is out of date! Please refresh the page.")
+      else if forceNow
+        console.log("Your version is up to date: have #{ssar.lastMod}, got #{result.last_mod}")
+    .fail ->
+      console.warn("Couldn't check file version!!")
     .always ->
       checkFileVersion()
   delay 5*60*1000, ->
     # Delay 5 minutes
     checkVersion()
-  unless ssar.lastMod?
+  if forceNow or not ssar.lastMod?
     checkVersion()
+    return true
   false
 
 $ ->
@@ -692,3 +707,4 @@ $ ->
     # If we're not in admin, get the location
     getLocation()
   browserBeware()
+  checkFileVersion()

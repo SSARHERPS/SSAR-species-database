@@ -3,7 +3,7 @@
  * The main coffeescript file for administrative stuff
  * Triggered from admin-page.html
  */
-var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkTaxonNear, clearSearch, createDuplicateTaxon, createNewTaxon, d$, deepJQuery, delay, deleteTaxon, doCORSget, doFontExceptions, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, handleDragDropImage, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadJS, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri, verifyLoginCredentials,
+var activityIndicatorOff, activityIndicatorOn, adminParams, animateLoad, bindClickTargets, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, createDuplicateTaxon, createNewTaxon, d$, deepJQuery, delay, deleteTaxon, doCORSget, doFontExceptions, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, handleDragDropImage, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadAdminUi, loadJS, loadModalTaxonEditor, lookupEditorSpecies, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, renderAdminSearchResults, root, roundNumber, saveEditorEntry, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri, verifyLoginCredentials,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __slice = [].slice;
 
@@ -1783,6 +1783,58 @@ browserBeware = function() {
   }
 };
 
+checkFileVersion = function(forceNow) {
+  var checkVersion;
+  if (forceNow == null) {
+    forceNow = false;
+  }
+
+  /*
+   * Check to see if the file on the server is up-to-date with what the
+   * user sees.
+   *
+   * @param bool forceNow force a check now
+   */
+  checkVersion = function() {
+    return $.get("" + uri.urlString + "meta.php", "do=get_last_mod", "json").done(function(result) {
+      var html;
+      if (forceNow) {
+        console.log("Forced version check:", result);
+      }
+      if (!isNumber(result.last_mod)) {
+        return false;
+      }
+      if (ssar.lastMod == null) {
+        ssar.lastMod = result.last_mod;
+      }
+      if (result.last_mod > ssar.lastMod) {
+        html = "<div id=\"outdated-warning\" class=\"alert alert-info alert-dismissible fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>We have page updates!</strong> This page has been updated since you last refreshed. <a class=\"alert-link\" id=\"refresh-page\">Click here to refresh now</a> and get bugfixes and updates.\n</div>";
+        if (!$("#outdated-warning").exists()) {
+          $("body").append(html);
+          $("#refresh-page").click(function() {
+            return document.location.reload(true);
+          });
+        }
+        return console.warn("Your current version is out of date! Please refresh the page.");
+      } else if (forceNow) {
+        return console.log("Your version is up to date: have " + ssar.lastMod + ", got " + result.last_mod);
+      }
+    }).fail(function() {
+      return console.warn("Couldn't check file version!!");
+    }).always(function() {
+      return checkFileVersion();
+    });
+  };
+  delay(5 * 60 * 1000, function() {
+    return checkVersion();
+  });
+  if (forceNow || (ssar.lastMod == null)) {
+    checkVersion();
+    return true;
+  }
+  return false;
+};
+
 $(function() {
   var e;
   bindClickTargets();
@@ -1802,7 +1854,8 @@ $(function() {
     e = _error;
     getLocation();
   }
-  return browserBeware();
+  browserBeware();
+  return checkFileVersion();
 });
 
 searchParams = new Object();
