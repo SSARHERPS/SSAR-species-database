@@ -914,6 +914,12 @@ handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
   loadJS("bower_components/JavaScript-MD5/js/md5.min.js")
   loadJS "bower_components/dropzone/dist/min/dropzone.min.js", ->
     # Dropzone has been loaded!
+    # Add the CSS
+    c = document.createElement("link")
+    c.setAttribute("rel","stylesheet")
+    c.setAttribute("type","text/css")
+    c.setAttribute("href","css/dropzone.min.css")
+    document.getElementsByTagName('head')[0].appendChild(c)
     # See http://www.dropzonejs.com/#configuration
     dropzoneConfig =
       url: "#{uri.urlString}meta.php?do=upload_image"
@@ -921,14 +927,14 @@ handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
       autoProcessQueue: true
       maxFiles: 1
       init: ->
-        @on "error" ->
+        @on "error", ->
           toastStatusMessage("An error occured sending your image to the server.")
-        @on "canceled" ->
+        @on "canceled", ->
           toastStatusMessage("Upload canceled.")
+        @on "success", (file, result) ->
+          callback(file, result)
     # Create the upload target
     fileUploadDropzone = d$(uploadTargetSelector).dropzone(dropzoneConfig)
-    fileUploadDropzone.on "success", (file, result) ->
-      callback(file, result)
     foo()
   false
 

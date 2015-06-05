@@ -870,13 +870,61 @@ deleteTaxon = function(taxaId) {
   });
 };
 
-handleDragDropImage = function() {
+handleDragDropImage = function(uploadTargetSelector, callback) {
+  if (uploadTargetSelector == null) {
+    uploadTargetSelector = "#upload-image";
+  }
 
   /*
    * Take a drag-and-dropped image, and save it out to the database.
    * If we trigger this, we need to disable #edit-image
    */
-  return foo();
+  if (typeof callback !== "function") {
+    callback = function(fileName, result) {
+      var ext, fullFile, fullPath;
+      if (result.success !== true) {
+        if (result.human_error == null) {
+          result.human_error = "There was a problem uploading your image.";
+        }
+        toastStatusMessage(result.human_error);
+        return false;
+      }
+      d$(uploadTargetSelector).disable();
+      ext = fileName.split(".").pop();
+      fullFile = "" + (md5(fileName)) + "." + ext;
+      fullPath = "species_photos/" + fullFile;
+      return false;
+    };
+  }
+  loadJS("bower_components/JavaScript-MD5/js/md5.min.js");
+  loadJS("bower_components/dropzone/dist/min/dropzone.min.js", function() {
+    var c, dropzoneConfig, fileUploadDropzone;
+    c = document.createElement("link");
+    c.setAttribute("rel", "stylesheet");
+    c.setAttribute("type", "text/css");
+    c.setAttribute("href", "css/dropzone.min.css");
+    document.getElementsByTagName('head')[0].appendChild(c);
+    dropzoneConfig = {
+      url: "" + uri.urlString + "meta.php?do=upload_image",
+      acceptedFiles: "image/*",
+      autoProcessQueue: true,
+      maxFiles: 1,
+      init: function() {
+        this.on("error", function() {
+          return toastStatusMessage("An error occured sending your image to the server.");
+        });
+        this.on("canceled", function() {
+          return toastStatusMessage("Upload canceled.");
+        });
+        return this.on("success", function(file, result) {
+          return callback(file, result);
+        });
+      }
+    };
+    fileUploadDropzone = d$(uploadTargetSelector).dropzone(dropzoneConfig);
+    return foo();
+  });
+  return false;
 };
 
 foo = function() {
