@@ -72,11 +72,13 @@ switch($do)
 case "get_last_mod":
     returnAjax(array("last_mod"=>getUserFileModTime()));
     break;
-case "upload_iamge":
+case "upload_image":
     returnAjax(doUploadImage());
     break;
 default:
-    returnAjax(doUploadImage());
+    $default_answer = array("status"=>false, "error"=>"Invalid action", "human_error"=>"No valid action was supplied.");
+    # doUploadImage()
+    returnAjax($default_answer);
 }
 
 

@@ -901,16 +901,20 @@ handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
         toastStatusMessage(result.human_error)
         console.error("Error uploading!",result)
         return false
-      # Disable the selector
-      d$(uploadTargetSelector).disable()
-      # Now, process the rename and insert it into the file area
-      # Get the MD5 of the original filename
-      ext = fileName.split(".").pop()
-      # MD5.extension is the goal
-      fullFile = "#{md5(fileName)}.#{ext}"
-      fullPath = "species_photos/#{fullFile}"
-      toastStatusMessage("Upload complete")
-      # Insert it into the field
+      try
+        # Disable the selector
+        ssar.dropzone.disable()
+        # Now, process the rename and insert it into the file area
+        # Get the MD5 of the original filename
+        ext = fileName.split(".").pop()
+        # MD5.extension is the goal
+        fullFile = "#{md5(fileName)}.#{ext}"
+        fullPath = "species_photos/#{fullFile}"
+        toastStatusMessage("Upload complete")
+        # Insert it into the field
+      catch e
+        console.error("There was a problem with upload post-processing - #{e.message}")
+        toastStatusMessage("Your upload completed, but we couldn't post-process it.")
       false
   # Load dependencies
   loadJS("bower_components/JavaScript-MD5/js/md5.min.js")
@@ -937,7 +941,10 @@ handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
         @on "success", (file, result) ->
           callback(file, result)
     # Create the upload target
-    fileUploadDropzone = d$(uploadTargetSelector).dropzone(dropzoneConfig)
+    unless d$(uploadTargetSelector).hasClass("dropzone")
+      d$(uploadTargetSelector).addClass("dropzone")
+    fileUploadDropzone = new Dropzone(d$(uploadTargetSelector).get(0), dropzoneConfig)
+    ssar.dropzone = fileUploadDropzone
     foo()
   false
 
@@ -1626,7 +1633,7 @@ checkFileVersion = (forceNow = false) ->
         html = """
         <div id="outdated-warning" class="alert alert-info alert-dismissible fade in" role="alert">
           <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <strong>We have page updates!</strong> This page has been updated since you last refreshed. <a class="alert-link" id="refresh-page">Click here to refresh now</a> and get bugfixes and updates.
+          <strong>We have page updates!</strong> This page has been updated since you last refreshed. <a class="alert-link" id="refresh-page" style="cursor:pointer">Click here to refresh now</a> and get bugfixes and updates.
         </div>
         """
         unless $("#outdated-warning").exists()

@@ -881,7 +881,7 @@ handleDragDropImage = function(uploadTargetSelector, callback) {
    */
   if (typeof callback !== "function") {
     callback = function(fileName, result) {
-      var ext, fullFile, fullPath;
+      var e, ext, fullFile, fullPath;
       if (result.status !== true) {
         if (result.human_error == null) {
           result.human_error = "There was a problem uploading your image.";
@@ -890,11 +890,17 @@ handleDragDropImage = function(uploadTargetSelector, callback) {
         console.error("Error uploading!", result);
         return false;
       }
-      d$(uploadTargetSelector).disable();
-      ext = fileName.split(".").pop();
-      fullFile = "" + (md5(fileName)) + "." + ext;
-      fullPath = "species_photos/" + fullFile;
-      toastStatusMessage("Upload complete");
+      try {
+        ssar.dropzone.disable();
+        ext = fileName.split(".").pop();
+        fullFile = "" + (md5(fileName)) + "." + ext;
+        fullPath = "species_photos/" + fullFile;
+        toastStatusMessage("Upload complete");
+      } catch (_error) {
+        e = _error;
+        console.error("There was a problem with upload post-processing - " + e.message);
+        toastStatusMessage("Your upload completed, but we couldn't post-process it.");
+      }
       return false;
     };
   }
@@ -924,7 +930,11 @@ handleDragDropImage = function(uploadTargetSelector, callback) {
         });
       }
     };
-    fileUploadDropzone = d$(uploadTargetSelector).dropzone(dropzoneConfig);
+    if (!d$(uploadTargetSelector).hasClass("dropzone")) {
+      d$(uploadTargetSelector).addClass("dropzone");
+    }
+    fileUploadDropzone = new Dropzone(d$(uploadTargetSelector).get(0), dropzoneConfig);
+    ssar.dropzone = fileUploadDropzone;
     return foo();
   });
   return false;
@@ -1859,7 +1869,7 @@ checkFileVersion = function(forceNow) {
         ssar.lastMod = result.last_mod;
       }
       if (result.last_mod > ssar.lastMod) {
-        html = "<div id=\"outdated-warning\" class=\"alert alert-info alert-dismissible fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>We have page updates!</strong> This page has been updated since you last refreshed. <a class=\"alert-link\" id=\"refresh-page\">Click here to refresh now</a> and get bugfixes and updates.\n</div>";
+        html = "<div id=\"outdated-warning\" class=\"alert alert-info alert-dismissible fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>We have page updates!</strong> This page has been updated since you last refreshed. <a class=\"alert-link\" id=\"refresh-page\" style=\"cursor:pointer\">Click here to refresh now</a> and get bugfixes and updates.\n</div>";
         if (!$("#outdated-warning").exists()) {
           $("body").append(html);
           $("#refresh-page").click(function() {

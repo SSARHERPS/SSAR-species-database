@@ -670,7 +670,7 @@ checkFileVersion = (forceNow = false) ->
         html = """
         <div id="outdated-warning" class="alert alert-info alert-dismissible fade in" role="alert">
           <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <strong>We have page updates!</strong> This page has been updated since you last refreshed. <a class="alert-link" id="refresh-page">Click here to refresh now</a> and get bugfixes and updates.
+          <strong>We have page updates!</strong> This page has been updated since you last refreshed. <a class="alert-link" id="refresh-page" style="cursor:pointer">Click here to refresh now</a> and get bugfixes and updates.
         </div>
         """
         unless $("#outdated-warning").exists()
