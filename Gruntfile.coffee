@@ -46,6 +46,8 @@ module.exports = (grunt) ->
           ]
       dist:
         src: "css/main.css"
+      drop:
+        src: "css/shadow-dropzone.css"
     uglify:
       options:
         mangle:
@@ -110,6 +112,7 @@ module.exports = (grunt) ->
       target:
         files:
           "css/main.min.css":["css/main.css"]
+          "css/dropzone.min.css":["css/shadow-dropzone.css"]
     coffee:
       compile:
         options:
