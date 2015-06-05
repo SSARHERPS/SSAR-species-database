@@ -1,0 +1,23 @@
+{
+    "short_name": "SSAR North American Species Database",
+    "name": "SSAR North American Reptile and Amphibian Common Names Database",
+    "icons": [
+        {
+            "src":"",
+            "sizes":"",
+            "type":"image/png"
+        },
+        {
+            "src":"",
+            "sizes":"",
+            "type":"image/png"
+        },
+        {
+            "src":"",
+            "sizes":"",
+            "type":"image/png"
+        },
+    ],
+    "start_url":"http://ssarherps.org/cndb/",
+    "display":"standalone"
+}
