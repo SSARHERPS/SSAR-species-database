@@ -219,6 +219,8 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
     <textarea placeholder="Notes" id="edit-notes" name="edit-notes" aria-describedby="notes-help" rows="5"></textarea>
   </paper-autogrow-textarea>
   <span class="help-block" id="notes-help">You can write your notes in Markdown. (<a href="https://daringfireball.net/projects/markdown/syntax" "onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'">Official Full Syntax Guide</a>)</span>
+  <div id="upload-image"></div>
+  <span class="help-block" id="upload-image-help">You can drag and drop an image above, or enter its server path below.</span>
   <paper-input label="Image" id="edit-image" name="edit-image" floatingLabel aria-describedby="imagehelp"></paper-input>
     <span class="help-block" id="imagehelp">The image path here should be relative to the <span class="code">public_html/cndb/</span> directory.</span>
   <paper-input label="Image Credit" id="edit-image-credit" name="edit-image-credit" floatingLabel></paper-input>
@@ -241,6 +243,7 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   if $("#modal-taxon-edit").exists()
     $("#modal-taxon-edit").remove()
   $("#search-results").after(html)
+  handleDragDropImage()
   # Bind the autogrow
   # See https://www.polymer-project.org/0.5/docs/elements/paper-autogrow-textarea.html
   try
@@ -894,7 +897,7 @@ handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
   # If we trigger this, we need to disable #edit-image
   ###
   unless typeof callback is "function"
-    callback = (fileName, result) ->
+    callback = (file, result) ->
       unless result.status is true
         # Yikes! Didn't work
         result.human_error ?= "There was a problem uploading your image."
@@ -902,6 +905,7 @@ handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
         console.error("Error uploading!",result)
         return false
       try
+        fileName = file.name
         # Disable the selector
         ssar.dropzone.disable()
         # Now, process the rename and insert it into the file area
@@ -910,10 +914,14 @@ handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
         # MD5.extension is the goal
         fullFile = "#{md5(fileName)}.#{ext}"
         fullPath = "species_photos/#{fullFile}"
-        toastStatusMessage("Upload complete")
         # Insert it into the field
+        d$("#edit-image")
+        .attr("disabled","disabled")
+        .attr("value",fullPath)
+        toastStatusMessage("Upload complete")
       catch e
         console.error("There was a problem with upload post-processing - #{e.message}")
+        console.warn("Using",fileName,result)
         toastStatusMessage("Your upload completed, but we couldn't post-process it.")
       false
   # Load dependencies
@@ -933,6 +941,7 @@ handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
       acceptedFiles: "image/*"
       autoProcessQueue: true
       maxFiles: 1
+      dictDefaultMessage: "Drop a high-resolution image for the taxon here."
       init: ->
         @on "error", ->
           toastStatusMessage("An error occured sending your image to the server.")
