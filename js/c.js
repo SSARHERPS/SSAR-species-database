@@ -1822,12 +1822,11 @@ checkFileVersion = function(forceNow) {
     }).fail(function() {
       return console.warn("Couldn't check file version!!");
     }).always(function() {
-      return checkFileVersion();
+      return delay(5 * 60 * 1000, function() {
+        return checkVersion();
+      });
     });
   };
-  delay(5 * 60 * 1000, function() {
-    return checkVersion();
-  });
   if (forceNow || (ssar.lastMod == null)) {
     checkVersion();
     return true;

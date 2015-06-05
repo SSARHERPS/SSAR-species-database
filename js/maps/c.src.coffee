@@ -1593,10 +1593,9 @@ checkFileVersion = (forceNow = false) ->
     .fail ->
       console.warn("Couldn't check file version!!")
     .always ->
-      checkFileVersion()
-  delay 5*60*1000, ->
-    # Delay 5 minutes
-    checkVersion()
+      delay 5*60*1000, ->
+        # Delay 5 minutes
+        checkVersion()
   if forceNow or not ssar.lastMod?
     checkVersion()
     return true
