@@ -882,7 +882,7 @@ handleDragDropImage = function(uploadTargetSelector, callback) {
   if (typeof callback !== "function") {
     callback = function(fileName, result) {
       var ext, fullFile, fullPath;
-      if (result.success !== true) {
+      if (result.status !== true) {
         if (result.human_error == null) {
           result.human_error = "There was a problem uploading your image.";
         }
@@ -894,6 +894,7 @@ handleDragDropImage = function(uploadTargetSelector, callback) {
       ext = fileName.split(".").pop();
       fullFile = "" + (md5(fileName)) + "." + ext;
       fullPath = "species_photos/" + fullFile;
+      toastStatusMessage("Upload complete");
       return false;
     };
   }

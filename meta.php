@@ -54,12 +54,12 @@ function doUploadImage() {
         return array("status"=>false,"error"=>"No files provided","human_error"=>"Please provide a file to upload");
     }
     $temp = $_FILES["file"]["tmp_name"];
-    $savePath = dirname(__FILE__) . "species_photos/";
+    $savePath = dirname(__FILE__) . "/species_photos/";
     $file = $_FILES["file"]["name"];
     $extension = array_pop(explode(".",$file));
     $newFilePath = md5($file) . "." . $extension;
     $fileWritePath = $savePath . $newFilePath;
-    return array("status"=>move_uploaded_file($temp,$fileWritePath),"original_file"=>$file,"wrote_file"=>$newFilePath);
+    return array("status"=>move_uploaded_file($temp,$fileWritePath),"original_file"=>$file,"wrote_file"=>$newFilePath,"full_path"=>$fileWritePath);
     
 }
 

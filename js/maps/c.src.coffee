@@ -895,7 +895,7 @@ handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
   ###
   unless typeof callback is "function"
     callback = (fileName, result) ->
-      unless result.success is true
+      unless result.status is true
         # Yikes! Didn't work
         result.human_error ?= "There was a problem uploading your image."
         toastStatusMessage(result.human_error)
@@ -909,6 +909,7 @@ handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
       # MD5.extension is the goal
       fullFile = "#{md5(fileName)}.#{ext}"
       fullPath = "species_photos/#{fullFile}"
+      toastStatusMessage("Upload complete")
       # Insert it into the field
       false
   # Load dependencies
