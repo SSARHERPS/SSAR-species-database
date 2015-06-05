@@ -65,7 +65,7 @@ module.exports = (grunt) ->
           sourceMapIncludeSources:true
           sourceMapIn:"js/maps/c.js.map"
         files:
-          "js/combined.min.js":["js/c.js","bower_components/purl/purl.js","bower_components/xmlToJSON/lib/xmlToJSON.js","bower_components/jquery-cookie/jquery.cookie.js"]
+          "js/combined.min.js":["js/c.js","js/admin.js","bower_components/purl/purl.js","bower_components/xmlToJSON/lib/xmlToJSON.js","bower_components/jquery-cookie/jquery.cookie.js"]
       dist:
         options:
           sourceMap:true
@@ -87,6 +87,7 @@ module.exports = (grunt) ->
             cascade: true
         files:
           "js/c.min.js":["js/c.js"]
+          "js/admin.min.js":["js/admin.js"]
       minpurl:
         options:
           sourceMap:true
@@ -121,7 +122,8 @@ module.exports = (grunt) ->
           sourceMapDir: "js/maps"
           sourceMap: true
         files:
-          "js/c.js":"coffee/*.coffee"
+          "js/c.js":["coffee/core.coffee","coffee/search.coffee"]
+          "js/admin.js":"coffee/admin.coffee"
     watch:
       scripts:
         files: ["coffee/*.coffee"]

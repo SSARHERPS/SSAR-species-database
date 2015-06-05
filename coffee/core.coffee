@@ -701,7 +701,8 @@ $ ->
   try
     checkAdmin()
     if adminParams.loadAdminUi is true
-      loadAdminUi()
+      loadJS "js/admin.min.js", ->
+        loadAdminUi()
   catch e
     # If we're not in admin, get the location
     getLocation()
