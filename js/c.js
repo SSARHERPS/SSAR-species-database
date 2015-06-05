@@ -887,6 +887,7 @@ handleDragDropImage = function(uploadTargetSelector, callback) {
           result.human_error = "There was a problem uploading your image.";
         }
         toastStatusMessage(result.human_error);
+        console.error("Error uploading!", result);
         return false;
       }
       d$(uploadTargetSelector).disable();
@@ -904,6 +905,7 @@ handleDragDropImage = function(uploadTargetSelector, callback) {
     c.setAttribute("type", "text/css");
     c.setAttribute("href", "css/dropzone.min.css");
     document.getElementsByTagName('head')[0].appendChild(c);
+    Dropzone.autoDiscover = false;
     dropzoneConfig = {
       url: "" + uri.urlString + "meta.php?do=upload_image",
       acceptedFiles: "image/*",

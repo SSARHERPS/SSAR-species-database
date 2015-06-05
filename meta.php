@@ -76,7 +76,7 @@ case "upload_iamge":
     returnAjax(doUploadImage());
     break;
 default:
-    returnAjax(array("status"=>false, "error"=>"Illegal action", "human_error"=>"No valid action provided"));
+    returnAjax(doUploadImage());
 }
 
 

@@ -899,6 +899,7 @@ handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
         # Yikes! Didn't work
         result.human_error ?= "There was a problem uploading your image."
         toastStatusMessage(result.human_error)
+        console.error("Error uploading!",result)
         return false
       # Disable the selector
       d$(uploadTargetSelector).disable()
@@ -920,6 +921,7 @@ handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
     c.setAttribute("type","text/css")
     c.setAttribute("href","css/dropzone.min.css")
     document.getElementsByTagName('head')[0].appendChild(c)
+    Dropzone.autoDiscover = false
     # See http://www.dropzonejs.com/#configuration
     dropzoneConfig =
       url: "#{uri.urlString}meta.php?do=upload_image"
