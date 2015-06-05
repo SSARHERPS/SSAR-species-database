@@ -649,6 +649,33 @@ browserBeware = ->
       browserBeware()
 
 
+checkFileVersion = ->
+  checkVersion = ->
+    $.get("#{uri.urlString}meta.php","do=get_last_mod","json")
+    .done (result) ->
+      unless isNumber result.last_mod
+        return false
+      unless ssar.lastMod?
+        ssar.lastMod = result.last_mod
+      if result.last_mod > ssar.last_mod
+        # File has updated
+        html = """
+        <div id="outdated-warning" class="alert alert-info alert-dismissible fade in" role="alert">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <strong>We have page updates!</strong> This page has been updated since you last refreshed. <a href="#" class="alert-link" id="refresh-page">Click here to refresh now</a> and get bugfixes and updates.
+        </div>
+        """
+        $("body").append(html)
+        $("#refresh-page").click ->
+          document.location.reload(true)
+    .always ->
+      checkFileVersion()
+  delay 5*60*1000, ->
+    # Delay 5 minutes
+    checkVersion()
+  unless ssar.lastMod?
+    checkVersion()
+  false
 
 $ ->
   bindClickTargets()

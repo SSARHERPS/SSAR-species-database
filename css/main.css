@@ -461,6 +461,15 @@ paper-autogrow-textarea textarea {
     margin-left:0;
 }
 
+#outdated-warning {
+    position:fixed;
+    top:0;
+    width:50%;
+    margin:0;
+    left:25%;
+}
+
+
 /***
  * Force the scollbar to show on the #modal-taxon-editor
  ***/
