@@ -49,5 +49,35 @@ function getUserFileModTime() {
   return filemtime("js/c.min.js");
 }
 
-returnAjax(array("last_mod"=>getUserFileModTime()));
+function doUploadImage() {
+    if(empty($_FILES)) {
+        return array("status"=>false,"error"=>"No files provided","human_error"=>"Please provide a file to upload");
+    }
+    $temp = $_FILES["file"]["tmp_name"];
+    $savePath = dirname(__FILE__) . "species_photos/";
+    $file = $_FILES["file"]["name"];
+    $extension = array_pop(explode(".",$file));
+    $newFilePath = md5($file) . "." . $extension;
+    $fileWritePath = $savePath . $newFilePath;
+    return array("status"=>move_uploaded_file($temp,$fileWritePath),"original_file"=>$file,"wrote_file"=>$newFilePath);
+    
+}
+
+
+if(isset($_SERVER['QUERY_STRING'])) parse_str($_SERVER['QUERY_STRING'],$_REQUEST);
+$do = isset($_REQUEST['do']) ? strtolower($_REQUEST['do']):null;
+
+switch($do)
+{
+case "get_last_mod":
+    returnAjax(array("last_mod"=>getUserFileModTime()));
+    break;
+case "upload_iamge":
+    returnAjax(doUploadImage());
+    break;
+default:
+    returnAjax(array("status"=>false, "error"=>"Illegal action", "human_error"=>"No valid action provided"));
+}
+
+
 ?>
