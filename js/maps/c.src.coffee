@@ -1092,6 +1092,49 @@ parseTaxonYear = (taxonYearString,strict = true) ->
   year.species = species
   return year
 
+formatAlien = (dataOrAlienBool, selector = "#is-alien-container") ->
+  ###
+  # Quick handler to determine if the taxon is alien, and if so, label
+  # it
+  #
+  # After
+  # https://github.com/SSARHERPS/SSAR-species-database/issues/51
+  # https://github.com/SSARHERPS/SSAR-species-database/issues/52
+  ###
+  if typeof dataOrAlienBool is "boolean"
+    isAlien = dataOrAlienBool
+  else if typeof dataOrAlienBool is "object"
+    isAlien = toInt(dataOrAlienBool.is_alien).toBool()
+  else
+    throw Error("Invalid data given to formatAlien()")
+  # Now that we have it, let's do the handling
+  unless isAlien
+    # We don't need to do anything else
+    d$(selector).css("display","none")
+    return false
+  # Now we deal with the real bits
+  iconHtml = """
+  <core-icon icon="maps:flight" class="small-icon alien-speices" id="modal-alien-species" data-toggle="tooltip"></core-icon>
+  """
+  d$(selector).html(iconHtml)
+  tooltipHint = "This species is not native"
+  tooltipHtml = """
+  <div class="tooltip fade top in right manual-placement-tooltip" role="tooltip" style="top: 6.5em; left: 4em; right:initial; display:none" id="manual-alien-tooltip">
+    <div class="tooltip-arrow" style="top:50%;left:5px"></div>
+    <div class="tooltip-inner">#{tooltipHint}</div>
+  </div>
+  """
+  d$(selector)
+  .after(tooltipHtml)
+  .mouseenter ->
+    d$("#manual-alien-tooltip").css("display","block")
+    false
+  .mouseleave ->
+    d$("#manual-alien-tooltip").css("display","none")
+    false
+  d$("#manual-location-tooltip").css("left","6em")
+  false
+
 checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "#near-me-container") ->
   ###
   # Check the iNaturalist API to see if the taxon is in your county
@@ -1127,47 +1170,21 @@ checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "#nea
     tooltipHint = "We couldn't determine your location"
   .always ->
     tooltipHtml = """
-    <div class="tooltip fade top in right" role="tooltip" style="top: 6.5em; left: 4em; right:initial; display:none" id="manual-location-tooltip">
+    <div class="tooltip fade top in right manual-placement-tooltip" role="tooltip" style="top: 6.5em; left: 4em; right:initial; display:none" id="manual-location-tooltip">
       <div class="tooltip-arrow" style="top:50%;left:5px"></div>
       <div class="tooltip-inner">#{tooltipHint}</div>
     </div>
     """
-    try
-      $("html /deep/ #{selector}").html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass} near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>")
-      $("html /deep/ #near-me-container")
-      .after(tooltipHtml)
-      .mouseenter ->
-        $("html /deep/ #manual-location-tooltip").css("display","block")
-        false
-      .mouseleave ->
-        $("html /deep/ #manual-location-tooltip").css("display","none")
-        false
-      #$("html /deep/ .near-me").tooltip()
-    catch e
-      $("html >>> #{selector}").html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass} near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>")
-      $("html >>> #near-me-container")
-      .after(tooltipHtml)
-      .mouseenter ->
-        $("html >>> #manual-location-tooltip").css("display","block")
-        false
-      .mouseleave ->
-        $("html >>> #manual-location-tooltip").css("display","none")
-        false
-      #$("html >>> .near-me").tooltip()
-      try
-        # Attempt to do this without looking through the shadow DOM
-        $(selector).html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass}' data-toggle='tooltip' id='near-me-icon'></core-icon>")
-        $("#near-me-container")
-        .after(tooltipHtml)
-        .mouseenter ->
-          $("#manual-location-tooltip").css("display","block")
-          false
-        .mouseleave ->
-          $("#manual-location-tooltip").css("display","none")
-          false
-        #$(".near-me").tooltip()
-      catch e
-        console.warn("Fallback failed to draw contents on the <paper-action-dialog>")
+    # Append it all
+    d$(selector).html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass} near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>")
+    $(selector)
+    .after(tooltipHtml)
+    .mouseenter ->
+      d$("#manual-location-tooltip").css("display","block")
+      false
+    .mouseleave ->
+      d$("#manual-location-tooltip").css("display","none")
+      false
     if callback?
       callback()
   false
@@ -1355,7 +1372,8 @@ modalTaxon = (taxon = undefined) ->
       if toInt(data.parens_auth_species).toBool()
         speciesAuthBlock = "(#{speciesAuthBlock})"
       yearHtml = """
-      <div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div>
+      <div id="is-alien-container" class="tooltip-container"></div>
+      <div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me tooltip-container'></div>
       <p>
         <span class='genus'>#{data.genus}</span>,
         #{genusAuthBlock};
@@ -1479,6 +1497,7 @@ modalTaxon = (taxon = undefined) ->
     # Insert the image
     insertModalImage()
     checkTaxonNear taxon, ->
+      formatAlien(data)
       stopLoad()
       $("#modal-taxon")[0].open()
   .fail (result,status) ->

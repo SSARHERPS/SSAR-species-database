@@ -114,17 +114,17 @@ html >>> .bad-location {
 .bad-location {
     color: #F44336;
 }
-html /deep/ #near-me-container {
+html /deep/ .tooltip-container {
     /* We need this seperate for Firefox */
     float:left;
     display:inline-block;
 }
-html >>> #near-me-container {
+html >>> .tooltip-container {
     /* We need this seperate for Firefox */
     float:left;
     display:inline-block;
 }
-#near-me-container {
+.tooltip-container {
     float:left;
     display:inline-block;
 }

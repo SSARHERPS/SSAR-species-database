@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
   __slice = [].slice,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -1405,6 +1405,46 @@ parseTaxonYear = function(taxonYearString, strict) {
   return year;
 };
 
+formatAlien = function(dataOrAlienBool, selector) {
+  var iconHtml, isAlien, tooltipHint, tooltipHtml;
+  if (selector == null) {
+    selector = "#is-alien-container";
+  }
+
+  /*
+   * Quick handler to determine if the taxon is alien, and if so, label
+   * it
+   *
+   * After
+   * https://github.com/SSARHERPS/SSAR-species-database/issues/51
+   * https://github.com/SSARHERPS/SSAR-species-database/issues/52
+   */
+  if (typeof dataOrAlienBool === "boolean") {
+    isAlien = dataOrAlienBool;
+  } else if (typeof dataOrAlienBool === "object") {
+    isAlien = toInt(dataOrAlienBool.is_alien).toBool();
+  } else {
+    throw Error("Invalid data given to formatAlien()");
+  }
+  if (!isAlien) {
+    d$(selector).css("display", "none");
+    return false;
+  }
+  iconHtml = "<core-icon icon=\"maps:flight\" class=\"small-icon alien-speices\" id=\"modal-alien-species\" data-toggle=\"tooltip\"></core-icon>";
+  d$(selector).html(iconHtml);
+  tooltipHint = "This species is not native";
+  tooltipHtml = "<div class=\"tooltip fade top in right manual-placement-tooltip\" role=\"tooltip\" style=\"top: 6.5em; left: 4em; right:initial; display:none\" id=\"manual-alien-tooltip\">\n  <div class=\"tooltip-arrow\" style=\"top:50%;left:5px\"></div>\n  <div class=\"tooltip-inner\">" + tooltipHint + "</div>\n</div>";
+  d$(selector).after(tooltipHtml).mouseenter(function() {
+    d$("#manual-alien-tooltip").css("display", "block");
+    return false;
+  }).mouseleave(function() {
+    d$("#manual-alien-tooltip").css("display", "none");
+    return false;
+  });
+  d$("#manual-location-tooltip").css("left", "6em");
+  return false;
+};
+
 checkTaxonNear = function(taxonQuery, callback, selector) {
   var apiUrl, args, cssClass, elapsed, geoIcon, tooltipHint;
   if (taxonQuery == null) {
@@ -1452,41 +1492,16 @@ checkTaxonNear = function(taxonQuery, callback, selector) {
     geoIcon = "warning";
     return tooltipHint = "We couldn't determine your location";
   }).always(function() {
-    var e, tooltipHtml;
-    tooltipHtml = "<div class=\"tooltip fade top in right\" role=\"tooltip\" style=\"top: 6.5em; left: 4em; right:initial; display:none\" id=\"manual-location-tooltip\">\n  <div class=\"tooltip-arrow\" style=\"top:50%;left:5px\"></div>\n  <div class=\"tooltip-inner\">" + tooltipHint + "</div>\n</div>";
-    try {
-      $("html /deep/ " + selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + " near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>");
-      $("html /deep/ #near-me-container").after(tooltipHtml).mouseenter(function() {
-        $("html /deep/ #manual-location-tooltip").css("display", "block");
-        return false;
-      }).mouseleave(function() {
-        $("html /deep/ #manual-location-tooltip").css("display", "none");
-        return false;
-      });
-    } catch (_error) {
-      e = _error;
-      $("html >>> " + selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + " near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>");
-      $("html >>> #near-me-container").after(tooltipHtml).mouseenter(function() {
-        $("html >>> #manual-location-tooltip").css("display", "block");
-        return false;
-      }).mouseleave(function() {
-        $("html >>> #manual-location-tooltip").css("display", "none");
-        return false;
-      });
-      try {
-        $(selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + "' data-toggle='tooltip' id='near-me-icon'></core-icon>");
-        $("#near-me-container").after(tooltipHtml).mouseenter(function() {
-          $("#manual-location-tooltip").css("display", "block");
-          return false;
-        }).mouseleave(function() {
-          $("#manual-location-tooltip").css("display", "none");
-          return false;
-        });
-      } catch (_error) {
-        e = _error;
-        console.warn("Fallback failed to draw contents on the <paper-action-dialog>");
-      }
-    }
+    var tooltipHtml;
+    tooltipHtml = "<div class=\"tooltip fade top in right manual-placement-tooltip\" role=\"tooltip\" style=\"top: 6.5em; left: 4em; right:initial; display:none\" id=\"manual-location-tooltip\">\n  <div class=\"tooltip-arrow\" style=\"top:50%;left:5px\"></div>\n  <div class=\"tooltip-inner\">" + tooltipHint + "</div>\n</div>";
+    d$(selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + " near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>");
+    $(selector).after(tooltipHtml).mouseenter(function() {
+      d$("#manual-location-tooltip").css("display", "block");
+      return false;
+    }).mouseleave(function() {
+      d$("#manual-location-tooltip").css("display", "none");
+      return false;
+    });
     if (callback != null) {
       return callback();
     }
@@ -1671,7 +1686,7 @@ modalTaxon = function(taxon) {
       if (toInt(data.parens_auth_species).toBool()) {
         speciesAuthBlock = "(" + speciesAuthBlock + ")";
       }
-      yearHtml = "<div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me'></div>\n<p>\n  <span class='genus'>" + data.genus + "</span>,\n  " + genusAuthBlock + ";\n  <span class='species'>" + data.species + "</span>,\n  " + speciesAuthBlock + "\n</p>";
+      yearHtml = "<div id=\"is-alien-container\" class=\"tooltip-container\"></div>\n<div id='near-me-container' data-toggle='tooltip' data-placement='top' title='' class='near-me tooltip-container'></div>\n<p>\n  <span class='genus'>" + data.genus + "</span>,\n  " + genusAuthBlock + ";\n  <span class='species'>" + data.species + "</span>,\n  " + speciesAuthBlock + "\n</p>";
     }
     deprecatedHtml = "";
     if (!isNull(data.deprecated_scientific)) {
@@ -1763,6 +1778,7 @@ modalTaxon = function(taxon) {
     };
     insertModalImage();
     return checkTaxonNear(taxon, function() {
+      formatAlien(data);
       stopLoad();
       return $("#modal-taxon")[0].open();
     });
