@@ -27,20 +27,21 @@ You can generate links that way, corresponding to the options given in the follo
 
 ### Search query parameters
 
-1. `fuzzy`: if truthy, use a similar sounding search for results, like
+1. `q`: The main query, for common names or species.
+2. `fuzzy`: if truthy, use a similar sounding search for results, like
    SOUNDEX. Note this won't work for authority years or deprecated
    scientific names. **Default `false`**
-2. `loose`: Truthy. Don't check for strict matches, allow partials and
+3. `loose`: Truthy. Don't check for strict matches, allow partials and
    case-insensitivity **Application default `true`; API default
    `false`**
-3. `only`: restrict search to this csv column list. Return an error if
+4. `only`: restrict search to this csv column list. Return an error if
    invalid column specified.
-4. `include`: Include additional search columns in this csv
+5. `include`: Include additional search columns in this csv
    list. Return an error if invalid column specified.
-5. `type`: restrict search to this `major_type`. Literal scientific
+6. `type`: restrict search to this `major_type`. Literal scientific
    match only. Return an error if the type does not exist. **Default
    none**
-6. `filter`: restrict search by this list of {"`column`":"value"}
+7. `filter`: restrict search by this list of {"`column`":"value"}
    object list. Requires key "BOOLEAN_TYPE" set to either "AND" or
    "OR". Return an error if the key does not exist, or if an unknown
    column is specified. This should be supplied as a URL-encoded JSON
@@ -51,8 +52,8 @@ You can generate links that way, corresponding to the options given in the follo
    where both examples represent
    `{"species_authority":"neill","boolean_type":"and"}`. **Default
    none**
-7. `limit`: Search result return limit. **Default unlimited**
-8. `order`: A csv list of columns to order by. **Defaults to genus,
+8. `limit`: Search result return limit. **Default unlimited**
+9. `order`: A csv list of columns to order by. **Defaults to genus,
    species, subspecies**
 
 
