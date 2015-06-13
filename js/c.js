@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
   __slice = [].slice,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -60,6 +60,10 @@ isJson = function(str) {
 
 isNumber = function(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
+};
+
+isNumeric = function(n) {
+  return isNumber(n);
 };
 
 toFloat = function(str, strict) {
@@ -2018,11 +2022,20 @@ $(function() {
         filterObj = JSON.parse(Base64.decode(f64));
         openFilters = false;
         $.each(filterObj, function(col, val) {
-          var selector;
+          var selectedState, selector;
           col = col.replace(/_/g, "-");
           selector = "#" + col + "-filter";
           if (col !== "type") {
-            $(selector).attr("value", val);
+            if (col !== "is-alien") {
+              $(selector).attr("value", val);
+            } else {
+              selectedState = toInt(val) === 1 ? "alien-only" : "native-only";
+              console.log("Setting alien-filter to " + selectedState);
+              $("#alien-filter").get(0).selected = selectedState;
+              delay(750, function() {
+                return $("#alien-filter").get(0).selected = selectedState;
+              });
+            }
             return openFilters = true;
           } else {
             return $("#linnean-order").polymerSelected(val);

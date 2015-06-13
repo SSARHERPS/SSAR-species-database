@@ -34,6 +34,8 @@ isJson = (str) ->
 
 isNumber = (n) -> not isNaN(parseFloat(n)) and isFinite(n)
 
+isNumeric = (n) -> isNumber(n)
+
 toFloat = (str, strict = false) ->
   if not isNumber(str) or isNull(str)
     if strict
@@ -1730,7 +1732,16 @@ $ ->
           col = col.replace(/_/g,"-")
           selector = "##{col}-filter"
           if col isnt "type"
-            $(selector).attr("value",val)
+            if col isnt "is-alien"
+              $(selector).attr("value",val)
+            else
+              selectedState = if toInt(val) is 1 then "alien-only" else "native-only"
+              console.log("Setting alien-filter to #{selectedState}")
+              $("#alien-filter").get(0).selected = selectedState
+              delay 750, ->
+                # Sometimes, the load delay can make this not
+                # work. Let's be sure.
+                $("#alien-filter").get(0).selected = selectedState
             openFilters = true
           else
             $("#linnean-order").polymerSelected(val)

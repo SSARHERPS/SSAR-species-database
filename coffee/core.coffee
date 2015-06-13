@@ -34,6 +34,8 @@ isJson = (str) ->
 
 isNumber = (n) -> not isNaN(parseFloat(n)) and isFinite(n)
 
+isNumeric = (n) -> isNumber(n)
+
 toFloat = (str, strict = false) ->
   if not isNumber(str) or isNull(str)
     if strict
