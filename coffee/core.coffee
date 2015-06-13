@@ -34,12 +34,18 @@ isJson = (str) ->
 
 isNumber = (n) -> not isNaN(parseFloat(n)) and isFinite(n)
 
-toFloat = (str) ->
-  if not isNumber(str) or isNull(str) then return 0
+toFloat = (str, strict = false) ->
+  if not isNumber(str) or isNull(str)
+    if strict
+      return NaN
+    return 0
   parseFloat(str)
 
-toInt = (str) ->
-  if not isNumber(str) or isNull(str) then return 0
+toInt = (str, strict = false) ->
+  if not isNumber(str) or isNull(str)
+    if strict
+      return NaN
+    return 0
   parseInt(str)
 
 

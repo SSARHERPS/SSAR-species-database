@@ -34,12 +34,18 @@ isJson = (str) ->
 
 isNumber = (n) -> not isNaN(parseFloat(n)) and isFinite(n)
 
-toFloat = (str) ->
-  if not isNumber(str) or isNull(str) then return 0
+toFloat = (str, strict = false) ->
+  if not isNumber(str) or isNull(str)
+    if strict
+      return NaN
+    return 0
   parseFloat(str)
 
-toInt = (str) ->
-  if not isNumber(str) or isNull(str) then return 0
+toInt = (str, strict = false) ->
+  if not isNumber(str) or isNull(str)
+    if strict
+      return NaN
+    return 0
   parseInt(str)
 
 
@@ -812,8 +818,8 @@ performSearch = (stateArgs = undefined) ->
     if $("#fuzzy").polymerChecked()
       s = "#{s}&fuzzy=true"
     # Add on the filters
-    if not isNull(filters)
-      console.log("Got filters - #{filters}")
+    unless isNull(filters)
+      # console.log("Got filters - #{filters}")
       s = "#{s}&filter=#{filters}"
     args = "q=#{s}"
   else
@@ -831,7 +837,8 @@ performSearch = (stateArgs = undefined) ->
   if s is "#" or (isNull(s) and isNull(args)) or (args is "q=" and stateArgs isnt true)
     return false
   animateLoad()
-  # console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
+  unless isNull(filters)
+    console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
   $.get(searchParams.targetApi,args,"json")
   .done (result) ->
     # Populate the result container
@@ -845,6 +852,8 @@ performSearch = (stateArgs = undefined) ->
             if col isnt "BOOLEAN_TYPE"
               if i isnt 0
                 filterText = "#{filter_text} #{result.filter.filter_params.BOOLEAN_TYPE}"
+              if isNumber(toInt(val,true))
+                val = if toInt(val) is 1 then "true" else "false"
               filterText = "#{filterText} #{col.replace(/_/g," ")} is #{val}"
           text = "\"#{sOrig}\" where #{filterText} returned no results."
         else
@@ -905,6 +914,12 @@ getFilters = (selector = ".cndb-filter",booleanType = "AND") ->
         return true
       else
     filterList[col] = val.toLowerCase()
+  # Check the alien species filter
+  alien = $("#alien-filter").get(0).selected
+  if alien isnt "both"
+    # The filter only needs to be applied if the filter isn't looking
+    # for both alien and non-alien/native species
+    filterList.is_alien = if alien is "alien-only" then 1 else 0
   if Object.size(filterList) is 0
     # Pass back an empty string
     # console.log("Got back an empty filter list.")

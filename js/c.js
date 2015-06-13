@@ -62,15 +62,27 @@ isNumber = function(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 };
 
-toFloat = function(str) {
+toFloat = function(str, strict) {
+  if (strict == null) {
+    strict = false;
+  }
   if (!isNumber(str) || isNull(str)) {
+    if (strict) {
+      return NaN;
+    }
     return 0;
   }
   return parseFloat(str);
 };
 
-toInt = function(str) {
+toInt = function(str, strict) {
+  if (strict == null) {
+    strict = false;
+  }
   if (!isNumber(str) || isNull(str)) {
+    if (strict) {
+      return NaN;
+    }
     return 0;
   }
   return parseInt(str);
@@ -1090,7 +1102,6 @@ performSearch = function(stateArgs) {
       s = "" + s + "&fuzzy=true";
     }
     if (!isNull(filters)) {
-      console.log("Got filters - " + filters);
       s = "" + s + "&filter=" + filters;
     }
     args = "q=" + s;
@@ -1108,6 +1119,9 @@ performSearch = function(stateArgs) {
     return false;
   }
   animateLoad();
+  if (!isNull(filters)) {
+    console.log("Got search value " + s + ", hitting", "" + searchParams.apiPath + "?" + args);
+  }
   return $.get(searchParams.targetApi, args, "json").done(function(result) {
     var filterText, i, text;
     if (toInt(result.count) === 0) {
@@ -1119,6 +1133,9 @@ performSearch = function(stateArgs) {
             if (col !== "BOOLEAN_TYPE") {
               if (i !== 0) {
                 filterText = "" + filter_text + " " + result.filter.filter_params.BOOLEAN_TYPE;
+              }
+              if (isNumber(toInt(val, true))) {
+                val = toInt(val) === 1 ? "true" : "false";
               }
               return filterText = "" + filterText + " " + (col.replace(/_/g, " ")) + " is " + val;
             }
@@ -1164,7 +1181,7 @@ performSearch = function(stateArgs) {
 };
 
 getFilters = function(selector, booleanType) {
-  var e, encodedFilter, filterList, jsonString;
+  var alien, e, encodedFilter, filterList, jsonString;
   if (selector == null) {
     selector = ".cndb-filter";
   }
@@ -1198,6 +1215,10 @@ getFilters = function(selector, booleanType) {
     }
     return filterList[col] = val.toLowerCase();
   });
+  alien = $("#alien-filter").get(0).selected;
+  if (alien !== "both") {
+    filterList.is_alien = alien === "alien-only" ? 1 : 0;
+  }
   if (Object.size(filterList) === 0) {
     return "";
   }

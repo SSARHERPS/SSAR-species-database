@@ -116,6 +116,15 @@
           <paper-input label="Genus Authority" id="genus-authority-filter" name="species-authority-filter" class="cndb-filter" data-column="genus_authority" floatingLabel></paper-input>
           <!-- Species authority -->
           <paper-input label="Species Authority" id="species-authority-filter" name="species-authority-filter" class="cndb-filter" data-column="species_authority" floatingLabel></paper-input>
+          <br/>
+          <core-label>
+            Alien Species
+            <paper-radio-group id="alien-filter" selected="both">
+              <paper-radio-button name="both" id="radio-both" label="Show both alien and native species"></paper-radio-button>
+              <paper-radio-button name="native-only" id="radio-native" label="Show only native species"></paper-radio-button>
+              <paper-radio-button name="alien-only" id="radio-alien" label="Show only alien species"></paper-radio-button>
+            </paper-radio-group>
+          </core-label>
         </div>
       </fieldset>
       <input type="submit" style="display:none;" value="Search"/>
