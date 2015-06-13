@@ -764,8 +764,8 @@ $ ->
         <paper-icon-button icon="create" class="click" data-href="#{uri.urlString}admin/" data-toggle="tooltip" title="Go to administration" id="goto-admin"></paper-icon-button>
         """
         $("#bug-footer").append(html)
-        $("#goto-admin").tooltip()
         bindClicks("#goto-admin")
+        $("#goto-admin").tooltip()
       false
   browserBeware()
   checkFileVersion()

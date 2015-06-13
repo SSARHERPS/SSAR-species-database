@@ -1034,8 +1034,8 @@ $(function() {
       if ($.cookie("ssarherps_user") != null) {
         html = "<paper-icon-button icon=\"create\" class=\"click\" data-href=\"" + uri.urlString + "admin/\" data-toggle=\"tooltip\" title=\"Go to administration\" id=\"goto-admin\"></paper-icon-button>";
         $("#bug-footer").append(html);
-        $("#goto-admin").tooltip();
         bindClicks("#goto-admin");
+        $("#goto-admin").tooltip();
       }
       return false;
     });
@@ -1213,7 +1213,7 @@ getFilters = function(selector, booleanType) {
 };
 
 formatSearchResults = function(result, container) {
-  var bootstrapColCount, colClass, data, dontShowColumns, externalCounter, headers, html, htmlClose, htmlHead, renderTimeout, targetCount;
+  var alt, bootstrapColCount, bootstrapColSize, col, colClass, d, data, dontShowColumns, e, externalCounter, genus, headers, html, htmlClose, htmlHead, htmlRow, i, j, k, kClass, l, niceKey, renderTimeout, row, species, split, targetCount, taxonQuery, v, year, _results;
   if (container == null) {
     container = searchParams.targetContainer;
   }
@@ -1234,7 +1234,7 @@ formatSearchResults = function(result, container) {
   targetCount = toInt(result.count) - 1;
   colClass = null;
   bootstrapColCount = 0;
-  dontShowColumns = ["id", "minor_type", "notes", "major_type", "taxon_author", "taxon_credit", "image_license", "image_credit", "taxon_credit_date", "parens_auth_genus", "parens_auth_species"];
+  dontShowColumns = ["id", "minor_type", "notes", "major_type", "taxon_author", "taxon_credit", "image_license", "image_credit", "taxon_credit_date", "parens_auth_genus", "parens_auth_species", "is_alien"];
   externalCounter = 0;
   renderTimeout = delay(5000, function() {
     stopLoadError("There was a problem parsing the search results.");
@@ -1242,14 +1242,15 @@ formatSearchResults = function(result, container) {
     console.warn(data);
     return false;
   });
-  return $.each(data, function(i, row) {
-    var htmlRow, j, l, taxonQuery;
+  _results = [];
+  for (i in data) {
+    row = data[i];
     externalCounter = i;
     if (toInt(i) === 0) {
       j = 0;
       htmlHead += "\n<!-- Table Headers - " + (Object.size(row)) + " entries -->";
-      $.each(row, function(k, v) {
-        var alt, bootstrapColSize, niceKey;
+      for (k in row) {
+        v = row[k];
         niceKey = k.replace(/_/g, " ");
         if (__indexOf.call(dontShowColumns, k) < 0) {
           if ($("#show-deprecated").polymerSelected() !== true) {
@@ -1277,9 +1278,9 @@ formatSearchResults = function(result, container) {
           htmlHead += "\n\t</tr>";
           htmlHead += "\n<!-- End Table Headers -->";
           bootstrapColSize = roundNumber(12 / bootstrapColCount, 0);
-          return colClass = "col-md-" + bootstrapColSize;
+          colClass = "col-md-" + bootstrapColSize;
         }
-      });
+      }
     }
     taxonQuery = "" + row.genus + "+" + row.species;
     if (!isNull(row.subspecies)) {
@@ -1287,8 +1288,8 @@ formatSearchResults = function(result, container) {
     }
     htmlRow = "\n\t<tr id='cndb-row" + i + "' class='cndb-result-entry' data-taxon=\"" + taxonQuery + "\">";
     l = 0;
-    $.each(row, function(k, col) {
-      var alt, d, e, genus, kClass, species, split, year;
+    for (k in row) {
+      col = row[k];
       if (__indexOf.call(dontShowColumns, k) < 0) {
         if (k === "authority_year") {
           try {
@@ -1342,9 +1343,9 @@ formatSearchResults = function(result, container) {
       l++;
       if (l === Object.size(row)) {
         htmlRow += "\n\t</tr>";
-        return html += htmlRow;
+        html += htmlRow;
       }
-    });
+    }
     if (toInt(i) === targetCount) {
       html = htmlHead + html + htmlClose;
       $(container).html(html);
@@ -1355,9 +1356,12 @@ formatSearchResults = function(result, container) {
       doFontExceptions();
       $("#result-count").text(" - " + result.count + " entries");
       insertCORSWorkaround();
-      return stopLoad();
+      _results.push(stopLoad());
+    } else {
+      _results.push(void 0);
     }
-  });
+  }
+  return _results;
 };
 
 parseTaxonYear = function(taxonYearString, strict) {

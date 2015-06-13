@@ -764,8 +764,8 @@ $ ->
         <paper-icon-button icon="create" class="click" data-href="#{uri.urlString}admin/" data-toggle="tooltip" title="Go to administration" id="goto-admin"></paper-icon-button>
         """
         $("#bug-footer").append(html)
-        $("#goto-admin").tooltip()
         bindClicks("#goto-admin")
+        $("#goto-admin").tooltip()
       false
   browserBeware()
   checkFileVersion()
@@ -949,6 +949,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
     "taxon_credit_date"
     "parens_auth_genus"
     "parens_auth_species"
+    "is_alien"
     ]
   externalCounter = 0
   renderTimeout = delay 5000, ->
@@ -956,12 +957,12 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
     console.error("Couldn't finish parsing the results! Expecting #{targetCount} elements, timed out on #{externalCounter}.")
     console.warn(data)
     return false
-  $.each data, (i,row) ->
+  for i, row of data
     externalCounter = i
     if toInt(i) is 0
       j = 0
       htmlHead += "\n<!-- Table Headers - #{Object.size(row)} entries -->"
-      $.each row, (k,v) ->
+      for k, v of row
         niceKey = k.replace(/_/g," ")
         unless k in dontShowColumns
           # or niceKey is "image" ...
@@ -993,7 +994,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       taxonQuery = "#{taxonQuery}+#{row.subspecies}"
     htmlRow = "\n\t<tr id='cndb-row#{i}' class='cndb-result-entry' data-taxon=\"#{taxonQuery}\">"
     l = 0
-    $.each row, (k,col) ->
+    for k, col of row
       unless k in dontShowColumns
         if k is "authority_year"
           try
