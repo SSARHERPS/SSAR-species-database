@@ -846,26 +846,8 @@ performSearch = (stateArgs = undefined) ->
     # Populate the result container
     # console.log("Search executed by #{result.method} with #{result.count} results.")
     if toInt(result.count) is 0
-      if result.status is true
-        if result.query_params.filter.had_filter is true
-          filterText = ""
-          i = 0
-          $.each result.query_params.filter.filter_params, (col,val) ->
-            if col isnt "BOOLEAN_TYPE"
-              if i isnt 0
-                filterText = "#{filter_text} #{result.filter.filter_params.BOOLEAN_TYPE}"
-              if isNumber(toInt(val,true))
-                val = if toInt(val) is 1 then "true" else "false"
-              filterText = "#{filterText} #{col.replace(/_/g," ")} is #{val}"
-          text = "\"#{sOrig}\" where #{filterText} returned no results."
-        else
-          text = "\"#{sOrig}\" returned no results."
-      else
-        text = result.human_error
+      showBadSearchErrorMessage(result)
       clearSearch(true)
-      $("#search-status").attr("text",text)
-      $("#search-status")[0].show()
-      stopLoadError()
       return false
     if result.status is true
       formatSearchResults(result)
@@ -1656,6 +1638,28 @@ insertCORSWorkaround = ->
   false
 
 
+showBadSearchErrorMessage = (result) ->
+  sOrig = result.query.replace(/\+/g," ")
+  if result.status is true
+    if result.query_params.filter.had_filter is true
+      filterText = ""
+      i = 0
+      $.each result.query_params.filter.filter_params, (col,val) ->
+        if col isnt "BOOLEAN_TYPE"
+          if i isnt 0
+            filterText = "#{filter_text} #{result.filter.filter_params.BOOLEAN_TYPE}"
+          if isNumber(toInt(val,true))
+            val = if toInt(val) is 1 then "true" else "false"
+          filterText = "#{filterText} #{col.replace(/_/g," ")} is #{val}"
+      text = "\"#{sOrig}\" where #{filterText} returned no results."
+    else
+      text = "\"#{sOrig}\" returned no results."
+  else
+    text = result.human_error
+  stopLoadError(text)
+
+
+
 $ ->
   devHello = """
   ****************************************************************************
@@ -1765,13 +1769,9 @@ $ ->
         # console.log("Got a valid result, formatting #{result.count} results.")
         formatSearchResults(result)
         return false
-      if result.count is 0
-        result.human_error = "No results for \"#{loadArgs.split("&")[0]}\""
-      $("#search-status").attr("text",result.human_error)
-      $("#search-status")[0].show()
+      showBadSearchErrorMessage(result)
       console.error(result.error)
       console.warn(result)
-      stopLoadError()
     .fail (result,error) ->
       console.error("There was an error loading the generic table")
       console.warn(result,error,result.statusText)

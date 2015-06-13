@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, showBadSearchErrorMessage, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
   __slice = [].slice,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -1127,34 +1127,9 @@ performSearch = function(stateArgs) {
     console.log("Got search value " + s + ", hitting", "" + searchParams.apiPath + "?" + args);
   }
   return $.get(searchParams.targetApi, args, "json").done(function(result) {
-    var filterText, i, text;
     if (toInt(result.count) === 0) {
-      if (result.status === true) {
-        if (result.query_params.filter.had_filter === true) {
-          filterText = "";
-          i = 0;
-          $.each(result.query_params.filter.filter_params, function(col, val) {
-            if (col !== "BOOLEAN_TYPE") {
-              if (i !== 0) {
-                filterText = "" + filter_text + " " + result.filter.filter_params.BOOLEAN_TYPE;
-              }
-              if (isNumber(toInt(val, true))) {
-                val = toInt(val) === 1 ? "true" : "false";
-              }
-              return filterText = "" + filterText + " " + (col.replace(/_/g, " ")) + " is " + val;
-            }
-          });
-          text = "\"" + sOrig + "\" where " + filterText + " returned no results.";
-        } else {
-          text = "\"" + sOrig + "\" returned no results.";
-        }
-      } else {
-        text = result.human_error;
-      }
+      showBadSearchErrorMessage(result);
       clearSearch(true);
-      $("#search-status").attr("text", text);
-      $("#search-status")[0].show();
-      stopLoadError();
       return false;
     }
     if (result.status === true) {
@@ -1946,6 +1921,34 @@ insertCORSWorkaround = function() {
   return false;
 };
 
+showBadSearchErrorMessage = function(result) {
+  var filterText, i, sOrig, text;
+  sOrig = result.query.replace(/\+/g, " ");
+  if (result.status === true) {
+    if (result.query_params.filter.had_filter === true) {
+      filterText = "";
+      i = 0;
+      $.each(result.query_params.filter.filter_params, function(col, val) {
+        if (col !== "BOOLEAN_TYPE") {
+          if (i !== 0) {
+            filterText = "" + filter_text + " " + result.filter.filter_params.BOOLEAN_TYPE;
+          }
+          if (isNumber(toInt(val, true))) {
+            val = toInt(val) === 1 ? "true" : "false";
+          }
+          return filterText = "" + filterText + " " + (col.replace(/_/g, " ")) + " is " + val;
+        }
+      });
+      text = "\"" + sOrig + "\" where " + filterText + " returned no results.";
+    } else {
+      text = "\"" + sOrig + "\" returned no results.";
+    }
+  } else {
+    text = result.human_error;
+  }
+  return stopLoadError(text);
+};
+
 $(function() {
   var devHello, e, f64, filterObj, fuzzyState, loadArgs, looseState, openFilters, queryUrl, temp;
   devHello = "****************************************************************************\nHello developer!\nIf you're looking for hints on our API information, this site is open-source\nand released under the GPL. Just click on the GitHub link on the bottom of\nthe page, or check out https://github.com/SSARHERPS\n****************************************************************************";
@@ -2061,14 +2064,9 @@ $(function() {
         formatSearchResults(result);
         return false;
       }
-      if (result.count === 0) {
-        result.human_error = "No results for \"" + (loadArgs.split("&")[0]) + "\"";
-      }
-      $("#search-status").attr("text", result.human_error);
-      $("#search-status")[0].show();
+      showBadSearchErrorMessage(result);
       console.error(result.error);
-      console.warn(result);
-      return stopLoadError();
+      return console.warn(result);
     }).fail(function(result, error) {
       console.error("There was an error loading the generic table");
       console.warn(result, error, result.statusText);
