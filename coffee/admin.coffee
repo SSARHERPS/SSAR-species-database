@@ -194,6 +194,10 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-input label="Genus" id="edit-genus" name="edit-genus" class="genus" floatingLabel></paper-input>
   <paper-input label="Species" id="edit-species" name="edit-species" class="species" floatingLabel></paper-input>
   <paper-input label="Subspecies" id="edit-subspecies" name="edit-subspecies" class="subspecies" floatingLabel></paper-input>
+  <core-label>
+    Alien species?
+    <paper-toggle-button id="is-alien"  checked="false"></paper-toggle-button>
+  </core-label>
   <paper-input label="Common Name" id="edit-common-name" name="edit-common-name"  class="common_name" floatingLabel></paper-input>
   <paper-input label="Deprecated Scientific Names" id="edit-deprecated-scientific" name="edit-depreated-scientific" floatingLabel aria-describedby="deprecatedHelp"></paper-input>
     <span class="help-block" id="deprecatedHelp">List names here in the form <span class="code">"Genus species":"Authority: year","Genus species":"Authority: year",[...]</span>.<br/>There should be no spaces between the quotes and comma or colon. If there are, it may not save correctly.</span>
@@ -464,7 +468,12 @@ lookupEditorSpecies = (taxon = undefined) ->
         data.deprecated_scientific["#{originalNames.genus.toTitleCase()} #{speciesString}"] = "AUTHORITY: YEAR"
       # We've finished cleaning up the data from the server, time to
       # actually populate the edior.
-      $.each data, (col,d) ->
+      toggleColumns = [
+        "parens_auth_genus"
+        "parens_auth_species"
+        "is_alien"
+        ]
+      for col, d of data
         # For each column, replace _ with - and prepend "edit"
         # This should be the selector
         try
@@ -481,10 +490,15 @@ lookupEditorSpecies = (taxon = undefined) ->
           year = parseTaxonYear(d)
           $("#edit-gauthyear").attr("value",year.genus)
           $("#edit-sauthyear").attr("value",year.species)
-        else if col is "parens_auth_genus" or col is "parens_auth_species"
+        else if col in toggleColumns
           # Check the paper-toggle-button
-          category = col.split("_").pop()
-          d$("##{category}-authority-parens").polymerChecked(toInt(d).toBool())
+          colSplit = col.split("_")
+          if colSplit[0] is "parens"
+            category = col.split("_").pop()
+            tempSelector = "##{category}-authority-parens"
+          else
+            tempSelector = "##{col.replace(/_/g,"-")}"
+          d$(tempSelector).polymerChecked(toInt(d).toBool())
         else if col is "taxon_author"
           if d is "null" or isNull(d)
             $("#last-edited-by").remove()
@@ -800,6 +814,7 @@ saveEditorEntry = (performMode = "save") ->
   # The parens checks
   saveObject.parens_auth_genus = d$("#genus-authority-parens").polymerChecked()
   saveObject.parens_auth_species = d$("#species-authority-parens").polymerChecked()
+  saveObject.is_alien = d$("#is-alien").polymerChecked()
   if performMode is "save"
     unless isNumber(saveObject.id)
       animateLoad()
