@@ -1690,7 +1690,7 @@ downloadCSVList = ->
       <paper-action-dialog class="download-file" id="download-csv-file" heading="Your file is ready">
         <div class="dialog-content">
           <p>
-            Please note that some special characters in names may be decoded incorrectly by Microsoft Excel. If this is a problem, following the steps in <a href="#" onclick="openTab('https://github.com/SSARHERPS/SSAR-species-database/blob/master/meta/excel_unicode_readme.md')">this README</a> to force Excel to format it correctly.
+            Please note that some special characters in names may be decoded incorrectly by Microsoft Excel. If this is a problem, following the steps in <a href="https://github.com/SSARHERPS/SSAR-species-database/blob/master/meta/excel_unicode_readme.md"  onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'>this README <core-icon icon="launch"></core-icon></a> to force Excel to format it correctly.
           </p>
           <p class="text-center">
             <a href="#{downloadable}" download="ssar-common-names-#{dateString}.csv" class="btn btn-default"><core-icon icon="file-download"></core-icon> Download Now</a>

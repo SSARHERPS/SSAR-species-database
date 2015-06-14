@@ -1010,3 +1010,34 @@ html /deep/ a.btn {
 html >>> a.btn {
     text-decoration: none;
 }
+
+
+html /deep/ a {
+  color: #337ab7;
+  text-decoration: none;
+}
+html /deep/ a:hover,
+html /deep/ a:focus {
+  color: #23527c;
+  text-decoration: underline;
+}
+html /deep/ a:focus {
+  outline: thin dotted;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+
+html >>> a {
+  color: #337ab7;
+  text-decoration: none;
+}
+html >>> a:hover,
+html >>> a:focus {
+  color: #23527c;
+  text-decoration: underline;
+}
+html >>> a:focus {
+  outline: thin dotted;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
