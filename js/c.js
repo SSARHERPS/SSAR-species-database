@@ -1895,6 +1895,9 @@ downloadCSVList = function() {
       for (k in _ref) {
         row = _ref[k];
         csvRow = new Array();
+        if (isNull(row.genus)) {
+          continue;
+        }
         for (dirtyCol in row) {
           dirtyColData = row[dirtyCol];
           col = dirtyCol.replace(/"/g, '""');
@@ -1948,7 +1951,7 @@ downloadCSVList = function() {
       }
       csv = "" + (csvHeader.join(",")) + "\n" + csvBody;
       downloadable = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
-      html = "<paper-action-dialog class=\"download-file\" id=\"download-csv-file\" heading=\"Your file is ready\">\n  <div class=\"dialog-content\">\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".csv\" class=\"btn btn-default\"><core-icon icon=\"file-download\"></core-icon> Download Now</a>\n    </p>\n  </div>\n  <paper-button dismissive>Close</paper-button>\n</paper-action-dialog>";
+      html = "<paper-action-dialog class=\"download-file\" id=\"download-csv-file\" heading=\"Your file is ready\">\n  <div class=\"dialog-content\">\n    <p>\n      Please note that some special characters in names may be decoded incorrectly by Microsoft Excel. If this is a problem, following the steps in <a href=\"#\" onclick=\"openTab('https://github.com/SSARHERPS/SSAR-species-database/blob/master/meta/excel_unicode_readme.md')\">this README</a> to force Excel to format it correctly.\n    </p>\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".csv\" class=\"btn btn-default\"><core-icon icon=\"file-download\"></core-icon> Download Now</a>\n    </p>\n  </div>\n  <paper-button dismissive>Close</paper-button>\n</paper-action-dialog>";
       if (!$("#download-csv-file").exists()) {
         $("body").append(html);
       } else {

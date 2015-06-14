@@ -1632,6 +1632,7 @@ downloadCSVList = ->
       for k, row of result.result
         # Line by line ... do each result
         csvRow = new Array()
+        if isNull(row.genus) then continue
         for dirtyCol, dirtyColData of row
           # Escape as per RFC4180
           # https://tools.ietf.org/html/rfc4180#page-2
@@ -1688,6 +1689,9 @@ downloadCSVList = ->
       html = """
       <paper-action-dialog class="download-file" id="download-csv-file" heading="Your file is ready">
         <div class="dialog-content">
+          <p>
+            Please note that some special characters in names may be decoded incorrectly by Microsoft Excel. If this is a problem, following the steps in <a href="#" onclick="openTab('https://github.com/SSARHERPS/SSAR-species-database/blob/master/meta/excel_unicode_readme.md')">this README</a> to force Excel to format it correctly.
+          </p>
           <p class="text-center">
             <a href="#{downloadable}" download="ssar-common-names-#{dateString}.csv" class="btn btn-default"><core-icon icon="file-download"></core-icon> Download Now</a>
           </p>
