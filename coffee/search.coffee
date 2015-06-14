@@ -831,6 +831,10 @@ insertCORSWorkaround = ->
   catch e
     # Defer it till next time
     return false
+  if browsers.isType("mobile")
+    # We don't need to show this at all -- no extensions!
+    ssar.hasShownWorkaround = true
+    return false
   browserExtensionLink = switch browsers.browser.name
     when "Chrome"
       """

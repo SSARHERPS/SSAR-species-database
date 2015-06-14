@@ -1902,6 +1902,10 @@ insertCORSWorkaround = function() {
     e = _error;
     return false;
   }
+  if (browsers.isType("mobile")) {
+    ssar.hasShownWorkaround = true;
+    return false;
+  }
   browserExtensionLink = (function() {
     switch (browsers.browser.name) {
       case "Chrome":
