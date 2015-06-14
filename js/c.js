@@ -1872,7 +1872,96 @@ downloadCSVList = function() {
    * See
    * https://github.com/tigerhawkvok/SSAR-species-database/issues/39
    */
-  foo();
+  var args, d, dateString, day, filterArg, month;
+  animateLoad();
+  filterArg = "eyJpc19hbGllbiI6MCwiYm9vbGVhbl90eXBlIjoib3IifQ";
+  args = "filter=" + filterArg;
+  d = new Date();
+  month = d.getMonth().toString().length === 1 ? "0" + (d.getMonth() + 1) : d.getMonth() + 1;
+  day = d.getDate().toString().length === 1 ? "0" + (d.getDate().toString()) : d.getDate();
+  dateString = "" + (d.getUTCFullYear()) + "-" + month + "-" + day;
+  $.get("" + searchParams.apiPath, args, "json").done(function(result) {
+    var authorityYears, col, colData, csv, csvBody, csvHeader, csvLiteralRow, csvRow, dirtyCol, dirtyColData, downloadable, e, genusYear, html, i, k, makeTitleCase, row, showColumn, speciesYear, tempCol, v, _ref;
+    try {
+      if (result.status !== true) {
+        throw Error("Invalid Result");
+      }
+      csvBody = "";
+      csvHeader = new Array();
+      showColumn = ["genus", "species", "subspecies", "common_name", "image", "image_credit", "image_license", "major_type", "major_common_type", "major_subtype", "minor_type", "linnean_order", "deprecated_scientific", "notes", "taxon_author", "taxon_credit", "taxon_credit_date"];
+      makeTitleCase = ["genus", "common_name", "taxon_author"];
+      i = 0;
+      _ref = result.result;
+      for (k in _ref) {
+        row = _ref[k];
+        csvRow = new Array();
+        for (dirtyCol in row) {
+          dirtyColData = row[dirtyCol];
+          col = dirtyCol.replace(/"/g, '""');
+          colData = dirtyColData.replace(/"/g, '""');
+          if (i === 0) {
+            if (__indexOf.call(showColumn, col) >= 0) {
+              csvHeader.push(col.replace(/_/g, " ").toTitleCase());
+            }
+          }
+          if (__indexOf.call(showColumn, col) >= 0) {
+            if (/[a-z]+_authority/.test(col)) {
+              try {
+                authorityYears = JSON.parse(row.authority_year);
+                genusYear = "";
+                speciesYear = "";
+                for (k in authorityYears) {
+                  v = authorityYears[k];
+                  genusYear = k;
+                  speciesYear = v;
+                }
+                switch (col.split("_")[0]) {
+                  case "genus":
+                    tempCol = "" + (colData.toTitleCase()) + " " + genusYear;
+                    if (toInt(row.parens_auth_genus).toBool()) {
+                      tempCol = "(" + tempCol + ")";
+                    }
+                    break;
+                  case "species":
+                    tempCol = "" + (colData.toTitleCase()) + " " + speciesYear;
+                    if (toInt(row.parens_auth_species).toBool()) {
+                      tempCol = "(" + tempCol + ")";
+                    }
+                }
+                colData = tempCol;
+              } catch (_error) {
+                e = _error;
+              }
+            }
+            if (__indexOf.call(makeTitleCase, col) >= 0) {
+              colData = colData.toTitleCase();
+            }
+            csvRow.push("\"" + colData + "\"");
+          }
+        }
+        i++;
+        csvLiteralRow = csvRow.join(",");
+        csvBody += "\n" + csvLiteralRow;
+      }
+      csv = "" + (csvHeader.join(",")) + "\n" + csvBody;
+      downloadable = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+      html = "<paper-action-dialog class=\"download-file\" id=\"download-csv-file\" heading=\"Your file is ready\">\n  <div class=\"dialog-content\">\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".csv\" class=\"btn btn-default\"><core-icon icon=\"file-download\"></core-icon> Download Now</a>\n    </p>\n  </div>\n  <paper-button dismissive>Close</paper-button>\n</paper-action-dialog>";
+      if (!$("#download-csv-file").exists()) {
+        $("body").append(html);
+      } else {
+        $("#download-csv-file").replaceWith(html);
+      }
+      $("#download-csv-file").get(0).open();
+      return stopLoad();
+    } catch (_error) {
+      e = _error;
+      stopLoadError("There was a problem creating the CSV file. Please try again later.");
+      console.error("Exception in downloadCSVList() - " + e.message);
+      return console.warn("Got", result, "from", "" + searchParams.apiPath + "?filter=" + filterArg, result.status);
+    }
+  }).fail(function() {
+    return stopLoadError("There was a problem communicating with the server. Please try again later.");
+  });
   return false;
 };
 

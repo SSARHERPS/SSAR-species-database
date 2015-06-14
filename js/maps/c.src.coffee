@@ -1584,7 +1584,123 @@ downloadCSVList = ->
   # See
   # https://github.com/tigerhawkvok/SSAR-species-database/issues/39
   ###
-  foo()
+  animateLoad()
+  filterArg = "eyJpc19hbGllbiI6MCwiYm9vbGVhbl90eXBlIjoib3IifQ"
+  args = "filter=#{filterArg}"
+  d = new Date()
+  month = if d.getMonth().toString().length is 1 then "0#{d.getMonth() + 1}" else d.getMonth() + 1
+  day = if d.getDate().toString().length is 1 then "0#{d.getDate().toString()}" else d.getDate()
+  dateString = "#{d.getUTCFullYear()}-#{month}-#{day}"
+  $.get "#{searchParams.apiPath}", args, "json"
+  .done (result) ->
+    try
+      unless result.status is true
+        throw Error("Invalid Result")
+      # Parse it all out
+      csvBody = """
+      """
+      csvHeader = new Array()
+      showColumn = [
+        "genus"
+        "species"
+        "subspecies"
+        "common_name"
+        "image"
+        "image_credit"
+        "image_license"
+        "major_type"
+        "major_common_type"
+        "major_subtype"
+        "minor_type"
+        "linnean_order"
+        "deprecated_scientific"
+        "notes"
+        "taxon_author"
+        "taxon_credit"
+        "taxon_credit_date"
+        ]
+      makeTitleCase = [
+        "genus"
+        "common_name"
+        "taxon_author"
+        ]
+      i = 0
+      for k, row of result.result
+        # Line by line ... do each result
+        csvRow = new Array()
+        for dirtyCol, dirtyColData of row
+          # Escape as per RFC4180
+          # https://tools.ietf.org/html/rfc4180#page-2
+          col = dirtyCol.replace(/"/g,'""')
+          colData = dirtyColData.replace(/"/g,'""')
+          if i is 0
+            # Do the headers
+            if col in showColumn
+              csvHeader.push col.replace(/_/g," ").toTitleCase()
+          # Sitch together the row
+          if col in showColumn
+            # You'd want to naively push, but we can't
+            # There are formatting rules to observe
+            # Deal with authorities
+            if /[a-z]+_authority/.test(col)
+              try
+                authorityYears = JSON.parse(row.authority_year)
+                genusYear = ""
+                speciesYear = ""
+                for k,v of authorityYears
+                  genusYear = k
+                  speciesYear = v
+                switch col.split("_")[0]
+                  when "genus"
+                    tempCol = "#{colData.toTitleCase()} #{genusYear}"
+                    if toInt(row.parens_auth_genus).toBool()
+                      tempCol = "(#{tempCol})"
+                  when "species"
+                    tempCol = "#{colData.toTitleCase()} #{speciesYear}"
+                    if toInt(row.parens_auth_species).toBool()
+                      tempCol = "(#{tempCol})"
+                colData = tempCol
+              catch e
+                # Bad authority year, just don't use it
+            if col in makeTitleCase
+              colData = colData.toTitleCase()
+            # Done with formatting, push it
+            csvRow.push "\"#{colData}\""
+        # Increment the row counter
+        i++
+        csvLiteralRow = csvRow.join(",")
+        csvBody +="""
+
+        #{csvLiteralRow}
+        """
+      csv = """
+      #{csvHeader.join(",")}
+      #{csvBody}
+      """
+      # OK, it's all been created. Download it.
+      downloadable = "data:text/csv;charset=utf-8," + encodeURIComponent(csv)
+      html = """
+      <paper-action-dialog class="download-file" id="download-csv-file" heading="Your file is ready">
+        <div class="dialog-content">
+          <p class="text-center">
+            <a href="#{downloadable}" download="ssar-common-names-#{dateString}.csv" class="btn btn-default"><core-icon icon="file-download"></core-icon> Download Now</a>
+          </p>
+        </div>
+        <paper-button dismissive>Close</paper-button>
+      </paper-action-dialog>
+      """
+      unless $("#download-csv-file").exists()
+        $("body").append(html)
+      else
+        $("#download-csv-file").replaceWith(html)
+      $("#download-csv-file").get(0).open()
+      stopLoad()
+    catch e
+      stopLoadError("There was a problem creating the CSV file. Please try again later.")
+      console.error("Exception in downloadCSVList() - #{e.message}")
+      console.warn("Got",result,"from","#{searchParams.apiPath}?filter=#{filterArg}", result.status)
+  .fail ->
+    stopLoadError("There was a problem communicating with the server. Please try again later.")
   false
 
 

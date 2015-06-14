@@ -806,3 +806,207 @@ html >>> .tooltip.bottom-right .tooltip-arrow {
   border-width: 0 5px 5px;
   border-bottom-color: #000;
 }
+
+
+html /deep/ .btn {
+  display: inline-block;
+  padding: 6px 12px;
+  margin-bottom: 0;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 1.42857143;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  touch-action: manipulation;
+  cursor: pointer;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  background-image: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+html /deep/ .btn:focus,
+html /deep/ .btn:active:focus,
+html /deep/ .btn.active:focus,
+html /deep/ .btn.focus,
+html /deep/ .btn:active.focus,
+html /deep/ .btn.active.focus {
+  outline: thin dotted;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+html /deep/ .btn:hover,
+html /deep/ .btn:focus,
+html /deep/ .btn.focus {
+  color: #333;
+  text-decoration: none;
+}
+html /deep/ .btn:active,
+html /deep/ .btn.active {
+  background-image: none;
+  outline: 0;
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
+}
+html /deep/ .btn.disabled,
+html /deep/ .btn[disabled],
+fieldset[disabled] .btn {
+  pointer-events: none;
+  cursor: not-allowed;
+  filter: alpha(opacity=65);
+  box-shadow: none;
+  opacity: .65;
+}
+html /deep/ .btn-default {
+  color: #333;
+  background-color: #fff;
+  border-color: #ccc;
+}
+html /deep/ .btn-default:hover,
+html /deep/ .btn-default:focus,
+html /deep/ .btn-default.focus,
+html /deep/ .btn-default:active,
+html /deep/ .btn-default.active,
+.open > .dropdown-toggle.btn-default {
+  color: #333;
+  background-color: #e6e6e6;
+  border-color: #adadad;
+}
+html /deep/ .btn-default:active,
+html /deep/ .btn-default.active,
+.open > .dropdown-toggle.btn-default {
+  background-image: none;
+}
+html /deep/ .btn-default.disabled,
+html /deep/ .btn-default[disabled],
+fieldset[disabled] .btn-default,
+html /deep/ .btn-default.disabled:hover,
+html /deep/ .btn-default[disabled]:hover,
+fieldset[disabled] .btn-default:hover,
+html /deep/ .btn-default.disabled:focus,
+html /deep/ .btn-default[disabled]:focus,
+fieldset[disabled] .btn-default:focus,
+html /deep/ .btn-default.disabled.focus,
+html /deep/ .btn-default[disabled].focus,
+fieldset[disabled] .btn-default.focus,
+html /deep/ .btn-default.disabled:active,
+html /deep/ .btn-default[disabled]:active,
+fieldset[disabled] .btn-default:active,
+html /deep/ .btn-default.disabled.active,
+html /deep/ .btn-default[disabled].active,
+fieldset[disabled] .btn-default.active {
+  background-color: #fff;
+  border-color: #ccc;
+}
+html /deep/ .btn-default .badge {
+  color: #fff;
+  background-color: #333;
+}
+
+
+html >>> .btn {
+  display: inline-block;
+  padding: 6px 12px;
+  margin-bottom: 0;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 1.42857143;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  touch-action: manipulation;
+  cursor: pointer;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  background-image: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+html >>> .btn:focus,
+html >>> .btn:active:focus,
+html >>> .btn.active:focus,
+html >>> .btn.focus,
+html >>> .btn:active.focus,
+html >>> .btn.active.focus {
+  outline: thin dotted;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+html >>> .btn:hover,
+html >>> .btn:focus,
+html >>> .btn.focus {
+  color: #333;
+  text-decoration: none;
+}
+html >>> .btn:active,
+html >>> .btn.active {
+  background-image: none;
+  outline: 0;
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
+}
+html >>> .btn.disabled,
+html >>> .btn[disabled],
+fieldset[disabled] .btn {
+  pointer-events: none;
+  cursor: not-allowed;
+  filter: alpha(opacity=65);
+  box-shadow: none;
+  opacity: .65;
+}
+html >>> .btn-default {
+  color: #333;
+  background-color: #fff;
+  border-color: #ccc;
+}
+html >>> .btn-default:hover,
+html >>> .btn-default:focus,
+html >>> .btn-default.focus,
+html >>> .btn-default:active,
+html >>> .btn-default.active,
+.open > .dropdown-toggle.btn-default {
+  color: #333;
+  background-color: #e6e6e6;
+  border-color: #adadad;
+}
+html >>> .btn-default:active,
+html >>> .btn-default.active,
+.open > .dropdown-toggle.btn-default {
+  background-image: none;
+}
+html >>> .btn-default.disabled,
+html >>> .btn-default[disabled],
+fieldset[disabled] .btn-default,
+html >>> .btn-default.disabled:hover,
+html >>> .btn-default[disabled]:hover,
+fieldset[disabled] .btn-default:hover,
+html >>> .btn-default.disabled:focus,
+html >>> .btn-default[disabled]:focus,
+fieldset[disabled] .btn-default:focus,
+html >>> .btn-default.disabled.focus,
+html >>> .btn-default[disabled].focus,
+fieldset[disabled] .btn-default.focus,
+html >>> .btn-default.disabled:active,
+html >>> .btn-default[disabled]:active,
+fieldset[disabled] .btn-default:active,
+html >>> .btn-default.disabled.active,
+html >>> .btn-default[disabled].active,
+fieldset[disabled] .btn-default.active {
+  background-color: #fff;
+  border-color: #ccc;
+}
+html >>> .btn-default .badge {
+  color: #fff;
+  background-color: #333;
+}
+
+html /deep/ a.btn {
+    text-decoration: none;
+}
+
+html >>> a.btn {
+    text-decoration: none;
+}
