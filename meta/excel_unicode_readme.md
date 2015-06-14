@@ -25,5 +25,6 @@ You'll have to jump through some hoops to get this to work correctly.
 6. Click "Finish"
 
 7. In the final resulting dialog, click **New Worksheet**, then **OK**
+   <img src="https://raw.githubusercontent.com/SSARHERPS/SSAR-species-database/master/meta/excel_unicode_images/finalize_import.png" />
 
 You'll be set!
