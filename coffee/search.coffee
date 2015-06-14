@@ -833,6 +833,8 @@ downloadCSVList = ->
         "major_subtype"
         "minor_type"
         "linnean_order"
+        "genus_authority"
+        "species_authority"
         "deprecated_scientific"
         "notes"
         "taxon_author"
@@ -843,6 +845,8 @@ downloadCSVList = ->
         "genus"
         "common_name"
         "taxon_author"
+        "major_subtype"
+        "linnean_order"
         ]
       i = 0
       for k, row of result.result
@@ -852,7 +856,7 @@ downloadCSVList = ->
           # Escape as per RFC4180
           # https://tools.ietf.org/html/rfc4180#page-2
           col = dirtyCol.replace(/"/g,'""')
-          colData = dirtyColData.replace(/"/g,'""')
+          colData = dirtyColData.replace(/"/g,'""').replace(/&#39;/g,"'")
           if i is 0
             # Do the headers
             if col in showColumn
@@ -868,8 +872,8 @@ downloadCSVList = ->
                 genusYear = ""
                 speciesYear = ""
                 for k,v of authorityYears
-                  genusYear = k
-                  speciesYear = v
+                  genusYear = k.replace(/&#39;/g,"'")
+                  speciesYear = v.replace(/&#39;/g,"'")
                 switch col.split("_")[0]
                   when "genus"
                     tempCol = "#{colData.toTitleCase()} #{genusYear}"
@@ -884,6 +888,8 @@ downloadCSVList = ->
                 # Bad authority year, just don't use it
             if col in makeTitleCase
               colData = colData.toTitleCase()
+            if col is "image" and not isNull(colData)
+              colData = "http://ssarherps.org/cndb/#{colData}"
             # Done with formatting, push it
             csvRow.push "\"#{colData}\""
         # Increment the row counter

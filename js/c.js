@@ -1888,8 +1888,8 @@ downloadCSVList = function() {
       }
       csvBody = "";
       csvHeader = new Array();
-      showColumn = ["genus", "species", "subspecies", "common_name", "image", "image_credit", "image_license", "major_type", "major_common_type", "major_subtype", "minor_type", "linnean_order", "deprecated_scientific", "notes", "taxon_author", "taxon_credit", "taxon_credit_date"];
-      makeTitleCase = ["genus", "common_name", "taxon_author"];
+      showColumn = ["genus", "species", "subspecies", "common_name", "image", "image_credit", "image_license", "major_type", "major_common_type", "major_subtype", "minor_type", "linnean_order", "genus_authority", "species_authority", "deprecated_scientific", "notes", "taxon_author", "taxon_credit", "taxon_credit_date"];
+      makeTitleCase = ["genus", "common_name", "taxon_author", "major_subtype", "linnean_order"];
       i = 0;
       _ref = result.result;
       for (k in _ref) {
@@ -1898,7 +1898,7 @@ downloadCSVList = function() {
         for (dirtyCol in row) {
           dirtyColData = row[dirtyCol];
           col = dirtyCol.replace(/"/g, '""');
-          colData = dirtyColData.replace(/"/g, '""');
+          colData = dirtyColData.replace(/"/g, '""').replace(/&#39;/g, "'");
           if (i === 0) {
             if (__indexOf.call(showColumn, col) >= 0) {
               csvHeader.push(col.replace(/_/g, " ").toTitleCase());
@@ -1912,8 +1912,8 @@ downloadCSVList = function() {
                 speciesYear = "";
                 for (k in authorityYears) {
                   v = authorityYears[k];
-                  genusYear = k;
-                  speciesYear = v;
+                  genusYear = k.replace(/&#39;/g, "'");
+                  speciesYear = v.replace(/&#39;/g, "'");
                 }
                 switch (col.split("_")[0]) {
                   case "genus":
@@ -1935,6 +1935,9 @@ downloadCSVList = function() {
             }
             if (__indexOf.call(makeTitleCase, col) >= 0) {
               colData = colData.toTitleCase();
+            }
+            if (col === "image" && !isNull(colData)) {
+              colData = "http://ssarherps.org/cndb/" + colData;
             }
             csvRow.push("\"" + colData + "\"");
           }
