@@ -1872,10 +1872,9 @@ downloadCSVList = function() {
    * See
    * https://github.com/tigerhawkvok/SSAR-species-database/issues/39
    */
-  var args, d, dateString, day, filterArg, month;
+  var args, d, dateString, day, month;
   animateLoad();
-  filterArg = "eyJpc19hbGllbiI6MCwiYm9vbGVhbl90eXBlIjoib3IifQ";
-  args = "filter=" + filterArg;
+  args = "q=*";
   d = new Date();
   month = d.getMonth().toString().length === 1 ? "0" + (d.getMonth() + 1) : d.getMonth() + 1;
   day = d.getDate().toString().length === 1 ? "0" + (d.getDate().toString()) : d.getDate();

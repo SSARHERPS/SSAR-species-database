@@ -315,6 +315,25 @@ function doSearch($overrideSearch = null)
                 else $error = $e;
             }
         }
+        else if ($search == "*") {
+            # Do a full list search, no qualifications
+            $method = "full_detail_list";
+            $l = $db->openDB();
+            $query = "SELECT * FROM `".$db->getTable()."` ORDER BY ".$order_by;
+            $r = mysqli_query($l,$query);
+            try
+            {
+                while($row = mysqli_fetch_assoc($r))
+                {
+                    $result_vector[] = $row;
+                }
+            }
+            catch(Exception $e)
+            {
+                if(is_string($r)) $error = $r;
+                else $error = $e;
+            }            
+        }
         else if(is_numeric($search))
         {
             $method="year_search";

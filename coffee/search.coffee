@@ -805,8 +805,9 @@ downloadCSVList = ->
   # https://github.com/tigerhawkvok/SSAR-species-database/issues/39
   ###
   animateLoad()
-  filterArg = "eyJpc19hbGllbiI6MCwiYm9vbGVhbl90eXBlIjoib3IifQ"
-  args = "filter=#{filterArg}"
+  #filterArg = "eyJpc19hbGllbiI6MCwiYm9vbGVhbl90eXBlIjoib3IifQ"
+  #args = "filter=#{filterArg}"
+  args = "q=*"
   d = new Date()
   month = if d.getMonth().toString().length is 1 then "0#{d.getMonth() + 1}" else d.getMonth() + 1
   day = if d.getDate().toString().length is 1 then "0#{d.getDate().toString()}" else d.getDate()
