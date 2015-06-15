@@ -961,7 +961,7 @@ resetPassword = function() {
   /*
    * Reset the user password
    */
-  var ajaxLanding, args, methodOptionsHtml, multiOptionBinding, pane_messages, resetFormSubmit, urlString, user;
+  var ajaxLanding, args, checkButton, multiOptionBinding, pane_messages, resetFormSubmit, urlString, user;
   $("#password").remove();
   $("label[for='password']").remove();
   pane_messages = "reset-user-messages";
@@ -970,39 +970,31 @@ resetPassword = function() {
   url = $.url();
   ajaxLanding = "async_login_handler.php";
   urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
-  methodOptionsHtml = "<button class=\"btn btn-danger reset-pass-button\" data-method=\"email\">Reset by Email</button>";
+  checkButton = "<button class=\"btn btn-warning\" id=\"check-login\">Start Reset</button>";
   user = $("#username").val();
-  args = "action=cansms&username=" + user;
-  $.post(urlString, args, "json").done(function(result) {
-    methodOptionsHtml += "<button class=\"btn btn-danger reset-pass-button\" data-method=\"sms\">Reset by SMS</button>";
-    return false;
-  }).fail(function() {
-    console.error("Couldn't check if the user could SMS");
-    return false;
-  }).always(function() {
-    return $("#login_button").replaceWith(methodOptionsHtml);
-  });
+  $("#login_button").replaceWith(checkButton);
   args = "action=startpasswordreset&username=" + user;
   multiOptionBinding = function(pargs) {
     if (pargs == null) {
       pargs = args;
     }
-    $(".reset-pass-button").click(function() {
+    $(".reset-pass-button").unbind().click(function() {
       var method;
       method = $(this).attr("data-method");
       if (!isNull(method)) {
-        pargs = "" + pargs + "&method=" + method;
+        pargs = "" + args + "&method=" + method;
       }
       animateLoad();
       $.post(urlString, pargs, "json").done(function(result) {
-        var smsFormInput;
+        var smsFormInput, text, _ref;
         if (result.status === false) {
-          $("#" + pane_messages).removeClass("bg-warning bg-primary").addClass("bg-danger").text("There was a problem resetting your password. Please try again");
-          console.error("Couldn't reset password!");
+          text = (_ref = result.human_error) != null ? _ref : "There was a problem resetting your password. Please try again";
+          $("#" + pane_messages).removeClass("alert-warning alert-primary").addClass("alert-danger").text();
+          console.error("Couldn't reset password! " + result.error);
           console.warn(result);
         } else {
           if (method === "email") {
-            $("#" + pane_messages).removeClass("bg-warning bg-danger").addClass("bg-primary").text("Check your " + method + " for your reset link");
+            $("#" + pane_messages).removeClass("alert-warning alert-danger").addClass("alert-primary").text("Check your " + method + " for your reset link. Once you've clicked that, your password will be reset.");
           }
           if (method === "sms") {
             smsFormInput = "<div class=\"form-group\">\n  <label for=\"verify\">Verification Token:</label>\n  <input type=\"text\" class=\"form-control\" id=\"verify\" name=\"verify\" />\n</div>\n<div class=\"form-group\">\n  <label for=\"key\">Key:</label>\n  <input type=\"text\" class=\"form-control\" id=\"key\" name=\"key\" />\n</div>";
@@ -1014,27 +1006,34 @@ resetPassword = function() {
       }).fail(function(result, status) {
         return false;
       }).always(function() {
+        $(".reset-pass-button").click(function() {
+          noSubmit();
+          return resetFormSubmit();
+        });
         return stopLoad();
       });
       return false;
     });
     return false;
   };
-  multiOptionBinding(args);
   resetFormSubmit = function() {
     return $.get(urlString, args, "json").done(function(result) {
-      var doTotpSubmission, html, sms_id, text_html, usedSms;
+      var doTotpSubmission, html, sms_id, text, text_html, usedSms, _ref;
       if (result.status === false) {
+        if (isNull(result.human_error)) {
+          result.human_error = void 0;
+        }
+        console.log("Got requested action " + result.action, result);
         $("#username").prop("disabled", true);
         switch (result.action) {
           case "GET_TOTP":
             usedSms = false;
-            html = "<div id='start-reset-process'><button id='totp-submit' class='btn btn-primary'>Verify</button></div>";
-            $("#login").append(html);
+            html = "<legend>Two-Factor Authentication</legend>\n<div id='start-reset-process' class=\"totp\">\n  <div class=\"form-group\">\n    <label for=\"totp\">Authentication Code</label>\n    <input type=\"number\" class=\"form-control\" id=\"totp\" name=\"totp\"/>\n  </div>\n  <button id='totp-submit' class='btn btn-success'>Verify</button>\n</div>";
+            $("#login").replaceWith(html);
             if (result.canSMS) {
               sms_id = "reset-user-sms-totp";
-              text_html = "<button class='btn btn-default' id='" + sms_id + "'>Text Code</button>";
-              $("#start-reset-process").append(text_html);
+              text_html = "<button class='btn btn-primary' id='" + sms_id + "'>Text Code</button>";
+              $("#start-reset-process").after(text_html);
               $("#" + sms_id).click(function() {
                 var smsArgs, sms_totp;
                 smsArgs = "action=sendtotptext&user=" + user;
@@ -1042,15 +1041,15 @@ resetPassword = function() {
                 console.log("Sending message ...", urlString + "?" + args);
                 sms_totp.done(function(result) {
                   if (result.status === true) {
-                    $("#" + pane_messages).text("Your code has been sent to your registered number.").removeClass("bg-warning bg-danger").addClass("bg-primary");
+                    $("#" + pane_messages).text("Your code has been sent to your registered number.").removeClass("alert-warning alert-danger").addClass("alert-primary");
                     return usedSms = true;
                   } else {
-                    $("#" + pane_messages).addClass("bg-danger").text(result.human_error);
+                    $("#" + pane_messages).addClass("alert-danger").text(result.human_error);
                     return console.error(result.error);
                   }
                 });
                 return sms_totp.fail(function(result, status) {
-                  $("#" + pane_messages).addClass("bg-danger").text("There was a problem sending your text. Please try again.");
+                  $("#" + pane_messages).addClass("alert-danger").text("There was a problem sending your text. Please try again.");
                   console.error("AJAX failure trying to send TOTP text", urlString + "?" + args);
                   return console.error("Returns:", result, status);
                 });
@@ -1061,13 +1060,13 @@ resetPassword = function() {
               totpValue = $("#totp").val();
               args = "" + args + "&totp=" + totpValue;
               $("#start-reset-process").remove();
-              html = "";
+              html = "<p>Resetting password for <code>" + user + "</code></p>";
               if (result.canSMS && usedSms !== true) {
-                html = "<button class='reset-pass-button btn btn-primary' data-method='text'>Text New Password</button>";
+                html = "<button class='reset-pass-button btn btn-danger' data-method='sms'>Text New Password</button>";
                 false;
               }
-              html = "" + html + "<button class='reset-pass-button btn btn-primary' data-method='email'>Email New Password</button>";
-              $("#login").append(html);
+              html += "<button class='reset-pass-button btn btn-danger' data-method='email'>\n  Email New Password\n</button>";
+              $("#login").replaceWith(html);
               multiOptionBinding(args);
               return false;
             };
@@ -1081,30 +1080,35 @@ resetPassword = function() {
             });
             break;
           case "NEED_METHOD":
-            $("#login_button").remove();
-            html = "<button class='reset-pass-button btn btn-primary' data-method='text'>Text New Password</button>";
-            html = "" + html + "<button class='reset-pass-button btn btn-primary' data-method='email'>Email New Password</button>";
-            $("#login").append(html);
-            multiOptionBinding();
+            html = "<p>Resetting password for <code>" + user + "</code></p>";
+            if (result.canSMS && usedSms !== true) {
+              html = "<button class='reset-pass-button btn btn-danger' data-method='sms'>Text New Password</button>";
+              false;
+            }
+            html += "<button class='reset-pass-button btn btn-danger' data-method='email'>\n  Email New Password\n</button>";
+            $("#login").replaceWith(html);
+            multiOptionBinding(args);
             false;
             break;
           case "BAD_USER":
-            $("#" + pane_messages).addClass("bg-danger").text("Sorry, that user doesn't exist.");
+            $("#" + pane_messages).addClass("alert-danger").text("Sorry, that user doesn't exist.");
             $("#username").prop("disabled", false).val("");
             false;
+            break;
+          default:
+            text = (_ref = result.human_error) != null ? _ref : "The system encounted a problem trying to do that. Please try again.";
+            $("#" + pane_messages).addClass("alert-danger").removeClass("alert-primary alert-warning").text(text);
+            console.error("Illegal state!");
+            console.warn(result);
         }
       }
-      $("#" + pane_messages).removeClass("bg-warning").addClass("bg-primary").text("Check your email for your new password. We strongly encourage you to change it!");
+      $("#" + pane_messages).removeClass("alert-warning").addClass("alert-primary").text("Check your email for your new password. We strongly encourage you to change it!");
       return false;
     }).fail(function(result, status) {
       return false;
     });
   };
-  $(".reset-pass-button").click(function() {
-    noSubmit();
-    return resetFormSubmit();
-  });
-  return $("#login").submit(function() {
+  return $("#check-user").submit(function() {
     noSubmit();
     return resetFormSubmit();
   });

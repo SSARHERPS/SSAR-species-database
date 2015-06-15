@@ -1437,8 +1437,8 @@ class UserFunctions extends DBHelper
     else return array('status'=>false,'error'=>'Bad validation','method'=>$method,"validated_meta"=>$vmeta);
   }
 
-  
-  
+
+
   public static function createRandomUserPassword($newPasswordLength = 16)
   {
     /***
@@ -1520,17 +1520,27 @@ class UserFunctions extends DBHelper
           return $callback;
         }
       }
+      else if($this->canSMS(false) and $method == "sms")
+      {
+          # The system can SMS ...
+          if(!$this->canSMS()) 
+          {
+              # The system can SMS but the user isn't verified, but asked
+              # for SMS verification.
+              $callback = array("status"=>false,"action"=>"SMS_NOT_VERIFIED");
+              return $callback;
+          }
+          else
+          {
+              # The user and system CAN SMS, and the method is set. We
+              # can do this normally, now.
+          }
+      }
+
       else if(!$this->canSMS(false) and empty($method))
       {
         # If the system can't SMS, and there's no method, assume email
         $method = "email";
-      }
-      else if(!$this->canSMS() and $method == "sms")
-      {
-        # The system can SMS but the user isn't verified, but asked
-        # for SMS verification.
-        $callback = array("status"=>false,"action"=>"SMS_NOT_VERIFIED");
-        return $callback;
       }
       # Calculate out the secrets
       /*
@@ -1580,6 +1590,7 @@ class UserFunctions extends DBHelper
         if(!$status)
         {
           $callback["error"] = $mail->ErrorInfo;
+          $callback["human_error"] = "There was a problem sending the email. Please try again later.";
         }
         return $callback;
       }
@@ -1600,7 +1611,8 @@ class UserFunctions extends DBHelper
       else
       {
         # Bad reset method
-        $callback = array("status"=>false,"method"=>"INVALID_METHOD");
+          $callback = array("status"=>false,"method"=>$method, "action"=>"INVALID_METHOD" ,"error"=>"INVALID_METHOD", "human_error"=>"The application requested an invalid reset method. Please report this error.");
+        return $callback;
       }
     }
   }
@@ -1738,7 +1750,7 @@ class UserFunctions extends DBHelper
           $callback["error"] = mysqli_error($l);
           $callback["new_password"] = null;
         }
-        
+
         $r2=mysqli_query($l,$finish_query);
         $callback["status"] = $r && $r2;
         if ($r2 !== true)
@@ -1749,7 +1761,7 @@ class UserFunctions extends DBHelper
         {
           # It all worked, remove the secret
           $this->setTempSecret();
-          if($doEmailPassword === true) 
+          if($doEmailPassword === true)
           {
             $mail = $this->getMailObject();
             $mail->Subject = $this->getDomain() . " New Password";
@@ -1824,9 +1836,9 @@ class UserFunctions extends DBHelper
       throw(new Exception("Invalid credentials - " . $e->getMessage()));
     }
   }
-  
-  
-  
+
+
+
   public function removeThisAccount($username,$password,$totp = false)
   {
     /***

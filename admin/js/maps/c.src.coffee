@@ -793,48 +793,39 @@ resetPassword = ->
   url = $.url()
   ajaxLanding = "async_login_handler.php"
   urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding
-  methodOptionsHtml = """
-  <button class="btn btn-danger reset-pass-button" data-method="email">Reset by Email</button>
+  checkButton = """
+  <button class="btn btn-warning" id="check-login">Start Reset</button>
   """
   user = $("#username").val()
-  args = "action=cansms&username=#{user}"
-  # See if they can SMS
-  $.post(urlString,args,"json")
-  .done (result) ->
-    methodOptionsHtml += """
-   <button class="btn btn-danger reset-pass-button" data-method="sms">Reset by SMS</button>
-    """
-    false
-  .fail ->
-    console.error("Couldn't check if the user could SMS")
-    false
-  .always ->
-    $("#login_button").replaceWith(methodOptionsHtml)
+  $("#login_button").replaceWith(checkButton)
   # Set up the bindings
   args = "action=startpasswordreset&username=#{user}"
   multiOptionBinding = (pargs = args) ->
-    $(".reset-pass-button").click ->
+    $(".reset-pass-button")
+    .unbind()
+    .click ->
       method = $(this).attr("data-method")
       unless isNull(method)
-        pargs = "#{pargs}&method=#{method}"
+        pargs = "#{args}&method=#{method}"
       # Check it!
       animateLoad()
       $.post(urlString,pargs,"json")
       .done (result) ->
         if result.status is false
+          text = result.human_error ? "There was a problem resetting your password. Please try again"
           $("##{pane_messages}")
-          .removeClass("bg-warning bg-primary")
-          .addClass("bg-danger")
-          .text("There was a problem resetting your password. Please try again")
+          .removeClass("alert-warning alert-primary")
+          .addClass("alert-danger")
+          .text()
           # Console
-          console.error("Couldn't reset password!")
+          console.error("Couldn't reset password! #{result.error}")
           console.warn(result)
         else
           if method is "email"
             $("##{pane_messages}")
-            .removeClass("bg-warning bg-danger")
-            .addClass("bg-primary")
-            .text("Check your #{method} for your reset link")
+            .removeClass("alert-warning alert-danger")
+            .addClass("alert-primary")
+            .text("Check your #{method} for your reset link. Once you've clicked that, your password will be reset.")
           if method is "sms"
             # Put in a key input thing
             smsFormInput = """
@@ -853,28 +844,43 @@ resetPassword = ->
       .fail (result,status) ->
         false
       .always ->
+        $(".reset-pass-button").click ->
+          noSubmit()
+          resetFormSubmit()
         stopLoad()
       false
     false
-  multiOptionBinding(args)
   # The wrapper function
   resetFormSubmit = ->
     $.get(urlString,args,"json")
     .done (result) ->
       if result.status is false
         # Do stuff based on the action
+        if isNull(result.human_error)
+          # Make it REALLY not there, in case it's an empty string
+          result.human_error = undefined
+        console.log("Got requested action #{result.action}",result)
         $("#username").prop("disabled",true)
         switch result.action
           when "GET_TOTP"
             # Replace and rebind form to get the TOTP value
             # If the user canSMS, then present that as a button option
             usedSms = false
-            html = "<div id='start-reset-process'><button id='totp-submit' class='btn btn-primary'>Verify</button></div>"
-            $("#login").append(html)
+            html = """
+            <legend>Two-Factor Authentication</legend>
+            <div id='start-reset-process' class="totp">
+              <div class="form-group">
+                <label for="totp">Authentication Code</label>
+                <input type="number" class="form-control" id="totp" name="totp"/>
+              </div>
+              <button id='totp-submit' class='btn btn-success'>Verify</button>
+            </div>
+            """
+            $("#login").replaceWith(html)
             if result.canSMS
               sms_id = "reset-user-sms-totp"
-              text_html = "<button class='btn btn-default' id='#{sms_id}'>Text Code</button>"
-              $("#start-reset-process").append(text_html)
+              text_html = "<button class='btn btn-primary' id='#{sms_id}'>Text Code</button>"
+              $("#start-reset-process").after(text_html)
               $("##{sms_id}").click ->
                 # Attempt to send the TOTP
                 smsArgs = "action=sendtotptext&user=#{user}"
@@ -885,18 +891,18 @@ resetPassword = ->
                     # Alert the user
                     $("##{pane_messages}")
                     .text("Your code has been sent to your registered number.")
-                    .removeClass("bg-warning bg-danger")
-                    .addClass("bg-primary")
+                    .removeClass("alert-warning alert-danger")
+                    .addClass("alert-primary")
                     usedSms = true
                   else
                     #Place a notice in pane_messages
                     $("##{pane_messages}")
-                    .addClass("bg-danger")
+                    .addClass("alert-danger")
                     .text(result.human_error)
                     console.error(result.error)
                 sms_totp.fail (result,status) ->
                   $("##{pane_messages}")
-                  .addClass("bg-danger")
+                  .addClass("alert-danger")
                   .text("There was a problem sending your text. Please try again.")
                   console.error("AJAX failure trying to send TOTP text",urlString + "?" + args)
                   console.error("Returns:",result,status)
@@ -905,13 +911,17 @@ resetPassword = ->
               args = "#{args}&totp=#{totpValue}"
               # Now draw the thing
               $("#start-reset-process").remove()
-              html = ""
+              html = "<p>Resetting password for <code>#{user}</code></p>"
               if result.canSMS and usedSms isnt true
                 # Show an option to get a text reset password
-                html = "<button class='reset-pass-button btn btn-primary' data-method='text'>Text New Password</button>"
+                html = "<button class='reset-pass-button btn btn-danger' data-method='sms'>Text New Password</button>"
                 false
-              html = "#{html}<button class='reset-pass-button btn btn-primary' data-method='email'>Email New Password</button>"
-              $("#login").append(html)
+              html += """
+              <button class='reset-pass-button btn btn-danger' data-method='email'>
+                Email New Password
+              </button>
+              """
+              $("#login").replaceWith(html)
               multiOptionBinding(args)
               false
             $("#totp-submit").click ->
@@ -922,35 +932,47 @@ resetPassword = ->
               doTotpSubmission()
           when "NEED_METHOD"
             # Draw a button to send a text AND button to email
-            $("#login_button").remove()
-            html = "<button class='reset-pass-button btn btn-primary' data-method='text'>Text New Password</button>"
-            html = "#{html}<button class='reset-pass-button btn btn-primary' data-method='email'>Email New Password</button>"
-            $("#login").append(html)
-            multiOptionBinding()
+            html = "<p>Resetting password for <code>#{user}</code></p>"
+            if result.canSMS and usedSms isnt true
+              # Show an option to get a text reset password
+              html = "<button class='reset-pass-button btn btn-danger' data-method='sms'>Text New Password</button>"
+              false
+            html += """
+            <button class='reset-pass-button btn btn-danger' data-method='email'>
+              Email New Password
+            </button>
+            """
+            $("#login").replaceWith(html)
+            multiOptionBinding(args)
             false
           when "BAD_USER"
             # Bad user
             $("##{pane_messages}")
-            .addClass("bg-danger")
+            .addClass("alert-danger")
             .text("Sorry, that user doesn't exist.")
             $("#username")
             .prop("disabled",false)
             .val("")
             false
+          else
+            text = result.human_error ? "The system encounted a problem trying to do that. Please try again."
+            $("##{pane_messages}")
+            .addClass("alert-danger")
+            .removeClass("alert-primary alert-warning")
+            .text(text)
+            console.error("Illegal state!")
+            console.warn(result)
       # Otherwise, it's good, and an email has been sent
       $("##{pane_messages}")
-      .removeClass("bg-warning")
-      .addClass("bg-primary")
+      .removeClass("alert-warning")
+      .addClass("alert-primary")
       .text("Check your email for your new password. We strongly encourage you to change it!")
       false
     .fail (result,status) ->
       false
   # End the major wrpaper function
   # Bind the clicks
-  $(".reset-pass-button").click ->
-    noSubmit()
-    resetFormSubmit()
-  $("#login").submit ->
+  $("#check-user").submit ->
     noSubmit()
     resetFormSubmit()
 
