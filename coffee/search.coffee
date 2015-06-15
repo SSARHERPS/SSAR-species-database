@@ -838,7 +838,6 @@ downloadCSVList = ->
         "species_authority"
         "deprecated_scientific"
         "notes"
-        "taxon_author"
         "taxon_credit"
         "taxon_credit_date"
         ]
@@ -857,8 +856,8 @@ downloadCSVList = ->
         for dirtyCol, dirtyColData of row
           # Escape as per RFC4180
           # https://tools.ietf.org/html/rfc4180#page-2
-          col = dirtyCol.replace(/"/g,'""')
-          colData = dirtyColData.replace(/"/g,'""').replace(/&#39;/g,"'")
+          col = dirtyCol.replace(/"/g,'\"\"')
+          colData = dirtyColData.replace(/"/g,'\"\"').replace(/&#39;/g,"'")
           if i is 0
             # Do the headers
             if col in showColumn
@@ -874,8 +873,8 @@ downloadCSVList = ->
                 genusYear = ""
                 speciesYear = ""
                 for k,v of authorityYears
-                  genusYear = k.replace(/&#39;/g,"'")
-                  speciesYear = v.replace(/&#39;/g,"'")
+                  genusYear = k.replace(/"/g,'\"\"').replace(/&#39;/g,"'")
+                  speciesYear = v.replace(/"/g,'\"\"').replace(/&#39;/g,"'")
                 switch col.split("_")[0]
                   when "genus"
                     tempCol = "#{colData.toTitleCase()} #{genusYear}"
@@ -886,6 +885,8 @@ downloadCSVList = ->
                     if toInt(row.parens_auth_species).toBool()
                       tempCol = "(#{tempCol})"
                 colData = tempCol
+                # if "\"Plestiodon\"" in csvRow and "\"egregius\"" in csvRow
+                #   console.log("Plestiodon: Working with",csvRow,"inserting",tempCol)
               catch e
                 # Bad authority year, just don't use it
             if col in makeTitleCase
@@ -897,6 +898,8 @@ downloadCSVList = ->
         # Increment the row counter
         i++
         csvLiteralRow = csvRow.join(",")
+        # if "\"Plestiodon\"" in csvRow and "\"egregius\"" in csvRow
+        #   console.log("Plestiodon: Working with",csvRow,csvLiteralRow)
         csvBody +="""
 
         #{csvLiteralRow}

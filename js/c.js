@@ -1891,7 +1891,7 @@ downloadCSVList = function() {
       }
       csvBody = "";
       csvHeader = new Array();
-      showColumn = ["genus", "species", "subspecies", "common_name", "image", "image_credit", "image_license", "major_type", "major_common_type", "major_subtype", "minor_type", "linnean_order", "genus_authority", "species_authority", "deprecated_scientific", "notes", "taxon_author", "taxon_credit", "taxon_credit_date"];
+      showColumn = ["genus", "species", "subspecies", "common_name", "image", "image_credit", "image_license", "major_type", "major_common_type", "major_subtype", "minor_type", "linnean_order", "genus_authority", "species_authority", "deprecated_scientific", "notes", "taxon_credit", "taxon_credit_date"];
       makeTitleCase = ["genus", "common_name", "taxon_author", "major_subtype", "linnean_order"];
       i = 0;
       _ref = result.result;
@@ -1903,8 +1903,8 @@ downloadCSVList = function() {
         }
         for (dirtyCol in row) {
           dirtyColData = row[dirtyCol];
-          col = dirtyCol.replace(/"/g, '""');
-          colData = dirtyColData.replace(/"/g, '""').replace(/&#39;/g, "'");
+          col = dirtyCol.replace(/"/g, '\"\"');
+          colData = dirtyColData.replace(/"/g, '\"\"').replace(/&#39;/g, "'");
           if (i === 0) {
             if (__indexOf.call(showColumn, col) >= 0) {
               csvHeader.push(col.replace(/_/g, " ").toTitleCase());
@@ -1918,8 +1918,8 @@ downloadCSVList = function() {
                 speciesYear = "";
                 for (k in authorityYears) {
                   v = authorityYears[k];
-                  genusYear = k.replace(/&#39;/g, "'");
-                  speciesYear = v.replace(/&#39;/g, "'");
+                  genusYear = k.replace(/"/g, '\"\"').replace(/&#39;/g, "'");
+                  speciesYear = v.replace(/"/g, '\"\"').replace(/&#39;/g, "'");
                 }
                 switch (col.split("_")[0]) {
                   case "genus":
