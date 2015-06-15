@@ -37,6 +37,8 @@ function returnAjax($data)
   if(!is_array($data)) $data=array($data);
   $data["execution_time"] = elapsed();
   $data["completed"] = microtime_float();
+  global $do;
+  $data["requested_action"] = $do;
   if(!isset($data["status"])) {
     $data["status"] = false;
     $data["error"] = "Server returned null or otherwise no status.";
@@ -138,11 +140,11 @@ function canSMS($get)
   try
     {
       # This should be non-strict
-      return $u->canSMS(false);
+        return array("status"=>$u->canSMS(false));
     }
   catch(Exception $e)
     {
-      return false;
+        return array("status"=>false,"error"=>$e->getMessage());
     }
 }
 

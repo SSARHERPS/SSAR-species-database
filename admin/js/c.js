@@ -961,45 +961,69 @@ resetPassword = function() {
   /*
    * Reset the user password
    */
-  var html, pane_messages, resetFormSubmit;
+  var ajaxLanding, args, methodOptionsHtml, multiOptionBinding, pane_messages, resetFormSubmit, urlString, user;
   $("#password").remove();
-  $("#login_button").remove();
-  html = "<button id='login_button' class='btn btn-danger'>Check User</button>";
+  $("label[for='password']").remove();
   pane_messages = "reset-user-messages";
-  $("#login").before("<div id='" + pane_messages + "'");
-  $("#login").append(html);
-  $("#" + pane_messages).addClass("bg-warning").text("Once your password has been reset, your old password will be invalid.");
-  resetFormSubmit = function() {
-    var ajaxLanding, args, multiOptionBinding, urlString, user;
-    url = $.url();
-    ajaxLanding = "async_login_handler.php";
-    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
-    user = $("#username").val();
-    args = "action=resetpass&username=" + user;
-    multiOptionBinding = function(pargs) {
-      if (pargs == null) {
-        pargs = args;
-      }
-      $(".reset-pass-button").click(function() {
-        var method;
-        method = $(this).attr("data-method");
+  $("#login").before("<div id='" + pane_messages + "'></div>");
+  $("#" + pane_messages).addClass("alert alert-warning").text("Once your password has been reset, your old password will be invalid.");
+  url = $.url();
+  ajaxLanding = "async_login_handler.php";
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
+  methodOptionsHtml = "<button class=\"btn btn-danger reset-pass-button\" data-method=\"email\">Reset by Email</button>";
+  user = $("#username").val();
+  args = "action=cansms&username=" + user;
+  $.post(urlString, args, "json").done(function(result) {
+    methodOptionsHtml += "<button class=\"btn btn-danger reset-pass-button\" data-method=\"sms\">Reset by SMS</button>";
+    return false;
+  }).fail(function() {
+    console.error("Couldn't check if the user could SMS");
+    return false;
+  }).always(function() {
+    return $("#login_button").replaceWith(methodOptionsHtml);
+  });
+  args = "action=startpasswordreset&username=" + user;
+  multiOptionBinding = function(pargs) {
+    if (pargs == null) {
+      pargs = args;
+    }
+    $(".reset-pass-button").click(function() {
+      var method;
+      method = $(this).attr("data-method");
+      if (!isNull(method)) {
         pargs = "" + pargs + "&method=" + method;
-        $.post(urlString, pargs, "json").done(function(result) {
-          if (result.status === false) {
-            $("#" + pane_messages).removeClass("bg-warning bg-primary").addClass("bg-danger").text("There was a problem resetting your password. Please try again");
-          } else {
-            $("#" + pane_messages).removeClass("bg-warning bg-danger").addClass("bg-primary").text("Check your " + method + " for your new password. We strongly encourage you to change it!");
+      }
+      animateLoad();
+      $.post(urlString, pargs, "json").done(function(result) {
+        var smsFormInput;
+        if (result.status === false) {
+          $("#" + pane_messages).removeClass("bg-warning bg-primary").addClass("bg-danger").text("There was a problem resetting your password. Please try again");
+          console.error("Couldn't reset password!");
+          console.warn(result);
+        } else {
+          if (method === "email") {
+            $("#" + pane_messages).removeClass("bg-warning bg-danger").addClass("bg-primary").text("Check your " + method + " for your reset link");
           }
-          return false;
-        }).fail(function(result, status) {
-          return false;
-        });
+          if (method === "sms") {
+            smsFormInput = "<div class=\"form-group\">\n  <label for=\"verify\">Verification Token:</label>\n  <input type=\"text\" class=\"form-control\" id=\"verify\" name=\"verify\" />\n</div>\n<div class=\"form-group\">\n  <label for=\"key\">Key:</label>\n  <input type=\"text\" class=\"form-control\" id=\"key\" name=\"key\" />\n</div>";
+            $(".form-group").remove();
+            $("legend").after(smsFormInput);
+          }
+        }
         return false;
+      }).fail(function(result, status) {
+        return false;
+      }).always(function() {
+        return stopLoad();
       });
       return false;
-    };
+    });
+    return false;
+  };
+  multiOptionBinding(args);
+  resetFormSubmit = function() {
     return $.get(urlString, args, "json").done(function(result) {
-      var doTotpSubmission, sms_id, text_html, usedSms;
+      var doTotpSubmission, html, sms_id, text_html, usedSms;
       if (result.status === false) {
         $("#username").prop("disabled", true);
         switch (result.action) {
@@ -1076,7 +1100,7 @@ resetPassword = function() {
       return false;
     });
   };
-  $("#login_button").click(function() {
+  $(".reset-pass-button").click(function() {
     noSubmit();
     return resetFormSubmit();
   });

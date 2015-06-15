@@ -585,47 +585,81 @@ resetPassword = ->
   # Remove the password field and replace the login button, rebind
   # events
   $("#password").remove()
-  html = "<button id='login_button' class='btn btn-danger'>Start Reset</button>"
+  $("label[for='password']").remove()
   pane_messages = "reset-user-messages"
-  $("#login").before("<div id='#{pane_messages}'")
-  $("#login_button").replaceWith(html)
+  $("#login").before("<div id='#{pane_messages}'></div>")
   $("##{pane_messages}")
-  .addClass("bg-warning")
+  .addClass("alert alert-warning")
   .text("Once your password has been reset, your old password will be invalid.")
-  resetFormSubmit = ->
-    url = $.url()
-    ajaxLanding = "async_login_handler.php"
-    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding
-    user = $("#username").val()
-    args = "action=startpasswordreset&username=#{user}"
-    multiOptionBinding = (pargs = args) ->
-      $(".reset-pass-button").click ->
-        method = $(this).attr("data-method")
-        unless isNull(method)
-          pargs = "#{pargs}&method=#{method}"
-        # Check it!
-        $.post(urlString,pargs,"json")
-        .done (result) ->
-          if result.status is false
+  url = $.url()
+  ajaxLanding = "async_login_handler.php"
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding
+  methodOptionsHtml = """
+  <button class="btn btn-danger reset-pass-button" data-method="email">Reset by Email</button>
+  """
+  user = $("#username").val()
+  args = "action=cansms&username=#{user}"
+  # See if they can SMS
+  $.post(urlString,args,"json")
+  .done (result) ->
+    methodOptionsHtml += """
+   <button class="btn btn-danger reset-pass-button" data-method="sms">Reset by SMS</button>
+    """
+    false
+  .fail ->
+    console.error("Couldn't check if the user could SMS")
+    false
+  .always ->
+    $("#login_button").replaceWith(methodOptionsHtml)
+  # Set up the bindings
+  args = "action=startpasswordreset&username=#{user}"
+  multiOptionBinding = (pargs = args) ->
+    $(".reset-pass-button").click ->
+      method = $(this).attr("data-method")
+      unless isNull(method)
+        pargs = "#{pargs}&method=#{method}"
+      # Check it!
+      animateLoad()
+      $.post(urlString,pargs,"json")
+      .done (result) ->
+        if result.status is false
+          $("##{pane_messages}")
+          .removeClass("bg-warning bg-primary")
+          .addClass("bg-danger")
+          .text("There was a problem resetting your password. Please try again")
+          # Console
+          console.error("Couldn't reset password!")
+          console.warn(result)
+        else
+          if method is "email"
             $("##{pane_messages}")
-            .removeClass("bg-warning bg-primary")
-            .addClass("bg-danger")
-            .text("There was a problem resetting your password. Please try again")
-            # Console
-          else
-            if method is "email"
-              $("##{pane_messages}")
-              .removeClass("bg-warning bg-danger")
-              .addClass("bg-primary")
-              .text("Check your #{method} for your reset link")
-            if method is "sms"
-              # Put in a key input thing
-          false
-        .fail (result,status) ->
-          false
+            .removeClass("bg-warning bg-danger")
+            .addClass("bg-primary")
+            .text("Check your #{method} for your reset link")
+          if method is "sms"
+            # Put in a key input thing
+            smsFormInput = """
+            <div class="form-group">
+              <label for="verify">Verification Token:</label>
+              <input type="text" class="form-control" id="verify" name="verify" />
+            </div>
+            <div class="form-group">
+              <label for="key">Key:</label>
+              <input type="text" class="form-control" id="key" name="key" />
+            </div>
+            """
+            $(".form-group").remove()
+            $("legend").after(smsFormInput)
         false
+      .fail (result,status) ->
+        false
+      .always ->
+        stopLoad()
       false
-    multiOptionBinding(args)
+    false
+  multiOptionBinding(args)
+  # The wrapper function
+  resetFormSubmit = ->
     $.get(urlString,args,"json")
     .done (result) ->
       if result.status is false
@@ -712,7 +746,9 @@ resetPassword = ->
       false
     .fail (result,status) ->
       false
-  $("#login_button").click ->
+  # End the major wrpaper function
+  # Bind the clicks
+  $(".reset-pass-button").click ->
     noSubmit()
     resetFormSubmit()
   $("#login").submit ->
