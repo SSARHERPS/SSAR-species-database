@@ -895,6 +895,10 @@ bindClicks = function(selector) {
         }
         $(this).click(function() {
           var _ref, _ref1, _ref2;
+          url = $(this).attr("data-href");
+          if (isNull(url)) {
+            url = $(this).attr("data-url");
+          }
           if (((_ref = $(this).attr("newTab")) != null ? _ref.toBool() : void 0) || ((_ref1 = $(this).attr("newtab")) != null ? _ref1.toBool() : void 0) || ((_ref2 = $(this).attr("data-newtab")) != null ? _ref2.toBool() : void 0)) {
             return openTab(url);
           } else {

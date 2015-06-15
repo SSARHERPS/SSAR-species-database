@@ -35,6 +35,7 @@ loadAdminUi = ->
       """
       $("article").html(articleHtml)
       $(".pib-wrapper").tooltip()
+      bindClicks()
       ###
       # Render out the admin UI
       # We want a search box that we pipe through the API
@@ -183,6 +184,7 @@ renderAdminSearchResults = (containerSelector = "#search-results") ->
     $("#search-status").attr("text","Couldn't execute the search - #{error}")
     $("#search-status")[0].show()
     stopLoadError()
+
 
 
 loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->

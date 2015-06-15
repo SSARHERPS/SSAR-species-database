@@ -638,6 +638,10 @@ bindClicks = (selector = ".click") ->
         catch e
           console.warn("tagname lower case error")
         $(this).click ->
+          # Use the most up-to-date URL
+          url = $(this).attr("data-href")
+          if isNull(url)
+            url = $(this).attr("data-url")
           if $(this).attr("newTab")?.toBool() or $(this).attr("newtab")?.toBool() or $(this).attr("data-newtab")?.toBool()
             openTab(url)
           else
