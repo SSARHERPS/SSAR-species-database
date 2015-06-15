@@ -585,11 +585,10 @@ resetPassword = ->
   # Remove the password field and replace the login button, rebind
   # events
   $("#password").remove()
-  $("#login_button").remove()
-  html = "<button id='login_button' class='btn btn-danger'>Check User</button>"
+  html = "<button id='login_button' class='btn btn-danger'>Start Reset</button>"
   pane_messages = "reset-user-messages"
   $("#login").before("<div id='#{pane_messages}'")
-  $("#login").append(html)
+  $("#login_button").replaceWith(html)
   $("##{pane_messages}")
   .addClass("bg-warning")
   .text("Once your password has been reset, your old password will be invalid.")
@@ -598,11 +597,12 @@ resetPassword = ->
     ajaxLanding = "async_login_handler.php"
     urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding
     user = $("#username").val()
-    args = "action=resetpass&username=#{user}"
+    args = "action=startpasswordreset&username=#{user}"
     multiOptionBinding = (pargs = args) ->
       $(".reset-pass-button").click ->
         method = $(this).attr("data-method")
-        pargs = "#{pargs}&method=#{method}"
+        unless isNull(method)
+          pargs = "#{pargs}&method=#{method}"
         # Check it!
         $.post(urlString,pargs,"json")
         .done (result) ->
@@ -613,15 +613,19 @@ resetPassword = ->
             .text("There was a problem resetting your password. Please try again")
             # Console
           else
-            $("##{pane_messages}")
-            .removeClass("bg-warning bg-danger")
-            .addClass("bg-primary")
-            .text("Check your #{method} for your new password. We strongly encourage you to change it!")
+            if method is "email"
+              $("##{pane_messages}")
+              .removeClass("bg-warning bg-danger")
+              .addClass("bg-primary")
+              .text("Check your #{method} for your reset link")
+            if method is "sms"
+              # Put in a key input thing
           false
         .fail (result,status) ->
           false
         false
       false
+    multiOptionBinding(args)
     $.get(urlString,args,"json")
     .done (result) ->
       if result.status is false
