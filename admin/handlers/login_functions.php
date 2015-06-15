@@ -1586,14 +1586,21 @@ class UserFunctions extends DBHelper
       else if ($method == "sms")
       {
         # Reset by text
-        $sms_message = "At the reset password prompt, for KEY enter ".$user_tokens["key"]." , and for VERIFY enter ".$user_tokens["verify"];
-        $t_obj = $this->textUser($sms_message);
-        return array("status"=>true,"method"=>"sms","twilio"=>$t_obj);
+          if($this->canSMS())
+          {
+              $sms_message = "At the reset password prompt, for KEY enter ".$user_tokens["key"]." , and for VERIFY enter ".$user_tokens["verify"];
+              $t_obj = $this->textUser($sms_message);
+              return array("status"=>true,"method"=>"sms","twilio"=>$t_obj);
+          }
+          else
+          {
+              return array("status"=>false,"method"=>"sms","error"=>"The user can't SMS","human_error"=>"Sorry, SMS is not a valid option for this account. Please try another option.");
+          }
       }
       else
       {
         # Bad reset method
-        $callback = array("status"=>false,"action"=>"INVALID_METHOD");
+        $callback = array("status"=>false,"method"=>"INVALID_METHOD");
       }
     }
   }
