@@ -1,4 +1,4 @@
-var animateLoad, byteCount, checkMatchPassword, checkPasswordLive, delay, doAsyncCreate, doAsyncLogin, doEmailCheck, doRemoveAccountAction, doTOTPRemove, doTOTPSubmit, evalRequirements, giveAltVerificationOptions, isBlank, isBool, isEmpty, isJson, isNull, isNumber, makeTOTP, mapNewWindows, noSubmit, popupSecret, removeAccount, resetPassword, root, roundNumber, saveTOTP, showAdvancedOptions, showInstructions, stopLoad, stopLoadError, toFloat, toInt, toggleNewUserSubmit, url, verifyPhone, _base, _base1,
+var animateLoad, byteCount, checkMatchPassword, checkPasswordLive, delay, doAsyncCreate, doAsyncLogin, doEmailCheck, doRemoveAccountAction, doTOTPRemove, doTOTPSubmit, evalRequirements, finishPasswordResetHandler, giveAltVerificationOptions, isBlank, isBool, isEmpty, isJson, isNull, isNumber, makeTOTP, mapNewWindows, noSubmit, popupSecret, removeAccount, resetPassword, root, roundNumber, saveTOTP, showAdvancedOptions, showInstructions, stopLoad, stopLoadError, toFloat, toInt, toggleNewUserSubmit, url, verifyPhone, _base, _base1,
   __slice = [].slice;
 
 root = typeof exports !== "undefined" && exports !== null ? exports : this;
@@ -1017,6 +1017,7 @@ resetPassword = function() {
     return false;
   };
   resetFormSubmit = function() {
+    animateLoad();
     return $.get(urlString, args, "json").done(function(result) {
       var doTotpSubmission, html, sms_id, text, text_html, usedSms, _ref;
       if (result.status === false) {
@@ -1103,8 +1104,11 @@ resetPassword = function() {
         }
       }
       $("#" + pane_messages).removeClass("alert-warning").addClass("alert-primary").text("Check your email for your new password. We strongly encourage you to change it!");
+      stopLoad();
       return false;
     }).fail(function(result, status) {
+      stopLoadError();
+      $("#" + pane_messages).removeClass("alert-primary alert-warning").addClass("alert-danger").text("We couldn't process the password reset. Please try again.");
       return false;
     });
   };
@@ -1112,6 +1116,10 @@ resetPassword = function() {
     noSubmit();
     return resetFormSubmit();
   });
+};
+
+finishPasswordResetHandler = function() {
+  return false;
 };
 
 $(function() {
@@ -1190,6 +1198,14 @@ $(function() {
         return showInstructions();
       }
     });
+  }
+  try {
+    if (window.checkPasswordReset === true) {
+      finishPasswordResetHandler();
+    }
+  } catch (_error) {
+    e = _error;
+    console.error("Couldn't check password reset state! " + e.message);
   }
   $("#next.continue").click(function() {
     return window.location.href = window.totpParams.home;

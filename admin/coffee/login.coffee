@@ -653,6 +653,7 @@ resetPassword = ->
     false
   # The wrapper function
   resetFormSubmit = ->
+    animateLoad()
     $.get(urlString,args,"json")
     .done (result) ->
       if result.status is false
@@ -768,14 +769,25 @@ resetPassword = ->
       .removeClass("alert-warning")
       .addClass("alert-primary")
       .text("Check your email for your new password. We strongly encourage you to change it!")
+      stopLoad()
       false
     .fail (result,status) ->
+      stopLoadError()
+      $("##{pane_messages}")
+      .removeClass("alert-primary alert-warning")
+      .addClass("alert-danger")
+      .text("We couldn't process the password reset. Please try again.")
       false
   # End the major wrpaper function
   # Bind the clicks
   $("#check-user").submit ->
     noSubmit()
     resetFormSubmit()
+
+
+finishPasswordResetHandler = ->
+  false
+
 
 
 $ ->
@@ -842,6 +854,11 @@ $ ->
   catch e
     delay 300, ->
       if $.url().param("showhelp")? then showInstructions()
+  try
+    if window.checkPasswordReset is true
+      finishPasswordResetHandler()
+  catch e
+    console.error("Couldn't check password reset state! #{e.message}")
   $("#next.continue").click ->
     window.location.href = window.totpParams.home
   # Load stylesheets

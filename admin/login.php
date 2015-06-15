@@ -736,8 +736,14 @@ else if(isset($_REQUEST['2fa']))
         $login_output .= $settings_blob;
       }
   }
+else if(strtolower($_REQUEST["action"]) == "finishpasswordreset")
+{
+    # Pass it off to the JS handler
+    $resetString = " window.checkPasswordReset = true; ";
+}
 else
   {
+      $resetString = "window.checkPasswordReset = false";
       if($redirect_to_home !== true && empty($redirect_url))
       {
           $durl = $self_url;
@@ -776,6 +782,7 @@ $deferredScriptBlock = "<script type='text/javascript' src='https://ajax.googlea
         passwords.minLength=$minimum_password_length;
         if(typeof totpParams != 'object') totpParams = new Object();
         $totpOverride
+        $resetString
 
 var loadLast = function () {
     try {
