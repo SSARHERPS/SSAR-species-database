@@ -1031,8 +1031,9 @@ foo = function() {
 
 $(function() {
   var e;
-  bindClicks();
   formatScientificNames();
+  bindClicks();
+  mapNewWindows();
   try {
     $('[data-toggle="tooltip"]').tooltip();
   } catch (_error) {

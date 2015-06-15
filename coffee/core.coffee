@@ -752,8 +752,9 @@ foo = ->
   false
 
 $ ->
-  bindClicks()
   formatScientificNames()
+  bindClicks()
+  mapNewWindows()
   try
     $('[data-toggle="tooltip"]').tooltip()
   catch e

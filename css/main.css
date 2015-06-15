@@ -149,6 +149,9 @@ footer {
     box-shadow: 5px 5px 8px 5px rgba(0,0,0,.5);
 }
 
+#title-logo {
+    height: 1.5em;
+}
 
 .force-lower {
     text-transform: lowercase !important;
