@@ -458,7 +458,7 @@ apiUri = new Object();
 
 apiUri.o = $.url();
 
-apiUri.urlString = apiUri.o.attr('protocol') + '://' + apiUri.o.attr('host') + apiUri.o.attr("directory") + "/" + totpParams.relative;
+apiUri.urlString = window.location.origin + "/" + totpParams.subdirectory;
 
 apiUri.query = uri.o.attr("fragment");
 
@@ -1228,7 +1228,7 @@ finishPasswordResetHandler = function() {
    *
    *
    */
-  var ajaxLanding, apiUrlString, args, html, key, url, username, verify;
+  var args, html, key, username, verify;
   verify = "";
   key = "";
   if ($("input#verify").exists()) {
@@ -1256,11 +1256,8 @@ finishPasswordResetHandler = function() {
     $(".alert").alert();
     return false;
   }
-  url = $.url();
-  ajaxLanding = "async_login_handler.php";
-  apiUrlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
   args = "action=finishpasswordreset&key=" + key + "&verify=" + verify + "&username=" + username;
-  $.post(apiUrlString, args, "json").done(function(result) {
+  $.post(apiUri.apiTarget, args, "json").done(function(result) {
     if (!result.status) {
       if ($(".alert").exists()) {
         $(".alert").remove();
@@ -1278,7 +1275,7 @@ finishPasswordResetHandler = function() {
     html = "<div class=\"alert alert-danger\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Yikes!</strong> We had a problem checking the server. Try again later.\n</div>";
     $("#login").before(html);
     $(".alert").alert();
-    console.error("Couldn't communicate with server! Tried to contact", "" + apiUrlString + "?" + args);
+    console.error("Couldn't communicate with server! Tried to contact", "" + apiUri.apiTarget + "?" + args);
     return false;
   });
   return false;

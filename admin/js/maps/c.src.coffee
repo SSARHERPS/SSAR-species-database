@@ -288,7 +288,8 @@ window.totpParams.combinedStylesheetPath = window.totpParams.relative+"css/otp.m
 
 apiUri = new Object()
 apiUri.o = $.url()
-apiUri.urlString = apiUri.o.attr('protocol') + '://' + apiUri.o.attr('host')  + apiUri.o.attr("directory") + "/" + totpParams.relative
+# Why window.location? In case there's a domain in a url key
+apiUri.urlString = window.location.origin  + "/" + totpParams.subdirectory
 apiUri.query = uri.o.attr("fragment")
 apiUri.targetApi = "async_login_handler.php"
 apiUri.apiTarget = apiUri.urlString + apiUri.targetApi
@@ -1109,11 +1110,8 @@ finishPasswordResetHandler = ->
     $(".alert").alert()
     return false
   # We have what we need, post it
-  url = $.url()
-  ajaxLanding = "async_login_handler.php"
-  apiUrlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding
   args = "action=finishpasswordreset&key=#{key}&verify=#{verify}&username=#{username}"
-  $.post(apiUrlString, args, "json")
+  $.post(apiUri.apiTarget, args, "json")
   .done (result) ->
     unless result.status
       if $(".alert").exists()
@@ -1146,7 +1144,7 @@ finishPasswordResetHandler = ->
     """
     $("#login").before(html)
     $(".alert").alert()
-    console.error("Couldn't communicate with server! Tried to contact","#{apiUrlString}?#{args}")
+    console.error("Couldn't communicate with server! Tried to contact","#{apiUri.apiTarget}?#{args}")
     false
   false
 
