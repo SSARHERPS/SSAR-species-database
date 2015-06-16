@@ -10,9 +10,7 @@ module.exports = (grunt) ->
   # https://github.com/gruntjs/grunt-contrib-watch
   grunt.loadNpmTasks("grunt-contrib-watch")
   grunt.loadNpmTasks("grunt-contrib-uglify")
-  # https://github.com/mathiasbynens/grunt-yui-compressor
-  # May end up porting to https://github.com/gruntjs/grunt-contrib-uglify
-  grunt.loadNpmTasks('grunt-yui-compressor')
+  grunt.loadNpmTasks("grunt-contrib-cssmin")
   # https://www.npmjs.com/package/grunt-phplint
   grunt.loadNpmTasks("grunt-phplint");
   grunt.initConfig
@@ -63,9 +61,9 @@ module.exports = (grunt) ->
         files:
           "js/loadJQuery.min.js": ["js/loadJQuery.js"]
     cssmin:
-      dist:
-        src:["css/otp_panels.css","css/otp_styles.css"]
-        dest:"css/otp.min.css"
+      target:
+        files:
+          "css/otp.min.css":["css/otp_panels.css","css/otp_styles.css"]
     coffee:
       compile:
         options:

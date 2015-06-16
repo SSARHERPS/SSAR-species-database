@@ -14,6 +14,13 @@ input[type='number'] {
     -moz-appearance:none;
     appearance:none;
 }
+#login {
+    margin-left: 2em;
+    width: 80%;
+}
+#login .form-group {
+    margin-left: 2em;
+}
 #login.form-horizontal label.control-label {
     text-align:left;
 }

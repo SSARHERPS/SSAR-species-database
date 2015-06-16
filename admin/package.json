@@ -13,7 +13,7 @@
     "grunt-contrib-watch": "^0.6.1",
     "grunt-phplint": "0.0.5",
     "grunt-shell": "^1.1.1",
-    "grunt-yui-compressor": "^0.3.3"
+    "grunt-contrib-cssmin": "^0.12.3"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
