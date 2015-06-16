@@ -766,7 +766,7 @@ resetPassword = ->
           $("##{pane_messages}")
           .removeClass("alert-warning alert-danger")
           .addClass("alert-info")
-          .text("Check your #{method} for your reset link. Once you've clicked that, your password will be reset.")
+          .text("Check your email for your reset link. Once you've clicked that, your password will be reset.")
           altEntryButton = "<button class='btn btn-default' id='manual-input'>Manually Input Verification</button>"
           $("#check-login").replaceWith(altEntryButton)
           $("#manual-input").click ->
@@ -805,8 +805,8 @@ finishPasswordResetHandler = ->
   verify = ""
   key = ""
   if $("input#verify").exists()
-    verify = $("input#verify").val()
-    key = $("input#key").val()
+    verify = $("input#verify").val().trim()
+    key = $("input#key").val().trim()
     username = $("input#username").val()
   else
     verify = $.url().param("verify")

@@ -1588,7 +1588,7 @@ class UserFunctions extends DBHelper
         $email_link = $this->getQualifiedDomain() . $rel_dir . $url ."?action=finishpasswordreset&key=".urlencode($user_tokens["key"])."&verify=".urlencode($user_tokens["verify"]) . "&user=".$this->getUsername();
         $mail = $this->getMailObject();
         $mail->Subject = "[". $this->getDomain() . "] Account Reset";
-        $mail->Body = "<p>You've requested to reset the password to ".$this->getDomain().". Click or copy-paste the link below to reset your password.</p><pre><a href='".$email_link."'>".$email_link."</a></pre><p>You can also enter a verification code of <strong>".$user_tokens["verify"]."</strong> and key of ".$user_tokens["key"]." on the reset page.</p><p>If you didn't request a password change, you can ignore this email.</p>.";
+        $mail->Body = "<p>You've requested to reset the password to ".$this->getDomain().". Click or copy-paste the link below to reset your password.</p><pre><a href='".$email_link."'>".$email_link."</a></pre><p>You can also enter a verification code of <strong>".$user_tokens["verify"]."</strong> and key of <strong>".$user_tokens["key"]."</strong> on the reset page.</p><p>If you didn't request a password change, you can ignore this email.</p>.";
         $mail->addAddress($this->getUsername());
         $status = $mail->send();
         $email = array(
