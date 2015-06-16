@@ -1,4 +1,4 @@
-var animateLoad, byteCount, checkMatchPassword, checkPasswordLive, delay, doAsyncCreate, doAsyncLogin, doEmailCheck, doRemoveAccountAction, doTOTPRemove, doTOTPSubmit, evalRequirements, finishPasswordResetHandler, giveAltVerificationOptions, isBlank, isBool, isEmpty, isJson, isNull, isNumber, loadJS, makeTOTP, mapNewWindows, noSubmit, popupSecret, removeAccount, resetPassword, root, roundNumber, saveTOTP, showAdvancedOptions, showInstructions, stopLoad, stopLoadError, toFloat, toInt, toggleNewUserSubmit, url, verifyPhone, _base, _base1,
+var animateLoad, apiUri, byteCount, checkMatchPassword, checkPasswordLive, delay, doAsyncCreate, doAsyncLogin, doEmailCheck, doRemoveAccountAction, doTOTPRemove, doTOTPSubmit, evalRequirements, finishPasswordResetHandler, giveAltVerificationOptions, isBlank, isBool, isEmpty, isJson, isNull, isNumber, loadJS, makeTOTP, mapNewWindows, noSubmit, popupSecret, removeAccount, resetPassword, root, roundNumber, saveTOTP, showAdvancedOptions, showInstructions, stopLoad, stopLoadError, toFloat, toInt, toggleNewUserSubmit, uri, verifyPhone, _base, _base1,
   __slice = [].slice;
 
 root = typeof exports !== "undefined" && exports !== null ? exports : this;
@@ -411,6 +411,8 @@ $(function() {
   }
 });
 
+delete url;
+
 if (typeof window.passwords !== 'object') {
   window.passwords = new Object();
 }
@@ -434,8 +436,8 @@ if (typeof window.totpParams !== 'object') {
 window.totpParams.popClass = "pop-panel";
 
 if (window.totpParams.home == null) {
-  url = $.url();
-  window.totpParams.home = url.attr('protocol') + '://' + url.attr('host') + '/';
+  uri = $.url();
+  window.totpParams.home = uri.attr('protocol') + '://' + uri.attr('host') + '/';
 }
 
 if (window.totpParams.relative == null) {
@@ -451,6 +453,20 @@ window.totpParams.mainStylesheetPath = window.totpParams.relative + "css/otp_sty
 window.totpParams.popStylesheetPath = window.totpParams.relative + "css/otp_panels.css";
 
 window.totpParams.combinedStylesheetPath = window.totpParams.relative + "css/otp.min.css";
+
+apiUri = new Object();
+
+apiUri.o = $.url();
+
+apiUri.urlString = apiUri.o.attr('protocol') + '://' + apiUri.o.attr('host') + apiUri.o.attr("directory") + "/" + totpParams.relative;
+
+apiUri.query = uri.o.attr("fragment");
+
+apiUri.targetApi = "async_login_handler.php";
+
+apiUri.apiTarget = apiUri.urlString + apiUri.targetApi;
+
+delete url;
 
 checkPasswordLive = function(selector) {
   var pass, re;
@@ -551,7 +567,7 @@ evalRequirements = function() {
 doEmailCheck = function() {};
 
 doTOTPSubmit = function(home) {
-  var ajaxLanding, args, code, ip, pass, totp, urlString, user;
+  var ajaxLanding, apiUrlString, args, code, ip, pass, totp, url, user;
   if (home == null) {
     home = window.totpParams.home;
   }
@@ -563,9 +579,9 @@ doTOTPSubmit = function(home) {
   ip = $("#remote").val();
   url = $.url();
   ajaxLanding = "async_login_handler.php";
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
+  apiUrlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
   args = "action=verifytotp&code=" + code + "&user=" + user + "&password=" + pass + "&remote=" + ip;
-  totp = $.post(urlString, args, 'json');
+  totp = $.post(apiUrlString, args, 'json');
   totp.done(function(result) {
     var e, i;
     if (result.status === true) {
@@ -605,13 +621,13 @@ doTOTPSubmit = function(home) {
   });
   return totp.fail(function(result, status) {
     $("#totp_message").text("Failed to contact server. Please try again.").addClass("error");
-    console.error("AJAX failure", urlString + "?" + args, result, status);
+    console.error("AJAX failure", apiUrlString + "?" + args, result, status);
     return stopLoadError();
   });
 };
 
 doTOTPRemove = function() {
-  var ajaxLanding, args, code, pass, remove_totp, urlString, user;
+  var ajaxLanding, apiUrlString, args, code, pass, remove_totp, url, user;
   noSubmit();
   animateLoad();
   user = $("#username").val();
@@ -619,34 +635,34 @@ doTOTPRemove = function() {
   code = $("#code").val();
   url = $.url();
   ajaxLanding = "async_login_handler.php";
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
+  apiUrlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
   args = "action=removetotp&code=" + code + "&username=" + user + "&password=" + pass + "&base64=true";
-  remove_totp = $.post(urlString, args, 'json');
+  remove_totp = $.post(apiUrlString, args, 'json');
   remove_totp.done(function(result) {
     if (result.status !== true) {
       $("#totp_message").text(result.human_error).addClass("error");
       console.error(result.error);
-      console.warn("" + urlString + "?" + args);
+      console.warn("" + apiUrlString + "?" + args);
       console.warn(result);
       stopLoadError();
       return false;
     }
     $("#totp_message").removeClass('error').addClass('good').text("Two-factor authentication removed for " + result.username + ".");
     $("#totp_remove").remove();
-    console.log(urlString + "?" + args);
+    console.log(apiUrlString + "?" + args);
     console.log(result);
     stopLoad();
     return false;
   });
   return remove_totp.fail(function(result, status) {
     $("#totp_message").text("Failed to contact server. Please try again.").addClass("error");
-    console.error("AJAX failure", urlString + "?" + args, result, status);
+    console.error("AJAX failure", apiUrlString + "?" + args, result, status);
     return stopLoadError();
   });
 };
 
 makeTOTP = function() {
-  var ajaxLanding, args, hash, key, password, totp, urlString, user;
+  var ajaxLanding, apiUrlString, args, hash, key, password, totp, url, user;
   noSubmit();
   animateLoad();
   user = $("#username").val();
@@ -655,9 +671,9 @@ makeTOTP = function() {
   key = $("#secret").val();
   url = $.url();
   ajaxLanding = "async_login_handler.php";
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
+  apiUrlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
   args = "action=maketotp&password=" + password + "&user=" + user;
-  totp = $.post(urlString, args, 'json');
+  totp = $.post(apiUrlString, args, 'json');
   totp.done(function(result) {
     var barcodeDiv, html, raw, show_alt, show_secret_id, svg;
     if (result.status === true) {
@@ -693,7 +709,7 @@ makeTOTP = function() {
       });
       return stopLoad();
     } else {
-      console.error("Couldn't generate TOTP code", urlString + "?" + args);
+      console.error("Couldn't generate TOTP code", apiUrlString + "?" + args);
       console.warn(result);
       $("#totp_message").text("There was an error generating your code. " + result.message).addClass("error");
       return stopLoadError();
@@ -701,14 +717,14 @@ makeTOTP = function() {
   });
   totp.fail(function(result, status) {
     $("#totp_message").text("Failed to contact server. Please try again.").addClass("error");
-    console.error("AJAX failure", urlString + "?" + args, result, status);
+    console.error("AJAX failure", apiUrlString + "?" + args, result, status);
     return stopLoadError();
   });
   return false;
 };
 
 saveTOTP = function(key, hash) {
-  var ajaxLanding, args, code, totp, urlString, user;
+  var ajaxLanding, apiUrlString, args, code, totp, url, user;
   noSubmit();
   animateLoad();
   code = $("#code").val();
@@ -717,9 +733,9 @@ saveTOTP = function(key, hash) {
   user = $("#username").val();
   url = $.url();
   ajaxLanding = "async_login_handler.php";
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
+  apiUrlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
   args = "action=savetotp&secret=" + key + "&user=" + user + "&hash=" + hash + "&code=" + code;
-  totp = $.post(urlString, args, 'json');
+  totp = $.post(apiUrlString, args, 'json');
   totp.done(function(result) {
     var html;
     if (result.status === true) {
@@ -765,10 +781,10 @@ popupSecret = function(secret) {
 };
 
 giveAltVerificationOptions = function() {
-  var ajaxLanding, args, messages, pane_id, pane_messages, remove_id, sms, sms_id, urlString, user;
+  var ajaxLanding, apiUrlString, args, messages, pane_id, pane_messages, remove_id, sms, sms_id, url, user;
   url = $.url();
   ajaxLanding = "async_login_handler.php";
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
+  apiUrlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
   user = $("#username").val();
   args = "action=cansms&user=" + user;
   remove_id = "remove_totp_link";
@@ -781,13 +797,13 @@ giveAltVerificationOptions = function() {
   }
   messages = new Object();
   messages.remove = "<a href='#' id='" + remove_id + "' role='button' class='btn btn-default'>Remove two-factor authentication</a>";
-  sms = $.get(urlString, args, 'json');
+  sms = $.get(apiUrlString, args, 'json');
   sms.done(function(result) {
     var html, pop_content;
     if (result[0] === true) {
       messages.sms = "<a href='#' id='" + sms_id + "' role='button' class='btn btn-default'>Send SMS</a>";
     } else {
-      console.warn("Couldn't get a valid result", result, urlString + "?" + args);
+      console.warn("Couldn't get a valid result", result, apiUrlString + "?" + args);
     }
     pop_content = "";
     $.each(messages, function(k, v) {
@@ -798,8 +814,8 @@ giveAltVerificationOptions = function() {
     return $("#" + sms_id).click(function() {
       var sms_totp;
       args = "action=sendtotptext&user=" + user;
-      sms_totp = $.get(urlString, args, 'json');
-      console.log("Sending message ...", urlString + "?" + args);
+      sms_totp = $.get(apiUrlString, args, 'json');
+      console.log("Sending message ...", apiUrlString + "?" + args);
       sms_totp.done(function(result) {
         if (result.status === true) {
           $("#" + pane_id).remove();
@@ -810,7 +826,7 @@ giveAltVerificationOptions = function() {
         }
       });
       return sms_totp.fail(function(result, status) {
-        console.error("AJAX failure trying to send TOTP text", urlString + "?" + args);
+        console.error("AJAX failure trying to send TOTP text", apiUrlString + "?" + args);
         return console.error("Returns:", result, status);
       });
     });
@@ -834,15 +850,15 @@ giveAltVerificationOptions = function() {
 };
 
 verifyPhone = function() {
-  var ajaxLanding, args, auth, urlString, user, verifyPhoneAjax;
+  var ajaxLanding, apiUrlString, args, auth, url, user, verifyPhoneAjax;
   noSubmit();
   url = $.url();
   ajaxLanding = "async_login_handler.php";
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
+  apiUrlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
   auth = $("#phone_auth").val() != null ? $("#phone_auth").val() : null;
   user = $("#username").val();
   args = "action=verifyphone&username=" + user + "&auth=" + auth;
-  verifyPhoneAjax = $.get(urlString, args, 'json');
+  verifyPhoneAjax = $.get(apiUrlString, args, 'json');
   verifyPhoneAjax.done(function(result) {
     var message, setClass;
     if (result.status === false) {
@@ -883,13 +899,13 @@ verifyPhone = function() {
         });
       }
     } else {
-      console.warn("Unexpected condition encountered verifying the phone number", urlString);
+      console.warn("Unexpected condition encountered verifying the phone number", apiUrlString);
       console.log(result);
       return false;
     }
   });
   return verifyPhoneAjax.fail(function(result, status) {
-    console.error("AJAX failure trying to send phone verification text", urlString + "?" + args);
+    console.error("AJAX failure trying to send phone verification text", apiUrlString + "?" + args);
     return console.error("Returns:", result, status);
   });
 };
@@ -968,16 +984,16 @@ removeAccount = function(caller, cookie_key, has2fa) {
 };
 
 doRemoveAccountAction = function() {
-  var ajaxLanding, args, code, password, urlString, username;
+  var ajaxLanding, apiUrlString, args, code, password, url, username;
   animateLoad();
   url = $.url();
   ajaxLanding = "async_login_handler.php";
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
+  apiUrlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
   username = $("#username").val();
   password = $("#password").val();
   code = $("#code").exists() ? $("#code").val() : false;
   args = "action=removeaccount&username=" + username + "&password=" + password + "&code=" + code;
-  return $.post(urlString, args, 'json').done(function(result) {
+  return $.post(apiUrlString, args, 'json').done(function(result) {
     if (result.status === true) {
       $("#remove_message").text("Your account has been successfully deleted.");
       $.each($.cookie(), function(k, v) {
@@ -992,13 +1008,13 @@ doRemoveAccountAction = function() {
     } else {
       $("#remove_message").text("There was an error removing your account. Please try again.");
       console.error("Got an error-result: ", result.error);
-      console.warn(urlString + "?" + args, result);
+      console.warn(apiUrlString + "?" + args, result);
       return stopLoadError();
     }
   }).fail(function(result, status) {
     $("#remove_message").text(result.error).addClass("error");
     $("totp_code").val("");
-    console.error("Ajax Failure", urlString + "?" + args, result, status);
+    console.error("Ajax Failure", apiUrlString + "?" + args, result, status);
     return stopLoadError();
   });
 };
@@ -1009,7 +1025,7 @@ noSubmit = function() {
 };
 
 doAsyncLogin = function(uri, respectRelativePath) {
-  var args, pass64, password, urlString, username;
+  var apiUrlString, args, pass64, password, username;
   if (uri == null) {
     uri = "async_login_handler.php";
   }
@@ -1018,9 +1034,9 @@ doAsyncLogin = function(uri, respectRelativePath) {
   }
   noSubmit();
   if (respectRelativePath) {
-    urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + uri;
+    apiUrlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + uri;
   } else {
-    urlString = uri;
+    apiUrlString = uri;
   }
   username = $("#username").val();
   password = $("#password").val();
@@ -1046,7 +1062,7 @@ resetPassword = function() {
   /*
    * Reset the user password
    */
-  var ajaxLanding, args, checkButton, multiOptionBinding, pane_messages, resetFormSubmit, urlString;
+  var ajaxLanding, apiUrlString, args, checkButton, multiOptionBinding, pane_messages, resetFormSubmit, url;
   $("#password").remove();
   $("label[for='password']").remove();
   $("#reset-password-icon").remove();
@@ -1060,7 +1076,7 @@ resetPassword = function() {
   $("#" + pane_messages).removeClass("alert-danger alert-info").addClass("alert alert-warning").text("Once your password has been reset, your old password will be invalid.");
   url = $.url();
   ajaxLanding = "async_login_handler.php";
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
+  apiUrlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
   checkButton = "<button class=\"btn btn-warning\" id=\"check-login\">Start Reset</button>";
   $("#login_button").replaceWith(checkButton);
   args = "action=startpasswordreset";
@@ -1087,14 +1103,14 @@ resetPassword = function() {
       args = "action=startpasswordreset&username=" + user;
     }
     animateLoad();
-    return $.get(urlString, args, "json").done(function(result) {
+    return $.get(apiUrlString, args, "json").done(function(result) {
       var altEntryButton, doManualEntry, html, sms_id, text, text_html, usedSms, _ref;
       if (result.status === false) {
         if (isNull(result.human_error)) {
           result.human_error = void 0;
         }
         console.log("Got requested action " + result.action, result);
-        console.log("Requested", "" + urlString + "?" + args);
+        console.log("Requested", "" + apiUrlString + "?" + args);
         $("#username").prop("disabled", true);
         switch (result.action) {
           case "GET_TOTP":
@@ -1108,8 +1124,8 @@ resetPassword = function() {
                 var smsArgs, sms_totp;
                 animateLoad();
                 smsArgs = "action=sendtotptext&user=" + user;
-                sms_totp = $.get(urlString, smsArgs, 'json');
-                console.log("Sending message ...", urlString + "?" + args);
+                sms_totp = $.get(apiUrlString, smsArgs, 'json');
+                console.log("Sending message ...", apiUrlString + "?" + args);
                 sms_totp.done(function(result) {
                   var newButton;
                   if (result.status === true) {
@@ -1125,7 +1141,7 @@ resetPassword = function() {
                 });
                 sms_totp.fail(function(result, status) {
                   $("#" + pane_messages).addClass("alert-danger").text("There was a problem sending your text. Please try again.");
-                  console.error("AJAX failure trying to send TOTP text", urlString + "?" + args);
+                  console.error("AJAX failure trying to send TOTP text", apiUrlString + "?" + args);
                   return console.error("Returns:", result, status);
                 });
                 return sms_totp.always(function() {
@@ -1212,10 +1228,9 @@ finishPasswordResetHandler = function() {
    *
    *
    */
-  var ajaxLanding, args, html, key, urlString, username, verify;
+  var ajaxLanding, apiUrlString, args, html, key, url, username, verify;
   verify = "";
   key = "";
-  url = $.url();
   if ($("input#verify").exists()) {
     verify = $("input#verify").val().trim();
     key = $("input#key").val().trim();
@@ -1241,10 +1256,11 @@ finishPasswordResetHandler = function() {
     $(".alert").alert();
     return false;
   }
+  url = $.url();
   ajaxLanding = "async_login_handler.php";
-  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
+  apiUrlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
   args = "action=finishpasswordreset&key=" + key + "&verify=" + verify + "&username=" + username;
-  $.post(urlString, args, "json").done(function(result) {
+  $.post(apiUrlString, args, "json").done(function(result) {
     if (!result.status) {
       if ($(".alert").exists()) {
         $(".alert").remove();
@@ -1262,7 +1278,7 @@ finishPasswordResetHandler = function() {
     html = "<div class=\"alert alert-danger\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Yikes!</strong> We had a problem checking the server. Try again later.\n</div>";
     $("#login").before(html);
     $(".alert").alert();
-    console.error("Couldn't communicate with server! Tried to contact", "" + urlString + "?args");
+    console.error("Couldn't communicate with server! Tried to contact", "" + apiUrlString + "?" + args);
     return false;
   });
   return false;
