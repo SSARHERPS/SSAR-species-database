@@ -809,9 +809,20 @@ finishPasswordResetHandler = ->
     key = $("input#key").val().trim()
     username = $("input#username").val()
   else
-    verify = $.url().param("verify")
-    key = $.url().param("key")
-    username = $.url().param("user")
+    # Check the globals
+    verify = window.resetParams.verify
+    key = window.resetParams.key
+    username = window.resetParams.user
+    if isNull(verify)
+      # Last-ditch -- if one isn't there, none are
+      verify = $.url().param("verify")
+      key = $.url().param("key")
+      username = $.url().param("user")
+    html = """
+    <h1>Password Reset Confirmation</h1>
+    <div id='login'></div>
+    """
+    $("body").append(html)
   if isNull(verify) or isNull(key)
     if $(".alert").exists()
       $(".alert").remove()
@@ -851,8 +862,18 @@ finishPasswordResetHandler = ->
     </div>
     """
     $("#login").replaceWith(html)
+    $(".alert").alert()
     false
   .fail (result) ->
+    html = """
+    <div class="alert alert-danger">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <strong>Yikes!</strong> We had a problem checking the server. Try again later.
+    </div>
+    """
+    $("#login").before(html)
+    $(".alert").alert()
+    console.error("Couldn't communicate with server! Tried to contact","#{urlString}?#{args}")
     false
   false
 

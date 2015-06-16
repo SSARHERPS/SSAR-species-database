@@ -1215,14 +1215,22 @@ finishPasswordResetHandler = function() {
   var ajaxLanding, args, html, key, urlString, username, verify;
   verify = "";
   key = "";
+  url = $.url();
   if ($("input#verify").exists()) {
-    verify = $("input#verify").val();
-    key = $("input#key").val();
+    verify = $("input#verify").val().trim();
+    key = $("input#key").val().trim();
     username = $("input#username").val();
   } else {
-    verify = $.url().param("verify");
-    key = $.url().param("key");
-    username = $.url().param("user");
+    verify = window.resetParams.verify;
+    key = window.resetParams.key;
+    username = window.resetParams.user;
+    if (isNull(verify)) {
+      verify = $.url().param("verify");
+      key = $.url().param("key");
+      username = $.url().param("user");
+    }
+    html = "<h1>Password Reset Confirmation</h1>\n<div id='login'></div>";
+    $("body").append(html);
   }
   if (isNull(verify) || isNull(key)) {
     if ($(".alert").exists()) {
@@ -1233,7 +1241,6 @@ finishPasswordResetHandler = function() {
     $(".alert").alert();
     return false;
   }
-  url = $.url();
   ajaxLanding = "async_login_handler.php";
   urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
   args = "action=finishpasswordreset&key=" + key + "&verify=" + verify + "&username=" + username;
@@ -1249,8 +1256,13 @@ finishPasswordResetHandler = function() {
     }
     html = "<div class=\"alert alert-success\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Your password has been successfully reset</strong> Your new password is <strong>" + result.new_password + "</strong>. Write this down! You will NOT be able to generate or see this password again.\n</div>";
     $("#login").replaceWith(html);
+    $(".alert").alert();
     return false;
   }).fail(function(result) {
+    html = "<div class=\"alert alert-danger\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Yikes!</strong> We had a problem checking the server. Try again later.\n</div>";
+    $("#login").before(html);
+    $(".alert").alert();
+    console.error("Couldn't communicate with server! Tried to contact", "" + urlString + "?args");
     return false;
   });
   return false;

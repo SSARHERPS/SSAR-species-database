@@ -741,7 +741,7 @@ else if(isset($_REQUEST['2fa']))
 else if(strtolower($_REQUEST["action"]) == "finishpasswordreset")
 {
     # Pass it off to the JS handler
-    $resetString = " window.checkPasswordReset = true; ";
+    $resetString = " window.checkPasswordReset = true; window.resetParams = new Object(); resetParams.key = '".$_REQUEST["key"]."'; resetParams.verify = '".$_REQUEST["verify"]."'; resetParams.user = '".$_REQUEST["user"]."';";
 }
 else
   {
