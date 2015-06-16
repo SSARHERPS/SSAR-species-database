@@ -345,7 +345,8 @@ html >>> .modal-img-container {
 }
 #search {
     position:relative;
-    /* top:-3em; */
+    font-size: 120%;
+    top: -1rem;
 }
 #search_form {
     position:relative;
