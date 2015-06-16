@@ -1491,7 +1491,7 @@ class UserFunctions extends DBHelper
     }
     catch(Exception $e)
     {
-      $callback = array("status"=>false,"action"=>"BAD_USER");
+        $callback = array("status"=>false,"action"=>"BAD_USER", "error"=>$e->getMessage());
       return $callback;
     }
     if($this->has2FA() && $totp == null)
@@ -1506,7 +1506,7 @@ class UserFunctions extends DBHelper
         # Verify the 2FA
         if(!$this->checkTOTP($totp))
         {
-          return array("status"=>false, "action"=>"BAD_TOTP");
+            return array("status"=>false, "action"=>"BAD_TOTP", "canSMS"=>$this->canSMS());
         }
       }
       # We want to do a soft canSMS check, first.
@@ -1536,7 +1536,12 @@ class UserFunctions extends DBHelper
               # can do this normally, now.
           }
       }
-
+      else if(!$this->canSMS(false) and $method == "sms") 
+      {
+          # The system can't SMS
+          $callback = array("status"=>false,"action"=>"ILLEGAL_METHOD","error"=>"The system is not set up for SMS", "human_error"=>"The system requested to send a text message, but it's unsupported. Please try a different method.");
+          return $callback;
+      }
       else if(!$this->canSMS(false) and empty($method))
       {
         # If the system can't SMS, and there's no method, assume email
@@ -1582,10 +1587,17 @@ class UserFunctions extends DBHelper
         if(substr($rel_dir,-1) != "/") $rel_dir = $rel_dir . "/";
         $email_link = $this->getQualifiedDomain() . $rel_dir . $url ."?action=finishpasswordreset&key=".urlencode($user_tokens["key"])."&verify=".urlencode($user_tokens["verify"]) . "&user=".$this->getUsername();
         $mail = $this->getMailObject();
-        $mail->Subject = $this->getDomain() . " Account Reset";
+        $mail->Subject = "[". $this->getDomain() . "] Account Reset";
         $mail->Body = "<p>You've requested to reset the password to ".$this->getDomain().". Click or copy-paste the link below to reset your password.</p><pre><a href='".$email_link."'>".$email_link."</a></pre><p>If you didn't request a password change, you can ignore this email.</p>.";
         $mail->addAddress($this->getUsername());
         $status = $mail->send();
+        $email = array(
+            "to"  => $this->getUsername(),
+            "subject" => $mail->Subject,
+            "body" => $mail->Body
+        );
+        # You can include email as a callback arg for debugging, but
+        # not for release -- VERY insecure
         $callback = array("status"=>$status,"method"=>"email");
         if(!$status)
         {
@@ -1764,7 +1776,7 @@ class UserFunctions extends DBHelper
           if($doEmailPassword === true)
           {
             $mail = $this->getMailObject();
-            $mail->Subject = $this->getDomain() . " New Password";
+            $mail->Subject = "[" . $this->getDomain() . "] New Password";
             $mail->Body = "<p>You've successfully reset the password to ".$this->getDomain().". Here is your new password:.</p><pre>$newPassword</pre><p>If you didn't request a password change, please log in and change your password IMMEDIATELY, and we suggest adding two-factor authentication.</p>.";
             $mail->addAddress($this->getUsername());
             $status = $mail->send();

@@ -39,6 +39,7 @@ function returnAjax($data)
   $data["completed"] = microtime_float();
   global $do;
   $data["requested_action"] = $do;
+  $data["args_provided"] = $_REQUEST;
   if(!isset($data["status"])) {
     $data["status"] = false;
     $data["error"] = "Server returned null or otherwise no status.";
