@@ -1650,7 +1650,8 @@ class UserFunctions extends DBHelper
       {
         try
         {
-          return $this->changeUserPassword($passwordBlob,null,true);
+            $emailPassword = $passwordBlob["email_password"] == true;
+          return $this->changeUserPassword($passwordBlob,$emailPassword,true);
         }
         catch(Exception $e)
         {

@@ -1051,6 +1051,8 @@ resetPassword = function() {
   $("label[for='password']").remove();
   $("#reset-password-icon").remove();
   $(".alert").remove();
+  $("#form_create_new_account").remove();
+  $(".tooltip").remove();
   pane_messages = "reset-user-messages";
   if (!$("#" + pane_messages).exists()) {
     $("#login").before("<div id='" + pane_messages + "'></div>");
@@ -1164,7 +1166,7 @@ resetPassword = function() {
         $(".form-group").remove();
         doManualEntry = function() {
           var altEntry;
-          altEntry = "<legend>Verify Reset</legend>\n<div class=\"form-group\">\n  <label for=\"verify\">Verification Token:</label>\n  <input type=\"text\" class=\"form-control\" id=\"verify\" name=\"verify\" />\n</div>\n<div class=\"form-group\">\n  <label for=\"key\">Key:</label>\n  <input type=\"text\" class=\"form-control\" id=\"key\" name=\"key\" />\n</div>\n<button class=\"btn btn-success\" id=\"verify-now\">Verify Now</button>";
+          altEntry = "<legend>Verify Reset</legend>\n<div class=\"form-group\">\n  <label for=\"verify\">Verification Token:</label>\n  <input type=\"text\" class=\"form-control\" id=\"verify\" name=\"verify\" />\n</div>\n<div class=\"form-group\">\n  <label for=\"key\">Key:</label>\n  <input type=\"text\" class=\"form-control\" id=\"key\" name=\"key\" />\n</div>\n<input type=\"hidden\" id=\"username\" name=\"username\" value=\"" + user + "\" />\n<button class=\"btn btn-success\" id=\"verify-now\">Verify Now</button>";
           $("#login").html(altEntry).unbind().submit(function() {
             noSubmit();
             return finishPasswordResetHandler();
@@ -1204,6 +1206,53 @@ resetPassword = function() {
 };
 
 finishPasswordResetHandler = function() {
+
+  /*
+   * Read the URL params, then do the async call
+   *
+   *
+   */
+  var ajaxLanding, args, html, key, urlString, username, verify;
+  verify = "";
+  key = "";
+  if ($("input#verify").exists()) {
+    verify = $("input#verify").val();
+    key = $("input#key").val();
+    username = $("input#username").val();
+  } else {
+    verify = $.url().param("verify");
+    key = $.url().param("key");
+    username = $.url().param("user");
+  }
+  if (isNull(verify) || isNull(key)) {
+    if ($(".alert").exists()) {
+      $(".alert").remove();
+    }
+    html = "<div class=\"alert alert-danger\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Yikes!</strong> We need both the verification token and key to continue resetting your password.\n</div>";
+    $("#login").before(html);
+    $(".alert").alert();
+    return false;
+  }
+  url = $.url();
+  ajaxLanding = "async_login_handler.php";
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding;
+  args = "action=finishpasswordreset&key=" + key + "&verify=" + verify + "&username=" + username;
+  $.post(urlString, args, "json").done(function(result) {
+    if (!result.status) {
+      if ($(".alert").exists()) {
+        $(".alert").remove();
+      }
+      html = "<div class=\"alert alert-danger\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>There was a problem resetting your password.</strong> " + result.human_error + "\n</div>";
+      $("#login").before(html);
+      $(".alert").alert();
+      return false;
+    }
+    html = "<div class=\"alert alert-success\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Your password has been successfully reset</strong> Your new password is <strong>" + result.new_password + "</strong>. Write this down! You will NOT be able to generate or see this password again.\n</div>";
+    $("#login").replaceWith(html);
+    return false;
+  }).fail(function(result) {
+    return false;
+  });
   return false;
 };
 
@@ -1280,10 +1329,11 @@ $(function() {
     loadJS("http://ssarherps.org/cndb/bower_components/bootstrap/dist/js/bootstrap.min.js", function() {
       $(".do-password-reset").unbind();
       $("#reset-password-icon").tooltip();
-      return $(".do-password-reset").click(function() {
+      $(".do-password-reset").click(function() {
         resetPassword();
         return false;
       });
+      return $(".alert").alert();
     });
   } catch (_error) {
     e = _error;

@@ -588,6 +588,8 @@ resetPassword = ->
   $("label[for='password']").remove()
   $("#reset-password-icon").remove()
   $(".alert").remove()
+  $("#form_create_new_account").remove()
+  $(".tooltip").remove()
   pane_messages = "reset-user-messages"
   unless $("##{pane_messages}").exists()
     $("#login").before("<div id='#{pane_messages}'></div>")
@@ -748,6 +750,7 @@ resetPassword = ->
             <label for="key">Key:</label>
             <input type="text" class="form-control" id="key" name="key" />
           </div>
+          <input type="hidden" id="username" name="username" value="#{user}" />
           <button class="btn btn-success" id="verify-now">Verify Now</button>
           """
           $("#login")
@@ -794,6 +797,63 @@ resetPassword = ->
 
 
 finishPasswordResetHandler = ->
+  ###
+  # Read the URL params, then do the async call
+  #
+  #
+  ###
+  verify = ""
+  key = ""
+  if $("input#verify").exists()
+    verify = $("input#verify").val()
+    key = $("input#key").val()
+    username = $("input#username").val()
+  else
+    verify = $.url().param("verify")
+    key = $.url().param("key")
+    username = $.url().param("user")
+  if isNull(verify) or isNull(key)
+    if $(".alert").exists()
+      $(".alert").remove()
+    html = """
+    <div class="alert alert-danger">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <strong>Yikes!</strong> We need both the verification token and key to continue resetting your password.
+    </div>
+    """
+    $("#login").before(html)
+    $(".alert").alert()
+    return false
+  # We have what we need, post it
+  url = $.url()
+  ajaxLanding = "async_login_handler.php"
+  urlString = url.attr('protocol') + '://' + url.attr('host') + '/' + window.totpParams.subdirectory + ajaxLanding
+  args = "action=finishpasswordreset&key=#{key}&verify=#{verify}&username=#{username}"
+  $.post(urlString, args, "json")
+  .done (result) ->
+    unless result.status
+      if $(".alert").exists()
+        $(".alert").remove()
+      html = """
+      <div class="alert alert-danger">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <strong>There was a problem resetting your password.</strong> #{result.human_error}
+      </div>
+      """
+      $("#login").before(html)
+      $(".alert").alert()
+      return false
+    # It worked! Show them the new password.
+    html = """
+    <div class="alert alert-success">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <strong>Your password has been successfully reset</strong> Your new password is <strong>#{result.new_password}</strong>. Write this down! You will NOT be able to generate or see this password again.
+    </div>
+    """
+    $("#login").replaceWith(html)
+    false
+  .fail (result) ->
+    false
   false
 
 
@@ -868,6 +928,7 @@ $ ->
       .click ->
         resetPassword()
         false
+      $(".alert").alert()
   catch e
     console.log("Couldn't tooltip icon!")
   try

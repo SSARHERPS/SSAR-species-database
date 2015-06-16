@@ -387,9 +387,16 @@ function finishResetPassword($get) {
   $passwordBlob = array(
     "key"=>$get["key"],
     "verify"=>$get["verify"],
-    "user"=>$get["username"]
+    "user"=>$get["username"],
+    "email_password" => $get["email_password"]
   );
-  return $u->doUpdatePassword($passwordBlob,true);
+  try {
+      $ret = $u->doUpdatePassword($passwordBlob,true);
+  }
+  catch (Exception $e) {
+      $ret = array("status"=>false,"error"=>$e->getMessage(),"human_error"=>"There was a server problem validating the reset. Please try again.");
+  }
+  return $ret;
 }
 
 ?>
