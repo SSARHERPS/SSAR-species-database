@@ -586,6 +586,8 @@ resetPassword = ->
   # events
   $("#password").remove()
   $("label[for='password']").remove()
+  $("#reset-password-icon").remove()
+  $(".alert").remove()
   pane_messages = "reset-user-messages"
   unless $("##{pane_messages}").exists()
     $("#login").before("<div id='#{pane_messages}'></div>")
@@ -858,6 +860,16 @@ $ ->
   $(".do-password-reset").click ->
     resetPassword()
     false
+  try
+    loadJS "http://ssarherps.org/cndb/bower_components/bootstrap/dist/js/bootstrap.min.js", ->
+      $(".do-password-reset").unbind()
+      $("#reset-password-icon").tooltip()
+      $(".do-password-reset")
+      .click ->
+        resetPassword()
+        false
+  catch e
+    console.log("Couldn't tooltip icon!")
   try
     if $.url().param("showhelp")? then showInstructions()
   catch e

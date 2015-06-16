@@ -82,7 +82,7 @@ debounce: (func, threshold = 300, execAsap = false) ->
     else if (execAsap)
       func.apply(obj, args)
     window.debounce_timer = setTimeout(delayed, threshold)
-    
+
 Function::debounce = (threshold = 300, execAsap = false, timeout = window.debounce_timer, args...) ->
   # Borrowed from http://coffeescriptcookbook.com/chapters/functions/debounce
   # Only run the prototyped function once per interval.
@@ -99,7 +99,72 @@ Function::debounce = (threshold = 300, execAsap = false, timeout = window.deboun
     func.apply(obj, args)
     console.log("Executed immediately")
   window.debounce_timer = setTimeout(delayed, threshold)
-    
+
+
+loadJS = (src, callback = new Object(), doCallbackOnError = true) ->
+  ###
+  # Load a new javascript file
+  #
+  # If it's already been loaded, jump straight to the callback
+  #
+  # @param string src The source URL of the file
+  # @param function callback Function to execute after the script has
+  #                          been loaded
+  # @param bool doCallbackOnError Should the callback be executed if
+  #                               loading the script produces an error?
+  ###
+  if $("script[src='#{src}']").exists()
+    if typeof callback is "function"
+      try
+        callback()
+      catch e
+        console.error "Script is already loaded, but there was an error executing the callback function - #{e.message}"
+    # Whether or not there was a callback, end the script
+    return true
+  # Create a new DOM selement
+  s = document.createElement("script")
+  # Set all the attributes. We can be a bit redundant about this
+  s.setAttribute("src",src)
+  s.setAttribute("async","async")
+  s.setAttribute("type","text/javascript")
+  s.src = src
+  s.async = true
+  # Onload function
+  onLoadFunction = ->
+    state = s.readyState
+    try
+      if not callback.done and (not state or /loaded|complete/.test(state))
+        callback.done = true
+        if typeof callback is "function"
+          try
+            callback()
+          catch e
+            console.error "Postload callback error - #{e.message}"
+    catch e
+      console.error "Onload error - #{e.message}"
+  # Error function
+  errorFunction = ->
+    console.warn "There may have been a problem loading #{src}"
+    try
+      unless callback.done
+        callback.done = true
+        if typeof callback is "function" and doCallbackOnError
+          try
+            callback()
+          catch e
+            console.error "Post error callback error - #{e.message}"
+    catch e
+      console.error "There was an error in the error handler! #{e.message}"
+  # Set the attributes
+  s.setAttribute("onload",onLoadFunction)
+  s.setAttribute("onreadystate",onLoadFunction)
+  s.setAttribute("onerror",errorFunction)
+  s.onload = s.onreadystate = onLoadFunction
+  s.onerror = errorFunction
+  document.getElementsByTagName('head')[0].appendChild(s)
+  true
+
+
 mapNewWindows = ->
   # Do new windows
   $(".newwindow").each ->
@@ -195,7 +260,6 @@ $ ->
       loadLast()
   catch e
     console.warn("There was an error calling loadLast(). This may result in unexpected behaviour.")
-    
 
 # Login functions
 
@@ -785,6 +849,8 @@ resetPassword = ->
   # events
   $("#password").remove()
   $("label[for='password']").remove()
+  $("#reset-password-icon").remove()
+  $(".alert").remove()
   pane_messages = "reset-user-messages"
   unless $("##{pane_messages}").exists()
     $("#login").before("<div id='#{pane_messages}'></div>")
@@ -1057,6 +1123,16 @@ $ ->
   $(".do-password-reset").click ->
     resetPassword()
     false
+  try
+    loadJS "http://ssarherps.org/cndb/bower_components/bootstrap/dist/js/bootstrap.min.js", ->
+      $(".do-password-reset").unbind()
+      $("#reset-password-icon").tooltip()
+      $(".do-password-reset")
+      .click ->
+        resetPassword()
+        false
+  catch e
+    console.log("Couldn't tooltip icon!")
   try
     if $.url().param("showhelp")? then showInstructions()
   catch e

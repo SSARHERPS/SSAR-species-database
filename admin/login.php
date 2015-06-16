@@ -204,7 +204,7 @@ $alt_forms="<div id='alt_logins'>
 $login_preamble = "
 	    <h2 id='title'>User Login</h2>";
 if($_REQUEST['m']=='login_error') $login_preamble.="<div class='alert alert-warning'><h3>There was a problem setting your login credentials. Please try again.</h3></div>";
-$loginform = "
+$loginform = "<script src='bower_components/bootstrap/dist/js/bootstrap.min.js' type='text/javascript' charset='utf-8'></script>
 	    <form id='login' method='post' action='?q=submitlogin' class='form-horizontal'>
             <fieldset>
               <legend>Login</legend>
@@ -218,7 +218,7 @@ $loginform = "
 	      <label for='password' class='col-sm-3 col-md-2'>
 		Password:
 	      </label>
-	      <input class='col-sm-5 col-md-3' type='password' name='password' id='password' placeholder='Password' class='password-input' required='required'/>
+	      <input class='col-sm-5 col-md-3' type='password' name='password' id='password' placeholder='Password' class='password-input' required='required'/> <span class='glyphicon glyphicon-question-sign do-password-reset' id='reset-password-icon' data-toggle='tooltip' title='Forgot Password?'></span>
 </div>
 </fieldset>";
 $loginform_close="	      <br/>

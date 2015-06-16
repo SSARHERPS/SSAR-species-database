@@ -1,4 +1,4 @@
-var animateLoad, byteCount, checkMatchPassword, checkPasswordLive, delay, doAsyncCreate, doAsyncLogin, doEmailCheck, doRemoveAccountAction, doTOTPRemove, doTOTPSubmit, evalRequirements, finishPasswordResetHandler, giveAltVerificationOptions, isBlank, isBool, isEmpty, isJson, isNull, isNumber, makeTOTP, mapNewWindows, noSubmit, popupSecret, removeAccount, resetPassword, root, roundNumber, saveTOTP, showAdvancedOptions, showInstructions, stopLoad, stopLoadError, toFloat, toInt, toggleNewUserSubmit, url, verifyPhone, _base, _base1,
+var animateLoad, byteCount, checkMatchPassword, checkPasswordLive, delay, doAsyncCreate, doAsyncLogin, doEmailCheck, doRemoveAccountAction, doTOTPRemove, doTOTPSubmit, evalRequirements, finishPasswordResetHandler, giveAltVerificationOptions, isBlank, isBool, isEmpty, isJson, isNull, isNumber, loadJS, makeTOTP, mapNewWindows, noSubmit, popupSecret, removeAccount, resetPassword, root, roundNumber, saveTOTP, showAdvancedOptions, showInstructions, stopLoad, stopLoadError, toFloat, toInt, toggleNewUserSubmit, url, verifyPhone, _base, _base1,
   __slice = [].slice;
 
 root = typeof exports !== "undefined" && exports !== null ? exports : this;
@@ -180,6 +180,91 @@ Function.prototype.debounce = function() {
     console.log("Executed immediately");
   }
   return window.debounce_timer = setTimeout(delayed, threshold);
+};
+
+loadJS = function(src, callback, doCallbackOnError) {
+  var e, errorFunction, onLoadFunction, s;
+  if (callback == null) {
+    callback = new Object();
+  }
+  if (doCallbackOnError == null) {
+    doCallbackOnError = true;
+  }
+
+  /*
+   * Load a new javascript file
+   *
+   * If it's already been loaded, jump straight to the callback
+   *
+   * @param string src The source URL of the file
+   * @param function callback Function to execute after the script has
+   *                          been loaded
+   * @param bool doCallbackOnError Should the callback be executed if
+   *                               loading the script produces an error?
+   */
+  if ($("script[src='" + src + "']").exists()) {
+    if (typeof callback === "function") {
+      try {
+        callback();
+      } catch (_error) {
+        e = _error;
+        console.error("Script is already loaded, but there was an error executing the callback function - " + e.message);
+      }
+    }
+    return true;
+  }
+  s = document.createElement("script");
+  s.setAttribute("src", src);
+  s.setAttribute("async", "async");
+  s.setAttribute("type", "text/javascript");
+  s.src = src;
+  s.async = true;
+  onLoadFunction = function() {
+    var state;
+    state = s.readyState;
+    try {
+      if (!callback.done && (!state || /loaded|complete/.test(state))) {
+        callback.done = true;
+        if (typeof callback === "function") {
+          try {
+            return callback();
+          } catch (_error) {
+            e = _error;
+            return console.error("Postload callback error - " + e.message);
+          }
+        }
+      }
+    } catch (_error) {
+      e = _error;
+      return console.error("Onload error - " + e.message);
+    }
+  };
+  errorFunction = function() {
+    console.warn("There may have been a problem loading " + src);
+    try {
+      if (!callback.done) {
+        callback.done = true;
+        if (typeof callback === "function" && doCallbackOnError) {
+          try {
+            return callback();
+          } catch (_error) {
+            e = _error;
+            return console.error("Post error callback error - " + e.message);
+          }
+        }
+      }
+    } catch (_error) {
+      e = _error;
+      return console.error("There was an error in the error handler! " + e.message);
+    }
+  };
+  s.setAttribute("onload", onLoadFunction);
+  s.setAttribute("onreadystate", onLoadFunction);
+  s.setAttribute("onerror", errorFunction);
+  s.onload = s.onreadystate = onLoadFunction;
+  s.onerror = errorFunction;
+  document.getElementsByTagName('head')[0].appendChild(s);
+  return true;
 };
 
 mapNewWindows = function() {
@@ -964,6 +1049,8 @@ resetPassword = function() {
   var ajaxLanding, args, checkButton, multiOptionBinding, pane_messages, resetFormSubmit, urlString;
   $("#password").remove();
   $("label[for='password']").remove();
+  $("#reset-password-icon").remove();
+  $(".alert").remove();
   pane_messages = "reset-user-messages";
   if (!$("#" + pane_messages).exists()) {
     $("#login").before("<div id='" + pane_messages + "'></div>");
@@ -1189,6 +1276,19 @@ $(function() {
     resetPassword();
     return false;
   });
+  try {
+    loadJS("http://ssarherps.org/cndb/bower_components/bootstrap/dist/js/bootstrap.min.js", function() {
+      $(".do-password-reset").unbind();
+      $("#reset-password-icon").tooltip();
+      return $(".do-password-reset").click(function() {
+        resetPassword();
+        return false;
+      });
+    });
+  } catch (_error) {
+    e = _error;
+    console.log("Couldn't tooltip icon!");
+  }
   try {
     if ($.url().param("showhelp") != null) {
       showInstructions();
