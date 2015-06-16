@@ -1054,6 +1054,9 @@ $ ->
     domain = $(this).attr('data-domain')
     has2fa = if $(this).attr("data-user-tfa") is 'true' then true else false
     showAdvancedOptions(domain,has2fa)
+  $(".do-password-reset").click ->
+    resetPassword()
+    false
   try
     if $.url().param("showhelp")? then showInstructions()
   catch e

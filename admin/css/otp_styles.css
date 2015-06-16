@@ -117,5 +117,5 @@ input[readonly] {
 }
 #password_security {
     float:right;
-    max-width:33%;
+    max-width:20%;
 }

@@ -1185,6 +1185,10 @@ $(function() {
     has2fa = $(this).attr("data-user-tfa") === 'true' ? true : false;
     return showAdvancedOptions(domain, has2fa);
   });
+  $(".do-password-reset").click(function() {
+    resetPassword();
+    return false;
+  });
   try {
     if ($.url().param("showhelp") != null) {
       showInstructions();
