@@ -954,7 +954,7 @@ browserBeware = function() {
       console.warn("We've noticed you're using Firefox. Firefox has problems with this site, we recommend trying Google Chrome instead:", "https://www.google.com/chrome/");
       console.warn("Firefox took " + (window.hasCheckedBrowser * 250) + "ms after page load to render this error message.");
     }
-    if (browsers.isBrowser("Internet Explorer")) {
+    if (browsers.isBrowser("Internet Explorer") || browsers.isBrowser("Safari")) {
       return $("#collapse-button").click(function() {
         return $(".collapse").collapse("toggle");
       });
@@ -962,7 +962,10 @@ browserBeware = function() {
   } catch (_error) {
     e = _error;
     if (window.hasCheckedBrowser === 100) {
-      console.warn("We can't check your browser! If you're using Firefox, beware of bugs!");
+      console.warn("We can't check your browser!");
+      console.warn("Known issues:");
+      console.warn("Firefox: Some VERY buggy behaviour");
+      console.warn("IE & Safari: The advanced options may not open");
       return false;
     }
     return delay(250, function() {

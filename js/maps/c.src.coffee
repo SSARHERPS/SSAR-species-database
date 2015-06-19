@@ -689,14 +689,17 @@ browserBeware = ->
       console.warn("We've noticed you're using Firefox. Firefox has problems with this site, we recommend trying Google Chrome instead:","https://www.google.com/chrome/")
       console.warn("Firefox took #{window.hasCheckedBrowser * 250}ms after page load to render this error message.")
     # Fix the collapse behaviour in IE
-    if browsers.isBrowser("Internet Explorer")
+    if browsers.isBrowser("Internet Explorer") or browsers.isBrowser("Safari")
       $("#collapse-button").click ->
         $(".collapse").collapse("toggle")
 
   catch e
     if window.hasCheckedBrowser is 100
       # We've waited almost 15 seconds
-      console.warn("We can't check your browser! If you're using Firefox, beware of bugs!")
+      console.warn("We can't check your browser!")
+      console.warn("Known issues:")
+      console.warn("Firefox: Some VERY buggy behaviour")
+      console.warn("IE & Safari: The advanced options may not open")
       return false
     delay 250, ->
       window.hasCheckedBrowser++
