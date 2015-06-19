@@ -486,6 +486,9 @@ paper-autogrow-textarea textarea {
     left:25%;
 }
 
+paper-radio-button #radioContainer, paper-radio-button #radioContainer div {
+    box-sizing: content-box !important;
+}
 
 /***
  * Force the scollbar to show on the #modal-taxon-editor
