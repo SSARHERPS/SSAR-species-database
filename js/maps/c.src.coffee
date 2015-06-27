@@ -1943,6 +1943,30 @@ downloadHTMLList = ->
     stopLoadError("There was a problem communicating with the server. Please try again later.")
   false
 
+showDownloadChooser = ->
+  html = """
+  <paper-action-dialog id="download-chooser" heading="Select Download Type">
+    <div class="dialog-content">
+      <p>
+        Once you select a file type, it will take a moment to prepare your download. Please be patient.
+      </p>
+    </div>
+      <paper-button dismissive>Cancel</paper-button>
+      <paper-button affirmative id="initiate-csv-download">CSV</paper-button>
+      <paper-button affirmative id="initiate-html-download">HTML</paper-button>
+  </paper-action-dialog>
+  """
+  unless $("#download-chooser").exists()
+    $("body").append(html)
+  d$("#initiate-csv-download").click ->
+    downloadCSVList()
+    false
+  d$("#initiate-html-download").click ->
+    downloadHTMLList()
+    false
+  $("#download-chooser").get(0).open()
+  false
+
 
 insertCORSWorkaround = ->
   unless ssar.hasShownWorkaround?

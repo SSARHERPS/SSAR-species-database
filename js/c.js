@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, showBadSearchErrorMessage, sortResults, ssar, stopLoad, stopLoadError, testCalPhotos, toFloat, toInt, toObject, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, showBadSearchErrorMessage, showDownloadChooser, sortResults, ssar, stopLoad, stopLoadError, testCalPhotos, toFloat, toInt, toObject, toastStatusMessage, uri,
   __slice = [].slice,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -2113,6 +2113,24 @@ downloadHTMLList = function() {
   }).fail(function() {
     return stopLoadError("There was a problem communicating with the server. Please try again later.");
   });
+  return false;
+};
+
+showDownloadChooser = function() {
+  var html;
+  html = "<paper-action-dialog id=\"download-chooser\" heading=\"Select Download Type\">\n  <div class=\"dialog-content\">\n    <p>\n      Once you select a file type, it will take a moment to prepare your download. Please be patient.\n    </p>\n  </div>\n    <paper-button dismissive>Cancel</paper-button>\n    <paper-button affirmative id=\"initiate-csv-download\">CSV</paper-button>\n    <paper-button affirmative id=\"initiate-html-download\">HTML</paper-button>\n</paper-action-dialog>";
+  if (!$("#download-chooser").exists()) {
+    $("body").append(html);
+  }
+  d$("#initiate-csv-download").click(function() {
+    downloadCSVList();
+    return false;
+  });
+  d$("#initiate-html-download").click(function() {
+    downloadHTMLList();
+    return false;
+  });
+  $("#download-chooser").get(0).open();
   return false;
 };
 
