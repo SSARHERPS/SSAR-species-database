@@ -1063,7 +1063,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       modalTaxon()
       doFontExceptions()
       $("#result-count").text(" - #{result.count} entries")
-      insertCORSWorkaround()
+      testCalPhotos()
       stopLoad()
 
 
@@ -1321,6 +1321,7 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     false
   # CORS failure callback
   failCORS = (result,status) ->
+    insertCORSWorkaround()
     console.error("Couldn't load a CalPhotos image to insert!")
     false
   # The actual call attempts.
@@ -1328,6 +1329,20 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     doCORSget(ssar.affiliateQueryUrl.calPhotos, args, doneCORS, failCORS)
   catch e
     console.error(e.message)
+  false
+
+
+testCalPhotos = ->
+  args = "getthumbinfo=1&num=all&cconly=1&taxon=batrachoseps&format=xml"
+  try
+    $.get(ssar.affiliateQueryUrl.calPhotos, args)
+    .done ->
+      false
+    .fail ->
+      insertCORSWorkaround()
+  catch e
+    # We're not going to do anything
+    false
   false
 
 
