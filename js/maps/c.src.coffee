@@ -938,7 +938,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
   searchParams.result = data
   headers = new Array()
   html = ""
-  htmlHead = "<table id='cndb-result-list' class='table table-striped table-hover'>\n\t<tr class='cndb-row-headers'>"
+  htmlHead = "<table id='cndb-result-list' class='table table-striped table-hover col-md-12'>\n\t<tr class='cndb-row-headers'>"
   htmlClose = "</table>"
   # We start at 0, so we want to count one below
   targetCount = toInt(result.count)-1
@@ -1799,22 +1799,22 @@ downloadHTMLList = ->
              font-weight: bold;
              }
             body { padding: 1rem; }
-            section + aside {
-              margin-top: 2rem;
+            .species-entry aside:first-child {
+              margin-top: 5rem;
               }
             section .entry-header {
               text-indent: 2em;
               }
-            .clade-declaration, .genus-declaration {
-              page-break-after: avoid;
-              break-after: avoid;
-              page-break-inside: avoid;
-              }
-            .clade-declaration + .species-entry, .genus-declaration + .clade-declaration {
-              page-break-before: avoid;
+            .clade-declaration {
+              font-variant: small-caps;
+              border-top: 1px solid #000;
+              border-bottom: 1px solid #000;
+              page-break-before: always;
+              break-before: always;
               }
             .species-entry {
               page-break-inside: avoid;
+              break-inside: avoid;
               }
             @media print {
               body {
@@ -1823,7 +1823,15 @@ downloadHTMLList = ->
               .h4 {
                 font-size: 13px;
                 }
-              }
+              @page {
+                counter-increment: page;
+                /*counter-reset: page 1;*/
+                 @bottom-right {
+                  content: counter(page);
+                 }
+                 /* margin: 0px auto; */
+                }
+            }
           </style>
         </head>
         <body>
@@ -1887,14 +1895,15 @@ downloadHTMLList = ->
             </p>
           """
         # Now for each result, we want to create a text blob
+        oneOffHtml = ""
         unless row.linnean_order.trim() in hasReadClade
-          htmlBody += """
+          oneOffHtml += """
           <h2 class="clade-declaration text-capitalize text-center">#{row.linnean_order} &#8212; #{row.major_common_type}</h2>
           """
           hasReadClade.push row.linnean_order.trim()
         unless row.genus in hasReadGenus
           # Show the genus header
-          htmlBody += """
+          oneOffHtml += """
           <aside class="genus-declaration lead">
             <span class="entry-sciname text-capitalize">#{row.genus}</span>
             <span class="entry-authority">#{genusAuth}</span>
@@ -1904,6 +1913,7 @@ downloadHTMLList = ->
         shortGenus = "#{row.genus.slice(0,1)}. "
         entryHtml = """
         <section class="species-entry">
+          #{oneOffHtml}
           <p class="h4 entry-header">
             <span class="entry-sciname">
               <span class="text-capitalize">#{shortGenus}</span> #{row.species} #{row.subspecies}
