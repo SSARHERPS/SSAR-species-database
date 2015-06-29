@@ -16,6 +16,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-html')
   grunt.loadNpmTasks('grunt-string-replace')
   grunt.loadNpmTasks('grunt-postcss')
+  grunt.loadNpmTasks('grunt-contrib-less')
   grunt.initConfig
     pkg: grunt.file.readJSON('package.json')
     shell:
@@ -106,6 +107,9 @@ module.exports = (grunt) ->
           sourceMapName:"js/maps/jquery.cookie.map"
         files:
           "js/jquery.cookie.min.js": ["bower_components/jquery-cookie/jquery.cookie.js"]
+    less:
+      files:
+        "css/main.css":"less/main.less"
     cssmin:
       options:
         sourceMap: true
@@ -129,8 +133,8 @@ module.exports = (grunt) ->
         files: ["coffee/*.coffee"]
         tasks: ["coffee:compile","uglify:dist","shell:movesrc"]
       styles:
-        files: ["css/main.css"]
-        tasks: ["postcss","cssmin"]
+        files: ["less/main.less"]
+        tasks: ["less","postcss","cssmin"]
       html:
         files: ["index.html","admin-page.html"]
         tasks: ["bootlint","htmllint"]
@@ -155,7 +159,7 @@ module.exports = (grunt) ->
   # Part 1
   grunt.registerTask("minifyIndependent","Minify Bower components that aren't distributed min'd",["uglify:minpurl","uglify:minxmljson","uglify:minjcookie"])
   # Part 2
-  grunt.registerTask("minifyBulk","Minify all the things",["uglify:combine","uglify:dist","postcss","cssmin"])
+  grunt.registerTask("minifyBulk","Minify all the things",["uglify:combine","uglify:dist","less","postcss","cssmin"])
   # Main call
   grunt.registerTask "minify","Minify all the things",->
     grunt.task.run("minifyIndependent","minifyBulk")
