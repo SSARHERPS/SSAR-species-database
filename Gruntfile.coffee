@@ -108,12 +108,14 @@ module.exports = (grunt) ->
         files:
           "js/jquery.cookie.min.js": ["bower_components/jquery-cookie/jquery.cookie.js"]
     less:
+      # https://github.com/gruntjs/grunt-contrib-less
       options:
         sourceMap: true
         outputSourceFiles: true
-        banner: "Compiled from LESS source"
+        banner: "/*** Compiled from LESS source ***/\n\n"
       files:
-        "css/main.css":"less/main.less"
+        dest: "css/main.css"
+        src: ["less/main.less"]
     cssmin:
       options:
         sourceMap: true
