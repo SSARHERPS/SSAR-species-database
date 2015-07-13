@@ -6768,6 +6768,13 @@ html >>> [affirmative] {
 .materialbluegreytext {
   color: #607d8b;
 }
+paper-dialog-scrollable {
+  padding: 1rem !important;
+  min-height: 7rem;
+}
+html >>> paper-dialog-scrollable {
+  padding: 1rem !important;
+}
 html >>> .good-location {
   color: #4caf50;
 }
@@ -6995,6 +7002,10 @@ paper-icon-button {
 }
 form {
   /* margin-left:2rem; */
+}
+copyright-statement {
+  position: relative;
+  top: 1rem;
 }
 html >>> .code {
   font-family: monospace;

@@ -36,12 +36,11 @@
             }
         },
         created: function() {
-            console.log("The copyright-statement has been registered.");
+            
         },
         computeCopyrightStart: function(currentYear, startYear) {
             if(startYear != null) {
                 currentYear = new Date().getFullYear();
-                console.log("Non-null startYear", startYear, currentYear);
                 if(parseInt(startYear) < currentYear) {
                     startYear = startYear + " \u2013 ";
                 } else {
@@ -49,7 +48,7 @@
                 }
             }
             else {
-                console.log("Null start year! Skipping.");
+                                         
             }
             return startYear;
         }

@@ -485,6 +485,8 @@ deepJQuery = (selector) ->
     # https://w3c.github.io/webcomponents/spec/shadow/#composed-trees
     # This is current as of Chrome 44.0.2391.0 dev-m
     # See https://code.google.com/p/chromium/issues/detail?id=446051
+    #
+    # However, this is pending deprecation.
     unless $("html /deep/ #{selector}").exists()
       throw("Bad /deep/ selector")
     return $("html /deep/ #{selector}")
@@ -1121,7 +1123,7 @@ formatAlien = (dataOrAlienBool, selector = "#is-alien-container") ->
     return false
   # Now we deal with the real bits
   iconHtml = """
-  <core-icon icon="maps:flight" class="small-icon alien-speices" id="modal-alien-species" data-toggle="tooltip"></core-icon>
+  <iron-icon icon="maps:flight" class="small-icon alien-speices" id="modal-alien-species" data-toggle="tooltip"></iron-icon>
   """
   d$(selector).html(iconHtml)
   tooltipHint = "This species is not native"
@@ -1183,7 +1185,7 @@ checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "#nea
     </div>
     """
     # Append it all
-    d$(selector).html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass} near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>")
+    d$(selector).html("<iron-icon icon='#{geoIcon}' class='small-icon #{cssClass} near-me' data-toggle='tooltip' id='near-me-icon'></iron-icon>")
     $(selector)
     .after(tooltipHtml)
     .mouseenter ->
@@ -1363,17 +1365,18 @@ modalTaxon = (taxon = undefined) ->
     # On very small devices, for both real-estate and
     # optimization-related reasons, we'll hide calphotos and the alternate
     html = """
-    <paper-dialog modal closeSelector="[affirmative]" id='modal-taxon'>
+    <paper-dialog modal id='modal-taxon'>
+      <h2 id="modal-heading"></h2>
       <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>
       <div class="buttons">
-        <paper-button dialog-dismiss id='modal-inat-linkout'>iNaturalist</paper-button>
-        <paper-button dialog-dismiss id='modal-calphotos-linkout' class="hidden-xs">CalPhotos</paper-button>
-        <paper-button dialog-dismiss id='modal-alt-linkout' class="hidden-xs"></paper-button>
-        <paper-button dialog-confirm autofocus>Close</paper-button>
+        <paper-button id='modal-inat-linkout'>iNaturalist</paper-button>
+        <paper-button id='modal-calphotos-linkout' class="hidden-xs">CalPhotos</paper-button>
+        <paper-button id='modal-alt-linkout' class="hidden-xs"></paper-button>
+        <paper-button dialog-dismiss autofocus>Close</paper-button>
       </div>
     </paper-dialog>
     """
-    $("#result_container").after(html)
+    $("body").append(html)
   $.get(searchParams.targetApi,"q=#{taxon}","json")
   .done (result) ->
     data = result.result[0]
@@ -1424,7 +1427,7 @@ modalTaxon = (taxon = undefined) ->
         console.error("There were deprecated scientific names, but the JSON was malformed.")
     minorTypeHtml = ""
     if not isNull(data.minor_type)
-      minorTypeHtml = " <core-icon icon='arrow-forward'></core-icon> <span id='taxon-minor-type'>#{data.minor_type}</span>"
+      minorTypeHtml = " <iron-icon icon='arrow-forward'></iron-icon> <span id='taxon-minor-type'>#{data.minor_type}</span>"
     # Populate the taxon
     if isNull(data.notes)
       data.notes = "Sorry, we have no notes on this taxon yet."
@@ -1450,7 +1453,7 @@ modalTaxon = (taxon = undefined) ->
       <p>
         Type: <span id='taxon-type' class="major_type">#{data.major_type}</span>
         #{commonType}
-        <core-icon icon='arrow-forward'></core-icon>
+        <iron-icon icon='arrow-forward'></iron-icon>
         <span id='taxon-subtype' class="major_subtype">#{data.major_subtype}</span>#{minorTypeHtml}
       </p>
       #{deprecatedHtml}
@@ -1506,7 +1509,7 @@ modalTaxon = (taxon = undefined) ->
     # Set the heading
     humanTaxon = taxon.charAt(0).toUpperCase()+taxon[1...]
     humanTaxon = humanTaxon.replace(/\+/g," ")
-    $("#modal-taxon").attr("heading",humanTaxon)
+    d$("#modal-heading").text(humanTaxon)
     # Open it
     taxonArray = taxon.split("+")
     ssar.activeTaxon =
@@ -1524,6 +1527,8 @@ modalTaxon = (taxon = undefined) ->
       formatAlien(data)
       stopLoad()
       $("#modal-taxon")[0].open()
+    $("[dialog-dismiss]").click ->
+      $(this).parents("paper-dialog").remove()
   .fail (result,status) ->
     stopLoadError()
   false
@@ -1720,10 +1725,10 @@ downloadCSVList = ->
         <h2>Your file is ready</h2>
         <paper-dialog-scrollable class="dialog-content">
           <p>
-            Please note that some special characters in names may be decoded incorrectly by Microsoft Excel. If this is a problem, following the steps in <a href="https://github.com/SSARHERPS/SSAR-species-database/blob/master/meta/excel_unicode_readme.md"  onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'>this README <core-icon icon="launch"></core-icon></a> to force Excel to format it correctly.
+            Please note that some special characters in names may be decoded incorrectly by Microsoft Excel. If this is a problem, following the steps in <a href="https://github.com/SSARHERPS/SSAR-species-database/blob/master/meta/excel_unicode_readme.md"  onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'>this README <iron-icon icon="launch"></iron-icon></a> to force Excel to format it correctly.
           </p>
           <p class="text-center">
-            <a href="#{downloadable}" download="ssar-common-names-#{dateString}.csv" class="btn btn-default"><core-icon icon="file-download"></core-icon> Download Now</a>
+            <a href="#{downloadable}" download="ssar-common-names-#{dateString}.csv" class="btn btn-default"><iron-icon icon="file-download"></iron-icon> Download Now</a>
           </p>
         </paper-dialog-scrollable>
         <div class="buttons">
@@ -1953,7 +1958,7 @@ downloadHTMLList = ->
         <h2>Your file is ready</h2>
         <paper-dialog-scrollable class="dialog-content">
           <p class="text-center">
-            <a href="#{downloadable}" download="ssar-common-names-#{dateString}.html" class="btn btn-default"><core-icon icon="file-download"></core-icon> Download Now</a>
+            <a href="#{downloadable}" download="ssar-common-names-#{dateString}.html" class="btn btn-default"><iron-icon icon="file-download"></iron-icon> Download Now</a>
           </p>
         </paper-dialog-scrollable>
         <div class="buttons>"
@@ -2108,7 +2113,7 @@ $ ->
     performSearch()
   $("#do-search-all").click ->
     performSearch(true)
-  $("#linnean-order").on "core-select", ->
+  $("#linnean-order").on "iron-select", ->
     # We do want to auto-trigger this when there's a search value,
     # but not when it's empty (even though this is valid)
     if not isNull($("#search").val()) then performSearch()

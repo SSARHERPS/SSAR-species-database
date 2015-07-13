@@ -1438,7 +1438,7 @@ formatAlien = function(dataOrAlienBool, selector) {
     d$(selector).css("display", "none");
     return false;
   }
-  iconHtml = "<core-icon icon=\"maps:flight\" class=\"small-icon alien-speices\" id=\"modal-alien-species\" data-toggle=\"tooltip\"></core-icon>";
+  iconHtml = "<iron-icon icon=\"maps:flight\" class=\"small-icon alien-speices\" id=\"modal-alien-species\" data-toggle=\"tooltip\"></iron-icon>";
   d$(selector).html(iconHtml);
   tooltipHint = "This species is not native";
   tooltipHtml = "<div class=\"tooltip fade top in right manual-placement-tooltip\" role=\"tooltip\" style=\"top: 6.5em; left: 4em; right:initial; display:none\" id=\"manual-alien-tooltip\">\n  <div class=\"tooltip-arrow\" style=\"top:50%;left:5px\"></div>\n  <div class=\"tooltip-inner\">" + tooltipHint + "</div>\n</div>";
@@ -1502,7 +1502,7 @@ checkTaxonNear = function(taxonQuery, callback, selector) {
   }).always(function() {
     var tooltipHtml;
     tooltipHtml = "<div class=\"tooltip fade top in right manual-placement-tooltip\" role=\"tooltip\" style=\"top: 6.5em; left: 4em; right:initial; display:none\" id=\"manual-location-tooltip\">\n  <div class=\"tooltip-arrow\" style=\"top:50%;left:5px\"></div>\n  <div class=\"tooltip-inner\">" + tooltipHint + "</div>\n</div>";
-    d$(selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + " near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>");
+    d$(selector).html("<iron-icon icon='" + geoIcon + "' class='small-icon " + cssClass + " near-me' data-toggle='tooltip' id='near-me-icon'></iron-icon>");
     $(selector).after(tooltipHtml).mouseenter(function() {
       d$("#manual-location-tooltip").css("display", "block");
       return false;
@@ -1689,8 +1689,8 @@ modalTaxon = function(taxon) {
   }
   animateLoad();
   if (!$("#modal-taxon").exists()) {
-    html = "<paper-dialog modal closeSelector=\"[affirmative]\" id='modal-taxon'>\n  <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button dialog-dismiss id='modal-inat-linkout'>iNaturalist</paper-button>\n    <paper-button dialog-dismiss id='modal-calphotos-linkout' class=\"hidden-xs\">CalPhotos</paper-button>\n    <paper-button dialog-dismiss id='modal-alt-linkout' class=\"hidden-xs\"></paper-button>\n    <paper-button dialog-confirm autofocus>Close</paper-button>\n  </div>\n</paper-dialog>";
-    $("#result_container").after(html);
+    html = "<paper-dialog modal id='modal-taxon'>\n  <h2 id=\"modal-heading\"></h2>\n  <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button id='modal-inat-linkout'>iNaturalist</paper-button>\n    <paper-button id='modal-calphotos-linkout' class=\"hidden-xs\">CalPhotos</paper-button>\n    <paper-button id='modal-alt-linkout' class=\"hidden-xs\"></paper-button>\n    <paper-button dialog-dismiss autofocus>Close</paper-button>\n  </div>\n</paper-dialog>";
+    $("body").append(html);
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
     var buttonText, commonType, data, deprecatedHtml, e, genusAuthBlock, humanTaxon, i, minorTypeHtml, notes, outboundLink, ref, sn, speciesAuthBlock, taxonArray, taxonCreditDate, year, yearHtml;
@@ -1737,7 +1737,7 @@ modalTaxon = function(taxon) {
     }
     minorTypeHtml = "";
     if (!isNull(data.minor_type)) {
-      minorTypeHtml = " <core-icon icon='arrow-forward'></core-icon> <span id='taxon-minor-type'>" + data.minor_type + "</span>";
+      minorTypeHtml = " <iron-icon icon='arrow-forward'></iron-icon> <span id='taxon-minor-type'>" + data.minor_type + "</span>";
     }
     if (isNull(data.notes)) {
       data.notes = "Sorry, we have no notes on this taxon yet.";
@@ -1758,7 +1758,7 @@ modalTaxon = function(taxon) {
       console.warn("Couldn't parse markdown!! " + e.message);
     }
     commonType = !isNull(data.major_common_type) ? " (<span id='taxon-common-type'>" + data.major_common_type + "</span>) " : "";
-    html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type' class=\"major_type\">" + data.major_type + "</span>\n    " + commonType + "\n    <core-icon icon='arrow-forward'></core-icon>\n    <span id='taxon-subtype' class=\"major_subtype\">" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_credit + "</p>";
+    html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type' class=\"major_type\">" + data.major_type + "</span>\n    " + commonType + "\n    <iron-icon icon='arrow-forward'></iron-icon>\n    <span id='taxon-subtype' class=\"major_subtype\">" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_credit + "</p>";
     $("#modal-taxon-content").html(html);
     $("#modal-inat-linkout").unbind().click(function() {
       return openTab(ssar.affiliateQueryUrl.iNaturalist + "?q=" + taxon);
@@ -1786,7 +1786,7 @@ modalTaxon = function(taxon) {
     doFontExceptions();
     humanTaxon = taxon.charAt(0).toUpperCase() + taxon.slice(1);
     humanTaxon = humanTaxon.replace(/\+/g, " ");
-    $("#modal-taxon").attr("heading", humanTaxon);
+    d$("#modal-heading").text(humanTaxon);
     taxonArray = taxon.split("+");
     ssar.activeTaxon = {
       genus: taxonArray[0],
@@ -1802,10 +1802,13 @@ modalTaxon = function(taxon) {
       imageLicense: data.image_license
     };
     insertModalImage();
-    return checkTaxonNear(taxon, function() {
+    checkTaxonNear(taxon, function() {
       formatAlien(data);
       stopLoad();
       return $("#modal-taxon")[0].open();
+    });
+    return $("[dialog-dismiss]").click(function() {
+      return $(this).parents("paper-dialog").remove();
     });
   }).fail(function(result, status) {
     return stopLoadError();
@@ -1975,7 +1978,7 @@ downloadCSVList = function() {
       }
       csv = (csvHeader.join(",")) + "\n" + csvBody;
       downloadable = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
-      html = "<paper-dialog class=\"download-file\" id=\"download-csv-file\">\n  <h2>Your file is ready</h2>\n  <paper-dialog-scrollable class=\"dialog-content\">\n    <p>\n      Please note that some special characters in names may be decoded incorrectly by Microsoft Excel. If this is a problem, following the steps in <a href=\"https://github.com/SSARHERPS/SSAR-species-database/blob/master/meta/excel_unicode_readme.md\"  onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'>this README <core-icon icon=\"launch\"></core-icon></a> to force Excel to format it correctly.\n    </p>\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".csv\" class=\"btn btn-default\"><core-icon icon=\"file-download\"></core-icon> Download Now</a>\n    </p>\n  </paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button dialog-dismiss>Close</paper-button>\n  </div>\n</paper-dialog>";
+      html = "<paper-dialog class=\"download-file\" id=\"download-csv-file\">\n  <h2>Your file is ready</h2>\n  <paper-dialog-scrollable class=\"dialog-content\">\n    <p>\n      Please note that some special characters in names may be decoded incorrectly by Microsoft Excel. If this is a problem, following the steps in <a href=\"https://github.com/SSARHERPS/SSAR-species-database/blob/master/meta/excel_unicode_readme.md\"  onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'>this README <iron-icon icon=\"launch\"></iron-icon></a> to force Excel to format it correctly.\n    </p>\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".csv\" class=\"btn btn-default\"><iron-icon icon=\"file-download\"></iron-icon> Download Now</a>\n    </p>\n  </paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button dialog-dismiss>Close</paper-button>\n  </div>\n</paper-dialog>";
       if (!$("#download-csv-file").exists()) {
         $("body").append(html);
       } else {
@@ -2095,7 +2098,7 @@ downloadHTMLList = function() {
       }
       htmlBody += "</article>\n</div>\n</body>\n</html>";
       downloadable = "data:text/html;charset=utf-8," + (encodeURIComponent(htmlBody));
-      dialogHtml = "<paper-dialog  modal class=\"download-file\" id=\"download-html-file\">\n  <h2>Your file is ready</h2>\n  <paper-dialog-scrollable class=\"dialog-content\">\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".html\" class=\"btn btn-default\"><core-icon icon=\"file-download\"></core-icon> Download Now</a>\n    </p>\n  </paper-dialog-scrollable>\n  <div class=\"buttons>\"\n    <paper-button dialog-dismiss>Close</paper-button>\n  </div>\n</paper-dialog>";
+      dialogHtml = "<paper-dialog  modal class=\"download-file\" id=\"download-html-file\">\n  <h2>Your file is ready</h2>\n  <paper-dialog-scrollable class=\"dialog-content\">\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".html\" class=\"btn btn-default\"><iron-icon icon=\"file-download\"></iron-icon> Download Now</a>\n    </p>\n  </paper-dialog-scrollable>\n  <div class=\"buttons>\"\n    <paper-button dialog-dismiss>Close</paper-button>\n  </div>\n</paper-dialog>";
       if (!$("#download-html-file").exists()) {
         $("body").append(dialogHtml);
       } else {
@@ -2241,7 +2244,7 @@ $(function() {
   $("#do-search-all").click(function() {
     return performSearch(true);
   });
-  $("#linnean-order").on("core-select", function() {
+  $("#linnean-order").on("iron-select", function() {
     if (!isNull($("#search").val())) {
       return performSearch();
     }

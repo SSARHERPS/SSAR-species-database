@@ -485,6 +485,8 @@ deepJQuery = (selector) ->
     # https://w3c.github.io/webcomponents/spec/shadow/#composed-trees
     # This is current as of Chrome 44.0.2391.0 dev-m
     # See https://code.google.com/p/chromium/issues/detail?id=446051
+    #
+    # However, this is pending deprecation.
     unless $("html /deep/ #{selector}").exists()
       throw("Bad /deep/ selector")
     return $("html /deep/ #{selector}")
