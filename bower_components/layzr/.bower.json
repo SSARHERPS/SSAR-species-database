@@ -1,6 +1,6 @@
 {
   "name": "layzr.js",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "description": "A small, fast, modern, and dependency-free library for lazy loading.",
   "homepage": "http://callmecavs.github.io/layzr.js/",
   "main": [
@@ -26,11 +26,11 @@
     "gulpfile.js",
     "package.json"
   ],
-  "_release": "1.4.0",
+  "_release": "1.4.2",
   "_resolution": {
     "type": "version",
-    "tag": "1.4.0",
-    "commit": "71b5109fa04508c8355f208e0bfcb44413b0979b"
+    "tag": "1.4.2",
+    "commit": "cace5dc81b2c24fd70db7c87fecf8fbf24d4172a"
   },
   "_source": "git://github.com/callmecavs/layzr.js.git",
   "_target": "*",
