@@ -1560,7 +1560,7 @@ insertModalImage = function(imageObject, taxon, callback) {
     /*
      * Insert a lightboxed image into the modal taxon dialog. This must
      * be shadow-piercing, since the modal dialog is a
-     * paper-action-dialog.
+     * paper-dialog.
      *
      * @param image an object with parameters [thumbUri, imageUri,
      *   imageLicense, imageCredit], and optionally imageLinkUri
@@ -1689,7 +1689,7 @@ modalTaxon = function(taxon) {
   }
   animateLoad();
   if (!$("#modal-taxon").exists()) {
-    html = "<paper-action-dialog backdrop layered closeSelector=\"[affirmative]\" id='modal-taxon'>\n  <div id='modal-taxon-content'></div>\n  <paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button>\n  <paper-button dismissive id='modal-calphotos-linkout' class=\"hidden-xs\">CalPhotos</paper-button>\n  <paper-button dismissive id='modal-alt-linkout' class=\"hidden-xs\"></paper-button>\n  <paper-button affirmative autofocus>Close</paper-button>\n</paper-action-dialog>";
+    html = "<paper-dialog modal closeSelector=\"[affirmative]\" id='modal-taxon'>\n  <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button dialog-dismiss id='modal-inat-linkout'>iNaturalist</paper-button>\n    <paper-button dialog-dismiss id='modal-calphotos-linkout' class=\"hidden-xs\">CalPhotos</paper-button>\n    <paper-button dialog-dismiss id='modal-alt-linkout' class=\"hidden-xs\"></paper-button>\n    <paper-button dialog-confirm autofocus>Close</paper-button>\n  </div>\n</paper-dialog>";
     $("#result_container").after(html);
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
@@ -1975,7 +1975,7 @@ downloadCSVList = function() {
       }
       csv = (csvHeader.join(",")) + "\n" + csvBody;
       downloadable = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
-      html = "<paper-action-dialog class=\"download-file\" id=\"download-csv-file\" heading=\"Your file is ready\">\n  <div class=\"dialog-content\">\n    <p>\n      Please note that some special characters in names may be decoded incorrectly by Microsoft Excel. If this is a problem, following the steps in <a href=\"https://github.com/SSARHERPS/SSAR-species-database/blob/master/meta/excel_unicode_readme.md\"  onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'>this README <core-icon icon=\"launch\"></core-icon></a> to force Excel to format it correctly.\n    </p>\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".csv\" class=\"btn btn-default\"><core-icon icon=\"file-download\"></core-icon> Download Now</a>\n    </p>\n  </div>\n  <paper-button dismissive>Close</paper-button>\n</paper-action-dialog>";
+      html = "<paper-dialog class=\"download-file\" id=\"download-csv-file\">\n  <h2>Your file is ready</h2>\n  <paper-dialog-scrollable class=\"dialog-content\">\n    <p>\n      Please note that some special characters in names may be decoded incorrectly by Microsoft Excel. If this is a problem, following the steps in <a href=\"https://github.com/SSARHERPS/SSAR-species-database/blob/master/meta/excel_unicode_readme.md\"  onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'>this README <core-icon icon=\"launch\"></core-icon></a> to force Excel to format it correctly.\n    </p>\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".csv\" class=\"btn btn-default\"><core-icon icon=\"file-download\"></core-icon> Download Now</a>\n    </p>\n  </paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button dialog-dismiss>Close</paper-button>\n  </div>\n</paper-dialog>";
       if (!$("#download-csv-file").exists()) {
         $("body").append(html);
       } else {
@@ -2095,7 +2095,7 @@ downloadHTMLList = function() {
       }
       htmlBody += "</article>\n</div>\n</body>\n</html>";
       downloadable = "data:text/html;charset=utf-8," + (encodeURIComponent(htmlBody));
-      dialogHtml = "<paper-action-dialog class=\"download-file\" id=\"download-html-file\" heading=\"Your file is ready\">\n  <div class=\"dialog-content\">\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".html\" class=\"btn btn-default\"><core-icon icon=\"file-download\"></core-icon> Download Now</a>\n    </p>\n  </div>\n  <paper-button dismissive>Close</paper-button>\n</paper-action-dialog>";
+      dialogHtml = "<paper-dialog  modal class=\"download-file\" id=\"download-html-file\">\n  <h2>Your file is ready</h2>\n  <paper-dialog-scrollable class=\"dialog-content\">\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".html\" class=\"btn btn-default\"><core-icon icon=\"file-download\"></core-icon> Download Now</a>\n    </p>\n  </paper-dialog-scrollable>\n  <div class=\"buttons>\"\n    <paper-button dialog-dismiss>Close</paper-button>\n  </div>\n</paper-dialog>";
       if (!$("#download-html-file").exists()) {
         $("body").append(dialogHtml);
       } else {
@@ -2119,17 +2119,15 @@ downloadHTMLList = function() {
 
 showDownloadChooser = function() {
   var html;
-  html = "<paper-action-dialog id=\"download-chooser\" heading=\"Select Download Type\">\n  <div class=\"dialog-content\">\n    <p>\n      Once you select a file type, it will take a moment to prepare your download. Please be patient.\n    </p>\n  </div>\n    <paper-button dismissive>Cancel</paper-button>\n    <paper-button affirmative id=\"initiate-csv-download\">CSV</paper-button>\n    <paper-button affirmative id=\"initiate-html-download\">HTML</paper-button>\n</paper-action-dialog>";
+  html = "<paper-dialog id=\"download-chooser\">\n  <h2>Select Download Type</h2>\n  <paper-dialog-scrollable class=\"dialog-content\">\n    <p>\n      Once you select a file type, it will take a moment to prepare your download. Please be patient.\n    </p>\n  </paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button dialog-dismiss>Cancel</paper-button>\n    <paper-button dialog-confirm id=\"initiate-csv-download\">CSV</paper-button>\n    <paper-button dialog-confirm id=\"initiate-html-download\">HTML</paper-button>\n  </div>\n</paper-dialog>";
   if (!$("#download-chooser").exists()) {
     $("body").append(html);
   }
   d$("#initiate-csv-download").click(function() {
-    downloadCSVList();
-    return false;
+    return downloadCSVList();
   });
   d$("#initiate-html-download").click(function() {
-    downloadHTMLList();
-    return false;
+    return downloadHTMLList();
   });
   $("#download-chooser").get(0).open();
   return false;
@@ -2227,10 +2225,10 @@ $(function() {
     return performSearch();
   });
   $("#collapse-advanced").on("shown.bs.collapse", function() {
-    return $("#collapse-icon").attr("icon", "unfold-less");
+    return $("#collapse-icon").attr("icon", "icons:unfold-less");
   });
   $("#collapse-advanced").on("hidden.bs.collapse", function() {
-    return $("#collapse-icon").attr("icon", "unfold-more");
+    return $("#collapse-icon").attr("icon", "icons:unfold-more");
   });
   $("#search_form").keypress(function(e) {
     if (e.which === 13) {

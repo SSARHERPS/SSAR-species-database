@@ -436,7 +436,7 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     ###
     # Insert a lightboxed image into the modal taxon dialog. This must
     # be shadow-piercing, since the modal dialog is a
-    # paper-action-dialog.
+    # paper-dialog.
     #
     # @param image an object with parameters [thumbUri, imageUri,
     #   imageLicense, imageCredit], and optionally imageLinkUri
@@ -569,19 +569,21 @@ modalTaxon = (taxon = undefined) ->
       modalTaxon($(this).attr("data-taxon"))
     return false
   # Pop open a paper action dialog ...
-  # https://www.polymer-project.org/docs/elements/paper-elements.html#paper-action-dialog
+  # https://elements.polymer-project.org/elements/paper-dialog
   animateLoad()
   if not $("#modal-taxon").exists()
     # On very small devices, for both real-estate and
     # optimization-related reasons, we'll hide calphotos and the alternate
     html = """
-    <paper-action-dialog backdrop layered closeSelector="[affirmative]" id='modal-taxon'>
-      <div id='modal-taxon-content'></div>
-      <paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button>
-      <paper-button dismissive id='modal-calphotos-linkout' class="hidden-xs">CalPhotos</paper-button>
-      <paper-button dismissive id='modal-alt-linkout' class="hidden-xs"></paper-button>
-      <paper-button affirmative autofocus>Close</paper-button>
-    </paper-action-dialog>
+    <paper-dialog modal closeSelector="[affirmative]" id='modal-taxon'>
+      <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>
+      <div class="buttons">
+        <paper-button dialog-dismiss id='modal-inat-linkout'>iNaturalist</paper-button>
+        <paper-button dialog-dismiss id='modal-calphotos-linkout' class="hidden-xs">CalPhotos</paper-button>
+        <paper-button dialog-dismiss id='modal-alt-linkout' class="hidden-xs"></paper-button>
+        <paper-button dialog-confirm autofocus>Close</paper-button>
+      </div>
+    </paper-dialog>
     """
     $("#result_container").after(html)
   $.get(searchParams.targetApi,"q=#{taxon}","json")
@@ -926,17 +928,20 @@ downloadCSVList = ->
       # OK, it's all been created. Download it.
       downloadable = "data:text/csv;charset=utf-8," + encodeURIComponent(csv)
       html = """
-      <paper-action-dialog class="download-file" id="download-csv-file" heading="Your file is ready">
-        <div class="dialog-content">
+      <paper-dialog class="download-file" id="download-csv-file">
+        <h2>Your file is ready</h2>
+        <paper-dialog-scrollable class="dialog-content">
           <p>
             Please note that some special characters in names may be decoded incorrectly by Microsoft Excel. If this is a problem, following the steps in <a href="https://github.com/SSARHERPS/SSAR-species-database/blob/master/meta/excel_unicode_readme.md"  onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'>this README <core-icon icon="launch"></core-icon></a> to force Excel to format it correctly.
           </p>
           <p class="text-center">
             <a href="#{downloadable}" download="ssar-common-names-#{dateString}.csv" class="btn btn-default"><core-icon icon="file-download"></core-icon> Download Now</a>
           </p>
+        </paper-dialog-scrollable>
+        <div class="buttons">
+          <paper-button dialog-dismiss>Close</paper-button>
         </div>
-        <paper-button dismissive>Close</paper-button>
-      </paper-action-dialog>
+      </paper-dialog>
       """
       unless $("#download-csv-file").exists()
         $("body").append(html)
@@ -1156,14 +1161,17 @@ downloadHTMLList = ->
       """
       downloadable = "data:text/html;charset=utf-8,#{encodeURIComponent(htmlBody)}"
       dialogHtml = """
-      <paper-action-dialog class="download-file" id="download-html-file" heading="Your file is ready">
-        <div class="dialog-content">
+      <paper-dialog  modal class="download-file" id="download-html-file">
+        <h2>Your file is ready</h2>
+        <paper-dialog-scrollable class="dialog-content">
           <p class="text-center">
             <a href="#{downloadable}" download="ssar-common-names-#{dateString}.html" class="btn btn-default"><core-icon icon="file-download"></core-icon> Download Now</a>
           </p>
+        </paper-dialog-scrollable>
+        <div class="buttons>"
+          <paper-button dialog-dismiss>Close</paper-button>
         </div>
-        <paper-button dismissive>Close</paper-button>
-      </paper-action-dialog>
+      </paper-dialog>
       """
       unless $("#download-html-file").exists()
         $("body").append(dialogHtml)
@@ -1183,25 +1191,26 @@ downloadHTMLList = ->
 
 showDownloadChooser = ->
   html = """
-  <paper-action-dialog id="download-chooser" heading="Select Download Type">
-    <div class="dialog-content">
+  <paper-dialog id="download-chooser">
+    <h2>Select Download Type</h2>
+    <paper-dialog-scrollable class="dialog-content">
       <p>
         Once you select a file type, it will take a moment to prepare your download. Please be patient.
       </p>
+    </paper-dialog-scrollable>
+    <div class="buttons">
+      <paper-button dialog-dismiss>Cancel</paper-button>
+      <paper-button dialog-confirm id="initiate-csv-download">CSV</paper-button>
+      <paper-button dialog-confirm id="initiate-html-download">HTML</paper-button>
     </div>
-      <paper-button dismissive>Cancel</paper-button>
-      <paper-button affirmative id="initiate-csv-download">CSV</paper-button>
-      <paper-button affirmative id="initiate-html-download">HTML</paper-button>
-  </paper-action-dialog>
+  </paper-dialog>
   """
   unless $("#download-chooser").exists()
     $("body").append(html)
   d$("#initiate-csv-download").click ->
     downloadCSVList()
-    false
   d$("#initiate-html-download").click ->
     downloadHTMLList()
-    false
   $("#download-chooser").get(0).open()
   false
 
@@ -1300,9 +1309,9 @@ $ ->
     e.preventDefault()
     performSearch()
   $("#collapse-advanced").on "shown.bs.collapse", ->
-    $("#collapse-icon").attr("icon","unfold-less")
+    $("#collapse-icon").attr("icon","icons:unfold-less")
   $("#collapse-advanced").on "hidden.bs.collapse", ->
-    $("#collapse-icon").attr("icon","unfold-more")
+    $("#collapse-icon").attr("icon","icons:unfold-more")
   # Bind enter keydown
   $("#search_form").keypress (e) ->
     if e.which is 13 then performSearch()
