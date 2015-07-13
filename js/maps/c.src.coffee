@@ -1527,14 +1527,17 @@ modalTaxon = (taxon = undefined) ->
       formatAlien(data)
       stopLoad()
       $("#modal-taxon")[0].open()
-    $("[dialog-dismiss]").click ->
-      $(this).parents("paper-dialog").remove()
+    bindDismissalRemoval()
   .fail (result,status) ->
     stopLoadError()
   false
 
 
-
+bindDismissalRemoval = ->
+  $("[dialog-dismiss]")
+  .unbind()
+  .click ->
+    $(this).parents("paper-dialog").remove()
 
 
 doFontExceptions = ->
@@ -1741,6 +1744,7 @@ downloadCSVList = ->
       else
         $("#download-csv-file").replaceWith(html)
       $("#download-csv-file").get(0).open()
+      bindDismissalRemoval()
       stopLoad()
     catch e
       stopLoadError("There was a problem creating the CSV file. Please try again later.")
@@ -1971,8 +1975,8 @@ downloadHTMLList = ->
       else
         $("#download-html-file").replaceWith(dialogHtml)
       $("#download-html-file").get(0).open()
+      bindDismissalRemoval()
       stopLoad()
-      console.log("Has read clades:",hasReadClade)
     catch e
       stopLoadError("There was a problem creating your file. Please try again later.")
       console.error("Exception in downloadHTMLList() - #{e.message}")
@@ -2005,6 +2009,7 @@ showDownloadChooser = ->
   d$("#initiate-html-download").click ->
     downloadHTMLList()
   $("#download-chooser").get(0).open()
+  bindDismissalRemoval()
   false
 
 

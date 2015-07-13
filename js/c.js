@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, showBadSearchErrorMessage, showDownloadChooser, sortResults, ssar, stopLoad, stopLoadError, testCalPhotos, toFloat, toInt, toObject, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, showBadSearchErrorMessage, showDownloadChooser, sortResults, ssar, stopLoad, stopLoadError, testCalPhotos, toFloat, toInt, toObject, toastStatusMessage, uri,
   slice = [].slice,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -1807,13 +1807,17 @@ modalTaxon = function(taxon) {
       stopLoad();
       return $("#modal-taxon")[0].open();
     });
-    return $("[dialog-dismiss]").click(function() {
-      return $(this).parents("paper-dialog").remove();
-    });
+    return bindDismissalRemoval();
   }).fail(function(result, status) {
     return stopLoadError();
   });
   return false;
+};
+
+bindDismissalRemoval = function() {
+  return $("[dialog-dismiss]").unbind().click(function() {
+    return $(this).parents("paper-dialog").remove();
+  });
 };
 
 doFontExceptions = function() {
@@ -1985,6 +1989,7 @@ downloadCSVList = function() {
         $("#download-csv-file").replaceWith(html);
       }
       $("#download-csv-file").get(0).open();
+      bindDismissalRemoval();
       return stopLoad();
     } catch (_error) {
       e = _error;
@@ -2105,8 +2110,8 @@ downloadHTMLList = function() {
         $("#download-html-file").replaceWith(dialogHtml);
       }
       $("#download-html-file").get(0).open();
-      stopLoad();
-      return console.log("Has read clades:", hasReadClade);
+      bindDismissalRemoval();
+      return stopLoad();
     } catch (_error) {
       e = _error;
       stopLoadError("There was a problem creating your file. Please try again later.");
@@ -2133,6 +2138,7 @@ showDownloadChooser = function() {
     return downloadHTMLList();
   });
   $("#download-chooser").get(0).open();
+  bindDismissalRemoval();
   return false;
 };
 
