@@ -20,7 +20,6 @@
     "paper-elements": "PolymerElements/paper-elements#^1.0.1",
       "gold-elements": "PolymerElements/gold-elements#^1.0.0",
     "polymer": "Polymer/polymer#^1.0.0",
-    "polymer": "Polymer/polymer#~0.5.2",
     "bootstrap": "~3.3.5",
     "imagelightbox": "git://github.com/rejas/imagelightbox.git#~0.3.2",
     "layzr": "git://github.com/callmecavs/layzr.js.git",
