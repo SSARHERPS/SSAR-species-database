@@ -4,7 +4,7 @@
  * Triggered from admin-page.html
  */
 var adminParams, createDuplicateTaxon, createNewTaxon, deleteTaxon, handleDragDropImage, loadAdminUi, loadModalTaxonEditor, lookupEditorSpecies, renderAdminSearchResults, saveEditorEntry, verifyLoginCredentials,
-  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 adminParams = new Object();
 
@@ -14,7 +14,7 @@ adminParams.adminPageUrl = "http://ssarherps.org/cndb/admin-page.html";
 
 adminParams.loginDir = "admin/";
 
-adminParams.loginApiTarget = "" + adminParams.loginDir + "async_login_handler.php";
+adminParams.loginApiTarget = adminParams.loginDir + "async_login_handler.php";
 
 loadAdminUi = function() {
 
@@ -111,7 +111,7 @@ renderAdminSearchResults = function(containerSelector) {
   s = prepURI(s.toLowerCase());
   args = "q=" + s + "&loose=true";
   b64s = Base64.encodeURI(s);
-  newLink = "" + uri.urlString + "#" + b64s;
+  newLink = uri.urlString + "#" + b64s;
   $("#app-linkout").attr("data-url", newLink);
   return $.get(searchParams.targetApi, args, "json").done(function(result) {
     var bootstrapColCount, colClass, data, html, htmlClose, htmlHead, targetCount;
@@ -156,9 +156,9 @@ renderAdminSearchResults = function(containerSelector) {
           }
         });
       }
-      taxonQuery = "" + (row.genus.trim()) + "+" + (row.species.trim());
+      taxonQuery = (row.genus.trim()) + "+" + (row.species.trim());
       if (!isNull(row.subspecies)) {
-        taxonQuery = "" + taxonQuery + "+" + (row.subspecies.trim());
+        taxonQuery = taxonQuery + "+" + (row.subspecies.trim());
       }
       htmlRow = "\n\t<tr id='cndb-row" + i + "' class='cndb-result-entry' data-taxon=\"" + taxonQuery + "\">";
       l = 0;
@@ -199,7 +199,7 @@ renderAdminSearchResults = function(containerSelector) {
     var error;
     console.error("There was an error performing the search");
     console.warn(result, error, result.statusText);
-    error = "" + result.status + " - " + result.statusText;
+    error = result.status + " - " + result.statusText;
     $("#search-status").attr("text", "Couldn't execute the search - " + error);
     $("#search-status")[0].show();
     return stopLoadError();
@@ -423,7 +423,7 @@ lookupEditorSpecies = function(taxon) {
       taxonArray[k] = v.trim();
       k++;
     }
-    taxon = "" + originalNames.genus + "+" + originalNames.species;
+    taxon = originalNames.genus + "+" + originalNames.species;
     if (!isNull(originalNames.subspecies)) {
       taxon += originalNames.subspecies;
     }
@@ -439,7 +439,7 @@ lookupEditorSpecies = function(taxon) {
       data = result.result[0];
       if (data == null) {
         stopLoadError("Sorry, there was a problem parsing the information for this taxon. If it persists, you may have to fix it manually.");
-        console.error("No data returned for", "" + searchParams.targetApi + "?q=" + taxon);
+        console.error("No data returned for", searchParams.targetApi + "?q=" + taxon);
         return false;
       }
       try {
@@ -459,7 +459,7 @@ lookupEditorSpecies = function(taxon) {
         if (!isNull(originalNames.subspecies)) {
           speciesString += " " + originalNames.subspecies;
         }
-        data.deprecated_scientific["" + (originalNames.genus.toTitleCase()) + " " + speciesString] = "AUTHORITY: YEAR";
+        data.deprecated_scientific[(originalNames.genus.toTitleCase()) + " " + speciesString] = "AUTHORITY: YEAR";
       }
       toggleColumns = ["parens_auth_genus", "parens_auth_species", "is_alien"];
       for (col in data) {
@@ -478,7 +478,7 @@ lookupEditorSpecies = function(taxon) {
           year = parseTaxonYear(d);
           $("#edit-gauthyear").attr("value", year.genus);
           $("#edit-sauthyear").attr("value", year.species);
-        } else if (__indexOf.call(toggleColumns, col) >= 0) {
+        } else if (indexOf.call(toggleColumns, col) >= 0) {
           colSplit = col.split("_");
           if (colSplit[0] === "parens") {
             category = col.split("_").pop();
@@ -535,7 +535,7 @@ lookupEditorSpecies = function(taxon) {
 };
 
 saveEditorEntry = function(performMode) {
-  var args, auth, authYearString, authority, authorityA, completionErrorMessage, consoleError, dep, depA, depS, depString, e, error, escapeCompletion, examineIds, gYear, hash, item, k, keepCase, link, requiredNotEmpty, s64, sYear, saveObject, saveString, secret, taxon, testAuthorityYear, trimmedYearString, userVerification, year, _i, _len;
+  var args, auth, authYearString, authority, authorityA, completionErrorMessage, consoleError, dep, depA, depS, depString, e, error, escapeCompletion, examineIds, gYear, hash, item, k, keepCase, len, link, m, requiredNotEmpty, s64, sYear, saveObject, saveString, secret, taxon, testAuthorityYear, trimmedYearString, userVerification, year;
   if (performMode == null) {
     performMode = "save";
   }
@@ -555,7 +555,7 @@ saveEditorEntry = function(performMode) {
   }
   try {
     testAuthorityYear = function(authYearDeepInputSelector, directYear) {
-      var altYear, authorityRegex, d, error, linnaeusYear, nextYear, yearString, years, _ref;
+      var altYear, authorityRegex, d, error, linnaeusYear, nextYear, ref, yearString, years;
       if (directYear == null) {
         directYear = false;
       }
@@ -590,7 +590,7 @@ saveEditorEntry = function(performMode) {
             error = "This must be a valid year between " + linnaeusYear + " and " + nextYear;
           } else {
             years = yearString.split(" ");
-            if (!((linnaeusYear < (_ref = years[0]) && _ref < nextYear))) {
+            if (!((linnaeusYear < (ref = years[0]) && ref < nextYear))) {
               error = "The first year must be a valid year between " + linnaeusYear + " and " + nextYear;
             }
             altYear = years[1].replace(/(\"|')/g, "");
@@ -603,7 +603,7 @@ saveEditorEntry = function(performMode) {
       }
       if (error != null) {
         escapeCompletion = true;
-        console.warn("" + authYearDeepInputSelector + " failed its validity checks for " + yearString + "!");
+        console.warn(authYearDeepInputSelector + " failed its validity checks for " + yearString + "!");
         if (!directYear) {
           try {
             $("html /deep/ " + authYearDeepInputSelector + " /deep/ paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
@@ -640,8 +640,8 @@ saveEditorEntry = function(performMode) {
     depS = d$("#edit-deprecated-scientific").val();
     if (!isNull(depS)) {
       depA = depS.split('","');
-      for (_i = 0, _len = depA.length; _i < _len; _i++) {
-        k = depA[_i];
+      for (m = 0, len = depA.length; m < len; m++) {
+        k = depA[m];
         item = k.split("\":\"");
         dep[item[0].replace(/"/g, "")] = item[1].replace(/"/g, "");
       }
@@ -672,7 +672,7 @@ saveEditorEntry = function(performMode) {
     e = _error;
     console.error("Failed to parse the deprecated scientifics - " + e.message + ". They may be empty.");
     depString = "";
-    error = "" + e.message + ". Check your formatting!";
+    error = e.message + ". Check your formatting!";
     try {
       $("html /deep/ #edit-deprecated-scientific /deep/ paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
     } catch (_error) {
@@ -705,7 +705,7 @@ saveEditorEntry = function(performMode) {
     }
     col = id.replace(/-/g, "_");
     val = $(thisSelector).val().trim();
-    if (__indexOf.call(keepCase, col) < 0) {
+    if (indexOf.call(keepCase, col) < 0) {
       val = val.toLowerCase();
     }
     switch (id) {
@@ -741,7 +741,7 @@ saveEditorEntry = function(performMode) {
         }
         break;
       default:
-        if (__indexOf.call(requiredNotEmpty, id) >= 0) {
+        if (indexOf.call(requiredNotEmpty, id) >= 0) {
           selectorSample = "#edit-" + id;
           spilloverError = "This must not be empty";
           if (selectorSample === "#edit-image-credit" || selectorSample === "#edit-image-license") {
@@ -863,7 +863,7 @@ deleteTaxon = function(taxaId) {
   return $.post(adminParams.apiTarget, args, "json").done(function(result) {
     if (result.status === true) {
       caller.parents("tr").remove();
-      toastStatusMessage("" + taxon + " with ID " + taxaId + " has been removed from the database.");
+      toastStatusMessage(taxon + " with ID " + taxaId + " has been removed from the database.");
       stopLoad();
     } else {
       stopLoadError();
@@ -903,7 +903,7 @@ handleDragDropImage = function(uploadTargetSelector, callback) {
         fileName = file.name;
         ssar.dropzone.disable();
         ext = fileName.split(".").pop();
-        fullFile = "" + (md5(fileName)) + "." + ext;
+        fullFile = (md5(fileName)) + "." + ext;
         fullPath = "species_photos/" + fullFile;
         d$("#edit-image").attr("disabled", "disabled").attr("value", fullPath);
         toastStatusMessage("Upload complete");
@@ -928,10 +928,10 @@ handleDragDropImage = function(uploadTargetSelector, callback) {
     defaultText = "Drop a high-resolution image for the taxon here.";
     dragCancel = function() {
       d$(uploadTargetSelector).css("box-shadow", "").css("border", "");
-      return d$("" + uploadTargetSelector + " .dz-message span").text(defaultText);
+      return d$(uploadTargetSelector + " .dz-message span").text(defaultText);
     };
     dropzoneConfig = {
-      url: "" + uri.urlString + "meta.php?do=upload_image",
+      url: uri.urlString + "meta.php?do=upload_image",
       acceptedFiles: "image/*",
       autoProcessQueue: true,
       maxFiles: 1,
@@ -944,7 +944,7 @@ handleDragDropImage = function(uploadTargetSelector, callback) {
           return toastStatusMessage("Upload canceled.");
         });
         this.on("dragover", function() {
-          d$("" + uploadTargetSelector + " .dz-message span").text("Drop here to upload the image");
+          d$(uploadTargetSelector + " .dz-message span").text("Drop here to upload the image");
 
           /*
            * box-shadow: 0px 0px 15px rgba(15,157,88,.8);
