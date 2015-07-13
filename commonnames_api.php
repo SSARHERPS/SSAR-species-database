@@ -300,7 +300,7 @@ function doSearch($overrideSearch = null)
             $loose = true;
             $method = "full_simple_list";
             $l = $db->openDB();
-            $query = "SELECT ".$search_list." FROM `".$db->getTable()."` ORDER BY ".$order_by;
+            $query = "SELECT ".$search_list." FROM `".$db->getTable()."` WHERE (`$col`!='' AND `$col` IS NOT NULL) ORDER BY ".$order_by;
             $r = mysqli_query($l,$query);
             try
             {
