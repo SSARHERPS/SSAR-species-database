@@ -2149,6 +2149,7 @@ $ ->
           if col isnt "type"
             if col isnt "is-alien"
               $(selector).attr("value",val)
+              openFilters = true
             else
               selectedState = if toInt(val) is 1 then "alien-only" else "native-only"
               console.log("Setting alien-filter to #{selectedState}")
@@ -2157,7 +2158,6 @@ $ ->
                 # Sometimes, the load delay can make this not
                 # work. Let's be sure.
                 $("#alien-filter").get(0).selected = selectedState
-            openFilters = true
           else
             $("#linnean-order").polymerSelected(val)
         if openFilters

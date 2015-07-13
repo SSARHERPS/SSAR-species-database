@@ -2283,15 +2283,15 @@ $(function() {
           if (col !== "type") {
             if (col !== "is-alien") {
               $(selector).attr("value", val);
+              return openFilters = true;
             } else {
               selectedState = toInt(val) === 1 ? "alien-only" : "native-only";
               console.log("Setting alien-filter to " + selectedState);
               $("#alien-filter").get(0).selected = selectedState;
-              delay(750, function() {
+              return delay(750, function() {
                 return $("#alien-filter").get(0).selected = selectedState;
               });
             }
-            return openFilters = true;
           } else {
             return $("#linnean-order").polymerSelected(val);
           }
