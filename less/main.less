@@ -12,6 +12,10 @@ body {
 @material-blue-grey: #607d8b;
 @material-red: #F44336;
 
+@bs-info: #5bc0de;
+@bs-danger: #d9534f;
+@bs-warning: #f0ad4e;
+
 @combinator: ~">>>";
 @hc: ~"html >>>";
 
@@ -120,13 +124,12 @@ body {
     color: @material-red;
 }
 
-@{hc} .tooltip-container {
-    float:left;
-    display:inline-block;
-}
 .tooltip-container {
     float:left;
     display:inline-block;
+}
+@{hc} .tooltip-container {
+    .tooltip-container();
 }
 .italic {
     font-style:italic;
@@ -332,22 +335,22 @@ paper-icon-button {
   width:80%;
 }
 .bs-callout-info {
-  border-left-color: #5bc0de;
+  border-left-color: @bs-info;
 }
 .bs-callout-info h4 {
-  color: #5bc0de;
+  color: @bs-info;
 }
 .bs-callout-danger {
-  border-left-color: #d9534f;
+  border-left-color: @bs-danger;
 }
 .bs-callout-danger h4 {
-  color: #d9534f;
+  color: @bs-danger;
 }
 .bs-callout-warning {
-  border-left-color: #f0ad4e;
+  border-left-color: @bs-warning;
 }
 .bs-callout-warning h4 {
-  color: #f0ad4e;
+  color: @bs-warning;
 }
 .bs-callout p:last-child {
   margin-bottom: 0;
@@ -368,11 +371,14 @@ form {
 @{hc} #modal-taxon-editor paper-input {
     display:block;
 }
-@{hc} .help-block {
+.help-block {
   display: block;
   margin-top: 5px;
   margin-bottom: 10px;
   color: #737373;
+}
+@{hc} .help-block {
+  .help-block();
 }
 
 @{hc} paper-autogrow-textarea textarea {
@@ -382,12 +388,7 @@ form {
 #modal-taxon-editor paper-input {
     display:block;
 }
-.help-block {
-  display: block;
-  margin-top: 5px;
-  margin-bottom: 10px;
-  color: #737373;
-}
+
 paper-autogrow-textarea textarea {
     width:90%;
 }
