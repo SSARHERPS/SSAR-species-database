@@ -139,7 +139,7 @@
             <!-- This is a filter column. We need a radio button for
             AND/OR, and then to walk through the filters and append the object to the query. -->
             <label for="type" class="sr-only">Clade Restriction</label>
-            <paper-menu label="Group" data-column="linnean_order" class="cndb-filter" id="linnean-order" id="type" name="type" valueattr="data-type">
+            <paper-menu label="Group" data-column="linnean_order" class="cndb-filter" id="linnean-order" id="type" name="type" attrForSelected="data-type" selected="0">
               <paper-item data-type="any">All</paper-item>
               <paper-item data-type="squamata">Non-Snake Lizards</paper-item>
               <paper-item data-type="serpentes">Snakes</paper-item>

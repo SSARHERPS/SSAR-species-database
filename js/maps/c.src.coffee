@@ -77,39 +77,39 @@ roundNumber = (number,digits = 0) ->
 
 jQuery.fn.exists = -> jQuery(this).length > 0
 
-jQuery.fn.polymerSelected = (setSelected = undefined) ->
+jQuery.fn.polymerSelected = (setSelected = undefined, attrLookup = "attrForSelected") ->
+  ###
   # See
-  # https://www.polymer-project.org/docs/elements/paper-elements.html#paper-dropdown-menu
+  # https://elements.polymer-project.org/elements/paper-menu
+  # https://elements.polymer-project.org/elements/paper-radio-group
+  #
+  # @param attrLookup is based on
+  # https://elements.polymer-project.org/elements/iron-selector?active=Polymer.IronSelectableBehavior
+  ###
+  attr = $(this).attr(attrLookup)
   if setSelected?
     if not isBool(setSelected)
       try
-        childDropdown = $(this).find("[valueattr]")
-        if isNull(childDropdown)
-          childDropdown = $(this)
-        prop = childDropdown.attr("valueattr")
-        # Find the element where the prop matches the selected
-        item = $(this).find("[#{prop}=#{setSelected}]")
-        index = item.index()
-        item.parent().prop("selected",index)
+        $(this).get(0).select(setSelected)
       catch e
         return false
     else
       console.log("setSelected #{setSelected} is boolean")
-      $(this).parent().children().removeAttribute("selected")
+      $(this).parent().children().removeAttribute("aria-selected")
       $(this).parent().children().removeAttribute("active")
-      $(this).parent().children().removeClass("core-selected")
+      $(this).parent().children().removeClass("iron-selected")
       $(this).prop("selected",setSelected)
       $(this).prop("active",setSelected)
+      $(this).prop("aria-selected",setSelected)
       if setSelected is true
-        $(this).addClass("core-selected")
+        $(this).addClass("iron-selected")
   else
     val = undefined
     try
-      childDropdown = $(this).find("[valueattr]")
-      if isNull(childDropdown)
-        childDropdown = $(this)
-      prop = childDropdown.attr("valueattr")
-      val = $(this).find(".core-selected").attr(prop)
+      val = $(this).get(0).selected
+      if isNumber(val) and not isNull(attr)
+        itemSelector = $(this).find("paper-item")[toInt(val)]
+        val = $(itemSelector).attr(attr)
     catch e
       return false
     if val is "null" or not val?

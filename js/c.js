@@ -144,46 +144,52 @@ jQuery.fn.exists = function() {
   return jQuery(this).length > 0;
 };
 
-jQuery.fn.polymerSelected = function(setSelected) {
-  var childDropdown, e, index, item, prop, val;
+jQuery.fn.polymerSelected = function(setSelected, attrLookup) {
+  var attr, e, itemSelector, val;
   if (setSelected == null) {
     setSelected = void 0;
   }
+  if (attrLookup == null) {
+    attrLookup = "attrForSelected";
+  }
+
+  /*
+   * See
+   * https://elements.polymer-project.org/elements/paper-menu
+   * https://elements.polymer-project.org/elements/paper-radio-group
+   *
+   * @param attrLookup is based on
+   * https://elements.polymer-project.org/elements/iron-selector?active=Polymer.IronSelectableBehavior
+   */
+  attr = $(this).attr(attrLookup);
   if (setSelected != null) {
     if (!isBool(setSelected)) {
       try {
-        childDropdown = $(this).find("[valueattr]");
-        if (isNull(childDropdown)) {
-          childDropdown = $(this);
-        }
-        prop = childDropdown.attr("valueattr");
-        item = $(this).find("[" + prop + "=" + setSelected + "]");
-        index = item.index();
-        return item.parent().prop("selected", index);
+        return $(this).get(0).select(setSelected);
       } catch (_error) {
         e = _error;
         return false;
       }
     } else {
       console.log("setSelected " + setSelected + " is boolean");
-      $(this).parent().children().removeAttribute("selected");
+      $(this).parent().children().removeAttribute("aria-selected");
       $(this).parent().children().removeAttribute("active");
-      $(this).parent().children().removeClass("core-selected");
+      $(this).parent().children().removeClass("iron-selected");
       $(this).prop("selected", setSelected);
       $(this).prop("active", setSelected);
+      $(this).prop("aria-selected", setSelected);
       if (setSelected === true) {
-        return $(this).addClass("core-selected");
+        return $(this).addClass("iron-selected");
       }
     }
   } else {
     val = void 0;
     try {
-      childDropdown = $(this).find("[valueattr]");
-      if (isNull(childDropdown)) {
-        childDropdown = $(this);
+      val = $(this).get(0).selected;
+      if (isNumber(val) && !isNull(attr)) {
+        itemSelector = $(this).find("paper-item")[toInt(val)];
+        val = $(itemSelector).attr(attr);
       }
-      prop = childDropdown.attr("valueattr");
-      val = $(this).find(".core-selected").attr(prop);
     } catch (_error) {
       e = _error;
       return false;
