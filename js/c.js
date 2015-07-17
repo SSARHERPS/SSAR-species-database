@@ -1690,7 +1690,7 @@ modalTaxon = function(taxon) {
   }
   animateLoad();
   if (!$("#modal-taxon").exists()) {
-    html = "<paper-dialog modal id='modal-taxon'>\n  <h2 id=\"modal-heading\"></h2>\n  <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button id='modal-inat-linkout'>iNaturalist</paper-button>\n    <paper-button id='modal-calphotos-linkout' class=\"hidden-xs\">CalPhotos</paper-button>\n    <paper-button id='modal-alt-linkout' class=\"hidden-xs\"></paper-button>\n    <paper-button dialog-dismiss autofocus>Close</paper-button>\n  </div>\n</paper-dialog>";
+    html = "<paper-dialog modal id='modal-taxon' entry-animation=\"scale-up-animation\" exit-animation=\"scale-down-animation\">\n  <h2 id=\"modal-heading\"></h2>\n  <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button id='modal-inat-linkout'>iNaturalist</paper-button>\n    <paper-button id='modal-calphotos-linkout' class=\"hidden-xs\">CalPhotos</paper-button>\n    <paper-button id='modal-alt-linkout' class=\"hidden-xs\"></paper-button>\n    <paper-button dialog-dismiss autofocus>Close</paper-button>\n  </div>\n</paper-dialog>";
     $("body").append(html);
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {

@@ -575,7 +575,7 @@ modalTaxon = (taxon = undefined) ->
     # On very small devices, for both real-estate and
     # optimization-related reasons, we'll hide calphotos and the alternate
     html = """
-    <paper-dialog modal id='modal-taxon'>
+    <paper-dialog modal id='modal-taxon' entry-animation="scale-up-animation" exit-animation="scale-down-animation">
       <h2 id="modal-heading"></h2>
       <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>
       <div class="buttons">
