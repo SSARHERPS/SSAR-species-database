@@ -935,7 +935,7 @@ downloadCSVList = ->
       # OK, it's all been created. Download it.
       downloadable = "data:text/csv;charset=utf-8," + encodeURIComponent(csv)
       html = """
-      <paper-dialog class="download-file" id="download-csv-file">
+      <paper-dialog class="download-file" id="download-csv-file" modal>
         <h2>Your file is ready</h2>
         <paper-dialog-scrollable class="dialog-content">
           <p>
@@ -1199,7 +1199,7 @@ downloadHTMLList = ->
 
 showDownloadChooser = ->
   html = """
-  <paper-dialog id="download-chooser">
+  <paper-dialog id="download-chooser" modal>
     <h2>Select Download Type</h2>
     <paper-dialog-scrollable class="dialog-content">
       <p>
