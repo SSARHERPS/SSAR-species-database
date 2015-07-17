@@ -1694,7 +1694,7 @@ modalTaxon = function(taxon) {
     $("body").append(html);
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
-    var buttonText, commonType, data, deprecatedHtml, e, genusAuthBlock, humanTaxon, i, minorTypeHtml, notes, outboundLink, ref, sn, speciesAuthBlock, taxonArray, taxonCreditDate, year, yearHtml;
+    var button, buttonText, commonType, data, deprecatedHtml, e, genusAuthBlock, humanTaxon, i, minorTypeHtml, notes, outboundLink, ref, sn, speciesAuthBlock, taxonArray, taxonCreditDate, year, yearHtml;
     data = result.result[0];
     if (data == null) {
       toastStatusMessage("There was an error fetching the entry details. Please try again later.");
@@ -1774,10 +1774,11 @@ modalTaxon = function(taxon) {
       outboundLink = ssar.affiliateQueryUrl.amphibiaWeb + "?where-genus=" + data.genus + "&where-species=" + data.species;
     } else if (!isNull(data.linnean_order)) {
       buttonText = "Reptile Database";
+      button = "<paper-button id='modal-alt-linkout' class=\"hidden-xs\">" + buttonText + "</paper-button>";
       outboundLink = ssar.affiliateQueryUrl.reptileDatabase + "?genus=" + data.genus + "&species=" + data.species;
     }
     if (outboundLink != null) {
-      $("#modal-alt-linkout").removeClass("hidden").text(buttonText).unbind().click(function() {
+      $("#modal-alt-linkout").replaceWith(button).click(function() {
         return openTab(outboundLink);
       });
     } else {

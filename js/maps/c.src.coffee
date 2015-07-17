@@ -1494,13 +1494,14 @@ modalTaxon = (taxon = undefined) ->
     else unless isNull(data.linnean_order)
       # It's not an amphibian -- so we want a link to Reptile Database
       buttonText = "Reptile Database"
+      button = """
+      <paper-button id='modal-alt-linkout' class="hidden-xs">#{buttonText}</paper-button>
+      """
       outboundLink = "#{ssar.affiliateQueryUrl.reptileDatabase}?genus=#{data.genus}&species=#{data.species}"
     if outboundLink?
       # First, un-hide it in case it was hidden
       $("#modal-alt-linkout")
-      .removeClass("hidden")
-      .text(buttonText)
-      .unbind()
+      .replaceWith(button)
       .click ->
         openTab(outboundLink)
     else
