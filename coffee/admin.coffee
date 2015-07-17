@@ -196,10 +196,10 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-input label="Genus" id="edit-genus" name="edit-genus" class="genus" floatingLabel></paper-input>
   <paper-input label="Species" id="edit-species" name="edit-species" class="species" floatingLabel></paper-input>
   <paper-input label="Subspecies" id="edit-subspecies" name="edit-subspecies" class="subspecies" floatingLabel></paper-input>
-  <core-label>
+  <iron-label>
     Alien species?
     <paper-toggle-button id="is-alien"  checked="false"></paper-toggle-button>
-  </core-label>
+  </iron-label>
   <paper-input label="Common Name" id="edit-common-name" name="edit-common-name"  class="common_name" floatingLabel></paper-input>
   <paper-input label="Deprecated Scientific Names" id="edit-deprecated-scientific" name="edit-depreated-scientific" floatingLabel aria-describedby="deprecatedHelp"></paper-input>
     <span class="help-block" id="deprecatedHelp">List names here in the form <span class="code">"Genus species":"Authority: year","Genus species":"Authority: year",[...]</span>.<br/>There should be no spaces between the quotes and comma or colon. If there are, it may not save correctly.</span>
@@ -210,20 +210,20 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <paper-input label="Common Type (eg., 'lizard')" id="edit-major-common-type" name="edit-major-common-type" class="major_common_type" floatingLabel></paper-input>
   <paper-input label="Genus authority" id="edit-genus-authority" name="edit-genus-authority" class="genus_authority" floatingLabel></paper-input>
   <paper-input label="Genus authority year" id="edit-gauthyear" name="edit-gauthyear" floatingLabel></paper-input>
-  <core-label>
+  <iron-label>
     Use Parenthesis for Genus Authority
     <paper-toggle-button id="genus-authority-parens"  checked="false"></paper-toggle-button>
-  </core-label>
+  </iron-label>
   <paper-input label="Species authority" id="edit-species-authority" name="edit-species-authority" class="species_authority" floatingLabel></paper-input>
   <paper-input label="Species authority year" id="edit-sauthyear" name="edit-sauthyear" floatingLabel></paper-input>
-  <core-label>
+  <iron-label>
     Use Parenthesis for Species Authority
     <paper-toggle-button id="species-authority-parens" checked="false"></paper-toggle-button>
-  </core-label>
+  </iron-label>
   <br/><br/>
-  <paper-autogrow-textarea id="edit-notes-autogrow" rows="5">
-    <textarea placeholder="Notes" id="edit-notes" name="edit-notes" aria-describedby="notes-help" rows="5"></textarea>
-  </paper-autogrow-textarea>
+  <iron-autogrow-textarea id="edit-notes" rows="5" aria-describedby="notes-help" placeholder="Notes">
+    <textarea placeholder="Notes" id="edit-notes-textarea" name="edit-notes-textarea" aria-describedby="notes-help" rows="5"></textarea>
+  </iron-autogrow-textarea>
   <span class="help-block" id="notes-help">You can write your notes in Markdown. (<a href="https://daringfireball.net/projects/markdown/syntax" "onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'">Official Full Syntax Guide</a>)</span>
   <div id="upload-image"></div>
   <span class="help-block" id="upload-image-help">You can drag and drop an image above, or enter its server path below.</span>
@@ -238,47 +238,36 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <input type="hidden" name="edit-taxon-author" id="edit-taxon-author" value="" />
   """
   html = """
-  <paper-action-dialog backdrop layered autoCloseDisabled closeSelector="#close-editor" id='modal-taxon-edit'>
-    <div id='modal-taxon-editor'>
+  <paper-dialog modal id='modal-taxon-edit'>
+    <h2 id="editor-title">Taxon Editor</h2>
+    <paper-dialog-scrollable id='modal-taxon-editor'>
       #{editHtml}
+    </paper-dialog-scrollable>
+    <div class="buttons">
+      <paper-button id='close-editor' dialog-dismiss>Cancel</paper-button>
+      <paper-button id='duplicate-taxon'>Duplicate</paper-button>
+      <paper-button id='save-editor'>#{affirmativeText}</paper-button>
     </div>
-    <paper-button id='close-editor' dismissive>Cancel</paper-button>
-    <paper-button id='duplicate-taxon' dismissive>Duplicate</paper-button>
-    <paper-button id='save-editor' affirmative>#{affirmativeText}</paper-button></paper-action-dialog>
+  </paper-dialog>
   """
   if $("#modal-taxon-edit").exists()
     $("#modal-taxon-edit").remove()
   $("#search-results").after(html)
   handleDragDropImage()
-  # Bind the autogrow
-  # See https://www.polymer-project.org/0.5/docs/elements/paper-autogrow-textarea.html
-  try
-    noteArea = $("html /deep/ #edit-notes").get(0)
-    $("html /deep/ #edit-notes-autogrow").attr("target",noteArea)
-  catch e
-    try
-      noteArea = $("html >>> #edit-notes").get(0)
-      $("html >>> #edit-notes-autogrow").attr("target",noteArea)
-    catch e
-      try
-        noteArea = $("#edit-notes").get(0)
-        $("#edit-notes-autogrow").attr("target",noteArea)
-      catch e
-        console.error("Couldn't bind autogrow")
+  # # Bind the autogrow
+  # # https://elements.polymer-project.org/elements/iron-autogrow-textarea
+  # try
+  #   noteArea = d$("#edit-notes").get(0)
+  #   d$("#edit-notes-autogrow").attr("target",noteArea)
+  # catch e
+  #   console.error("Couldn't bind autogrow")
   # Reset the bindings
   $("#modal-taxon-edit").unbind()
-  try
-    $("html /deep/ #save-editor").unbind()
-    $("html /deep/ #duplicate-taxon")
-    .unbind()
-    .click ->
-      createDuplicateTaxon()
-  catch e
-    $("html >>> #save-editor").unbind()
-    $("html >>> #duplicate-taxon")
-    .unbind()
-    .click ->
-      createDuplicateTaxon()
+  d$("#save-editor").unbind()
+  d$("#duplicate-taxon")
+  .unbind()
+  .click ->
+    createDuplicateTaxon()
 
 
 
@@ -289,27 +278,17 @@ createNewTaxon = ->
   ###
   animateLoad()
   loadModalTaxonEditor("","Create")
-  # REmove the dupliate button
-  try
-    $("html /deep/ #duplicate-taxon").remove()
-  catch e
-    $("html >>> #duplicate-taxon").remove()
+  d$("#editor-title").text("Create New Taxon")
+  # Remove the dupliate button
+  d$("#duplicate-taxon").remove()
   # Append the editor value
   whoEdited = if isNull($.cookie("ssarherps_fullname")) then $.cookie("ssarherps_user") else $.cookie("ssarherps_fullname")
-  try
-    $("html /deep/ #edit-taxon-author").attr("value",whoEdited)
-  catch e
-    $("html >>> #edit-taxon-author").attr("value",whoEdited)
+  d$("#edit-taxon-author").attr("value",whoEdited)
   # Bind the save button
-  try
-    $("html /deep/ #save-editor")
-    .click ->
-      saveEditorEntry("new")
-  catch e
-    $("html >>> #save-editor")
-    .click ->
-      saveEditorEntry("new")
-  $("#modal-taxon-edit")[0].open()
+  d$("#save-editor")
+  .click ->
+    saveEditorEntry("new")
+  $("#modal-taxon-edit").get(0).open()
   stopLoad()
 
 createDuplicateTaxon = ->
@@ -322,37 +301,23 @@ createDuplicateTaxon = ->
   animateLoad()
   try
     # Change the open editor ID value
-    try
-      $("html /deep/ #taxon-id").remove()
-      $("html /deep/ #last-edited-by").remove()
-      $("html /deep/ #duplicate-taxon").remove()
-    catch e
-      $("html >>> #taxon-id").remove()
-      $("html >>> #last-edited-by").remove()
-      $("html >>> #duplicate-taxon").remove()
+    d$("#taxon-id").remove()
+    d$("#last-edited-by").remove()
+    d$("#duplicate-taxon").remove()
+    d$("#editor-title").text("Create Duplicate Taxon")
     # Rebind the saves
-    try
-      $("html /deep/ #save-editor")
-      .text("Create")
-      .unbind()
-      .click ->
-        saveEditorEntry("new")
-    catch e
-      $("html >>> #save-editor")
-      .text("Create")
-      .unbind()
-      .click ->
-        saveEditorEntry("new")
+    d$("#save-editor")
+    .text("Create")
+    .unbind()
+    .click ->
+      saveEditorEntry("new")
     delay 250, ->
       stopLoad()
   catch e
     stopLoadError("Unable to duplicate taxon")
     console.error("Couldn't duplicate taxon! #{e.message}")
-    try
-      $("html /deep/ #modal-taxon-edit").get(0).close()
-    catch e
-      $("html >>> #modal-taxon-edit").get(0).close()
-  false
+    d$("#modal-taxon-edit").get(0).close()
+  true
 
 
 lookupEditorSpecies = (taxon = undefined) ->
@@ -378,7 +343,7 @@ lookupEditorSpecies = (taxon = undefined) ->
     saveEditorEntry()
   existensial = d$("#last-edited-by").exists()
   unless existensial
-    d$("#axon-credit-help").after(lastEdited)
+    d$("#taxon-credit-help").after(lastEdited)
   ###
   # After
   # https://github.com/tigerhawkvok/SSAR-species-database/issues/33 :
@@ -521,15 +486,14 @@ lookupEditorSpecies = (taxon = undefined) ->
           if col isnt "notes"
             d$(fieldSelector).attr("value",d)
           else
-            d$(fieldSelector).text(d)
-      # Update the autogrow
-      # See https://www.polymer-project.org/0.5/docs/elements/paper-autogrow-textarea.html
-      try
-        noteArea = d$("#edit-notes").get(0)
-        d$("#edit-notes-autogrow").get(0).update(noteArea)
-      catch e
-        # Having an error binding the update
-        console.error("Couldn't update autogrow size. Possibly related to","https://github.com/Polymer/paper-input/issues/182")
+            width = $("#modal-taxon-edit").width() * .8
+            d$(fieldSelector).css("width","#{width}px")
+            textarea = d$(fieldSelector).get(0).textarea
+            $(textarea).text(d)
+            # This is different than the docs;
+            # see
+            # https://github.com/PolymerElements/iron-autogrow-textarea/issues/24
+            textarea._update()
       # Finally, open the editor
       $("#modal-taxon-edit")[0].open()
       stopLoad()
@@ -570,10 +534,7 @@ saveEditorEntry = (performMode = "save") ->
     ]
   saveObject = new Object()
   escapeCompletion = false
-  try
-    $("html /deep/ paper-input /deep/ paper-input-decorator").removeAttr("isinvalid")
-  catch e
-    $("html >>> paper-input-button >>> paper-input-decorator").removeAttr("isinvalid")
+  d$("paper-input").removeAttr("invalid")
   ## Manual parses
   try
     # Authority year
@@ -633,14 +594,12 @@ saveEditorEntry = (performMode = "save") ->
         console.warn("#{authYearDeepInputSelector} failed its validity checks for #{yearString}!")
         unless directYear
           # Populate the paper-input errors
-          try
-            $("html /deep/ #{authYearDeepInputSelector} /deep/ paper-input-decorator")
-            .attr("error",error)
-            .attr("isinvalid","isinvalid")
-          catch e
-            $("html >>> #{authYearDeepInputSelector} >>> paper-input-decorator")
-            .attr("error",error)
-            .attr("isinvalid","isinvalid")
+          # See
+          # https://elements.polymer-project.org/elements/paper-input?active=Polymer.PaperInputBehavior
+          # https://elements.polymer-project.org/elements/paper-input
+          d$("#{authYearDeepInputSelector}")
+          .attr("error-message",error)
+          .attr("invalid","invalid")
         else
           throw Error(error)
       # Return the value for assignment
@@ -698,14 +657,9 @@ saveEditorEntry = (performMode = "save") ->
     console.error("Failed to parse the deprecated scientifics - #{e.message}. They may be empty.")
     depString = ""
     error = "#{e.message}. Check your formatting!"
-    try
-      $("html /deep/ #edit-deprecated-scientific /deep/ paper-input-decorator")
-      .attr("error",error)
-      .attr("isinvalid","isinvalid")
-    catch e
-      $("html >>> #edit-deprecated-scientific >>> paper-input-decorator")
-      .attr("error",error)
-      .attr("isinvalid","isinvalid")
+    d$("#edit-deprecated-scientific")
+    .attr("error-message",error)
+    .attr("invalid",true)
     escapeCompletion = true
     completionErrorMessage = "There was a problem with your formatting for the deprecated scientifics. Please check it and try again."
   saveObject["deprecated_scientific"] = depString
@@ -734,15 +688,13 @@ saveEditorEntry = (performMode = "save") ->
   unless isNull(d$("#edit-taxon-credit").val())
     # We have a taxon credit, need a date for it
     requiredNotEmpty.push("taxon-credit-date")
-  $.each examineIds, (k,id) ->
+  for k, id of examineIds
     # console.log(k,id)
-    try
-      thisSelector = "html /deep/ #edit-#{id}"
-      if isNull($(thisSelector)) then throw("Invalid Selector")
-    catch e
-      thisSelector = "html >>> #edit-#{id}"
     col = id.replace(/-/g,"_")
-    val = $(thisSelector).val().trim()
+    unless col is "notes"
+      val = d$("#edit-#{id}").val().trim()
+    else
+      val = d$("#edit-notes").get(0).textarea.value
     unless col in keepCase
       # We want these to be as literally typed, rather than
       # smart-formatted.
@@ -755,14 +707,9 @@ saveEditorEntry = (performMode = "save") ->
         error = "This required field must have only letters"
         nullTest = if id is "genus" or id is "species" then isNull(val) else false
         if /[^A-Za-z]/m.test(val) or nullTest
-          try
-            $("html /deep/ #edit-#{id} /deep/ paper-input-decorator")
-            .attr("error",error)
-            .attr("isinvalid","isinvalid")
-          catch e
-            $("html >>> #edit-#{id} >>> paper-input-decorator")
-            .attr("error",error)
-            .attr("isinvalid","isinvalid")
+          d$("#edit-#{id}")
+          .attr("error-message",error)
+          .attr("invalid","invalid")
           escapeCompletion = true
       when "common-name", "major-type", "linnean-order", "genus-authority", "species-authority"
         # I'd love to syntactically clean this up via the empty array
@@ -772,14 +719,9 @@ saveEditorEntry = (performMode = "save") ->
         # These must just exist
         error = "This cannot be empty"
         if isNull(val)
-          try
-            $("html /deep/ #edit-#{id} /deep/ paper-input-decorator")
-            .attr("error",error)
-            .attr("isinvalid","isinvalid")
-          catch e
-            $("html >>> #edit-#{id} >>> paper-input-decorator")
-            .attr("error",error)
-            .attr("isinvalid","isinvalid")
+          $("#edit-#{id}")
+          .attr("error-message",error)
+          .attr("invalid","invalid")
           escapeCompletion = true
       else
         if id in requiredNotEmpty
@@ -793,14 +735,9 @@ saveEditorEntry = (performMode = "save") ->
             # We have a taxon credit, need a date for it
             spilloverError = "If you have a taxon credit, it also needs a date"
           if isNull(val)
-            try
-              $("html /deep/ #edit-#{id} /deep/ paper-input-decorator")
-              .attr("error",spilloverError)
-              .attr("isinvalid","isinvalid")
-            catch e
-              $("html >>> #edit-#{id} >>> paper-input-decorator")
-              .attr("error",spilloverError)
-              .attr("isinvalid","isinvalid")
+            d$("#edit-#{id}")
+            .attr("error-message",spilloverError)
+            .attr("invalid","invalid")
             escapeCompletion = true
     # Finally, tack it on to the saveObject
     saveObject[col] = val
@@ -811,7 +748,7 @@ saveEditorEntry = (performMode = "save") ->
     completionErrorMessage ?= "There was a problem with your entry. Please correct your entry and try again."
     stopLoadError(completionErrorMessage)
     console.error(consoleError)
-    return false
+    return true
   saveObject.id = d$("#taxon-id").val()
   # The parens checks
   saveObject.parens_auth_genus = d$("#genus-authority-parens").polymerChecked()
@@ -833,7 +770,7 @@ saveEditorEntry = (performMode = "save") ->
     console.warn("The total save object so far is:",saveObject)
     console.warn("Got the output string",saveSring)
     console.warn("Sending b64 string",s64)
-    return false
+    return true
   hash = $.cookie("ssarherps_auth")
   secret = $.cookie("ssarherps_secret")
   link = $.cookie("ssarherps_link")
@@ -849,10 +786,7 @@ saveEditorEntry = (performMode = "save") ->
       if escapeCompletion
         console.error("Warning! The item saved, even though it wasn't supposed to.")
         return false
-      try
-        $("html /deep/ #modal-taxon-edit")[0].close()
-      catch e
-        $("html >>> #modal-taxon-edit")[0].close()
+      d$("#modal-taxon-edit").get(0).close()
       unless isNull($("#admin-search").val())
         renderAdminSearchResults()
       return false
