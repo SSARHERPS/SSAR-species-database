@@ -317,6 +317,16 @@ toastStatusMessage = (message, className = "", duration = 3000, selector = "#sea
   ###
   # Pop up a status message
   ###
+  unless window.metaTracker?.isToasting?
+    unless window.metaTracker?
+      window.metaTracker = new Object()
+      window.metaTracker.isToasting = false
+  if window.metaTracker.isToasting
+    delay 250, ->
+      # Wait and call again
+      toastStatusMessage(message, className, duration, selector)
+    return false
+  window.metaTracker.isToasting = true
   if not isNumber(duration)
     duration = 3000
   if selector.slice(0,1) is not "#"
@@ -334,6 +344,7 @@ toastStatusMessage = (message, className = "", duration = 3000, selector = "#sea
     $(selector).empty()
     $(selector).removeClass(className)
     $(selector).attr("text","")
+    window.metaTracker.isToasting = false
 
 
 openLink = (url) ->
