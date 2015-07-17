@@ -390,9 +390,10 @@ stopLoad = (elId = "loader", fadeOut = 1000) ->
     if $(selector).exists()
       $(selector).addClass("good")
       delay fadeOut, ->
-        $(selector).removeClass("good")
-        $(selector).attr("active",false)
-        $(selector).removeAttr("active")
+        $(selector)
+        .removeClass("good")
+        .attr("active",false)
+        .removeAttr("active")
   catch e
     console.warn('Could not stop load animation', e.message)
 
@@ -408,8 +409,11 @@ stopLoadError = (message, elId = "loader", fadeOut = 7500) ->
       $(selector).addClass("bad")
       if message? then toastStatusMessage(message,"",fadeOut)
       delay fadeOut, ->
-        $(selector).removeClass("bad")
-        $(selector).attr("active",false)
+        $(selector)
+        .removeClass("bad")
+        .attr("active",false)
+        .removeAttr("active")
+
   catch e
     console.warn('Could not stop load error animation', e.message)
 

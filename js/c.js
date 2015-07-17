@@ -171,7 +171,6 @@ jQuery.fn.polymerSelected = function(setSelected, attrLookup) {
         return false;
       }
     } else {
-      console.log("setSelected " + setSelected + " is boolean");
       $(this).parent().children().removeAttribute("aria-selected");
       $(this).parent().children().removeAttribute("active");
       $(this).parent().children().removeClass("iron-selected");
@@ -477,9 +476,8 @@ toastStatusMessage = function(message, className, duration, selector) {
     html = "<paper-toast id=\"" + (selector.slice(1)) + "\" duration=\"" + duration + "\"></paper-toast>";
     $(html).appendTo("body");
   }
-  $(selector).attr("text", message);
-  $(selector).addClass(className);
-  $(selector)[0].show();
+  $(selector).attr("text", message).text(message).addClass(className);
+  $(selector).get(0).show();
   return delay(duration + 500, function() {
     $(selector).empty();
     $(selector).removeClass(className);
@@ -568,9 +566,7 @@ stopLoad = function(elId, fadeOut) {
     if ($(selector).exists()) {
       $(selector).addClass("good");
       return delay(fadeOut, function() {
-        $(selector).removeClass("good");
-        $(selector).attr("active", false);
-        return $(selector).removeAttr("active");
+        return $(selector).removeClass("good").attr("active", false).removeAttr("active");
       });
     }
   } catch (_error) {
@@ -600,8 +596,7 @@ stopLoadError = function(message, elId, fadeOut) {
         toastStatusMessage(message, "", fadeOut);
       }
       return delay(fadeOut, function() {
-        $(selector).removeClass("bad");
-        return $(selector).attr("active", false);
+        return $(selector).removeClass("bad").attr("active", false).removeAttr("active");
       });
     }
   } catch (_error) {

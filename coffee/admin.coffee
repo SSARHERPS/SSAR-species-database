@@ -238,7 +238,7 @@ loadModalTaxonEditor = (extraHtml = "", affirmativeText = "Save") ->
   <input type="hidden" name="edit-taxon-author" id="edit-taxon-author" value="" />
   """
   html = """
-  <paper-dialog modal id='modal-taxon-edit'>
+  <paper-dialog modal id='modal-taxon-edit' entry-animation="scale-up-animation" exit-animation="fade-out-animation">
     <h2 id="editor-title">Taxon Editor</h2>
     <paper-dialog-scrollable id='modal-taxon-editor'>
       #{editHtml}
@@ -279,6 +279,13 @@ createNewTaxon = ->
   animateLoad()
   loadModalTaxonEditor("","Create")
   d$("#editor-title").text("Create New Taxon")
+  windowHeight = $(window).height() * .5
+  d$("#modal-taxon-editor")
+  .css("min-height","#{windowHeight}px")
+  d$("#modal-taxon-editor div.scrollable").css("max-height","")
+  d$("#modal-taxon-edit")
+  .addClass("create-new-taxon")
+  #.get(0).refit()
   # Remove the dupliate button
   d$("#duplicate-taxon").remove()
   # Append the editor value
@@ -306,9 +313,12 @@ createDuplicateTaxon = ->
     d$("#duplicate-taxon").remove()
     d$("#editor-title").text("Create Duplicate Taxon")
     # Rebind the saves
+    newButton = """
+    <paper-button id="save-editor">Create</paper-button>
+    """
     d$("#save-editor")
-    .text("Create")
-    .unbind()
+    .replaceWith(newButton)
+    d$("#save-editor")
     .click ->
       saveEditorEntry("new")
     delay 250, ->
@@ -486,23 +496,24 @@ lookupEditorSpecies = (taxon = undefined) ->
           if col isnt "notes"
             d$(fieldSelector).attr("value",d)
           else
-            width = $("#modal-taxon-edit").width() * .8
+            width = $("#modal-taxon-edit").width() * .9
             d$(fieldSelector).css("width","#{width}px")
             textarea = d$(fieldSelector).get(0).textarea
             $(textarea).text(d)
-            # This is different than the docs;
-            # see
-            # https://github.com/PolymerElements/iron-autogrow-textarea/issues/24
-            textarea._update()
+            try
+              # This is different than the docs;
+              # see
+              # https://github.com/PolymerElements/iron-autogrow-textarea/issues/24
+              d$(fieldSelector).get(0)._update()
+            catch e
+              console.warn "Couldn't update the textarea! See", "https://github.com/PolymerElements/iron-autogrow-textarea/issues/24"
       # Finally, open the editor
       $("#modal-taxon-edit")[0].open()
       stopLoad()
     catch e
-      stopLoadError()
-      toastStatusMessage("Unable to populate the editor for this taxon - #{e.message}")
+      stopLoadError("Unable to populate the editor for this taxon - #{e.message}")
   .fail (result,status) ->
-    stopLoadError()
-    toastStatusMessage("There was a server error populating this taxon. Please try again.")
+    stopLoadError("There was a server error populating this taxon. Please try again.")
   false
 
 saveEditorEntry = (performMode = "save") ->

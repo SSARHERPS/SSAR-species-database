@@ -207,7 +207,7 @@ renderAdminSearchResults = function(containerSelector) {
 };
 
 loadModalTaxonEditor = function(extraHtml, affirmativeText) {
-  var e, editHtml, html, noteArea;
+  var editHtml, html;
   if (extraHtml == null) {
     extraHtml = "";
   }
@@ -218,45 +218,18 @@ loadModalTaxonEditor = function(extraHtml, affirmativeText) {
   /*
    * Load a modal taxon editor
    */
-  editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" class=\"genus\" floatingLabel></paper-input>\n<paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" class=\"species\" floatingLabel></paper-input>\n<paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" class=\"subspecies\" floatingLabel></paper-input>\n<core-label>\n  Alien species?\n  <paper-toggle-button id=\"is-alien\"  checked=\"false\"></paper-toggle-button>\n</core-label>\n<paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\"  class=\"common_name\" floatingLabel></paper-input>\n<paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input>\n  <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",[...]</span>.<br/>There should be no spaces between the quotes and comma or colon. If there are, it may not save correctly.</span>\n<paper-input label=\"Clade\" class=\"capitalize\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input>\n<paper-input label=\"Subtype\" class=\"capitalize\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input>\n<paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input>\n<paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" class=\"linnean_order\" floatingLabel></paper-input>\n<paper-input label=\"Common Type (eg., 'lizard')\" id=\"edit-major-common-type\" name=\"edit-major-common-type\" class=\"major_common_type\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" class=\"genus_authority\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input>\n<core-label>\n  Use Parenthesis for Genus Authority\n  <paper-toggle-button id=\"genus-authority-parens\"  checked=\"false\"></paper-toggle-button>\n</core-label>\n<paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" class=\"species_authority\" floatingLabel></paper-input>\n<paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input>\n<core-label>\n  Use Parenthesis for Species Authority\n  <paper-toggle-button id=\"species-authority-parens\" checked=\"false\"></paper-toggle-button>\n</core-label>\n<br/><br/>\n<paper-autogrow-textarea id=\"edit-notes-autogrow\" rows=\"5\">\n  <textarea placeholder=\"Notes\" id=\"edit-notes\" name=\"edit-notes\" aria-describedby=\"notes-help\" rows=\"5\"></textarea>\n</paper-autogrow-textarea>\n<span class=\"help-block\" id=\"notes-help\">You can write your notes in Markdown. (<a href=\"https://daringfireball.net/projects/markdown/syntax\" \"onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'\">Official Full Syntax Guide</a>)</span>\n<div id=\"upload-image\"></div>\n<span class=\"help-block\" id=\"upload-image-help\">You can drag and drop an image above, or enter its server path below.</span>\n<paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input>\n  <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>\n<paper-input label=\"Image Credit\" id=\"edit-image-credit\" name=\"edit-image-credit\" floatingLabel></paper-input>\n<paper-input label=\"Image License\" id=\"edit-image-license\" name=\"edit-image-license\" floatingLabel></paper-input>\n<paper-input label=\"Taxon Credit\" id=\"edit-taxon-credit\" name=\"edit-taxon-credit\" floatingLabel aria-describedby=\"taxon-credit-help\"></paper-input>\n  <span class=\"help-block\" id=\"taxon-credit-help\">This will be displayed as \"Taxon information by [your entry].\"</span>\n<paper-input label=\"Taxon Credit Date\" id=\"edit-taxon-credit-date\" name=\"edit-taxon-credit-date\" floatingLabel></paper-input>\n" + extraHtml + "\n<input type=\"hidden\" name=\"edit-taxon-author\" id=\"edit-taxon-author\" value=\"\" />";
-  html = "<paper-action-dialog backdrop layered autoCloseDisabled closeSelector=\"#close-editor\" id='modal-taxon-edit'>\n  <div id='modal-taxon-editor'>\n    " + editHtml + "\n  </div>\n  <paper-button id='close-editor' dismissive>Cancel</paper-button>\n  <paper-button id='duplicate-taxon' dismissive>Duplicate</paper-button>\n  <paper-button id='save-editor' affirmative>" + affirmativeText + "</paper-button></paper-action-dialog>";
+  editHtml = "<paper-input label=\"Genus\" id=\"edit-genus\" name=\"edit-genus\" class=\"genus\" floatingLabel></paper-input>\n<paper-input label=\"Species\" id=\"edit-species\" name=\"edit-species\" class=\"species\" floatingLabel></paper-input>\n<paper-input label=\"Subspecies\" id=\"edit-subspecies\" name=\"edit-subspecies\" class=\"subspecies\" floatingLabel></paper-input>\n<iron-label>\n  Alien species?\n  <paper-toggle-button id=\"is-alien\"  checked=\"false\"></paper-toggle-button>\n</iron-label>\n<paper-input label=\"Common Name\" id=\"edit-common-name\" name=\"edit-common-name\"  class=\"common_name\" floatingLabel></paper-input>\n<paper-input label=\"Deprecated Scientific Names\" id=\"edit-deprecated-scientific\" name=\"edit-depreated-scientific\" floatingLabel aria-describedby=\"deprecatedHelp\"></paper-input>\n  <span class=\"help-block\" id=\"deprecatedHelp\">List names here in the form <span class=\"code\">\"Genus species\":\"Authority: year\",\"Genus species\":\"Authority: year\",[...]</span>.<br/>There should be no spaces between the quotes and comma or colon. If there are, it may not save correctly.</span>\n<paper-input label=\"Clade\" class=\"capitalize\" id=\"edit-major-type\" name=\"edit-major-type\" floatingLabel></paper-input>\n<paper-input label=\"Subtype\" class=\"capitalize\" id=\"edit-major-subtype\" name=\"edit-major-subtype\" floatingLabel></paper-input>\n<paper-input label=\"Minor clade / 'Family'\" id=\"edit-minor-type\" name=\"edit-minor-type\" floatingLabel></paper-input>\n<paper-input label=\"Linnean Order\" id=\"edit-linnean-order\" name=\"edit-linnean-order\" class=\"linnean_order\" floatingLabel></paper-input>\n<paper-input label=\"Common Type (eg., 'lizard')\" id=\"edit-major-common-type\" name=\"edit-major-common-type\" class=\"major_common_type\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority\" id=\"edit-genus-authority\" name=\"edit-genus-authority\" class=\"genus_authority\" floatingLabel></paper-input>\n<paper-input label=\"Genus authority year\" id=\"edit-gauthyear\" name=\"edit-gauthyear\" floatingLabel></paper-input>\n<iron-label>\n  Use Parenthesis for Genus Authority\n  <paper-toggle-button id=\"genus-authority-parens\"  checked=\"false\"></paper-toggle-button>\n</iron-label>\n<paper-input label=\"Species authority\" id=\"edit-species-authority\" name=\"edit-species-authority\" class=\"species_authority\" floatingLabel></paper-input>\n<paper-input label=\"Species authority year\" id=\"edit-sauthyear\" name=\"edit-sauthyear\" floatingLabel></paper-input>\n<iron-label>\n  Use Parenthesis for Species Authority\n  <paper-toggle-button id=\"species-authority-parens\" checked=\"false\"></paper-toggle-button>\n</iron-label>\n<br/><br/>\n<iron-autogrow-textarea id=\"edit-notes\" rows=\"5\" aria-describedby=\"notes-help\" placeholder=\"Notes\">\n  <textarea placeholder=\"Notes\" id=\"edit-notes-textarea\" name=\"edit-notes-textarea\" aria-describedby=\"notes-help\" rows=\"5\"></textarea>\n</iron-autogrow-textarea>\n<span class=\"help-block\" id=\"notes-help\">You can write your notes in Markdown. (<a href=\"https://daringfireball.net/projects/markdown/syntax\" \"onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'\">Official Full Syntax Guide</a>)</span>\n<div id=\"upload-image\"></div>\n<span class=\"help-block\" id=\"upload-image-help\">You can drag and drop an image above, or enter its server path below.</span>\n<paper-input label=\"Image\" id=\"edit-image\" name=\"edit-image\" floatingLabel aria-describedby=\"imagehelp\"></paper-input>\n  <span class=\"help-block\" id=\"imagehelp\">The image path here should be relative to the <span class=\"code\">public_html/cndb/</span> directory.</span>\n<paper-input label=\"Image Credit\" id=\"edit-image-credit\" name=\"edit-image-credit\" floatingLabel></paper-input>\n<paper-input label=\"Image License\" id=\"edit-image-license\" name=\"edit-image-license\" floatingLabel></paper-input>\n<paper-input label=\"Taxon Credit\" id=\"edit-taxon-credit\" name=\"edit-taxon-credit\" floatingLabel aria-describedby=\"taxon-credit-help\"></paper-input>\n  <span class=\"help-block\" id=\"taxon-credit-help\">This will be displayed as \"Taxon information by [your entry].\"</span>\n<paper-input label=\"Taxon Credit Date\" id=\"edit-taxon-credit-date\" name=\"edit-taxon-credit-date\" floatingLabel></paper-input>\n" + extraHtml + "\n<input type=\"hidden\" name=\"edit-taxon-author\" id=\"edit-taxon-author\" value=\"\" />";
+  html = "<paper-dialog modal id='modal-taxon-edit' entry-animation=\"scale-up-animation\" exit-animation=\"fade-out-animation\">\n  <h2 id=\"editor-title\">Taxon Editor</h2>\n  <paper-dialog-scrollable id='modal-taxon-editor'>\n    " + editHtml + "\n  </paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button id='close-editor' dialog-dismiss>Cancel</paper-button>\n    <paper-button id='duplicate-taxon'>Duplicate</paper-button>\n    <paper-button id='save-editor'>" + affirmativeText + "</paper-button>\n  </div>\n</paper-dialog>";
   if ($("#modal-taxon-edit").exists()) {
     $("#modal-taxon-edit").remove();
   }
   $("#search-results").after(html);
   handleDragDropImage();
-  try {
-    noteArea = $("html /deep/ #edit-notes").get(0);
-    $("html /deep/ #edit-notes-autogrow").attr("target", noteArea);
-  } catch (_error) {
-    e = _error;
-    try {
-      noteArea = $("html >>> #edit-notes").get(0);
-      $("html >>> #edit-notes-autogrow").attr("target", noteArea);
-    } catch (_error) {
-      e = _error;
-      try {
-        noteArea = $("#edit-notes").get(0);
-        $("#edit-notes-autogrow").attr("target", noteArea);
-      } catch (_error) {
-        e = _error;
-        console.error("Couldn't bind autogrow");
-      }
-    }
-  }
   $("#modal-taxon-edit").unbind();
-  try {
-    $("html /deep/ #save-editor").unbind();
-    return $("html /deep/ #duplicate-taxon").unbind().click(function() {
-      return createDuplicateTaxon();
-    });
-  } catch (_error) {
-    e = _error;
-    $("html >>> #save-editor").unbind();
-    return $("html >>> #duplicate-taxon").unbind().click(function() {
-      return createDuplicateTaxon();
-    });
-  }
+  d$("#save-editor").unbind();
+  return d$("#duplicate-taxon").unbind().click(function() {
+    return createDuplicateTaxon();
+  });
 };
 
 createNewTaxon = function() {
@@ -264,33 +237,21 @@ createNewTaxon = function() {
   /*
    * Load a blank modal taxon editor, ready to make a new one
    */
-  var e, whoEdited;
+  var whoEdited, windowHeight;
   animateLoad();
   loadModalTaxonEditor("", "Create");
-  try {
-    $("html /deep/ #duplicate-taxon").remove();
-  } catch (_error) {
-    e = _error;
-    $("html >>> #duplicate-taxon").remove();
-  }
+  d$("#editor-title").text("Create New Taxon");
+  windowHeight = $(window).height() * .5;
+  d$("#modal-taxon-editor").css("min-height", windowHeight + "px");
+  d$("#modal-taxon-editor div.scrollable").css("max-height", "");
+  d$("#modal-taxon-edit").addClass("create-new-taxon");
+  d$("#duplicate-taxon").remove();
   whoEdited = isNull($.cookie("ssarherps_fullname")) ? $.cookie("ssarherps_user") : $.cookie("ssarherps_fullname");
-  try {
-    $("html /deep/ #edit-taxon-author").attr("value", whoEdited);
-  } catch (_error) {
-    e = _error;
-    $("html >>> #edit-taxon-author").attr("value", whoEdited);
-  }
-  try {
-    $("html /deep/ #save-editor").click(function() {
-      return saveEditorEntry("new");
-    });
-  } catch (_error) {
-    e = _error;
-    $("html >>> #save-editor").click(function() {
-      return saveEditorEntry("new");
-    });
-  }
-  $("#modal-taxon-edit")[0].open();
+  d$("#edit-taxon-author").attr("value", whoEdited);
+  d$("#save-editor").click(function() {
+    return saveEditorEntry("new");
+  });
+  $("#modal-taxon-edit").get(0).open();
   return stopLoad();
 };
 
@@ -302,29 +263,18 @@ createDuplicateTaxon = function() {
    * Remove the edited notes, remove the duplicate button, and change
    * the bidings so a new entry is created.
    */
-  var e;
+  var e, newButton;
   animateLoad();
   try {
-    try {
-      $("html /deep/ #taxon-id").remove();
-      $("html /deep/ #last-edited-by").remove();
-      $("html /deep/ #duplicate-taxon").remove();
-    } catch (_error) {
-      e = _error;
-      $("html >>> #taxon-id").remove();
-      $("html >>> #last-edited-by").remove();
-      $("html >>> #duplicate-taxon").remove();
-    }
-    try {
-      $("html /deep/ #save-editor").text("Create").unbind().click(function() {
-        return saveEditorEntry("new");
-      });
-    } catch (_error) {
-      e = _error;
-      $("html >>> #save-editor").text("Create").unbind().click(function() {
-        return saveEditorEntry("new");
-      });
-    }
+    d$("#taxon-id").remove();
+    d$("#last-edited-by").remove();
+    d$("#duplicate-taxon").remove();
+    d$("#editor-title").text("Create Duplicate Taxon");
+    newButton = "<paper-button id=\"save-editor\">Create</paper-button>";
+    d$("#save-editor").replaceWith(newButton);
+    d$("#save-editor").click(function() {
+      return saveEditorEntry("new");
+    });
     delay(250, function() {
       return stopLoad();
     });
@@ -332,14 +282,9 @@ createDuplicateTaxon = function() {
     e = _error;
     stopLoadError("Unable to duplicate taxon");
     console.error("Couldn't duplicate taxon! " + e.message);
-    try {
-      $("html /deep/ #modal-taxon-edit").get(0).close();
-    } catch (_error) {
-      e = _error;
-      $("html >>> #modal-taxon-edit").get(0).close();
-    }
+    d$("#modal-taxon-edit").get(0).close();
   }
-  return false;
+  return true;
 };
 
 lookupEditorSpecies = function(taxon) {
@@ -365,7 +310,7 @@ lookupEditorSpecies = function(taxon) {
   });
   existensial = d$("#last-edited-by").exists();
   if (!existensial) {
-    d$("#axon-credit-help").after(lastEdited);
+    d$("#taxon-credit-help").after(lastEdited);
   }
 
   /*
@@ -434,7 +379,7 @@ lookupEditorSpecies = function(taxon) {
     console.warn("Pinging with", "" + uri.urlString + searchParams.targetApi + "?q=" + taxon);
   }
   $.get(searchParams.targetApi, args, "json").done(function(result) {
-    var category, col, colSplit, d, data, e, fieldSelector, noteArea, speciesString, tempSelector, toggleColumns, whoEdited, year;
+    var category, col, colSplit, d, data, e, fieldSelector, speciesString, tempSelector, textarea, toggleColumns, whoEdited, width, year;
     try {
       data = result.result[0];
       if (data == null) {
@@ -509,33 +454,33 @@ lookupEditorSpecies = function(taxon) {
           if (col !== "notes") {
             d$(fieldSelector).attr("value", d);
           } else {
-            d$(fieldSelector).text(d);
+            width = $("#modal-taxon-edit").width() * .9;
+            d$(fieldSelector).css("width", width + "px");
+            textarea = d$(fieldSelector).get(0).textarea;
+            $(textarea).text(d);
+            try {
+              d$(fieldSelector).get(0)._update();
+            } catch (_error) {
+              e = _error;
+              console.warn("Couldn't update the textarea! See", "https://github.com/PolymerElements/iron-autogrow-textarea/issues/24");
+            }
           }
         }
-      }
-      try {
-        noteArea = d$("#edit-notes").get(0);
-        d$("#edit-notes-autogrow").get(0).update(noteArea);
-      } catch (_error) {
-        e = _error;
-        console.error("Couldn't update autogrow size. Possibly related to", "https://github.com/Polymer/paper-input/issues/182");
       }
       $("#modal-taxon-edit")[0].open();
       return stopLoad();
     } catch (_error) {
       e = _error;
-      stopLoadError();
-      return toastStatusMessage("Unable to populate the editor for this taxon - " + e.message);
+      return stopLoadError("Unable to populate the editor for this taxon - " + e.message);
     }
   }).fail(function(result, status) {
-    stopLoadError();
-    return toastStatusMessage("There was a server error populating this taxon. Please try again.");
+    return stopLoadError("There was a server error populating this taxon. Please try again.");
   });
   return false;
 };
 
 saveEditorEntry = function(performMode) {
-  var args, auth, authYearString, authority, authorityA, completionErrorMessage, consoleError, dep, depA, depS, depString, e, error, escapeCompletion, examineIds, gYear, hash, item, k, keepCase, len, link, m, requiredNotEmpty, s64, sYear, saveObject, saveString, secret, taxon, testAuthorityYear, trimmedYearString, userVerification, year;
+  var args, auth, authYearString, authority, authorityA, col, completionErrorMessage, consoleError, dep, depA, depS, depString, e, error, escapeCompletion, examineIds, gYear, hash, id, item, k, keepCase, len, link, m, nullTest, requiredNotEmpty, s64, sYear, saveObject, saveString, secret, selectorSample, spilloverError, taxon, testAuthorityYear, trimmedYearString, userVerification, val, year;
   if (performMode == null) {
     performMode = "save";
   }
@@ -547,12 +492,7 @@ saveEditorEntry = function(performMode) {
   examineIds = ["genus", "species", "subspecies", "common-name", "major-type", "major-common-type", "major-subtype", "minor-type", "linnean-order", "genus-authority", "species-authority", "notes", "image", "image-credit", "image-license", "taxon-author", "taxon-credit", "taxon-credit-date"];
   saveObject = new Object();
   escapeCompletion = false;
-  try {
-    $("html /deep/ paper-input /deep/ paper-input-decorator").removeAttr("isinvalid");
-  } catch (_error) {
-    e = _error;
-    $("html >>> paper-input-button >>> paper-input-decorator").removeAttr("isinvalid");
-  }
+  d$("paper-input").removeAttr("invalid");
   try {
     testAuthorityYear = function(authYearDeepInputSelector, directYear) {
       var altYear, authorityRegex, d, error, linnaeusYear, nextYear, ref, yearString, years;
@@ -605,12 +545,7 @@ saveEditorEntry = function(performMode) {
         escapeCompletion = true;
         console.warn(authYearDeepInputSelector + " failed its validity checks for " + yearString + "!");
         if (!directYear) {
-          try {
-            $("html /deep/ " + authYearDeepInputSelector + " /deep/ paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
-          } catch (_error) {
-            e = _error;
-            $("html >>> " + authYearDeepInputSelector + " >>> paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
-          }
+          d$("" + authYearDeepInputSelector).attr("error-message", error).attr("invalid", "invalid");
         } else {
           throw Error(error);
         }
@@ -673,12 +608,7 @@ saveEditorEntry = function(performMode) {
     console.error("Failed to parse the deprecated scientifics - " + e.message + ". They may be empty.");
     depString = "";
     error = e.message + ". Check your formatting!";
-    try {
-      $("html /deep/ #edit-deprecated-scientific /deep/ paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
-    } catch (_error) {
-      e = _error;
-      $("html >>> #edit-deprecated-scientific >>> paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
-    }
+    d$("#edit-deprecated-scientific").attr("error-message", error).attr("invalid", true);
     escapeCompletion = true;
     completionErrorMessage = "There was a problem with your formatting for the deprecated scientifics. Please check it and try again.";
   }
@@ -692,19 +622,14 @@ saveEditorEntry = function(performMode) {
   if (!isNull(d$("#edit-taxon-credit").val())) {
     requiredNotEmpty.push("taxon-credit-date");
   }
-  $.each(examineIds, function(k, id) {
-    var col, nullTest, selectorSample, spilloverError, thisSelector, val;
-    try {
-      thisSelector = "html /deep/ #edit-" + id;
-      if (isNull($(thisSelector))) {
-        throw "Invalid Selector";
-      }
-    } catch (_error) {
-      e = _error;
-      thisSelector = "html >>> #edit-" + id;
-    }
+  for (k in examineIds) {
+    id = examineIds[k];
     col = id.replace(/-/g, "_");
-    val = $(thisSelector).val().trim();
+    if (col !== "notes") {
+      val = d$("#edit-" + id).val().trim();
+    } else {
+      val = d$("#edit-notes").get(0).textarea.value;
+    }
     if (indexOf.call(keepCase, col) < 0) {
       val = val.toLowerCase();
     }
@@ -715,12 +640,7 @@ saveEditorEntry = function(performMode) {
         error = "This required field must have only letters";
         nullTest = id === "genus" || id === "species" ? isNull(val) : false;
         if (/[^A-Za-z]/m.test(val) || nullTest) {
-          try {
-            $("html /deep/ #edit-" + id + " /deep/ paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
-          } catch (_error) {
-            e = _error;
-            $("html >>> #edit-" + id + " >>> paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
-          }
+          d$("#edit-" + id).attr("error-message", error).attr("invalid", "invalid");
           escapeCompletion = true;
         }
         break;
@@ -731,12 +651,7 @@ saveEditorEntry = function(performMode) {
       case "species-authority":
         error = "This cannot be empty";
         if (isNull(val)) {
-          try {
-            $("html /deep/ #edit-" + id + " /deep/ paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
-          } catch (_error) {
-            e = _error;
-            $("html >>> #edit-" + id + " >>> paper-input-decorator").attr("error", error).attr("isinvalid", "isinvalid");
-          }
+          $("#edit-" + id).attr("error-message", error).attr("invalid", "invalid");
           escapeCompletion = true;
         }
         break;
@@ -751,18 +666,13 @@ saveEditorEntry = function(performMode) {
             spilloverError = "If you have a taxon credit, it also needs a date";
           }
           if (isNull(val)) {
-            try {
-              $("html /deep/ #edit-" + id + " /deep/ paper-input-decorator").attr("error", spilloverError).attr("isinvalid", "isinvalid");
-            } catch (_error) {
-              e = _error;
-              $("html >>> #edit-" + id + " >>> paper-input-decorator").attr("error", spilloverError).attr("isinvalid", "isinvalid");
-            }
+            d$("#edit-" + id).attr("error-message", spilloverError).attr("invalid", "invalid");
             escapeCompletion = true;
           }
         }
     }
-    return saveObject[col] = val;
-  });
+    saveObject[col] = val;
+  }
   if (escapeCompletion) {
     animateLoad();
     consoleError = completionErrorMessage != null ? completionErrorMessage : "Bad characters in entry. Stopping ...";
@@ -771,7 +681,7 @@ saveEditorEntry = function(performMode) {
     }
     stopLoadError(completionErrorMessage);
     console.error(consoleError);
-    return false;
+    return true;
   }
   saveObject.id = d$("#taxon-id").val();
   saveObject.parens_auth_genus = d$("#genus-authority-parens").polymerChecked();
@@ -795,7 +705,7 @@ saveEditorEntry = function(performMode) {
     console.warn("The total save object so far is:", saveObject);
     console.warn("Got the output string", saveSring);
     console.warn("Sending b64 string", s64);
-    return false;
+    return true;
   }
   hash = $.cookie("ssarherps_auth");
   secret = $.cookie("ssarherps_secret");
@@ -812,12 +722,7 @@ saveEditorEntry = function(performMode) {
         console.error("Warning! The item saved, even though it wasn't supposed to.");
         return false;
       }
-      try {
-        $("html /deep/ #modal-taxon-edit")[0].close();
-      } catch (_error) {
-        e = _error;
-        $("html >>> #modal-taxon-edit")[0].close();
-      }
+      d$("#modal-taxon-edit").get(0).close();
       if (!isNull($("#admin-search").val())) {
         renderAdminSearchResults();
       }
