@@ -843,14 +843,12 @@ deleteTaxon = (taxaId) ->
       toastStatusMessage("#{taxon} with ID #{taxaId} has been removed from the database.")
       stopLoad()
     else
-      stopLoadError()
-      toastStatusMessage(result.human_error)
+      stopLoadError(result.human_error)
       console.error(result.error)
       console.warn(result)
     false
   .fail (result,status) ->
-    stopLoadError()
-    toastStatusMessage("Failed to communicate with the server.")
+    stopLoadError("Failed to communicate with the server.")
     false
 
 handleDragDropImage = (uploadTargetSelector = "#upload-image", callback) ->
