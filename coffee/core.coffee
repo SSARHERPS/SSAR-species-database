@@ -324,9 +324,11 @@ toastStatusMessage = (message, className = "", duration = 3000, selector = "#sea
   if not $(selector).exists()
     html = "<paper-toast id=\"#{selector.slice(1)}\" duration=\"#{duration}\"></paper-toast>"
     $(html).appendTo("body")
-  $(selector).attr("text",message)
-  $(selector).addClass(className)
-  $(selector)[0].show()
+  $(selector)
+  .attr("text",message)
+  .text(message)
+  .addClass(className)
+  $(selector).get(0).show()
   delay duration + 500, ->
     # A short time after it hides, clean it up
     $(selector).empty()
