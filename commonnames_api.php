@@ -18,7 +18,7 @@
  *
  * Initial version by Philip Kahn
  * Started July 2014
- * https://github.com/tigerhawkvok/SSAR-species-database
+ * https://github.com/SSARHERPS/SSAR-species-database
  **********************************************************/
 
 /*****************
@@ -29,6 +29,8 @@
 
 require_once("CONFIG.php");
 require_once(dirname(__FILE__)."/core/core.php");
+# This is a public API
+header("Access-Control-Allow-Origin: *");
 
 $db = new DBHelper($default_database,$default_sql_user,$default_sql_password,$default_sql_url,$default_table,$db_cols);
 
@@ -332,7 +334,7 @@ function doSearch($overrideSearch = null)
             {
                 if(is_string($r)) $error = $r;
                 else $error = $e;
-            }            
+            }
         }
         else if(is_numeric($search))
         {
