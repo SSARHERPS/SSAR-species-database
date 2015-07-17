@@ -140,7 +140,7 @@
             <!-- This is a filter column. We need a radio button for
             AND/OR, and then to walk through the filters and append the object to the query. -->
             <label for="type" class="sr-only">Clade Restriction</label>
-            <paper-menu label="Group" data-column="linnean_order" class="cndb-filter" id="linnean-order" id="type" name="type" attrForSelected="data-type" selected="0">
+            <paper-menu label="Group" data-column="linnean_order" class="cndb-filter" id="linnean-order" name="type" attrForSelected="data-type" selected="0">
               <paper-item data-type="any">All</paper-item>
               <paper-item data-type="squamata">Non-Snake Lizards</paper-item>
               <paper-item data-type="serpentes">Snakes</paper-item>
@@ -154,27 +154,28 @@
           </div>
         </div>
         <div class="row">
-        <!-- Now, elements that are hidden by default -->
-        <paper-button data-toggle="collapse" data-target="#collapse-advanced" aria-expanded="false" aria-controls="collapse-advanced" class="materialbluegrey" id="collapse-button" raised>Advanced Options <iron-icon icon="icons:unfold-more" id="collapse-icon"></iron-icon></paper-button>
-        <div class="collapse" id="collapse-advanced">
-          <!-- Clade -->
-          <paper-input label="Clade" id="major-type-filter" name="major-type-filter" class="cndb-filter col-md-4 col-xs-6" data-column="major_type"></paper-input>
-          <!-- Subtype -->
-          <paper-input label="Subtype" id="major-subtype-filter" name="major-subtype-filter" class="cndb-filter col-md-4 col-xs-6" data-column="major_subtype"></paper-input>
-          <!-- Family -->
-          <paper-input label="Minor Type / Family" id="minor-type-filter" name="minor-type-filter" class="cndb-filter col-md-4 col-xs-6" data-column="minor_type"></paper-input>
-          <!-- Genus authority -->
-          <paper-input label="Genus Authority" id="genus-authority-filter" name="species-authority-filter" class="cndb-filter col-md-4 col-xs-6" data-column="genus_authority"></paper-input>
-          <!-- Species authority -->
-          <paper-input label="Species Authority" id="species-authority-filter" name="species-authority-filter" class="cndb-filter col-md-4 col-xs-6" data-column="species_authority"></paper-input>
-          <br/>
-          <div>
-            <label for="alien-filter" class="sr-only">Alien Species</label>
-            <paper-radio-group id="alien-filter" selected="both">
-              <paper-radio-button name="both" id="radio-both">Show both alien and native species</paper-radio-button>
-              <paper-radio-button name="native-only" id="radio-native">Show only native species</paper-radio-button>
-              <paper-radio-button name="alien-only" id="radio-alien">Show only alien species</paper-radio-button>
-            </paper-radio-group>
+          <!-- Now, elements that are hidden by default -->
+          <paper-button data-toggle="collapse" data-target="#collapse-advanced" aria-expanded="false" aria-controls="collapse-advanced" class="materialbluegrey" id="collapse-button" raised>Advanced Options <iron-icon icon="icons:unfold-more" id="collapse-icon"></iron-icon></paper-button>
+          <div class="collapse" id="collapse-advanced">
+            <!-- Clade -->
+            <paper-input label="Clade" id="major-type-filter" name="major-type-filter" class="cndb-filter col-md-4 col-xs-6" data-column="major_type"></paper-input>
+            <!-- Subtype -->
+            <paper-input label="Subtype" id="major-subtype-filter" name="major-subtype-filter" class="cndb-filter col-md-4 col-xs-6" data-column="major_subtype"></paper-input>
+            <!-- Family -->
+            <paper-input label="Minor Type / Family" id="minor-type-filter" name="minor-type-filter" class="cndb-filter col-md-4 col-xs-6" data-column="minor_type"></paper-input>
+            <!-- Genus authority -->
+            <paper-input label="Genus Authority" id="genus-authority-filter" name="species-authority-filter" class="cndb-filter col-md-4 col-xs-6" data-column="genus_authority"></paper-input>
+            <!-- Species authority -->
+            <paper-input label="Species Authority" id="species-authority-filter" name="species-authority-filter" class="cndb-filter col-md-4 col-xs-6" data-column="species_authority"></paper-input>
+            <br/>
+            <div>
+              <label for="alien-filter" class="sr-only">Alien Species</label>
+              <paper-radio-group id="alien-filter" selected="both">
+                <paper-radio-button name="both" id="radio-both">Show both alien and native species</paper-radio-button>
+                <paper-radio-button name="native-only" id="radio-native">Show only native species</paper-radio-button>
+                <paper-radio-button name="alien-only" id="radio-alien">Show only alien species</paper-radio-button>
+              </paper-radio-group>
+            </div>
           </div>
         </div>
       </fieldset>
