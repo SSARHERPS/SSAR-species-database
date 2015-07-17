@@ -452,7 +452,7 @@ mapNewWindows = function(stopPropagation) {
 };
 
 toastStatusMessage = function(message, className, duration, selector) {
-  var html;
+  var html, ref;
   if (className == null) {
     className = "";
   }
@@ -466,6 +466,19 @@ toastStatusMessage = function(message, className, duration, selector) {
   /*
    * Pop up a status message
    */
+  if (((ref = window.metaTracker) != null ? ref.isToasting : void 0) == null) {
+    if (window.metaTracker == null) {
+      window.metaTracker = new Object();
+      window.metaTracker.isToasting = false;
+    }
+  }
+  if (window.metaTracker.isToasting) {
+    delay(250, function() {
+      return toastStatusMessage(message, className, duration, selector);
+    });
+    return false;
+  }
+  window.metaTracker.isToasting = true;
   if (!isNumber(duration)) {
     duration = 3000;
   }
@@ -481,7 +494,8 @@ toastStatusMessage = function(message, className, duration, selector) {
   return delay(duration + 500, function() {
     $(selector).empty();
     $(selector).removeClass(className);
-    return $(selector).attr("text", "");
+    $(selector).attr("text", "");
+    return window.metaTracker.isToasting = false;
   });
 };
 
