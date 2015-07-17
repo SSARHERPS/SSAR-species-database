@@ -7051,6 +7051,10 @@ paper-autogrow-textarea textarea {
   margin: 0;
   left: 25%;
 }
+iron-label {
+  margin-top: .5rem;
+  display: block;
+}
 paper-radio-button #radioContainer,
 paper-radio-button #radioContainer div {
   box-sizing: content-box !important;
