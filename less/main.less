@@ -127,7 +127,7 @@ body {
 
 paper-dialog-scrollable {
     padding: 1rem !important;
-    min-height: 7rem;
+    min-height: 15rem;
 }
 
 @{hc} paper-dialog-scrollable {
@@ -399,7 +399,7 @@ copyright-statement {
 }
 .help-block {
   display: block;
-  margin-top: 5px;
+  margin-top: 1.25rem;
   margin-bottom: 10px;
   color: #737373;
 }
@@ -415,8 +415,8 @@ copyright-statement {
     display:block;
 }
 
-paper-autogrow-textarea textarea {
-    width:90%;
+paper-toast, paper-spinner {
+    z-index:1000;
 }
 
 #password_security + #login {
@@ -898,10 +898,7 @@ html /deep/ #modal-taxon-editor paper-input {
 }
 
 html /deep/ .help-block {
-  display: block;
-  margin-top: 1.25rem;
-  margin-bottom: 10px;
-  color: #737373;
+    .help-block()
 }
 
 html /deep/ paper-autogrow-textarea textarea {

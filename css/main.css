@@ -6770,7 +6770,7 @@ html >>> [affirmative] {
 }
 paper-dialog-scrollable {
   padding: 1rem !important;
-  min-height: 7rem;
+  min-height: 15rem;
 }
 html >>> paper-dialog-scrollable {
   padding: 1rem !important;
@@ -7015,13 +7015,14 @@ html >>> #modal-taxon-editor paper-input {
 }
 .help-block {
   display: block;
-  margin-top: 5px;
+  margin-top: 1.25rem;
   margin-bottom: 10px;
   color: #737373;
 }
 html >>> .help-block {
-  display: block;
   margin-top: 5px;
+  display: block;
+  margin-top: 1.25rem;
   margin-bottom: 10px;
   color: #737373;
 }
@@ -7031,8 +7032,9 @@ html >>> paper-autogrow-textarea textarea {
 #modal-taxon-editor paper-input {
   display: block;
 }
-paper-autogrow-textarea textarea {
-  width: 90%;
+paper-toast,
+paper-spinner {
+  z-index: 1000;
 }
 #password_security + #login {
   float: left;
@@ -7476,6 +7478,7 @@ html /deep/ #modal-taxon-editor paper-input {
   display: block;
 }
 html /deep/ .help-block {
+  margin-top: 5px;
   display: block;
   margin-top: 1.25rem;
   margin-bottom: 10px;
