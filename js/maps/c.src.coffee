@@ -767,6 +767,18 @@ checkFileVersion = (forceNow = false) ->
   false
 
 
+setupServiceWorker = ->
+  # http://www.html5rocks.com/en/tutorials/service-worker/introduction/
+  if "serviceworker" of navigator
+    navigator.serviceWorker
+    .register("js/serviceWorker.min.js")
+    .then (registration) ->
+      console.log("ServiceWorker registered with scope", registration.scope)
+    .catch (error) ->
+      console.warn("ServiceWorker registration failed:", error)
+  false
+
+
 foo = ->
   toastStatusMessage("Sorry, this feature is not yet finished")
   stopLoad()
