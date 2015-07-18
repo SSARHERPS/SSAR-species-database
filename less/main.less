@@ -43,6 +43,10 @@ body {
     color:#fff;
 }
 
+paper-fab.materialblue.paper-fab-0 {
+    .materialblue();
+}
+
 /*
  * LESS is failing at these for now:
  * https://github.com/less/less.js/issues/2623
@@ -52,12 +56,10 @@ body {
  */
 
 @{hc} .materialblue {
-
-    background: @material-blue;
-    color:#fff;
+    .materialblue();
 }
 
-.materialgreen, .materialblue:hover {
+.materialgreen, .materialblue:hover, paper-fab.materialblue.paper-fab-0:hover {
     background: @material-green;
     color: #fff;
 }

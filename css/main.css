@@ -6706,6 +6706,10 @@ body {
   background: #5677fc;
   color: #fff;
 }
+paper-fab.materialblue.paper-fab-0 {
+  background: #5677fc;
+  color: #fff;
+}
 /*
  * LESS is failing at these for now:
  * https://github.com/less/less.js/issues/2623
@@ -6718,7 +6722,8 @@ html >>> .materialblue {
   color: #fff;
 }
 .materialgreen,
-.materialblue:hover {
+.materialblue:hover,
+paper-fab.materialblue.paper-fab-0:hover {
   background: #4caf50;
   color: #fff;
 }
