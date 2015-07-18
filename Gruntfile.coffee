@@ -90,6 +90,7 @@ module.exports = (grunt) ->
         files:
           "js/c.min.js":["js/c.js"]
           "js/admin.min.js":["js/admin.js"]
+          "js/serviceWorker.min.js":["js/serviceWorker.js"]
       minpurl:
         options:
           sourceMap:true
@@ -135,6 +136,7 @@ module.exports = (grunt) ->
         files:
           "js/c.js":["coffee/core.coffee","coffee/search.coffee"]
           "js/admin.js":"coffee/admin.coffee"
+          "js/serviceWorker.js":"coffee/serviceWorker.coffee"
     watch:
       scripts:
         files: ["coffee/*.coffee"]
