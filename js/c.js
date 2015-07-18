@@ -1751,6 +1751,7 @@ modalTaxon = function(taxon) {
       notes = data.notes;
       console.warn("Couldn't parse markdown!! " + e.message);
     }
+    notes = notes.replace(/\&amp;(([a-z]+|[0-9]+);)/mg, "&$1");
     commonType = !isNull(data.major_common_type) ? " (<span id='taxon-common-type'>" + data.major_common_type + "</span>) " : "";
     html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type' class=\"major_type\">" + data.major_type + "</span>\n    " + commonType + "\n    <iron-icon icon='arrow-forward'></iron-icon>\n    <span id='taxon-subtype' class=\"major_subtype\">" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_credit + "</p>";
     $("#modal-taxon-content").html(html);

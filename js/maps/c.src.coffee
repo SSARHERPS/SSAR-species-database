@@ -1449,6 +1449,9 @@ modalTaxon = (taxon = undefined) ->
     catch e
       notes = data.notes
       console.warn("Couldn't parse markdown!! #{e.message}")
+    # For the notes, we want to fix any badly-encoded html with real
+    # encodings
+    notes = notes.replace(/\&amp;(([a-z]+|[0-9]+);)/mg, "&$1")
     commonType = unless isNull(data.major_common_type) then " (<span id='taxon-common-type'>#{data.major_common_type}</span>) " else ""
     html = """
     <div id='meta-taxon-info'>
