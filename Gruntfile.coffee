@@ -67,6 +67,7 @@ module.exports = (grunt) ->
           sourceMapIn:"js/maps/c.js.map"
         files:
           "js/combined.min.js":["js/c.js","js/admin.js","bower_components/purl/purl.js","bower_components/xmlToJSON/lib/xmlToJSON.js","bower_components/jquery-cookie/jquery.cookie.js"]
+          "js/app.min.js":["js/c.js","js/admin.js"]
       dist:
         options:
           sourceMap:true

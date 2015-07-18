@@ -1081,7 +1081,6 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       modalTaxon()
       doFontExceptions()
       $("#result-count").text(" - #{result.count} entries")
-      testCalPhotos()
       stopLoad()
 
 
@@ -1300,6 +1299,7 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     # And finally, call our helper function
     insertImage(imageObject, taxonString, "ssarimg")
     return false
+    
   ###
   # OK, we don't have it, do CalPhotos
   #
@@ -1310,6 +1310,7 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
   # http://calphotos.berkeley.edu/thumblink.html
   # for API reference.
   ###
+  
   args = "getthumbinfo=1&num=all&cconly=1&taxon=#{taxonString}&format=xml"
   # console.log("Looking at","#{ssar.affiliateQueryUrl.calPhotos}?#{args}")
   ## CalPhotos doesn't have good headers set up. Try a CORS request.
@@ -1317,9 +1318,12 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
   doneCORS = (resultXml) ->
     result = xmlToJSON.parseString(resultXml)
     window.testData = result
-    data = result.calphotos[0]
+    try
+      data = result.calphotos[0]
+    catch e
+      data = undefined
     unless data?
-      console.warn("CalPhotos didn't return any valid images for this search!")
+      # console.warn("CalPhotos didn't return any valid images for this search! Looked for #{taxonString}")
       return false
     imageObject = new Object()
     try
@@ -1347,20 +1351,6 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     doCORSget(ssar.affiliateQueryUrl.calPhotos, args, doneCORS, failCORS)
   catch e
     console.error(e.message)
-  false
-
-
-testCalPhotos = ->
-  args = "getthumbinfo=1&num=all&cconly=1&taxon=batrachoseps&format=xml"
-  try
-    $.get(ssar.affiliateQueryUrl.calPhotos, args)
-    .done ->
-      false
-    .fail ->
-      insertCORSWorkaround()
-  catch e
-    # We're not going to do anything
-    false
   false
 
 

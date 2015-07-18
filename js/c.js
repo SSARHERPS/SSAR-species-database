@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, safariDialogHelper, searchParams, setHistory, showBadSearchErrorMessage, showDownloadChooser, sortResults, ssar, stopLoad, stopLoadError, testCalPhotos, toFloat, toInt, toObject, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, safariDialogHelper, searchParams, setHistory, showBadSearchErrorMessage, showDownloadChooser, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
   slice = [].slice,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -1372,7 +1372,6 @@ formatSearchResults = function(result, container) {
       modalTaxon();
       doFontExceptions();
       $("#result-count").text(" - " + result.count + " entries");
-      testCalPhotos();
       results.push(stopLoad());
     } else {
       results.push(void 0);
@@ -1625,9 +1624,13 @@ insertModalImage = function(imageObject, taxon, callback) {
     var data, e, result;
     result = xmlToJSON.parseString(resultXml);
     window.testData = result;
-    data = result.calphotos[0];
+    try {
+      data = result.calphotos[0];
+    } catch (_error) {
+      e = _error;
+      data = void 0;
+    }
     if (data == null) {
-      console.warn("CalPhotos didn't return any valid images for this search!");
       return false;
     }
     imageObject = new Object();
@@ -1659,22 +1662,6 @@ insertModalImage = function(imageObject, taxon, callback) {
   } catch (_error) {
     e = _error;
     console.error(e.message);
-  }
-  return false;
-};
-
-testCalPhotos = function() {
-  var args, e;
-  args = "getthumbinfo=1&num=all&cconly=1&taxon=batrachoseps&format=xml";
-  try {
-    $.get(ssar.affiliateQueryUrl.calPhotos, args).done(function() {
-      return false;
-    }).fail(function() {
-      return insertCORSWorkaround();
-    });
-  } catch (_error) {
-    e = _error;
-    false;
   }
   return false;
 };
