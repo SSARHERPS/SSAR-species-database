@@ -55,12 +55,12 @@ performSearch = (stateArgs = undefined) ->
       # be decoded at this point.
       args = "q=#{stateArgs}"
       sOrig = stateArgs.split("&")[0]
-    console.log("Searching on #{stateArgs}")
+    #console.log("Searching on #{stateArgs}")
   if s is "#" or (isNull(s) and isNull(args)) or (args is "q=" and stateArgs isnt true)
     return false
   animateLoad()
-  unless isNull(filters)
-    console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
+  # unless isNull(filters)
+  #   console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
   $.get(searchParams.targetApi,args,"json")
   .done (result) ->
     # Populate the result container
@@ -224,11 +224,11 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
               console.warn("There was an error parsing '#{col}', attempting to fix - ",e.message)
               split = col.split(":")
               year = split[1].slice(split[1].search("\"")+1,-2)
-              console.log("Examining #{year}")
+              # console.log("Examining #{year}")
               year = year.replace(/"/g,"'")
               split[1] = "\"#{year}\"}"
               col = split.join(":")
-              console.log("Reconstructed #{col}")
+              # console.log("Reconstructed #{col}")
               d = JSON.parse(col)
             genus = Object.keys(d)[0]
             species = d[genus]
@@ -292,11 +292,11 @@ parseTaxonYear = (taxonYearString,strict = true) ->
     console.warn("There was an error parsing '#{taxonYearString}', attempting to fix - ",e.message)
     split = taxonYearString.split(":")
     year = split[1].slice(split[1].search('"')+1,-2)
-    console.log("Examining #{year}")
+    # console.log("Examining #{year}")
     year = year.replace(/"/g,"'")
     split[1] = "\"#{year}\"}"
     taxonYearString = split.join(":")
-    console.log("Reconstructed #{taxonYearString}")
+    # console.log("Reconstructed #{taxonYearString}")
     try
       d = JSON.parse(taxonYearString)
     catch e
@@ -1307,7 +1307,7 @@ $ ->
       loadArgs = Base64.decode(uri.query)
     catch e
       loadArgs = ""
-    console.log("Popping state to #{loadArgs}")
+    #console.log("Popping state to #{loadArgs}")
     performSearch(loadArgs)
     temp = loadArgs.split("&")[0]
     $("#search").attr("value",temp)
