@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, showBadSearchErrorMessage, showDownloadChooser, sortResults, ssar, stopLoad, stopLoadError, testCalPhotos, toFloat, toInt, toObject, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, safariDialogHelper, searchParams, setHistory, showBadSearchErrorMessage, showDownloadChooser, sortResults, ssar, stopLoad, stopLoadError, testCalPhotos, toFloat, toInt, toObject, toastStatusMessage, uri,
   __slice = [].slice,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -1981,7 +1981,7 @@ downloadCSVList = function() {
       } else {
         $("#download-csv-file").replaceWith(html);
       }
-      $("#download-csv-file").get(0).open();
+      safariDialogHelper("#download-csv-file");
       return stopLoad();
     } catch (_error) {
       e = _error;
@@ -2101,7 +2101,7 @@ downloadHTMLList = function() {
       } else {
         $("#download-html-file").replaceWith(dialogHtml);
       }
-      $("#download-html-file").get(0).open();
+      safariDialogHelper("#download-html-file");
       stopLoad();
       return console.log("Has read clades:", hasReadClade);
     } catch (_error) {
@@ -2131,8 +2131,52 @@ showDownloadChooser = function() {
     downloadHTMLList();
     return false;
   });
-  $("#download-chooser").get(0).open();
+  safariDialogHelper();
   return false;
+};
+
+bindDismissalRemoval = function() {
+  return $("[dialog-dismiss]").unbind().click(function() {
+    return $(this).parents("paper-dialog").remove();
+  });
+};
+
+safariDialogHelper = function(selector, counter, callback) {
+  var delayTimer, e, newCount;
+  if (selector == null) {
+    selector = "#download-chooser";
+  }
+  if (counter == null) {
+    counter = 0;
+  }
+
+  /*
+   * Help Safari display paper-dialogs
+   */
+  if (typeof callback !== "function") {
+    callback = function() {
+      return bindDismissalRemoval();
+    };
+  }
+  if (counter < 10) {
+    try {
+      d$(selector).get(0).open();
+      if (typeof callback === "function") {
+        callback();
+      }
+      return stopLoad();
+    } catch (_error) {
+      e = _error;
+      newCount = counter + 1;
+      delayTimer = 250;
+      return delay(delayTimer, function() {
+        console.warn("Trying again to display dialog after " + (newCount * delayTimer) + "ms");
+        return safariDialogHelper(selector, newCount, callback);
+      });
+    }
+  } else {
+    return stopLoadError("Unable to show dialog. Please try again.");
+  }
 };
 
 insertCORSWorkaround = function() {

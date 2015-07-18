@@ -1730,7 +1730,7 @@ downloadCSVList = ->
         $("body").append(html)
       else
         $("#download-csv-file").replaceWith(html)
-      $("#download-csv-file").get(0).open()
+      safariDialogHelper("#download-csv-file")
       stopLoad()
     catch e
       stopLoadError("There was a problem creating the CSV file. Please try again later.")
@@ -1957,7 +1957,7 @@ downloadHTMLList = ->
         $("body").append(dialogHtml)
       else
         $("#download-html-file").replaceWith(dialogHtml)
-      $("#download-html-file").get(0).open()
+      safariDialogHelper("#download-html-file")
       stopLoad()
       console.log("Has read clades:",hasReadClade)
     catch e
@@ -1990,8 +1990,42 @@ showDownloadChooser = ->
   d$("#initiate-html-download").click ->
     downloadHTMLList()
     false
-  $("#download-chooser").get(0).open()
+  safariDialogHelper()
   false
+
+bindDismissalRemoval = ->
+  $("[dialog-dismiss]")
+  .unbind()
+  .click ->
+    $(this).parents("paper-dialog").remove()
+
+safariDialogHelper = (selector = "#download-chooser", counter = 0, callback) ->
+  ###
+  # Help Safari display paper-dialogs
+  ###
+  unless typeof callback is "function"
+    callback = ->
+      bindDismissalRemoval()
+  if counter < 10
+    try
+      # Safari is stupid and like to throw an error. Presumably
+      # it's VERY slow about creating the element.
+      d$(selector).get(0).open()
+      if typeof callback is "function"
+        callback()
+      stopLoad()
+    catch e
+      # Ah, Safari threw an error. Let's delay and try up to
+      # 10x.
+      newCount = counter + 1
+      delayTimer = 250
+      delay delayTimer, ->
+        console.warn "Trying again to display dialog after #{newCount * delayTimer}ms"
+        safariDialogHelper(selector, newCount, callback)
+  else
+    stopLoadError("Unable to show dialog. Please try again.")
+
+
 
 
 insertCORSWorkaround = ->
