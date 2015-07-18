@@ -861,12 +861,12 @@ performSearch = (stateArgs = undefined) ->
       # be decoded at this point.
       args = "q=#{stateArgs}"
       sOrig = stateArgs.split("&")[0]
-    console.log("Searching on #{stateArgs}")
+    #console.log("Searching on #{stateArgs}")
   if s is "#" or (isNull(s) and isNull(args)) or (args is "q=" and stateArgs isnt true)
     return false
   animateLoad()
-  unless isNull(filters)
-    console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
+  # unless isNull(filters)
+  #   console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
   $.get(searchParams.targetApi,args,"json")
   .done (result) ->
     # Populate the result container
@@ -1030,11 +1030,11 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
               console.warn("There was an error parsing '#{col}', attempting to fix - ",e.message)
               split = col.split(":")
               year = split[1].slice(split[1].search("\"")+1,-2)
-              console.log("Examining #{year}")
+              # console.log("Examining #{year}")
               year = year.replace(/"/g,"'")
               split[1] = "\"#{year}\"}"
               col = split.join(":")
-              console.log("Reconstructed #{col}")
+              # console.log("Reconstructed #{col}")
               d = JSON.parse(col)
             genus = Object.keys(d)[0]
             species = d[genus]
@@ -1098,11 +1098,11 @@ parseTaxonYear = (taxonYearString,strict = true) ->
     console.warn("There was an error parsing '#{taxonYearString}', attempting to fix - ",e.message)
     split = taxonYearString.split(":")
     year = split[1].slice(split[1].search('"')+1,-2)
-    console.log("Examining #{year}")
+    # console.log("Examining #{year}")
     year = year.replace(/"/g,"'")
     split[1] = "\"#{year}\"}"
     taxonYearString = split.join(":")
-    console.log("Reconstructed #{taxonYearString}")
+    # console.log("Reconstructed #{taxonYearString}")
     try
       d = JSON.parse(taxonYearString)
     catch e
@@ -1760,9 +1760,8 @@ downloadCSVList = ->
         $("body").append(html)
       else
         $("#download-csv-file").replaceWith(html)
-      $("#download-csv-file").get(0).open()
-      bindDismissalRemoval()
-      stopLoad()
+      $("#download-chooser").get(0).close()
+      safariDialogHelper("#download-csv-file")
     catch e
       stopLoadError("There was a problem creating the CSV file. Please try again later.")
       console.error("Exception in downloadCSVList() - #{e.message}")
@@ -1982,7 +1981,7 @@ downloadHTMLList = ->
             <a href="#{downloadable}" download="ssar-common-names-#{dateString}.html" class="btn btn-default"><iron-icon icon="file-download"></iron-icon> Download Now</a>
           </p>
         </paper-dialog-scrollable>
-        <div class="buttons>"
+        <div class="buttons">
           <paper-button dialog-dismiss>Close</paper-button>
         </div>
       </paper-dialog>
@@ -1991,9 +1990,8 @@ downloadHTMLList = ->
         $("body").append(dialogHtml)
       else
         $("#download-html-file").replaceWith(dialogHtml)
-      $("#download-html-file").get(0).open()
-      bindDismissalRemoval()
-      stopLoad()
+      $("#download-chooser").get(0).close()
+      safariDialogHelper("#download-html-file")
     catch e
       stopLoadError("There was a problem creating your file. Please try again later.")
       console.error("Exception in downloadHTMLList() - #{e.message}")
@@ -2025,9 +2023,34 @@ showDownloadChooser = ->
     downloadCSVList()
   d$("#initiate-html-download").click ->
     downloadHTMLList()
-  $("#download-chooser").get(0).open()
-  bindDismissalRemoval()
+  safariDialogHelper("#download-chooser")
   false
+
+safariDialogHelper = (selector = "#download-chooser", counter = 0, callback) ->
+  ###
+  # Help Safari display paper-dialogs
+  ###
+  unless typeof callback is "function"
+    callback = ->
+      bindDismissalRemoval()
+  if counter < 10
+    try
+      # Safari is stupid and like to throw an error. Presumably
+      # it's VERY slow about creating the element.
+      $(selector).get(0).open()
+      if typeof callback is "function"
+        callback()
+      stopLoad()
+    catch e
+      # Ah, Safari threw an error. Let's delay and try up to
+      # 10x.
+      newCount = counter++
+      delayTimer = 250
+      delay delayTimer, ->
+        console.warn "Trying again to display dialog after #{newCount * delayTimer}ms"
+        safariDialogHelper(selector, newCount, callback)
+  else
+    stopLoadError("Unable to show dialog. Please try again.")
 
 
 insertCORSWorkaround = ->
@@ -2113,7 +2136,7 @@ $ ->
       loadArgs = Base64.decode(uri.query)
     catch e
       loadArgs = ""
-    console.log("Popping state to #{loadArgs}")
+    #console.log("Popping state to #{loadArgs}")
     performSearch(loadArgs)
     temp = loadArgs.split("&")[0]
     $("#search").attr("value",temp)

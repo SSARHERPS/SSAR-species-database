@@ -954,9 +954,8 @@ downloadCSVList = ->
         $("body").append(html)
       else
         $("#download-csv-file").replaceWith(html)
-      $("#download-csv-file").get(0).open()
-      bindDismissalRemoval()
-      stopLoad()
+      $("#download-chooser").get(0).close()
+      safariDialogHelper("#download-csv-file")
     catch e
       stopLoadError("There was a problem creating the CSV file. Please try again later.")
       console.error("Exception in downloadCSVList() - #{e.message}")
@@ -1176,7 +1175,7 @@ downloadHTMLList = ->
             <a href="#{downloadable}" download="ssar-common-names-#{dateString}.html" class="btn btn-default"><iron-icon icon="file-download"></iron-icon> Download Now</a>
           </p>
         </paper-dialog-scrollable>
-        <div class="buttons>"
+        <div class="buttons">
           <paper-button dialog-dismiss>Close</paper-button>
         </div>
       </paper-dialog>
@@ -1185,9 +1184,8 @@ downloadHTMLList = ->
         $("body").append(dialogHtml)
       else
         $("#download-html-file").replaceWith(dialogHtml)
-      $("#download-html-file").get(0).open()
-      bindDismissalRemoval()
-      stopLoad()
+      $("#download-chooser").get(0).close()
+      safariDialogHelper("#download-html-file")
     catch e
       stopLoadError("There was a problem creating your file. Please try again later.")
       console.error("Exception in downloadHTMLList() - #{e.message}")
@@ -1219,9 +1217,34 @@ showDownloadChooser = ->
     downloadCSVList()
   d$("#initiate-html-download").click ->
     downloadHTMLList()
-  $("#download-chooser").get(0).open()
-  bindDismissalRemoval()
+  safariDialogHelper("#download-chooser")
   false
+
+safariDialogHelper = (selector = "#download-chooser", counter = 0, callback) ->
+  ###
+  # Help Safari display paper-dialogs
+  ###
+  unless typeof callback is "function"
+    callback = ->
+      bindDismissalRemoval()
+  if counter < 10
+    try
+      # Safari is stupid and like to throw an error. Presumably
+      # it's VERY slow about creating the element.
+      $(selector).get(0).open()
+      if typeof callback is "function"
+        callback()
+      stopLoad()
+    catch e
+      # Ah, Safari threw an error. Let's delay and try up to
+      # 10x.
+      newCount = counter++
+      delayTimer = 250
+      delay delayTimer, ->
+        console.warn "Trying again to display dialog after #{newCount * delayTimer}ms"
+        safariDialogHelper(selector, newCount, callback)
+  else
+    stopLoadError("Unable to show dialog. Please try again.")
 
 
 insertCORSWorkaround = ->

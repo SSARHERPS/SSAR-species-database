@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, searchParams, setHistory, showBadSearchErrorMessage, showDownloadChooser, sortResults, ssar, stopLoad, stopLoadError, testCalPhotos, toFloat, toInt, toObject, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, safariDialogHelper, searchParams, setHistory, showBadSearchErrorMessage, showDownloadChooser, sortResults, ssar, stopLoad, stopLoadError, testCalPhotos, toFloat, toInt, toObject, toastStatusMessage, uri,
   slice = [].slice,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -1140,15 +1140,11 @@ performSearch = function(stateArgs) {
       args = "q=" + stateArgs;
       sOrig = stateArgs.split("&")[0];
     }
-    console.log("Searching on " + stateArgs);
   }
   if (s === "#" || (isNull(s) && isNull(args)) || (args === "q=" && stateArgs !== true)) {
     return false;
   }
   animateLoad();
-  if (!isNull(filters)) {
-    console.log("Got search value " + s + ", hitting", searchParams.apiPath + "?" + args);
-  }
   return $.get(searchParams.targetApi, args, "json").done(function(result) {
     if (toInt(result.count) === 0) {
       showBadSearchErrorMessage(result);
@@ -1323,11 +1319,9 @@ formatSearchResults = function(result, container) {
               console.warn("There was an error parsing '" + col + "', attempting to fix - ", e.message);
               split = col.split(":");
               year = split[1].slice(split[1].search("\"") + 1, -2);
-              console.log("Examining " + year);
               year = year.replace(/"/g, "'");
               split[1] = "\"" + year + "\"}";
               col = split.join(":");
-              console.log("Reconstructed " + col);
               d = JSON.parse(col);
             }
             genus = Object.keys(d)[0];
@@ -1404,11 +1398,9 @@ parseTaxonYear = function(taxonYearString, strict) {
     console.warn("There was an error parsing '" + taxonYearString + "', attempting to fix - ", e.message);
     split = taxonYearString.split(":");
     year = split[1].slice(split[1].search('"') + 1, -2);
-    console.log("Examining " + year);
     year = year.replace(/"/g, "'");
     split[1] = "\"" + year + "\"}";
     taxonYearString = split.join(":");
-    console.log("Reconstructed " + taxonYearString);
     try {
       d = JSON.parse(taxonYearString);
     } catch (_error) {
@@ -2004,9 +1996,8 @@ downloadCSVList = function() {
       } else {
         $("#download-csv-file").replaceWith(html);
       }
-      $("#download-csv-file").get(0).open();
-      bindDismissalRemoval();
-      return stopLoad();
+      $("#download-chooser").get(0).close();
+      return safariDialogHelper("#download-csv-file");
     } catch (_error) {
       e = _error;
       stopLoadError("There was a problem creating the CSV file. Please try again later.");
@@ -2119,15 +2110,14 @@ downloadHTMLList = function() {
       }
       htmlBody += "</article>\n</div>\n</body>\n</html>";
       downloadable = "data:text/html;charset=utf-8," + (encodeURIComponent(htmlBody));
-      dialogHtml = "<paper-dialog  modal class=\"download-file\" id=\"download-html-file\">\n  <h2>Your file is ready</h2>\n  <paper-dialog-scrollable class=\"dialog-content\">\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".html\" class=\"btn btn-default\"><iron-icon icon=\"file-download\"></iron-icon> Download Now</a>\n    </p>\n  </paper-dialog-scrollable>\n  <div class=\"buttons>\"\n    <paper-button dialog-dismiss>Close</paper-button>\n  </div>\n</paper-dialog>";
+      dialogHtml = "<paper-dialog  modal class=\"download-file\" id=\"download-html-file\">\n  <h2>Your file is ready</h2>\n  <paper-dialog-scrollable class=\"dialog-content\">\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".html\" class=\"btn btn-default\"><iron-icon icon=\"file-download\"></iron-icon> Download Now</a>\n    </p>\n  </paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button dialog-dismiss>Close</paper-button>\n  </div>\n</paper-dialog>";
       if (!$("#download-html-file").exists()) {
         $("body").append(dialogHtml);
       } else {
         $("#download-html-file").replaceWith(dialogHtml);
       }
-      $("#download-html-file").get(0).open();
-      bindDismissalRemoval();
-      return stopLoad();
+      $("#download-chooser").get(0).close();
+      return safariDialogHelper("#download-html-file");
     } catch (_error) {
       e = _error;
       stopLoadError("There was a problem creating your file. Please try again later.");
@@ -2153,9 +2143,46 @@ showDownloadChooser = function() {
   d$("#initiate-html-download").click(function() {
     return downloadHTMLList();
   });
-  $("#download-chooser").get(0).open();
-  bindDismissalRemoval();
+  safariDialogHelper("#download-chooser");
   return false;
+};
+
+safariDialogHelper = function(selector, counter, callback) {
+  var delayTimer, e, newCount;
+  if (selector == null) {
+    selector = "#download-chooser";
+  }
+  if (counter == null) {
+    counter = 0;
+  }
+
+  /*
+   * Help Safari display paper-dialogs
+   */
+  if (typeof callback !== "function") {
+    callback = function() {
+      return bindDismissalRemoval();
+    };
+  }
+  if (counter < 10) {
+    try {
+      $(selector).get(0).open();
+      if (typeof callback === "function") {
+        callback();
+      }
+      return stopLoad();
+    } catch (_error) {
+      e = _error;
+      newCount = counter++;
+      delayTimer = 250;
+      return delay(delayTimer, function() {
+        console.warn("Trying again to display dialog after " + (newCount * delayTimer) + "ms");
+        return safariDialogHelper(selector, newCount, callback);
+      });
+    }
+  } else {
+    return stopLoadError("Unable to show dialog. Please try again.");
+  }
 };
 
 insertCORSWorkaround = function() {
@@ -2237,7 +2264,6 @@ $(function() {
       e = _error;
       loadArgs = "";
     }
-    console.log("Popping state to " + loadArgs);
     performSearch(loadArgs);
     temp = loadArgs.split("&")[0];
     return $("#search").attr("value", temp);
