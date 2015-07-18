@@ -1231,14 +1231,14 @@ safariDialogHelper = (selector = "#download-chooser", counter = 0, callback) ->
     try
       # Safari is stupid and like to throw an error. Presumably
       # it's VERY slow about creating the element.
-      $(selector).get(0).open()
+      d$(selector).get(0).open()
       if typeof callback is "function"
         callback()
       stopLoad()
     catch e
       # Ah, Safari threw an error. Let's delay and try up to
       # 10x.
-      newCount = counter++
+      newCount = counter + 1
       delayTimer = 250
       delay delayTimer, ->
         console.warn "Trying again to display dialog after #{newCount * delayTimer}ms"

@@ -2166,14 +2166,14 @@ safariDialogHelper = function(selector, counter, callback) {
   }
   if (counter < 10) {
     try {
-      $(selector).get(0).open();
+      d$(selector).get(0).open();
       if (typeof callback === "function") {
         callback();
       }
       return stopLoad();
     } catch (_error) {
       e = _error;
-      newCount = counter++;
+      newCount = counter + 1;
       delayTimer = 250;
       return delay(delayTimer, function() {
         console.warn("Trying again to display dialog after " + (newCount * delayTimer) + "ms");
