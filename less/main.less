@@ -234,28 +234,14 @@ footer {
 
 .modal-img-container {
     float: right;
-    margin-top: -3em;
+    margin-top: -1em;
     width: 256px;
     overflow:hidden;
 }
 
 
 @{hc} .modal-img-container {
-    float: right;
-    margin-top: -3em;
-    width: 256px;
-    overflow:hidden;
-}
-@media (max-width: 767px) {
-    .modal-img-container {
-        margin-top: -1em;
-    }
-    html /deep/ .modal-img-container {
-        margin-top: -1em;
-    }
-    @{hc} .modal-img-container {
-        margin-top: -1em;
-    }
+    .modal-img-container();
 }
 
 @media (max-width: 767px) {
@@ -847,10 +833,7 @@ html /deep/ .text-center {
 }
 
 html /deep/ .modal-img-container {
-    float: right;
-    margin-top: -3em;
-    width: 256px;
-    overflow:hidden;
+    .modal-img-container();
 }
 
 html /deep/ .code {
