@@ -1,6 +1,6 @@
 {
   "name": "SSAR-species-database",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "SSAR Common Names Database",
   "main": "commonnamnes_api.php",
   "scripts": {
