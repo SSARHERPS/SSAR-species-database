@@ -493,7 +493,7 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     # And finally, call our helper function
     insertImage(imageObject, taxonString, "ssarimg")
     return false
-    
+
   ###
   # OK, we don't have it, do CalPhotos
   #
@@ -504,7 +504,7 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
   # http://calphotos.berkeley.edu/thumblink.html
   # for API reference.
   ###
-  
+
   args = "getthumbinfo=1&num=all&cconly=1&taxon=#{taxonString}&format=xml"
   # console.log("Looking at","#{ssar.affiliateQueryUrl.calPhotos}?#{args}")
   ## CalPhotos doesn't have good headers set up. Try a CORS request.
@@ -1303,6 +1303,28 @@ showBadSearchErrorMessage = (result) ->
 
 
 
+
+bindPaperMenuButton = (selector = "paper-menu-button", unbindTargets = true) ->
+  ###
+  # Use a paper-menu-button and make the
+  # .dropdown-label gain the selected value
+  ###
+  for dropdown in $(selector)
+    menu = $(dropdown).find("paper-menu")
+    if unbindTargets
+      $(menu).unbind()
+    do relabelSelectedItem = (target = menu, activeDropdown = dropdown) ->
+      # A menu item has been selected!
+      selectText = $(target).polymerSelected(null, true)
+      # console.log("iron-select fired! We fetched '#{selectText}'")
+      labelSpan = $(activeDropdown).find(".dropdown-label")
+      $(labelSpan).text(selectText)
+      $(target).polymerSelected()
+    $(menu).on "iron-select", ->
+      relabelSelectedItem this, dropdown
+  false
+
+
 $ ->
   devHello = """
   ****************************************************************************
@@ -1349,6 +1371,7 @@ $ ->
     # We do want to auto-trigger this when there's a search value,
     # but not when it's empty (even though this is valid)
     if not isNull($("#search").val()) then performSearch()
+  bindPaperMenuButton()
   # Do a fill of the result container
   if isNull uri.query
     loadArgs = ""

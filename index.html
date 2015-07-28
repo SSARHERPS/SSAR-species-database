@@ -40,6 +40,7 @@
     <link rel="import" href="bower_components/paper-spinner/paper-spinner.html"/>
     <link rel="import" href="bower_components/paper-spinner/paper-spinner.html"/>
     <link rel="import" href="bower_components/paper-menu/paper-menu.html"/>
+    <link rel="import" href="bower_components/paper-menu-button/paper-menu-button.html"/>
     <link rel="import" href="bower_components/paper-dialog/paper-dialog.html"/>
     <link rel="import" href="bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html"/>
     <link rel="import" href="bower_components/paper-button/paper-button.html"/>
@@ -50,7 +51,7 @@
     <link rel="import" href="bower_components/paper-item/paper-item.html"/>
 
     <link rel="import" href="bower_components/neon-animation/neon-animation.html"/>
-    
+
     <link rel="import" href="polymer-elements/copyright-statement.html"/>
     <link rel="import" href="polymer-elements/glyphicon-social-icons.html"/>
 
@@ -140,17 +141,20 @@
             <!-- This is a filter column. We need a radio button for
             AND/OR, and then to walk through the filters and append the object to the query. -->
             <label for="type" class="sr-only">Clade Restriction</label>
-            <paper-menu label="Group" data-column="linnean_order" class="cndb-filter" id="linnean-order" name="type" attrForSelected="data-type" selected="0">
-              <paper-item data-type="any">All</paper-item>
-              <paper-item data-type="squamata">Non-Snake Lizards</paper-item>
-              <paper-item data-type="serpentes">Snakes</paper-item>
-              <paper-item data-type="testudines">Turtles</paper-item>
-              <paper-item data-type="crocodylia">Crocodiles &amp; Alligators</paper-item>
-              <paper-item data-type="caudata">Salamanders</paper-item>
-              <paper-item data-type="anura">Frogs</paper-item>
-              <paper-item data-type="gymnophiona">Caecilians</paper-item>
-              <!-- As per flag 4 in readme -->
-            </paper-menu>
+            <paper-menu-button>
+              <paper-button class="dropdown-trigger"><iron-icon icon="icons:filter-list"></iron-icon><span id="filter-what" class="dropdown-label"></span></paper-button>
+              <paper-menu label="Group" data-column="linnean_order" class="cndb-filter dropdown-content" id="linnean-order" name="type" attrForSelected="data-type" selected="0">
+                <paper-item data-type="any">All</paper-item>
+                <paper-item data-type="squamata">Non-Snake Lizards</paper-item>
+                <paper-item data-type="serpentes">Snakes</paper-item>
+                <paper-item data-type="testudines">Turtles</paper-item>
+                <paper-item data-type="crocodylia">Crocodiles &amp; Alligators</paper-item>
+                <paper-item data-type="caudata">Salamanders</paper-item>
+                <paper-item data-type="anura">Frogs</paper-item>
+                <paper-item data-type="gymnophiona">Caecilians</paper-item>
+                <!-- As per flag 4 in readme -->
+              </paper-menu>
+            </paper-menu-button>
           </div>
         </div>
         <div class="row">

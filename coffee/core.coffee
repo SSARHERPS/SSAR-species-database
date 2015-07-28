@@ -83,7 +83,11 @@ jQuery.fn.polymerSelected = (setSelected = undefined, attrLookup = "attrForSelec
   # @param attrLookup is based on
   # https://elements.polymer-project.org/elements/iron-selector?active=Polymer.IronSelectableBehavior
   ###
-  attr = $(this).attr(attrLookup)
+  unless attrLookup is true
+    attr = $(this).attr(attrLookup)
+  else
+    # If we pass the flag true, we get the label instead
+    attr = true
   if setSelected?
     if not isBool(setSelected)
       try
@@ -105,7 +109,11 @@ jQuery.fn.polymerSelected = (setSelected = undefined, attrLookup = "attrForSelec
       val = $(this).get(0).selected
       if isNumber(val) and not isNull(attr)
         itemSelector = $(this).find("paper-item")[toInt(val)]
-        val = $(itemSelector).attr(attr)
+        unless attr is true
+          val = $(itemSelector).attr(attr)
+        else
+          # Fetch the label
+          val = $(itemSelector).text()
     catch e
       return false
     if val is "null" or not val?

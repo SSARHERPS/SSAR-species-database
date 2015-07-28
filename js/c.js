@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, roundNumber, safariDialogHelper, searchParams, setHistory, setupServiceWorker, showBadSearchErrorMessage, showDownloadChooser, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, bindPaperMenuButton, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, roundNumber, safariDialogHelper, searchParams, setHistory, setupServiceWorker, showBadSearchErrorMessage, showDownloadChooser, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
   slice = [].slice,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -159,7 +159,11 @@ jQuery.fn.polymerSelected = function(setSelected, attrLookup) {
    * @param attrLookup is based on
    * https://elements.polymer-project.org/elements/iron-selector?active=Polymer.IronSelectableBehavior
    */
-  attr = $(this).attr(attrLookup);
+  if (attrLookup !== true) {
+    attr = $(this).attr(attrLookup);
+  } else {
+    attr = true;
+  }
   if (setSelected != null) {
     if (!isBool(setSelected)) {
       try {
@@ -185,7 +189,11 @@ jQuery.fn.polymerSelected = function(setSelected, attrLookup) {
       val = $(this).get(0).selected;
       if (isNumber(val) && !isNull(attr)) {
         itemSelector = $(this).find("paper-item")[toInt(val)];
-        val = $(itemSelector).attr(attr);
+        if (attr !== true) {
+          val = $(itemSelector).attr(attr);
+        } else {
+          val = $(itemSelector).text();
+        }
       }
     } catch (_error) {
       e = _error;
@@ -2247,6 +2255,40 @@ showBadSearchErrorMessage = function(result) {
   return stopLoadError(text);
 };
 
+bindPaperMenuButton = function(selector, unbindTargets) {
+  var dropdown, len, m, menu, ref, relabelSelectedItem;
+  if (selector == null) {
+    selector = "paper-menu-button";
+  }
+  if (unbindTargets == null) {
+    unbindTargets = true;
+  }
+
+  /*
+   * Use a paper-menu-button and make the
+   * .dropdown-label gain the selected value
+   */
+  ref = $(selector);
+  for (m = 0, len = ref.length; m < len; m++) {
+    dropdown = ref[m];
+    menu = $(dropdown).find("paper-menu");
+    if (unbindTargets) {
+      $(menu).unbind();
+    }
+    (relabelSelectedItem = function(target, activeDropdown) {
+      var labelSpan, selectText;
+      selectText = $(target).polymerSelected(null, true);
+      labelSpan = $(activeDropdown).find(".dropdown-label");
+      $(labelSpan).text(selectText);
+      return $(target).polymerSelected();
+    })(menu, dropdown);
+    $(menu).on("iron-select", function() {
+      return relabelSelectedItem(this, dropdown);
+    });
+  }
+  return false;
+};
+
 $(function() {
   var devHello, e, f64, filterObj, fuzzyState, loadArgs, looseState, openFilters, queryUrl, temp;
   devHello = "****************************************************************************\nHello developer!\nIf you're looking for hints on our API information, this site is open-source\nand released under the GPL. Just click on the GitHub link on the bottom of\nthe page, or check out https://github.com/SSARHERPS\n****************************************************************************";
@@ -2294,6 +2336,7 @@ $(function() {
       return performSearch();
     }
   });
+  bindPaperMenuButton();
   if (isNull(uri.query)) {
     loadArgs = "";
   } else {
