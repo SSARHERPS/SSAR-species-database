@@ -2131,6 +2131,10 @@ bindPaperMenuButton = (selector = "paper-menu-button", unbindTargets = true) ->
   ###
   # Use a paper-menu-button and make the
   # .dropdown-label gain the selected value
+  #
+  # Reference:
+  # https://github.com/polymerelements/paper-menu-button
+  # https://elements.polymer-project.org/elements/paper-menu-button
   ###
   for dropdown in $(selector)
     menu = $(dropdown).find("paper-menu")
