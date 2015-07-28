@@ -1,6 +1,3 @@
-# Basic inits
-root = exports ? this
-
 uri = new Object()
 uri.o = $.url()
 uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host')  + uri.o.attr("directory")
