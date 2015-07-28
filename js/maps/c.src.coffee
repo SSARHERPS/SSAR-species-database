@@ -18,7 +18,6 @@ isNull = (str) ->
   try
     if isEmpty(str) or isBlank(str) or not str?
       unless str is false or str is 0 then return true
-  catch
   false
 
 isJson = (str) ->
@@ -26,7 +25,6 @@ isJson = (str) ->
   try
     JSON.parse(str)
     return true
-  catch
   false
 
 isNumber = (n) -> not isNaN(parseFloat(n)) and isFinite(n)

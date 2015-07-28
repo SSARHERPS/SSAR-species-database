@@ -37,9 +37,7 @@ isNull = function(str) {
         return true;
       }
     }
-  } catch (_error) {
-
-  }
+  } catch (_error) {}
   return false;
 };
 
@@ -50,9 +48,7 @@ isJson = function(str) {
   try {
     JSON.parse(str);
     return true;
-  } catch (_error) {
-
-  }
+  } catch (_error) {}
   return false;
 };
 
