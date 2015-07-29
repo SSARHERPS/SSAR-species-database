@@ -293,6 +293,13 @@ String::toTitleCase = ->
     str = str.replace upperRegEx, upper.toUpperCase()
   str
 
+
+smartUpperCasing = (text) ->
+  replacer = (match) ->
+    return match.replace(match, match.toUpperCase())
+  text.replace(/((?=((?!-)[\W\s\r\n]))\s[A-Za-z]|^[A-Za-z])/g, replacer)
+
+
 mapNewWindows = (stopPropagation = true) ->
   # Do new windows
   $(".newwindow").each ->

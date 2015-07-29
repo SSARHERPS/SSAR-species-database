@@ -293,6 +293,13 @@ String::toTitleCase = ->
     str = str.replace upperRegEx, upper.toUpperCase()
   str
 
+
+smartUpperCasing = (text) ->
+  replacer = (match) ->
+    return match.replace(match, match.toUpperCase())
+  text.replace(/((?=((?!-)[\W\s\r\n]))\s[A-Za-z]|^[A-Za-z])/g, replacer)
+
+
 mapNewWindows = (stopPropagation = true) ->
   # Do new windows
   $(".newwindow").each ->
@@ -1080,6 +1087,9 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
             kClass = k
           if k is "genus_authority" or k is "species_authority"
             kClass += " authority"
+          if k is "common_name"
+            col = smartUpperCasing col
+            kClass += " no-cap"
           htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{kClass} #{colClass}'>#{col}</td>"
       l++
       if l is Object.size(row)
@@ -1472,7 +1482,7 @@ modalTaxon = (taxon = undefined) ->
     <div id='meta-taxon-info'>
       #{yearHtml}
       <p>
-        English name: <span id='taxon-common-name' class='common_name'>#{data.common_name}</span>
+        English name: <span id='taxon-common-name' class='common_name no-cap'>#{smartUpperCasing data.common_name}</span>
       </p>
       <p>
         Type: <span id='taxon-type' class="major_type">#{data.major_type}</span>
@@ -1962,8 +1972,8 @@ downloadHTMLList = ->
               #{speciesAuth}
             </span>
             &#8212;
-            <span class="common-name text-capitalize">
-              #{row.common_name}
+            <span class="common_name no-cap">
+              #{smartUpperCasing row.common_name}
             </span>
           </p>
           <div class="entry-content">

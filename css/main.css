@@ -6921,6 +6921,9 @@ footer {
 html >>> .force-lower {
   text-transform: lowercase !important;
 }
+.no-cap {
+  text-transform: none !important;
+}
 .capitalize,
 html >>> .capitalize,
 html >>> .genus,

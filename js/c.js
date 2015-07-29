@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, bindPaperMenuButton, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, roundNumber, safariDialogHelper, searchParams, setHistory, setupServiceWorker, showBadSearchErrorMessage, showDownloadChooser, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, bindPaperMenuButton, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, roundNumber, safariDialogHelper, searchParams, setHistory, setupServiceWorker, showBadSearchErrorMessage, showDownloadChooser, smartUpperCasing, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
   slice = [].slice,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -421,6 +421,14 @@ String.prototype.toTitleCase = function() {
     str = str.replace(upperRegEx, upper.toUpperCase());
   }
   return str;
+};
+
+smartUpperCasing = function(text) {
+  var replacer;
+  replacer = function(match) {
+    return match.replace(match, match.toUpperCase());
+  };
+  return text.replace(/((?=((?!-)[\W\s\r\n]))\s[A-Za-z]|^[A-Za-z])/g, replacer);
 };
 
 mapNewWindows = function(stopPropagation) {
@@ -1367,6 +1375,10 @@ formatSearchResults = function(result, container) {
           if (k === "genus_authority" || k === "species_authority") {
             kClass += " authority";
           }
+          if (k === "common_name") {
+            col = smartUpperCasing(col);
+            kClass += " no-cap";
+          }
           htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='" + kClass + " " + colClass + "'>" + col + "</td>";
         }
       }
@@ -1766,7 +1778,7 @@ modalTaxon = function(taxon) {
     }
     notes = notes.replace(/\&amp;(([a-z]+|[0-9]+);)/mg, "&$1");
     commonType = !isNull(data.major_common_type) ? " (<span id='taxon-common-type'>" + data.major_common_type + "</span>) " : "";
-    html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type' class=\"major_type\">" + data.major_type + "</span>\n    " + commonType + "\n    <iron-icon icon='arrow-forward'></iron-icon>\n    <span id='taxon-subtype' class=\"major_subtype\">" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_credit + "</p>";
+    html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name no-cap'>" + (smartUpperCasing(data.common_name)) + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type' class=\"major_type\">" + data.major_type + "</span>\n    " + commonType + "\n    <iron-icon icon='arrow-forward'></iron-icon>\n    <span id='taxon-subtype' class=\"major_subtype\">" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_credit + "</p>";
     $("#modal-taxon-content").html(html);
     $("#modal-inat-linkout").unbind().click(function() {
       return openTab(ssar.affiliateQueryUrl.iNaturalist + "?q=" + taxon);
@@ -2107,7 +2119,7 @@ downloadHTMLList = function() {
           hasReadGenus.push(row.genus);
         }
         shortGenus = (row.genus.slice(0, 1)) + ". ";
-        entryHtml = "<section class=\"species-entry\">\n  " + oneOffHtml + "\n  <p class=\"h4 entry-header\">\n    <span class=\"entry-sciname\">\n      <span class=\"text-capitalize\">" + shortGenus + "</span> " + row.species + " " + row.subspecies + "\n    </span>\n    <span class=\"entry-authority\">\n      " + speciesAuth + "\n    </span>\n    &#8212;\n    <span class=\"common-name text-capitalize\">\n      " + row.common_name + "\n    </span>\n  </p>\n  <div class=\"entry-content\">\n    " + htmlNotes + "\n    " + htmlCredit + "\n  </div>\n</section>";
+        entryHtml = "<section class=\"species-entry\">\n  " + oneOffHtml + "\n  <p class=\"h4 entry-header\">\n    <span class=\"entry-sciname\">\n      <span class=\"text-capitalize\">" + shortGenus + "</span> " + row.species + " " + row.subspecies + "\n    </span>\n    <span class=\"entry-authority\">\n      " + speciesAuth + "\n    </span>\n    &#8212;\n    <span class=\"common_name no-cap\">\n      " + (smartUpperCasing(row.common_name)) + "\n    </span>\n  </p>\n  <div class=\"entry-content\">\n    " + htmlNotes + "\n    " + htmlCredit + "\n  </div>\n</section>";
         htmlBody += entryHtml;
       }
       htmlBody += "</article>\n</div>\n</body>\n</html>";
