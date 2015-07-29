@@ -2303,7 +2303,7 @@ bindPaperMenuButton = function(selector, unbindTargets) {
 };
 
 $(function() {
-  var devHello, e, f64, filterObj, fuzzyState, loadArgs, looseState, openFilters, queryUrl, temp;
+  var devHello, e, f64, filterObj, fixState, fuzzyState, loadArgs, looseState, openFilters, queryUrl, temp;
   devHello = "****************************************************************************\nHello developer!\nIf you're looking for hints on our API information, this site is open-source\nand released under the GPL. Just click on the GitHub link on the bottom of\nthe page, or check out https://github.com/SSARHERPS\n****************************************************************************";
   console.log(devHello);
   animateLoad();
@@ -2368,8 +2368,37 @@ $(function() {
         e = _error;
         fuzzyState = false;
       }
-      $("#loose").prop("checked", looseState);
-      $("#fuzzy").prop("checked", fuzzyState);
+      (fixState = function() {
+        if ((typeof Polymer !== "undefined" && Polymer !== null ? Polymer.Base : void 0) != null) {
+          if (!isNull(Polymer.Base.$$("#loose"))) {
+            delay(250, function() {
+              d$("#loose").prop("checked", looseState);
+              return d$("#fuzzy").prop("checked", fuzzyState);
+            });
+            return false;
+          }
+        }
+        if (ssar.stateIter == null) {
+          ssar.stateIter = 0;
+        }
+        ++ssar.stateIter;
+        if (ssar.stateIter > 10) {
+          console.warn("Couldn't attach Polymer.Base.ready");
+          return false;
+        }
+        try {
+          return Polymer.Base.ready(function() {
+            return delay(250, function() {
+              d$("#loose").prop("checked", looseState);
+              return d$("#fuzzy").prop("checked", fuzzyState);
+            });
+          });
+        } catch (_error) {
+          return delay(250, function() {
+            return fixState();
+          });
+        }
+      })();
       temp = loadArgs.split("&")[0];
       temp = temp.replace(/\+/g, " ").trim();
       $("#search").attr("value", temp);
@@ -2434,7 +2463,35 @@ $(function() {
   } else {
     stopLoad();
     $("#search").attr("disabled", false);
-    return $("#loose").prop("checked", true);
+    return (fixState = function() {
+      if ((typeof Polymer !== "undefined" && Polymer !== null ? Polymer.Base : void 0) != null) {
+        if (!isNull(Polymer.Base.$$("#loose"))) {
+          delay(250, function() {
+            return d$("#loose").prop("checked", true);
+          });
+          return false;
+        }
+      }
+      if (ssar.stateIter == null) {
+        ssar.stateIter = 0;
+      }
+      ++ssar.stateIter;
+      if (ssar.stateIter > 10) {
+        console.warn("Couldn't attach Polymer.Base.ready");
+        return false;
+      }
+      try {
+        return Polymer.Base.ready(function() {
+          return delay(250, function() {
+            return d$("#loose").prop("checked", true);
+          });
+        });
+      } catch (_error) {
+        return delay(250, function() {
+          return fixState();
+        });
+      }
+    })();
   }
 });
 

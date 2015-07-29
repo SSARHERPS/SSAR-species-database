@@ -1396,8 +1396,32 @@ $ ->
         fuzzyState = queryUrl.param("fuzzy").toBool()
       catch e
         fuzzyState = false
-      $("#loose").prop("checked",looseState)
-      $("#fuzzy").prop("checked",fuzzyState)
+      # Delay these for polyfilled element registration
+      # See
+      # https://github.com/PolymerElements/paper-toggle-button/issues/29
+      do fixState = ->
+        if Polymer?.Base?
+          unless isNull Polymer.Base.$$("#loose")
+            delay 250, ->
+              d$("#loose").prop("checked",looseState)
+              d$("#fuzzy").prop("checked",fuzzyState)
+            return false
+        unless ssar.stateIter?
+          ssar.stateIter = 0
+        ++ssar.stateIter
+        if ssar.stateIter > 10
+          console.warn("Couldn't attach Polymer.Base.ready")
+          return false
+        try
+          Polymer.Base.ready ->
+            # The whenReady makes the toggle work, but it won't toggle
+            # without this "real" delay
+            delay 250, ->
+              d$("#loose").prop("checked",looseState)
+              d$("#fuzzy").prop("checked",fuzzyState)
+        catch
+          delay 250, ->
+            fixState()
       temp = loadArgs.split("&")[0]
       # Remove any plus signs in the query
       temp = temp.replace(/\+/g," ").trim()
@@ -1461,4 +1485,27 @@ $ ->
   else
     stopLoad()
     $("#search").attr("disabled",false)
-    $("#loose").prop("checked",true)
+    # Delay this for polyfilled element registration
+    # See
+    # https://github.com/PolymerElements/paper-toggle-button/issues/29
+    do fixState = ->
+      if Polymer?.Base?
+        unless isNull Polymer.Base.$$("#loose")
+          delay 250, ->
+            d$("#loose").prop("checked", true)
+          return false
+      unless ssar.stateIter?
+        ssar.stateIter = 0
+      ++ssar.stateIter
+      if ssar.stateIter > 10
+        console.warn("Couldn't attach Polymer.Base.ready")
+        return false
+      try
+        Polymer.Base.ready ->
+          # The whenReady makes the toggle work, but it won't toggle
+          # without this "real" delay
+          delay 250, ->
+            d$("#loose").prop("checked", true)
+      catch
+        delay 250, ->
+          fixState()
