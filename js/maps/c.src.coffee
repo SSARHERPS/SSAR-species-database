@@ -1018,7 +1018,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
             # as an example
             niceKey = switch niceKey
               when "common name" then "english name"
-              when "major subtype" then "english subtype"
+              when "major subtype" then "english genus name"
               else niceKey
             htmlHead += "\n\t\t<th class='text-center'>#{niceKey}</th>"
             bootstrapColCount++
@@ -1521,7 +1521,9 @@ modalTaxon = (taxon = undefined) ->
       # First, un-hide it in case it was hidden
       $("#modal-alt-linkout")
       .replaceWith(button)
+      $("#modal-alt-linkout")
       .click ->
+        # console.log "Should outbound to", outboundLink
         openTab(outboundLink)
     else
       # Well, wasn't expecting this! But we'll handle it anyway.

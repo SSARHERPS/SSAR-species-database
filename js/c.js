@@ -1296,7 +1296,7 @@ formatSearchResults = function(result, container) {
                 case "common name":
                   return "english name";
                 case "major subtype":
-                  return "english subtype";
+                  return "english genus name";
                 default:
                   return niceKey;
               }
@@ -1785,7 +1785,8 @@ modalTaxon = function(taxon) {
       outboundLink = ssar.affiliateQueryUrl.reptileDatabase + "?genus=" + data.genus + "&species=" + data.species;
     }
     if (outboundLink != null) {
-      $("#modal-alt-linkout").replaceWith(button).click(function() {
+      $("#modal-alt-linkout").replaceWith(button);
+      $("#modal-alt-linkout").click(function() {
         return openTab(outboundLink);
       });
     } else {
