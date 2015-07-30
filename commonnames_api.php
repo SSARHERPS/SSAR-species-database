@@ -540,6 +540,20 @@ function doSearch($overrideSearch = null)
                             {
                                 $result_vector[] = $row;
                             }
+                            if ($loose) {
+                                # For a loose query, append deprecated results
+                                try {
+                                    $r2 = $db->doQuery(array("deprecated_scientific"=>$search),"*",$boolean_type,true,true,$order_by);
+                                    while($row = mysqli_fetch_assoc($r2))
+                                    {
+                                        $result_vector[] = $row;
+                                    }
+                                }
+                                catch(Exception $e)
+                                {
+                                    # Do nothing - we already have the main result
+                                }
+                            }
                         }
                         else
                         {
