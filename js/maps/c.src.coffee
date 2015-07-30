@@ -1395,13 +1395,13 @@ smartReptileDatabaseLink = ->
   if taxon.subspecies?
     taxonArray.push(taxon.subspecies)
   taxonString = taxonArray.join("+")
+  humanTaxon = taxonArray.join(" ")
+  humanTaxon = humanTaxon[0...1].toUpperCase() + humanTaxon[1..]
   args = "taxon=#{taxonString}"
   $.get url, args, "json"
   .done (result) ->
     if result.response is "VALID"
       # We're done
-      humanTaxon = taxonArray.join(" ")
-      humanTaxon = humanTaxon[0...1].toUpperCase() + humanTaxon[1..]
       console.info("_#{humanTaxon}_ is the consensus taxon with Reptile Database")
       return true
     if result.response is "SYNONYM"
@@ -1412,7 +1412,6 @@ smartReptileDatabaseLink = ->
       data =
         genus: alternateTaxonArray[0]
         species: alternateTaxonArray[1]
-        subspecies: alternateTaxonArray[2]
       buttonText = "Reptile Database"
       button = """
       <paper-button id='modal-alt-linkout' class="hidden-xs">#{buttonText}</paper-button>
@@ -1426,7 +1425,8 @@ smartReptileDatabaseLink = ->
         .click ->
           # console.log "Should outbound to", outboundLink
           openTab(outboundLink)
-      console.info("Reptile Database uses this taxon as _#{alternateTaxa}_")
+      console.info("Reptile Database uses recognizes _#{humanTaxon}_ as _#{alternateTaxa}_")
+      smartCalPhotosLink(data)
     else
       # The taxon doesn't exist
       d$("#modal-alt-linkout").remove()
@@ -1438,8 +1438,38 @@ smartReptileDatabaseLink = ->
   false
 
 
-smartCalPhotosLink = ->
-  foo()
+smartCalPhotosLink = (overrideTaxon) ->
+  ###
+  # Called from smartReptileDatabaseLink()
+  # If there were no Cal Photos hits, try
+  # the reptile database genus/species with the
+  # SSAR species as the subspecies
+  ###
+  calPhotosTaxon =
+    genus: overrideTaxon.genus
+    species: overrideTaxon.species
+    subspecies: ssar.activeTaxon.species
+  taxonArray = [
+    calPhotosTaxon.genus
+    calPhotosTaxon.species
+    ]
+  if calPhotosTaxon.subspecies?
+    taxonArray.push(calPhotosTaxon.subspecies)
+  if d$(".modal-img-container").exists()
+    console.info("CalPhotos agrees with SSAR")
+    return true
+  postImageInsertion = ->
+    # We found a valid photo for this alternate taxon
+    humanTaxon = taxonArray.join(" ")
+    humanTaxon = humanTaxon[0...1].toUpperCase() + humanTaxon[1..]
+    console.info("CalPhotos agrees with Reptile Database, so we're linking to _#{humanTaxon}_ for CalPhotos")
+    # Rebind the paper-button
+    $("#modal-calphotos-linkout")
+    .unbind()
+    .click ->
+      openTab("#{ssar.affiliateQueryUrl.calPhotos}?rel-taxon=contains&where-taxon=#{taxonArray.join("+")}")
+    false
+  insertModalImage(ssar.taxonImage, calPhotosTaxon, postImageInsertion)
   false
 
 
@@ -1577,6 +1607,11 @@ modalTaxon = (taxon = undefined) ->
     # https://github.com/tigerhawkvok/SSAR-species-database/issues/35
     outboundLink = null
     buttonText = null
+    taxonArray = taxon.split("+")
+    ssar.activeTaxon =
+      genus: taxonArray[0]
+      species: taxonArray[1]
+      subspecies: taxonArray[2]
     if data.linnean_order.toLowerCase() in ["caudata","anura","gymnophiona"]
       # Hey, we can always HOPE to find a North American caecilian ...
       # And, if you're reading this, here's some fun for you:
@@ -1591,6 +1626,8 @@ modalTaxon = (taxon = undefined) ->
       <paper-button id='modal-alt-linkout' class="hidden-xs">#{buttonText}</paper-button>
       """
       outboundLink = "#{ssar.affiliateQueryUrl.reptileDatabase}?genus=#{data.genus}&species=#{data.species}"
+      # Now, lazily check this against the Reptile Database taxon API
+      smartReptileDatabaseLink()
     if outboundLink?
       # First, un-hide it in case it was hidden
       $("#modal-alt-linkout")
@@ -1612,11 +1649,6 @@ modalTaxon = (taxon = undefined) ->
     humanTaxon = humanTaxon.replace(/\+/g," ")
     d$("#modal-heading").text(humanTaxon)
     # Open it
-    taxonArray = taxon.split("+")
-    ssar.activeTaxon =
-      genus: taxonArray[0]
-      species: taxonArray[1]
-      subspecies: taxonArray[2]
     if isNull(data.image) then data.image = undefined
     ssar.taxonImage =
       imageUri: data.image

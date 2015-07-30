@@ -1704,7 +1704,7 @@ smartReptileDatabaseLink = function() {
    * After
    * https://github.com/SSARHERPS/SSAR-species-database/issues/77
    */
-  var args, taxon, taxonArray, taxonString, url;
+  var args, humanTaxon, taxon, taxonArray, taxonString, url;
   url = "http://reptile-database.reptarium.cz/interfaces/services/check-taxon";
   taxon = ssar.activeTaxon;
   taxonArray = [taxon.genus, taxon.species];
@@ -1712,12 +1712,12 @@ smartReptileDatabaseLink = function() {
     taxonArray.push(taxon.subspecies);
   }
   taxonString = taxonArray.join("+");
+  humanTaxon = taxonArray.join(" ");
+  humanTaxon = humanTaxon.slice(0, 1).toUpperCase() + humanTaxon.slice(1);
   args = "taxon=" + taxonString;
   $.get(url, args, "json").done(function(result) {
-    var alternateTaxa, alternateTaxonArray, alternateTaxonString, button, buttonText, data, humanTaxon, outboundLink;
+    var alternateTaxa, alternateTaxonArray, alternateTaxonString, button, buttonText, data, outboundLink;
     if (result.response === "VALID") {
-      humanTaxon = taxonArray.join(" ");
-      humanTaxon = humanTaxon.slice(0, 1).toUpperCase() + humanTaxon.slice(1);
       console.info("_" + humanTaxon + "_ is the consensus taxon with Reptile Database");
       return true;
     }
@@ -1727,8 +1727,7 @@ smartReptileDatabaseLink = function() {
       alternateTaxonArray = alternateTaxa.split(/\s/);
       data = {
         genus: alternateTaxonArray[0],
-        species: alternateTaxonArray[1],
-        subspecies: alternateTaxonArray[2]
+        species: alternateTaxonArray[1]
       };
       buttonText = "Reptile Database";
       button = "<paper-button id='modal-alt-linkout' class=\"hidden-xs\">" + buttonText + "</paper-button>";
@@ -1739,7 +1738,8 @@ smartReptileDatabaseLink = function() {
           return openTab(outboundLink);
         });
       }
-      return console.info("Reptile Database uses this taxon as _" + alternateTaxa + "_");
+      console.info("Reptile Database uses recognizes _" + humanTaxon + "_ as _" + alternateTaxa + "_");
+      return smartCalPhotosLink(data);
     } else {
       d$("#modal-alt-linkout").remove();
       return console.warn("Reptile Database couldn't find this taxon at all!");
@@ -1751,8 +1751,39 @@ smartReptileDatabaseLink = function() {
   return false;
 };
 
-smartCalPhotosLink = function() {
-  foo();
+smartCalPhotosLink = function(overrideTaxon) {
+
+  /*
+   * Called from smartReptileDatabaseLink()
+   * If there were no Cal Photos hits, try
+   * the reptile database genus/species with the
+   * SSAR species as the subspecies
+   */
+  var calPhotosTaxon, postImageInsertion, taxonArray;
+  calPhotosTaxon = {
+    genus: overrideTaxon.genus,
+    species: overrideTaxon.species,
+    subspecies: ssar.activeTaxon.species
+  };
+  taxonArray = [calPhotosTaxon.genus, calPhotosTaxon.species];
+  if (calPhotosTaxon.subspecies != null) {
+    taxonArray.push(calPhotosTaxon.subspecies);
+  }
+  if (d$(".modal-img-container").exists()) {
+    console.info("CalPhotos agrees with SSAR");
+    return true;
+  }
+  postImageInsertion = function() {
+    var humanTaxon;
+    humanTaxon = taxonArray.join(" ");
+    humanTaxon = humanTaxon.slice(0, 1).toUpperCase() + humanTaxon.slice(1);
+    console.info("CalPhotos agrees with Reptile Database, so we're linking to _" + humanTaxon + "_ for CalPhotos");
+    $("#modal-calphotos-linkout").unbind().click(function() {
+      return openTab(ssar.affiliateQueryUrl.calPhotos + "?rel-taxon=contains&where-taxon=" + (taxonArray.join("+")));
+    });
+    return false;
+  };
+  insertModalImage(ssar.taxonImage, calPhotosTaxon, postImageInsertion);
   return false;
 };
 
@@ -1853,6 +1884,12 @@ modalTaxon = function(taxon) {
     });
     outboundLink = null;
     buttonText = null;
+    taxonArray = taxon.split("+");
+    ssar.activeTaxon = {
+      genus: taxonArray[0],
+      species: taxonArray[1],
+      subspecies: taxonArray[2]
+    };
     if ((ref = data.linnean_order.toLowerCase()) === "caudata" || ref === "anura" || ref === "gymnophiona") {
       buttonText = "AmphibiaWeb";
       outboundLink = ssar.affiliateQueryUrl.amphibiaWeb + "?where-genus=" + data.genus + "&where-species=" + data.species;
@@ -1860,6 +1897,7 @@ modalTaxon = function(taxon) {
       buttonText = "Reptile Database";
       button = "<paper-button id='modal-alt-linkout' class=\"hidden-xs\">" + buttonText + "</paper-button>";
       outboundLink = ssar.affiliateQueryUrl.reptileDatabase + "?genus=" + data.genus + "&species=" + data.species;
+      smartReptileDatabaseLink();
     }
     if (outboundLink != null) {
       $("#modal-alt-linkout").replaceWith(button);
@@ -1874,12 +1912,6 @@ modalTaxon = function(taxon) {
     humanTaxon = taxon.charAt(0).toUpperCase() + taxon.slice(1);
     humanTaxon = humanTaxon.replace(/\+/g, " ");
     d$("#modal-heading").text(humanTaxon);
-    taxonArray = taxon.split("+");
-    ssar.activeTaxon = {
-      genus: taxonArray[0],
-      species: taxonArray[1],
-      subspecies: taxonArray[2]
-    };
     if (isNull(data.image)) {
       data.image = void 0;
     }
