@@ -1347,6 +1347,12 @@ formatSearchResults = function(result, container) {
             }
             genus = Object.keys(d)[0];
             species = d[genus];
+            if (toInt(row.parens_auth_genus).toBool()) {
+              genus = "(" + genus + ")";
+            }
+            if (toInt(row.parens_auth_species).toBool()) {
+              species = "(" + species + ")";
+            }
             col = "G: " + genus + "<br/>S: " + species;
           } catch (_error) {
             e = _error;

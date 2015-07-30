@@ -1060,6 +1060,10 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
               d = JSON.parse(col)
             genus = Object.keys(d)[0]
             species = d[genus]
+            if toInt(row.parens_auth_genus).toBool()
+              genus = "(#{genus})"
+            if toInt(row.parens_auth_species).toBool()
+              species = "(#{species})"
             col = "G: #{genus}<br/>S: #{species}"
           catch e
             # Render as-is
