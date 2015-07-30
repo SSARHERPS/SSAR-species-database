@@ -1714,24 +1714,35 @@ smartReptileDatabaseLink = function() {
   taxonString = taxonArray.join("+");
   args = "taxon=" + taxonString;
   $.get(url, args, "json").done(function(result) {
-    var alternateTaxa, alternateTaxonString, button, buttonText, outboundLink;
+    var alternateTaxa, alternateTaxonArray, alternateTaxonString, button, buttonText, data, humanTaxon, outboundLink;
     if (result.response === "VALID") {
+      humanTaxon = taxonArray.join(" ");
+      humanTaxon = humanTaxon.slice(0, 1).toUpperCase() + humanTaxon.slice(1);
+      console.info("_" + humanTaxon + "_ is the consensus taxon with Reptile Database");
       return true;
     }
     if (result.response === "SYNONYM") {
       alternateTaxa = result.VALID[0];
-      alternateTaxonString = alternateTaxa.replace(/\s/mg, "+");
+      alternateTaxonString = alternateTaxa.toLowerCase().replace(/\s/mg, "+");
+      alternateTaxonArray = alternateTaxa.split(/\s/);
+      data = {
+        genus: alternateTaxonArray[0],
+        species: alternateTaxonArray[1],
+        subspecies: alternateTaxonArray[2]
+      };
       buttonText = "Reptile Database";
       button = "<paper-button id='modal-alt-linkout' class=\"hidden-xs\">" + buttonText + "</paper-button>";
       outboundLink = ssar.affiliateQueryUrl.reptileDatabase + "?genus=" + data.genus + "&species=" + data.species;
-    }
-    if (outboundLink != null) {
-      $("#modal-alt-linkout").replaceWith(button);
-      return $("#modal-alt-linkout").click(function() {
-        return openTab(outboundLink);
-      });
+      if (outboundLink != null) {
+        $("#modal-alt-linkout").replaceWith(button);
+        $("#modal-alt-linkout").click(function() {
+          return openTab(outboundLink);
+        });
+      }
+      return console.info("Reptile Database uses this taxon as _" + alternateTaxa + "_");
     } else {
-      return d$("#modal-alt-linkout").remove();
+      d$("#modal-alt-linkout").remove();
+      return console.warn("Reptile Database couldn't find this taxon at all!");
     }
   }).fail(function() {
     console.warn("Unable to check the taxon on Reptile Database!");

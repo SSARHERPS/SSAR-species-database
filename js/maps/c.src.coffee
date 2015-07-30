@@ -1400,27 +1400,37 @@ smartReptileDatabaseLink = ->
   .done (result) ->
     if result.response is "VALID"
       # We're done
+      humanTaxon = taxonArray.join(" ")
+      humanTaxon = humanTaxon[0...1].toUpperCase() + humanTaxon[1..]
+      console.info("_#{humanTaxon}_ is the consensus taxon with Reptile Database")
       return true
     if result.response is "SYNONYM"
       # Great, a synonym!
       alternateTaxa = result.VALID[0]
-      alternateTaxonString = alternateTaxa.replace(/\s/mg,"+")
+      alternateTaxonString = alternateTaxa.toLowerCase().replace(/\s/mg,"+")
+      alternateTaxonArray = alternateTaxa.split(/\s/)
+      data =
+        genus: alternateTaxonArray[0]
+        species: alternateTaxonArray[1]
+        subspecies: alternateTaxonArray[2]
       buttonText = "Reptile Database"
       button = """
       <paper-button id='modal-alt-linkout' class="hidden-xs">#{buttonText}</paper-button>
       """
       outboundLink = "#{ssar.affiliateQueryUrl.reptileDatabase}?genus=#{data.genus}&species=#{data.species}"
-    if outboundLink?
-      # First, un-hide it in case it was hidden
-      $("#modal-alt-linkout")
-      .replaceWith(button)
-      $("#modal-alt-linkout")
-      .click ->
-        # console.log "Should outbound to", outboundLink
-        openTab(outboundLink)
+      if outboundLink?
+        # First, un-hide it in case it was hidden
+        $("#modal-alt-linkout")
+        .replaceWith(button)
+        $("#modal-alt-linkout")
+        .click ->
+          # console.log "Should outbound to", outboundLink
+          openTab(outboundLink)
+      console.info("Reptile Database uses this taxon as _#{alternateTaxa}_")
     else
       # The taxon doesn't exist
       d$("#modal-alt-linkout").remove()
+      console.warn("Reptile Database couldn't find this taxon at all!")
   .fail ->
     # We're just going to do nothing here
     console.warn("Unable to check the taxon on Reptile Database!")
