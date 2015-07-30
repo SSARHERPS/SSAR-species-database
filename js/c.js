@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, bindPaperMenuButton, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, roundNumber, safariDialogHelper, searchParams, setHistory, setupServiceWorker, showBadSearchErrorMessage, showDownloadChooser, smartUpperCasing, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, bindPaperMenuButton, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, roundNumber, safariDialogHelper, searchParams, setHistory, setupServiceWorker, showBadSearchErrorMessage, showDownloadChooser, smartCalPhotosLink, smartReptileDatabaseLink, smartUpperCasing, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
   slice = [].slice,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -1688,6 +1688,54 @@ insertModalImage = function(imageObject, taxon, callback) {
     e = _error;
     console.error(e.message);
   }
+  return false;
+};
+
+smartReptileDatabaseLink = function() {
+
+  /*
+   * We're going to check the remote for synonyms, and fix links
+   * After
+   * https://github.com/SSARHERPS/SSAR-species-database/issues/77
+   */
+  var args, taxon, taxonArray, taxonString, url;
+  url = "http://reptile-database.reptarium.cz/interfaces/services/check-taxon";
+  taxon = ssar.activeTaxon;
+  taxonArray = [taxon.genus, taxon.species];
+  if (taxon.subspecies != null) {
+    taxonArray.push(taxon.subspecies);
+  }
+  taxonString = taxonArray.join("+");
+  args = "taxon=" + taxonString;
+  $.get(url, args, "json").done(function(result) {
+    var alternateTaxa, alternateTaxonString, button, buttonText, outboundLink;
+    if (result.response === "VALID") {
+      return true;
+    }
+    if (result.response === "SYNONYM") {
+      alternateTaxa = result.VALID[0];
+      alternateTaxonString = alternateTaxa.replace(/\s/mg, "+");
+      buttonText = "Reptile Database";
+      button = "<paper-button id='modal-alt-linkout' class=\"hidden-xs\">" + buttonText + "</paper-button>";
+      outboundLink = ssar.affiliateQueryUrl.reptileDatabase + "?genus=" + data.genus + "&species=" + data.species;
+    }
+    if (outboundLink != null) {
+      $("#modal-alt-linkout").replaceWith(button);
+      return $("#modal-alt-linkout").click(function() {
+        return openTab(outboundLink);
+      });
+    } else {
+      return d$("#modal-alt-linkout").remove();
+    }
+  }).fail(function() {
+    console.warn("Unable to check the taxon on Reptile Database!");
+    return false;
+  });
+  return false;
+};
+
+smartCalPhotosLink = function() {
+  foo();
   return false;
 };
 

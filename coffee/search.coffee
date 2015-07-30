@@ -551,6 +551,56 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
   false
 
 
+smartReptileDatabaseLink = ->
+  ###
+  # We're going to check the remote for synonyms, and fix links
+  # After
+  # https://github.com/SSARHERPS/SSAR-species-database/issues/77
+  ###
+  url = "http://reptile-database.reptarium.cz/interfaces/services/check-taxon"
+  taxon = ssar.activeTaxon
+  taxonArray = [taxon.genus,taxon.species]
+  if taxon.subspecies?
+    taxonArray.push(taxon.subspecies)
+  taxonString = taxonArray.join("+")
+  args = "taxon=#{taxonString}"
+  $.get url, args, "json"
+  .done (result) ->
+    if result.response is "VALID"
+      # We're done
+      return true
+    if result.response is "SYNONYM"
+      # Great, a synonym!
+      alternateTaxa = result.VALID[0]
+      alternateTaxonString = alternateTaxa.replace(/\s/mg,"+")
+      buttonText = "Reptile Database"
+      button = """
+      <paper-button id='modal-alt-linkout' class="hidden-xs">#{buttonText}</paper-button>
+      """
+      outboundLink = "#{ssar.affiliateQueryUrl.reptileDatabase}?genus=#{data.genus}&species=#{data.species}"
+    if outboundLink?
+      # First, un-hide it in case it was hidden
+      $("#modal-alt-linkout")
+      .replaceWith(button)
+      $("#modal-alt-linkout")
+      .click ->
+        # console.log "Should outbound to", outboundLink
+        openTab(outboundLink)
+    else
+      # The taxon doesn't exist
+      d$("#modal-alt-linkout").remove()
+  .fail ->
+    # We're just going to do nothing here
+    console.warn("Unable to check the taxon on Reptile Database!")
+    false
+  false
+
+
+smartCalPhotosLink = ->
+  foo()
+  false
+
+
 modalTaxon = (taxon = undefined) ->
   ###
   # Pop up the modal taxon dialog for a given species
