@@ -420,6 +420,7 @@ stopLoad = (elId = "loader", fadeOut = 1000) ->
       # here
       delay fadeOut * 1.5, ->
         endLoad()
+        $(selector).get(0).reset()
   catch e
     console.warn('Could not stop load animation', e.message)
 
@@ -444,6 +445,7 @@ stopLoadError = (message, elId = "loader", fadeOut = 7500) ->
       # here
       delay fadeOut * 1.5, ->
         endLoad()
+        $(selector).get(0).reset()
   catch e
     console.warn('Could not stop load error animation', e.message)
 

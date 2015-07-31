@@ -595,7 +595,8 @@ stopLoad = function(elId, fadeOut) {
         });
       })();
       return delay(fadeOut * 1.5, function() {
-        return endLoad();
+        endLoad();
+        return $(selector).get(0).reset();
       });
     }
   } catch (_error) {
@@ -630,7 +631,8 @@ stopLoadError = function(message, elId, fadeOut) {
         });
       })();
       return delay(fadeOut * 1.5, function() {
-        return endLoad();
+        endLoad();
+        return $(selector).get(0).reset();
       });
     }
   } catch (_error) {
