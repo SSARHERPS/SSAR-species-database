@@ -1328,6 +1328,8 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     do smartFit = (iteration = 0) ->
       try
         d$("#modal-taxon").get(0).fit()
+        delay 250, ->
+          d$("#modal-taxon").get(0).fit()
       catch e
         if iteration < 10
           iteration++
@@ -1707,6 +1709,8 @@ modalTaxon = (taxon = undefined) ->
           # Firefox is weird about this sometimes ...
           # Let's add a catch-all 'top' adjustment
           $(modalElement).css("top","12.5vh")
+        delay 250, ->
+          modalElement.fit()
       modalElement.sizingTarget = d$("#modal-taxon-content")[0]
       safariDialogHelper("#modal-taxon")
     bindDismissalRemoval()

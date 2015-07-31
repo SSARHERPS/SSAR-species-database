@@ -704,9 +704,10 @@ function doSearch($overrideSearch = null)
                         {
                             while($row = mysqli_fetch_assoc($r))
                             {
-                                if ( !in_array( intval($row["id"]) ) )
+                                if ( !in_array( intval($row["id"]), $id_list) ) 
                                 {
                                     $result_vector[] = $row;
+                                    $id_list[] = intval($row["id"]);   
                                 }
                             }
                         }

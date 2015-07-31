@@ -1633,7 +1633,10 @@ insertModalImage = function(imageObject, taxon, callback) {
     (smartFit = function(iteration) {
       var e;
       try {
-        return d$("#modal-taxon").get(0).fit();
+        d$("#modal-taxon").get(0).fit();
+        return delay(250, function() {
+          return d$("#modal-taxon").get(0).fit();
+        });
       } catch (_error) {
         e = _error;
         if (iteration < 10) {
@@ -1967,8 +1970,11 @@ modalTaxon = function(taxon) {
         modalElement.fit();
         modalElement.scrollTop = 0;
         if (toFloat($(modalElement).css("top").slice(0, -2)) > $(window).height()) {
-          return $(modalElement).css("top", "12.5vh");
+          $(modalElement).css("top", "12.5vh");
         }
+        return delay(250, function() {
+          return modalElement.fit();
+        });
       });
       modalElement.sizingTarget = d$("#modal-taxon-content")[0];
       return safariDialogHelper("#modal-taxon");
