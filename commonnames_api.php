@@ -610,11 +610,13 @@ function doSearch($overrideSearch = null)
                         $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by,true);
                     }
                     else $r = false;
+                    $id_list = array();
                     try
                     {
                         while($row = mysqli_fetch_assoc($r))
                         {
                             $result_vector[] = $row;
+                            $id_list[] = intval($row["id"]);
                         }
                         if((sizeof($result_vector) == 0 && $loose) || $flag_fuzzy)
                         {
@@ -684,6 +686,36 @@ function doSearch($overrideSearch = null)
                     {
                         if(is_string($r)) $error = $r;
                         else $error = $e;
+                    }
+                    /*
+                     * If the method was
+                     * space_common_fallback, let's double
+                     * check and append the results for no
+                     * space.
+                     *
+                     * After 
+                     * https://github.com/SSARHERPS/SSAR-species-database/issues/70
+                     */
+                    if ($method == "space_common_fallback")
+                    {
+                        $params["common_name"] = str_replace(" ", "", $search);
+                        $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
+                        try
+                        {
+                            while($row = mysqli_fetch_assoc($r))
+                            {
+                                if ( !in_array( intval($row["id"]) ) )
+                                {
+                                    $result_vector[] = $row;
+                                }
+                            }
+                        }
+                        catch(Exception $e)
+                        {
+                            if(is_string($r)) $error = $r;
+                            else $error = $e;
+                        }
+                                    
                     }
                 }
             }
