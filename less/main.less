@@ -145,7 +145,7 @@ paper-dialog-scrollable {
 
 #modal-taxon {
     position:fixed !important;
-    max-height:75vh;
+    max-height:75vh; // For mobile
 }
 
 paper-dialog#modal-taxon .buttons {
@@ -457,6 +457,13 @@ paper-toast, paper-spinner {
     width:50%;
     margin:0;
     left:25%;
+}
+
+@media (max-width: 767px) {
+    #outdated-warning {
+        width: 80%;
+        left: 10%;
+    }
 }
 
 iron-label {

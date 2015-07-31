@@ -1599,7 +1599,7 @@ insertModalImage = function(imageObject, taxon, callback) {
     return false;
   }
   insertImage = function(image, taxonQueryString, classPrefix) {
-    var e, html, imgCredit, imgLicense, largeImg, largeImgLink, thumbnail;
+    var e, html, imgCredit, imgLicense, largeImg, largeImgLink, smartFit, thumbnail;
     if (classPrefix == null) {
       classPrefix = "calphoto";
     }
@@ -1619,7 +1619,22 @@ insertModalImage = function(imageObject, taxon, callback) {
     imgCredit = image.imageCredit;
     html = "<div class=\"modal-img-container\">\n  <a href=\"" + largeImg + "\" class=\"" + classPrefix + "-img-anchor center-block text-center\">\n    <img src=\"" + thumbnail + "\"\n      data-href=\"" + largeImgLink + "\"\n      class=\"" + classPrefix + "-img-thumb\"\n      data-taxon=\"" + taxonQueryString + "\" />\n  </a>\n  <p class=\"small text-muted text-center\">\n    Image by " + imgCredit + " under " + imgLicense + "\n  </p>\n</div>";
     d$("#meta-taxon-info").before(html);
-    d$("#modal-taxon").get(0).fit();
+    (smartFit = function(iteration) {
+      var e;
+      try {
+        return d$("#modal-taxon").get(0).fit();
+      } catch (_error) {
+        e = _error;
+        if (iteration < 10) {
+          iteration++;
+          return delay(100, function() {
+            return smartFit(iteration);
+          });
+        } else {
+          return console.warn("Couldn't execute fit!");
+        }
+      }
+    })(0);
     try {
       lightboxImages("." + classPrefix + "-img-anchor", true);
     } catch (_error) {
@@ -1939,10 +1954,13 @@ modalTaxon = function(taxon) {
       modalElement = d$("#modal-taxon")[0];
       d$("#modal-taxon").on("iron-overlay-opened", function() {
         modalElement.fit();
-        return modalElement.scrollTop = 0;
+        modalElement.scrollTop = 0;
+        if (toFloat($(modalElement).css("top").slice(0, -2)) > $(window).height()) {
+          return $(modalElement).css("top", "12.5vh");
+        }
       });
       modalElement.sizingTarget = d$("#modal-taxon-content")[0];
-      return modalElement.open();
+      return safariDialogHelper("#modal-taxon");
     });
     return bindDismissalRemoval();
   }).fail(function(result, status) {
@@ -2335,14 +2353,12 @@ safariSearchArgHelper = function(value, didLateRecheck) {
   if (searchArg.search(/\+/) !== -1) {
     trimmed = true;
     searchArg = searchArg.replace(/\+/g, " ").trim();
-    console.log("Trimmed a plus");
     delay(100, function() {
       return safariSearchArgHelper();
     });
   }
   if (trimmed || (value != null)) {
     $("#search").attr("value", searchArg);
-    console.log("Updated the search args");
     if (!didLateRecheck) {
       delay(5000, function() {
         return safariSearchArgHelper(void 0, true);

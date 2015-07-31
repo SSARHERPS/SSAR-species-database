@@ -7160,6 +7160,12 @@ paper-spinner {
   margin: 0;
   left: 25%;
 }
+@media (max-width: 767px) {
+  #outdated-warning {
+    width: 80%;
+    left: 10%;
+  }
+}
 iron-label {
   margin-top: .5rem;
   display: block;

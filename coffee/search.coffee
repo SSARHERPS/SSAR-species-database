@@ -467,7 +467,16 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     </div>
     """
     d$("#meta-taxon-info").before(html)
-    d$("#modal-taxon").get(0).fit()
+    do smartFit = (iteration = 0) ->
+      try
+        d$("#modal-taxon").get(0).fit()
+      catch e
+        if iteration < 10
+          iteration++
+          delay 100, ->
+            smartFit(iteration)
+        else
+          console.warn("Couldn't execute fit!")
     try
       # Call lightboxImages with the second argument "true" to do a
       # shadow-piercing lookup
@@ -836,8 +845,12 @@ modalTaxon = (taxon = undefined) ->
       d$("#modal-taxon").on "iron-overlay-opened", ->
         modalElement.fit()
         modalElement.scrollTop = 0
+        if toFloat($(modalElement).css("top").slice(0,-2)) > $(window).height()
+          # Firefox is weird about this sometimes ...
+          # Let's add a catch-all 'top' adjustment
+          $(modalElement).css("top","12.5vh")
       modalElement.sizingTarget = d$("#modal-taxon-content")[0]
-      modalElement.open()
+      safariDialogHelper("#modal-taxon")
     bindDismissalRemoval()
   .fail (result,status) ->
     stopLoadError()
@@ -1362,12 +1375,12 @@ safariSearchArgHelper = (value, didLateRecheck = false) ->
   if searchArg.search(/\+/) isnt -1
     trimmed = true
     searchArg = searchArg.replace(/\+/g," ").trim()
-    console.log("Trimmed a plus")
+    # console.log("Trimmed a plus")
     delay 100, ->
       safariSearchArgHelper()
   if trimmed or value?
     $("#search").attr("value",searchArg)
-    console.log("Updated the search args")
+    # console.log("Updated the search args")
     unless didLateRecheck
       delay 5000, ->
         # What? Safari is VERY slow on older devices,
