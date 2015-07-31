@@ -7176,6 +7176,10 @@ iron-label {
   margin-top: .5rem;
   display: block;
 }
+iron-label + paper-icon-button,
+label + paper-icon-button {
+  padding-left: 0;
+}
 paper-radio-button #radioContainer,
 paper-radio-button #radioContainer div {
   box-sizing: content-box !important;

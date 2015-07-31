@@ -485,6 +485,10 @@ iron-label {
     display: block;
 }
 
+iron-label + paper-icon-button, label + paper-icon-button {
+    padding-left: 0; // Fixes iPhone 5/s display glitch
+}
+
 #edit-notes {
     // width: 100%;
 }
