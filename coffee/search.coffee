@@ -1347,6 +1347,35 @@ safariDialogHelper = (selector = "#download-chooser", counter = 0, callback) ->
     stopLoadError("Unable to show dialog. Please try again.")
 
 
+safariSearchArgHelper = (value, didLateRecheck = false) ->
+  ###
+  # If the search argument has a "+" in it, remove it
+  # Then write the arg to search.
+  #
+  # Since Safari doesn't "take" it all the time, keep trying till it does.
+  ###
+  if value?
+    searchArg = value
+  else
+    searchArg = $("#search").val()
+  trimmed = false
+  if searchArg.search(/\+/) isnt -1
+    trimmed = true
+    searchArg = searchArg.replace(/\+/g," ").trim()
+    console.log("Trimmed a plus")
+    delay 100, ->
+      safariSearchArgHelper()
+  if trimmed or value?
+    $("#search").attr("value",searchArg)
+    console.log("Updated the search args")
+    unless didLateRecheck
+      delay 5000, ->
+        # What? Safari is VERY slow on older devices,
+        # and this check will fix them.
+        safariSearchArgHelper(undefined, true)
+  false
+
+
 insertCORSWorkaround = ->
   unless ssar.hasShownWorkaround?
     ssar.hasShownWorkaround = false

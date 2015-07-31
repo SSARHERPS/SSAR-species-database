@@ -1061,44 +1061,6 @@ checkFileVersion = function(forceNow) {
   return false;
 };
 
-safariSearchArgHelper = function(value, didLateRecheck) {
-  var searchArg, trimmed;
-  if (didLateRecheck == null) {
-    didLateRecheck = false;
-  }
-
-  /*
-   * If the search argument has a "+" in it, remove it
-   * Then write the arg to search.
-   *
-   * Since Safari doesn't "take" it all the time, keep trying till it does.
-   */
-  if (value != null) {
-    searchArg = value;
-  } else {
-    searchArg = $("#search").val();
-  }
-  trimmed = false;
-  if (searchArg.search(/\+/) !== -1) {
-    trimmed = true;
-    searchArg = searchArg.replace(/\+/g, " ").trim();
-    console.log("Trimmed a plus");
-    delay(100, function() {
-      return safariSearchArgHelper();
-    });
-  }
-  if (trimmed || (value != null)) {
-    $("#search").attr("value", searchArg);
-    console.log("Updated the search args");
-    if (!didLateRecheck) {
-      delay(5000, function() {
-        return safariSearchArgHelper(void 0, true);
-      });
-    }
-  }
-  return false;
-};
-
 setupServiceWorker = function() {
   if ("serviceworker" in navigator) {
     navigator.serviceWorker.register("js/serviceWorker.min.js").then(function(registration) {
@@ -2350,6 +2312,44 @@ safariDialogHelper = function(selector, counter, callback) {
   } else {
     return stopLoadError("Unable to show dialog. Please try again.");
   }
+};
+
+safariSearchArgHelper = function(value, didLateRecheck) {
+  var searchArg, trimmed;
+  if (didLateRecheck == null) {
+    didLateRecheck = false;
+  }
+
+  /*
+   * If the search argument has a "+" in it, remove it
+   * Then write the arg to search.
+   *
+   * Since Safari doesn't "take" it all the time, keep trying till it does.
+   */
+  if (value != null) {
+    searchArg = value;
+  } else {
+    searchArg = $("#search").val();
+  }
+  trimmed = false;
+  if (searchArg.search(/\+/) !== -1) {
+    trimmed = true;
+    searchArg = searchArg.replace(/\+/g, " ").trim();
+    console.log("Trimmed a plus");
+    delay(100, function() {
+      return safariSearchArgHelper();
+    });
+  }
+  if (trimmed || (value != null)) {
+    $("#search").attr("value", searchArg);
+    console.log("Updated the search args");
+    if (!didLateRecheck) {
+      delay(5000, function() {
+        return safariSearchArgHelper(void 0, true);
+      });
+    }
+  }
+  return false;
 };
 
 insertCORSWorkaround = function() {
