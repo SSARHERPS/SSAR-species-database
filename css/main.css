@@ -6879,6 +6879,9 @@ html >>> paper-dialog-scrollable {
 paper-dialog#modal-taxon .buttons {
   background: #fff;
 }
+#modal-taxon-content {
+  min-width: 95% !important;
+}
 html >>> .good-location {
   color: #4caf50;
 }

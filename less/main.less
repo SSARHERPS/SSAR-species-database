@@ -152,6 +152,15 @@ paper-dialog#modal-taxon .buttons {
     background: #fff;
 }
 
+#modal-taxon-content {
+    // Why this? This fixes a bug where paper-dialog.fit()
+    // shrinks the max-width of this to something small, like
+    // 48px.
+    // See
+    // https://github.com/SSARHERPS/SSAR-species-database/issues/79
+    min-width: 95% !important; 
+}
+
 @{hc} .good-location {
     color: @material-green;
 }
