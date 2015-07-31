@@ -171,7 +171,7 @@ Function::debounce = (threshold = 300, execAsap = false, timeout = window.deboun
   func = this
   delayed = ->
     func.apply(func, args) unless execAsap
-    console.log("Debounce applied")
+    # console.log("Debounce applied")
   if timeout?
     try
       clearTimeout(timeout)
@@ -179,7 +179,7 @@ Function::debounce = (threshold = 300, execAsap = false, timeout = window.deboun
       # just do nothing
   else if execAsap
     func.apply(obj, args)
-    console.log("Executed immediately")
+    # console.log("Executed immediately")
   window.debounce_timer = setTimeout(delayed, threshold)
 
 

@@ -299,9 +299,8 @@ Function.prototype.debounce = function() {
   func = this;
   delayed = function() {
     if (!execAsap) {
-      func.apply(func, args);
+      return func.apply(func, args);
     }
-    return console.log("Debounce applied");
   };
   if (timeout != null) {
     try {
@@ -311,7 +310,6 @@ Function.prototype.debounce = function() {
     }
   } else if (execAsap) {
     func.apply(obj, args);
-    console.log("Executed immediately");
   }
   return window.debounce_timer = setTimeout(delayed, threshold);
 };
@@ -1265,7 +1263,7 @@ getFilters = function(selector, booleanType) {
 };
 
 formatSearchResults = function(result, container) {
-  var alt, bootstrapColCount, bootstrapColSize, col, colClass, d, data, dontShowColumns, e, externalCounter, genus, headers, html, htmlClose, htmlHead, htmlRow, i, j, k, kClass, l, niceKey, renderTimeout, results, row, species, split, targetCount, taxonQuery, v, year;
+  var alt, bootstrapColCount, bootstrapColSize, col, colClass, d, data, dontShowColumns, e, externalCounter, genus, headers, html, htmlClose, htmlHead, htmlRow, i, j, k, kClass, l, niceKey, noticeHtml, renderTimeout, row, species, split, targetCount, taxonQuery, v, year;
   if (container == null) {
     container = searchParams.targetContainer;
   }
@@ -1294,7 +1292,6 @@ formatSearchResults = function(result, container) {
     console.warn(data);
     return false;
   });
-  results = [];
   for (i in data) {
     row = data[i];
     externalCounter = i;
@@ -1415,12 +1412,24 @@ formatSearchResults = function(result, container) {
       modalTaxon();
       doFontExceptions();
       $("#result-count").text(" - " + result.count + " entries");
-      results.push(stopLoad());
-    } else {
-      results.push(void 0);
+      stopLoad();
     }
   }
-  return results;
+  if (result.method === "space_common_fallback" && !$("#space-fallback-info").exists()) {
+    noticeHtml = "<div id=\"space-fallback-info\" class=\"alert alert-info alert-dismissible center-block fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Don't see what you want?</strong> We might use a slightly different name. Try <a href=\"\" class=\"alert-link\" id=\"do-instant-fuzzy\">checking the \"fuzzy\" toggle and searching again</a>.\n</div>";
+    $("#result_container").before(noticeHtml);
+    return $("#do-instant-fuzzy").click(function(e) {
+      var doBatch;
+      e.preventDefault();
+      doBatch = function() {
+        $("#fuzzy").get(0).checked = true;
+        return performSearch();
+      };
+      return doBatch.debounce();
+    });
+  } else if ($("#space-fallback-info").exists()) {
+    return $("#space-fallback-info").remove();
+  }
 };
 
 parseTaxonYear = function(taxonYearString, strict) {

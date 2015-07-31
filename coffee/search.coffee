@@ -283,6 +283,22 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       doFontExceptions()
       $("#result-count").text(" - #{result.count} entries")
       stopLoad()
+  if result.method is "space_common_fallback" and not $("#space-fallback-info").exists()
+    noticeHtml = """
+    <div id="space-fallback-info" class="alert alert-info alert-dismissible center-block fade in" role="alert">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <strong>Don't see what you want?</strong> We might use a slightly different name. Try <a href="" class="alert-link" id="do-instant-fuzzy">checking the "fuzzy" toggle and searching again</a>.
+    </div>
+    """
+    $("#result_container").before(noticeHtml)
+    $("#do-instant-fuzzy").click (e) ->
+      e.preventDefault()
+      doBatch = ->
+        $("#fuzzy").get(0).checked = true
+        performSearch()
+      doBatch.debounce()
+  else if $("#space-fallback-info").exists()
+    $("#space-fallback-info").remove()
 
 
 
