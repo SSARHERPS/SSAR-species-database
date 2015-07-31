@@ -973,7 +973,7 @@ browserBeware = function() {
   try {
     browsers = new WhichBrowser();
     if (browsers.isBrowser("Firefox")) {
-      warnBrowserHtml = "<div id=\"firefox-warning\" class=\"alert alert-warning alert-dismissible fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Warning!</strong> Firefox has buggy support for <a href=\"http://webcomponents.org/\" class=\"alert-link\">webcomponents</a> and the <a href=\"https://www.polymer-project.org\" class=\"alert-link\">Polymer project</a>. If you encounter bugs, try using Chrome (recommended), Opera, Safari, Internet Explorer, or your phone instead &#8212; they'll all be faster, too.\n</div>";
+      warnBrowserHtml = "<div id=\"firefox-warning\" class=\"alert alert-warning alert-dismissible fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Warning!</strong> Firefox has buggy support for <a href=\"http://webcomponents.org/\" class=\"alert-link\">webcomponents</a> and the <a href=\"https://www.polymer-project.org\" class=\"alert-link\">Polymer project</a>. If you encounter bugs, try using <a href=\"https://www.google.com/chrome/\" class=\"alert-link\">Chrome</a> (recommended), <a href=\"www.opera.com/computer\" class=\"alert-link\">Opera</a>, Safari, <a href=\"https://www.microsoft.com/en-us/windows/microsoft-edge\" class=\"alert-link\">Edge</a>, or your phone instead &#8212; they'll all be faster, too.\n</div>";
       $("#title").after(warnBrowserHtml);
       $(".alert").alert();
       console.warn("We've noticed you're using Firefox. Firefox has problems with this site, we recommend trying Google Chrome instead:", "https://www.google.com/chrome/");
@@ -1609,6 +1609,7 @@ insertModalImage = function(imageObject, taxon, callback) {
     imgCredit = image.imageCredit;
     html = "<div class=\"modal-img-container\">\n  <a href=\"" + largeImg + "\" class=\"" + classPrefix + "-img-anchor center-block text-center\">\n    <img src=\"" + thumbnail + "\"\n      data-href=\"" + largeImgLink + "\"\n      class=\"" + classPrefix + "-img-thumb\"\n      data-taxon=\"" + taxonQueryString + "\" />\n  </a>\n  <p class=\"small text-muted text-center\">\n    Image by " + imgCredit + " under " + imgLicense + "\n  </p>\n</div>";
     d$("#meta-taxon-info").before(html);
+    d$("#modal-taxon").get(0).fit();
     try {
       lightboxImages("." + classPrefix + "-img-anchor", true);
     } catch (_error) {
@@ -1922,9 +1923,16 @@ modalTaxon = function(taxon) {
     };
     insertModalImage();
     checkTaxonNear(taxon, function() {
+      var modalElement;
       formatAlien(data);
       stopLoad();
-      return $("#modal-taxon")[0].open();
+      modalElement = d$("#modal-taxon")[0];
+      d$("#modal-taxon").on("iron-overlay-opened", function() {
+        modalElement.fit();
+        return modalElement.scrollTop = 0;
+      });
+      modalElement.sizingTarget = d$("#modal-taxon-content")[0];
+      return modalElement.open();
     });
     return bindDismissalRemoval();
   }).fail(function(result, status) {
@@ -2400,7 +2408,7 @@ bindPaperMenuButton = function(selector, unbindTargets) {
 };
 
 $(function() {
-  var devHello, e, f64, filterObj, fixState, fuzzyState, loadArgs, looseState, openFilters, queryUrl, temp;
+  var col, devHello, e, f64, filterObj, fixState, fuzzyState, loadArgs, looseState, openFilters, queryUrl, selectedState, selector, temp, val;
   devHello = "****************************************************************************\nHello developer!\nIf you're looking for hints on our API information, this site is open-source\nand released under the GPL. Just click on the GitHub link on the bottom of\nthe page, or check out https://github.com/SSARHERPS\n****************************************************************************";
   console.log(devHello);
   animateLoad();
@@ -2466,11 +2474,16 @@ $(function() {
         fuzzyState = false;
       }
       (fixState = function() {
-        if ((typeof Polymer !== "undefined" && Polymer !== null ? Polymer.Base : void 0) != null) {
+        var ref;
+        if ((typeof Polymer !== "undefined" && Polymer !== null ? (ref = Polymer.Base) != null ? ref.$$ : void 0 : void 0) != null) {
           if (!isNull(Polymer.Base.$$("#loose"))) {
             delay(250, function() {
-              d$("#loose").prop("checked", looseState);
-              return d$("#fuzzy").prop("checked", fuzzyState);
+              if (looseState) {
+                d$("#loose").attr("checked", "checked");
+              }
+              if (fuzzyState) {
+                return d$("#fuzzy").attr("checked", "checked");
+              }
             });
             return false;
           }
@@ -2486,8 +2499,12 @@ $(function() {
         try {
           return Polymer.Base.ready(function() {
             return delay(250, function() {
-              d$("#loose").prop("checked", looseState);
-              return d$("#fuzzy").prop("checked", fuzzyState);
+              if (looseState) {
+                d$("#loose").attr("checked", "checked");
+              }
+              if (fuzzyState) {
+                return d$("#fuzzy").attr("checked", "checked");
+              }
             });
           });
         } catch (_error) {
@@ -2503,26 +2520,26 @@ $(function() {
         f64 = queryUrl.param("filter");
         filterObj = JSON.parse(Base64.decode(f64));
         openFilters = false;
-        $.each(filterObj, function(col, val) {
-          var selectedState, selector;
+        for (col in filterObj) {
+          val = filterObj[col];
           col = col.replace(/_/g, "-");
           selector = "#" + col + "-filter";
           if (col !== "type") {
             if (col !== "is-alien") {
               $(selector).attr("value", val);
-              return openFilters = true;
+              openFilters = true;
             } else {
               selectedState = toInt(val) === 1 ? "alien-only" : "native-only";
               console.log("Setting alien-filter to " + selectedState);
               $("#alien-filter").get(0).selected = selectedState;
-              return delay(750, function() {
+              delay(750, function() {
                 return $("#alien-filter").get(0).selected = selectedState;
               });
             }
           } else {
-            return $("#linnean-order").polymerSelected(val);
+            $("#linnean-order").polymerSelected(val);
           }
-        });
+        }
         if (openFilters) {
           $("#collapse-advanced").collapse("show");
         }
@@ -2561,10 +2578,11 @@ $(function() {
     stopLoad();
     $("#search").attr("disabled", false);
     return (fixState = function() {
-      if ((typeof Polymer !== "undefined" && Polymer !== null ? Polymer.Base : void 0) != null) {
+      var ref;
+      if ((typeof Polymer !== "undefined" && Polymer !== null ? (ref = Polymer.Base) != null ? ref.$$ : void 0 : void 0) != null) {
         if (!isNull(Polymer.Base.$$("#loose"))) {
           delay(250, function() {
-            return d$("#loose").prop("checked", true);
+            return d$("#loose").attr("checked", "checked");
           });
           return false;
         }
@@ -2580,7 +2598,7 @@ $(function() {
       try {
         return Polymer.Base.ready(function() {
           return delay(250, function() {
-            return d$("#loose").prop("checked", true);
+            return d$("#loose").attr("checked", "checked");
           });
         });
       } catch (_error) {

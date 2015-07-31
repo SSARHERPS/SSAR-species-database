@@ -129,11 +129,27 @@ paper-fab.materialblue.paper-fab-0 {
 
 paper-dialog-scrollable {
     padding: 1rem !important;
-    min-height: 15rem;
+    //min-height: 15rem;
+    //height: 40vh;
 }
 
 @{hc} paper-dialog-scrollable {
     padding: 1rem !important;
+}
+
+@media (max-width: 767px) {
+    paper-dialog-scrollable {
+        //height: 50vh;
+    }
+}
+
+#modal-taxon {
+    position:fixed !important;
+    max-height:75vh;
+}
+
+paper-dialog#modal-taxon .buttons {
+    background: #fff;
 }
 
 @{hc} .good-location {

@@ -6868,10 +6868,16 @@ html >>> [affirmative] {
 }
 paper-dialog-scrollable {
   padding: 1rem !important;
-  min-height: 15rem;
 }
 html >>> paper-dialog-scrollable {
   padding: 1rem !important;
+}
+#modal-taxon {
+  position: fixed !important;
+  max-height: 75vh;
+}
+paper-dialog#modal-taxon .buttons {
+  background: #fff;
 }
 html >>> .good-location {
   color: #4caf50;

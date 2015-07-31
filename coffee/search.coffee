@@ -467,6 +467,7 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     </div>
     """
     d$("#meta-taxon-info").before(html)
+    d$("#modal-taxon").get(0).fit()
     try
       # Call lightboxImages with the second argument "true" to do a
       # shadow-piercing lookup
@@ -831,7 +832,12 @@ modalTaxon = (taxon = undefined) ->
     checkTaxonNear taxon, ->
       formatAlien(data)
       stopLoad()
-      $("#modal-taxon")[0].open()
+      modalElement = d$("#modal-taxon")[0]
+      d$("#modal-taxon").on "iron-overlay-opened", ->
+        modalElement.fit()
+        modalElement.scrollTop = 0
+      modalElement.sizingTarget = d$("#modal-taxon-content")[0]
+      modalElement.open()
     bindDismissalRemoval()
   .fail (result,status) ->
     stopLoadError()
@@ -1496,11 +1502,13 @@ $ ->
       # See
       # https://github.com/PolymerElements/paper-toggle-button/issues/29
       do fixState = ->
-        if Polymer?.Base?
+        if Polymer?.Base?.$$?
           unless isNull Polymer.Base.$$("#loose")
             delay 250, ->
-              d$("#loose").prop("checked",looseState)
-              d$("#fuzzy").prop("checked",fuzzyState)
+              if looseState
+                d$("#loose").attr("checked", "checked")
+              if fuzzyState
+                d$("#fuzzy").attr("checked", "checked")
             return false
         unless ssar.stateIter?
           ssar.stateIter = 0
@@ -1513,8 +1521,10 @@ $ ->
             # The whenReady makes the toggle work, but it won't toggle
             # without this "real" delay
             delay 250, ->
-              d$("#loose").prop("checked",looseState)
-              d$("#fuzzy").prop("checked",fuzzyState)
+              if looseState
+                d$("#loose").attr("checked", "checked")
+              if fuzzyState
+                d$("#fuzzy").attr("checked", "checked")
         catch
           delay 250, ->
             fixState()
@@ -1527,7 +1537,7 @@ $ ->
         f64 = queryUrl.param("filter")
         filterObj = JSON.parse(Base64.decode(f64))
         openFilters = false
-        $.each filterObj, (col,val) ->
+        for col, val of filterObj
           col = col.replace(/_/g,"-")
           selector = "##{col}-filter"
           if col isnt "type"
@@ -1585,10 +1595,10 @@ $ ->
     # See
     # https://github.com/PolymerElements/paper-toggle-button/issues/29
     do fixState = ->
-      if Polymer?.Base?
+      if Polymer?.Base?.$$?
         unless isNull Polymer.Base.$$("#loose")
           delay 250, ->
-            d$("#loose").prop("checked", true)
+            d$("#loose").attr("checked", "checked")
           return false
       unless ssar.stateIter?
         ssar.stateIter = 0
@@ -1601,7 +1611,7 @@ $ ->
           # The whenReady makes the toggle work, but it won't toggle
           # without this "real" delay
           delay 250, ->
-            d$("#loose").prop("checked", true)
+            d$("#loose").attr("checked", "checked")
       catch
         delay 250, ->
           fixState()
