@@ -287,7 +287,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
     noticeHtml = """
     <div id="space-fallback-info" class="alert alert-info alert-dismissible center-block fade in" role="alert">
       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-      <strong>Don't see what you want?</strong> We might use a slightly different name. Try <a href="" class="alert-link" id="do-instant-fuzzy">checking the "fuzzy" toggle and searching again</a>.
+      <strong>Don't see what you want?</strong> We might use a slightly different name. Try <a href="" class="alert-link" id="do-instant-fuzzy">checking the "fuzzy" toggle and searching again</a>, or use a shorter search term.
     </div>
     """
     $("#result_container").before(noticeHtml)
@@ -298,7 +298,9 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
         performSearch()
       doBatch.debounce()
   else if $("#space-fallback-info").exists()
-    $("#space-fallback-info").remove()
+    # We only want to show it once, so we'll hide it now
+    $("#space-fallback-info").prop("hidden",true)
+    #$("#space-fallback-info").remove()
 
 
 

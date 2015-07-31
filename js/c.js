@@ -1416,7 +1416,7 @@ formatSearchResults = function(result, container) {
     }
   }
   if (result.method === "space_common_fallback" && !$("#space-fallback-info").exists()) {
-    noticeHtml = "<div id=\"space-fallback-info\" class=\"alert alert-info alert-dismissible center-block fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Don't see what you want?</strong> We might use a slightly different name. Try <a href=\"\" class=\"alert-link\" id=\"do-instant-fuzzy\">checking the \"fuzzy\" toggle and searching again</a>.\n</div>";
+    noticeHtml = "<div id=\"space-fallback-info\" class=\"alert alert-info alert-dismissible center-block fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Don't see what you want?</strong> We might use a slightly different name. Try <a href=\"\" class=\"alert-link\" id=\"do-instant-fuzzy\">checking the \"fuzzy\" toggle and searching again</a>, or use a shorter search term.\n</div>";
     $("#result_container").before(noticeHtml);
     return $("#do-instant-fuzzy").click(function(e) {
       var doBatch;
@@ -1428,7 +1428,7 @@ formatSearchResults = function(result, container) {
       return doBatch.debounce();
     });
   } else if ($("#space-fallback-info").exists()) {
-    return $("#space-fallback-info").remove();
+    return $("#space-fallback-info").prop("hidden", true);
   }
 };
 
