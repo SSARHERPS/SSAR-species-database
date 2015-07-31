@@ -1635,7 +1635,10 @@ insertModalImage = function(imageObject, taxon, callback) {
       try {
         d$("#modal-taxon").get(0).fit();
         return delay(250, function() {
-          return d$("#modal-taxon").get(0).fit();
+          d$("#modal-taxon").get(0).fit();
+          return delay(750, function() {
+            return d$("#modal-taxon").get(0).fit();
+          });
         });
       } catch (_error) {
         e = _error;

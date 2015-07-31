@@ -1330,6 +1330,8 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
         d$("#modal-taxon").get(0).fit()
         delay 250, ->
           d$("#modal-taxon").get(0).fit()
+          delay 750, ->
+            d$("#modal-taxon").get(0).fit()
       catch e
         if iteration < 10
           iteration++
