@@ -6998,7 +6998,7 @@ html >>> .modal-img-container {
   width: 256px;
   overflow: hidden;
 }
-@media (min-width: 767px) {
+@media (min-width: 768px) {
   #modal-taxon {
     min-width: 50em;
   }
@@ -7010,6 +7010,9 @@ html >>> .modal-img-container {
   }
 }
 @media (max-width: 767px) {
+  #modal-taxon {
+    min-width: 85vw;
+  }
   html >>> .hidden-xs {
     display: none !important;
   }
