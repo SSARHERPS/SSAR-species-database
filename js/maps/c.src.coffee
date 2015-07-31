@@ -3,6 +3,8 @@ uri.o = $.url()
 uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host')  + uri.o.attr("directory")
 uri.query = uri.o.attr("fragment")
 
+_metaStatus = new Object()
+
 window.locationData = new Object()
 locationData.params =
   enableHighAccuracy: true
@@ -370,7 +372,7 @@ goTo = (url) ->
   window.location.href = url
   false
 
-animateLoad = (elId = "loader") ->
+animateLoad = (elId = "loader", iteration = 0) ->
   ###
   # Suggested CSS to go with this:
   #
@@ -392,22 +394,54 @@ animateLoad = (elId = "loader") ->
     elId = elId.slice(1)
   else
     selector = "##{elId}"
+  ###
+  # This is there for Edge, which sometimes leaves an element
+  # We declare this early because Polymer tries to be smart and not
+  # actually activate when it's hidden. Thus, this is a prerequisite
+  # to actually re-showing it once hidden.
+  ###
+  $(selector).removeAttr("hidden")
   try
-    if not $(selector).exists()
+    if _metaStatus.isLoading
+      # Don't do this again until it's done loading.
+      if iteration < 100
+        iteration++
+        delay 100, ->
+          animateLoad(elId, iteration)
+        return false
+      else
+        # Still not done loading? This probably isn't important
+        # anymore.
+        console.warn("Loader timed out waiting for load completion")
+        return false
+    unless $(selector).exists()
       $("body").append("<paper-spinner id=\"#{elId}\" active></paper-spinner")
     else
-      $(selector).attr("active",true)
+      $(selector)
+      .attr("active",true) # Chrome, etc., want this
+      #.prop("active",true) # Edge wants this
+    _metaStatus.isLoading = true
     false
   catch e
     console.warn('Could not animate loader', e.message)
 
-stopLoad = (elId = "loader", fadeOut = 1000) ->
+stopLoad = (elId = "loader", fadeOut = 1000, iteration = 0) ->
   if elId.slice(0,1) is "#"
     selector = elId
     elId = elId.slice(1)
   else
     selector = "##{elId}"
   try
+    unless _metaStatus.isLoading
+      # Wait until it's loading before executing again
+      if iteration < 100
+        iteration++
+        delay 100, ->
+          stopLoad(elId, fadeOut, iteration)
+        return false
+      else
+        # Probably not worth waiting for anymore
+        return false
     if $(selector).exists()
       $(selector).addClass("good")
       do endLoad = ->
@@ -416,22 +450,62 @@ stopLoad = (elId = "loader", fadeOut = 1000) ->
           .removeClass("good")
           .attr("active",false)
           .removeAttr("active")
-      # Wait, and call it again because Edge sometimes glitches out
-      # here
-      delay fadeOut * 1.5, ->
-        endLoad()
-        $(selector).get(0).reset()
+          # Timeout for animations. There aren't any at the moment,
+          # but leaving this as a placeholder.
+          delay 1, ->
+            $(selector).prop("hidden",true) # This is there for Edge, which sometimes leaves an element
+            ###
+            # Now, the slower part.
+            # Edge does weirdness with active being toggled off, but
+            # everyone else should have hidden removed so animateLoad()
+            # behaves well. So, we check our browser sniffing.
+            ###
+            if Browsers?.browser?
+              aliases = [
+                "Spartan"
+                "Project Spartan"
+                "Edge"
+                "Microsoft Edge"
+                "MS Edge"
+                ]
+              if Browsers.browser.browser.name in aliases or Browsers.browser.engine.name is "EdgeHTML"
+                # Nuke it from orbit. It's a slight performance hit, but
+                # it's the only way to be sure.
+                $(selector).remove()
+                _metaStatus.isLoading = false
+              else
+                $(selector).removeAttr("hidden")
+                delay 50, ->
+                  # Give the DOM a chance to reflect it's no longer hidden
+                  _metaStatus.isLoading = false
+            else
+              # Just default to "everything but Edge"
+              $(selector).removeAttr("hidden")
+              delay 50, ->
+                # Give the DOM a chance to reflect it's no longer hidden
+                _metaStatus.isLoading = false
+    false
   catch e
     console.warn('Could not stop load animation', e.message)
 
 
-stopLoadError = (message, elId = "loader", fadeOut = 7500) ->
+stopLoadError = (message, elId = "loader", fadeOut = 7500, iteration) ->
   if elId.slice(0,1) is "#"
     selector = elId
     elId = elId.slice(1)
   else
     selector = "##{elId}"
   try
+    unless _metaStatus.isLoading
+      # Wait until it's loading before executing again
+      if iteration < 100
+        iteration++
+        delay 100, ->
+          stopLoadError(message, elId, fadeOut, iteration)
+        return false
+      else
+        # Probably not worth waiting for anymore
+        return false
     if $(selector).exists()
       $(selector).addClass("bad")
       if message? then toastStatusMessage(message,"",fadeOut)
@@ -439,13 +513,43 @@ stopLoadError = (message, elId = "loader", fadeOut = 7500) ->
         delay fadeOut, ->
           $(selector)
           .removeClass("bad")
-          .attr("active",false)
+          .prop("active",false)
           .removeAttr("active")
-      # Wait, and call it again because Edge sometimes glitches out
-      # here
-      delay fadeOut * 1.5, ->
-        endLoad()
-        $(selector).get(0).reset()
+          # Timeout for animations. There aren't any at the moment,
+          # but leaving this as a placeholder.
+          delay 1, ->
+            $(selector).prop("hidden",true) # This is there for Edge, which sometimes leaves an element
+            ###
+            # Now, the slower part.
+            # Edge does weirdness with active being toggled off, but
+            # everyone else should have hidden removed so animateLoad()
+            # behaves well. So, we check our browser sniffing.
+            ###
+            if Browsers?.browser?
+              aliases = [
+                "Spartan"
+                "Project Spartan"
+                "Edge"
+                "Microsoft Edge"
+                "MS Edge"
+                ]
+              if Browsers.browser.browser.name in aliases or Browsers.browser.engine.name is "EdgeHTML"
+                # Nuke it from orbit. It's a slight performance hit, but
+                # it's the only way to be sure.
+                $(selector).remove()
+                _metaStatus.isLoading = false
+              else
+                $(selector).removeAttr("hidden")
+                delay 50, ->
+                  # Give the DOM a chance to reflect it's no longer hidden
+                  _metaStatus.isLoading = false
+            else
+              # Just default to "everything but Edge"
+              $(selector).removeAttr("hidden")
+              delay 50, ->
+                # Give the DOM a chance to reflect it's no longer hidden
+                _metaStatus.isLoading = false
+    false
   catch e
     console.warn('Could not stop load error animation', e.message)
 
@@ -710,10 +814,13 @@ getMaxZ = ->
   Math.max.apply null, mapFunction()
 
 browserBeware = ->
-  unless window.hasCheckedBrowser?
-    window.hasCheckedBrowser = 0
+  unless Browsers?.hasCheckedBrowser?
+    unless Browsers?
+      window.Browsers = new Object()
+    Browsers.hasCheckedBrowser = 0
   try
     browsers = new WhichBrowser()
+    Browsers.browser = browsers
     # Firefox general buggieness
     if browsers.isBrowser("Firefox")
       warnBrowserHtml = """
@@ -726,14 +833,14 @@ browserBeware = ->
       # Firefox doesn't auto-initalize the dismissable
       $(".alert").alert()
       console.warn("We've noticed you're using Firefox. Firefox has problems with this site, we recommend trying Google Chrome instead:","https://www.google.com/chrome/")
-      console.warn("Firefox took #{window.hasCheckedBrowser * 250}ms after page load to render this error message.")
+      console.warn("Firefox took #{Browsers.hasCheckedBrowser * 250}ms after page load to render this error message.")
     # Fix the collapse behaviour in IE
     if browsers.isBrowser("Internet Explorer") or browsers.isBrowser("Safari")
       $("#collapse-button").click ->
         $(".collapse").collapse("toggle")
 
   catch e
-    if window.hasCheckedBrowser is 100
+    if Browsers.hasCheckedBrowser is 100
       # We've waited almost 15 seconds
       console.warn("We can't check your browser!")
       console.warn("Known issues:")
@@ -741,7 +848,7 @@ browserBeware = ->
       console.warn("IE & Safari: The advanced options may not open")
       return false
     delay 250, ->
-      window.hasCheckedBrowser++
+      Browsers.hasCheckedBrowser++
       browserBeware()
 
 

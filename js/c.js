@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, bindPaperMenuButton, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, roundNumber, safariDialogHelper, safariSearchArgHelper, searchParams, setHistory, setupServiceWorker, showBadSearchErrorMessage, showDownloadChooser, smartCalPhotosLink, smartReptileDatabaseLink, smartUpperCasing, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
+var _metaStatus, activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, bindPaperMenuButton, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, roundNumber, safariDialogHelper, safariSearchArgHelper, searchParams, setHistory, setupServiceWorker, showBadSearchErrorMessage, showDownloadChooser, smartCalPhotosLink, smartReptileDatabaseLink, smartUpperCasing, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
   slice = [].slice,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -9,6 +9,8 @@ uri.o = $.url();
 uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host') + uri.o.attr("directory");
 
 uri.query = uri.o.attr("fragment");
+
+_metaStatus = new Object();
 
 window.locationData = new Object();
 
@@ -527,10 +529,13 @@ goTo = function(url) {
   return false;
 };
 
-animateLoad = function(elId) {
+animateLoad = function(elId, iteration) {
   var e, selector;
   if (elId == null) {
     elId = "loader";
+  }
+  if (iteration == null) {
+    iteration = 0;
   }
 
   /*
@@ -557,12 +562,33 @@ animateLoad = function(elId) {
   } else {
     selector = "#" + elId;
   }
+
+  /*
+   * This is there for Edge, which sometimes leaves an element
+   * We declare this early because Polymer tries to be smart and not
+   * actually activate when it's hidden. Thus, this is a prerequisite
+   * to actually re-showing it once hidden.
+   */
+  $(selector).removeAttr("hidden");
   try {
+    if (_metaStatus.isLoading) {
+      if (iteration < 100) {
+        iteration++;
+        delay(100, function() {
+          return animateLoad(elId, iteration);
+        });
+        return false;
+      } else {
+        console.warn("Loader timed out waiting for load completion");
+        return false;
+      }
+    }
     if (!$(selector).exists()) {
       $("body").append("<paper-spinner id=\"" + elId + "\" active></paper-spinner");
     } else {
       $(selector).attr("active", true);
     }
+    _metaStatus.isLoading = true;
     return false;
   } catch (_error) {
     e = _error;
@@ -570,13 +596,16 @@ animateLoad = function(elId) {
   }
 };
 
-stopLoad = function(elId, fadeOut) {
+stopLoad = function(elId, fadeOut, iteration) {
   var e, endLoad, selector;
   if (elId == null) {
     elId = "loader";
   }
   if (fadeOut == null) {
     fadeOut = 1000;
+  }
+  if (iteration == null) {
+    iteration = 0;
   }
   if (elId.slice(0, 1) === "#") {
     selector = elId;
@@ -585,25 +614,61 @@ stopLoad = function(elId, fadeOut) {
     selector = "#" + elId;
   }
   try {
+    if (!_metaStatus.isLoading) {
+      if (iteration < 100) {
+        iteration++;
+        delay(100, function() {
+          return stopLoad(elId, fadeOut, iteration);
+        });
+        return false;
+      } else {
+        return false;
+      }
+    }
     if ($(selector).exists()) {
       $(selector).addClass("good");
       (endLoad = function() {
         return delay(fadeOut, function() {
-          return $(selector).removeClass("good").attr("active", false).removeAttr("active");
+          $(selector).removeClass("good").attr("active", false).removeAttr("active");
+          return delay(1, function() {
+            var aliases, ref;
+            $(selector).prop("hidden", true);
+
+            /*
+             * Now, the slower part.
+             * Edge does weirdness with active being toggled off, but
+             * everyone else should have hidden removed so animateLoad()
+             * behaves well. So, we check our browser sniffing.
+             */
+            if ((typeof Browsers !== "undefined" && Browsers !== null ? Browsers.browser : void 0) != null) {
+              aliases = ["Spartan", "Project Spartan", "Edge", "Microsoft Edge", "MS Edge"];
+              if ((ref = Browsers.browser.browser.name, indexOf.call(aliases, ref) >= 0) || Browsers.browser.engine.name === "EdgeHTML") {
+                $(selector).remove();
+                return _metaStatus.isLoading = false;
+              } else {
+                $(selector).removeAttr("hidden");
+                return delay(50, function() {
+                  return _metaStatus.isLoading = false;
+                });
+              }
+            } else {
+              $(selector).removeAttr("hidden");
+              return delay(50, function() {
+                return _metaStatus.isLoading = false;
+              });
+            }
+          });
         });
       })();
-      return delay(fadeOut * 1.5, function() {
-        endLoad();
-        return $(selector).get(0).reset();
-      });
     }
+    return false;
   } catch (_error) {
     e = _error;
     return console.warn('Could not stop load animation', e.message);
   }
 };
 
-stopLoadError = function(message, elId, fadeOut) {
+stopLoadError = function(message, elId, fadeOut, iteration) {
   var e, endLoad, selector;
   if (elId == null) {
     elId = "loader";
@@ -618,6 +683,17 @@ stopLoadError = function(message, elId, fadeOut) {
     selector = "#" + elId;
   }
   try {
+    if (!_metaStatus.isLoading) {
+      if (iteration < 100) {
+        iteration++;
+        delay(100, function() {
+          return stopLoadError(message, elId, fadeOut, iteration);
+        });
+        return false;
+      } else {
+        return false;
+      }
+    }
     if ($(selector).exists()) {
       $(selector).addClass("bad");
       if (message != null) {
@@ -625,14 +701,39 @@ stopLoadError = function(message, elId, fadeOut) {
       }
       (endLoad = function() {
         return delay(fadeOut, function() {
-          return $(selector).removeClass("bad").attr("active", false).removeAttr("active");
+          $(selector).removeClass("bad").prop("active", false).removeAttr("active");
+          return delay(1, function() {
+            var aliases, ref;
+            $(selector).prop("hidden", true);
+
+            /*
+             * Now, the slower part.
+             * Edge does weirdness with active being toggled off, but
+             * everyone else should have hidden removed so animateLoad()
+             * behaves well. So, we check our browser sniffing.
+             */
+            if ((typeof Browsers !== "undefined" && Browsers !== null ? Browsers.browser : void 0) != null) {
+              aliases = ["Spartan", "Project Spartan", "Edge", "Microsoft Edge", "MS Edge"];
+              if ((ref = Browsers.browser.browser.name, indexOf.call(aliases, ref) >= 0) || Browsers.browser.engine.name === "EdgeHTML") {
+                $(selector).remove();
+                return _metaStatus.isLoading = false;
+              } else {
+                $(selector).removeAttr("hidden");
+                return delay(50, function() {
+                  return _metaStatus.isLoading = false;
+                });
+              }
+            } else {
+              $(selector).removeAttr("hidden");
+              return delay(50, function() {
+                return _metaStatus.isLoading = false;
+              });
+            }
+          });
         });
       })();
-      return delay(fadeOut * 1.5, function() {
-        endLoad();
-        return $(selector).get(0).reset();
-      });
     }
+    return false;
   } catch (_error) {
     e = _error;
     return console.warn('Could not stop load error animation', e.message);
@@ -977,17 +1078,21 @@ getMaxZ = function() {
 
 browserBeware = function() {
   var browsers, e, warnBrowserHtml;
-  if (window.hasCheckedBrowser == null) {
-    window.hasCheckedBrowser = 0;
+  if ((typeof Browsers !== "undefined" && Browsers !== null ? Browsers.hasCheckedBrowser : void 0) == null) {
+    if (typeof Browsers === "undefined" || Browsers === null) {
+      window.Browsers = new Object();
+    }
+    Browsers.hasCheckedBrowser = 0;
   }
   try {
     browsers = new WhichBrowser();
+    Browsers.browser = browsers;
     if (browsers.isBrowser("Firefox")) {
       warnBrowserHtml = "<div id=\"firefox-warning\" class=\"alert alert-warning alert-dismissible fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Warning!</strong> Firefox has buggy support for <a href=\"http://webcomponents.org/\" class=\"alert-link\">webcomponents</a> and the <a href=\"https://www.polymer-project.org\" class=\"alert-link\">Polymer project</a>. If you encounter bugs, try using <a href=\"https://www.google.com/chrome/\" class=\"alert-link\">Chrome</a> (recommended), <a href=\"www.opera.com/computer\" class=\"alert-link\">Opera</a>, Safari, <a href=\"https://www.microsoft.com/en-us/windows/microsoft-edge\" class=\"alert-link\">Edge</a>, or your phone instead &#8212; they'll all be faster, too.\n</div>";
       $("#title").after(warnBrowserHtml);
       $(".alert").alert();
       console.warn("We've noticed you're using Firefox. Firefox has problems with this site, we recommend trying Google Chrome instead:", "https://www.google.com/chrome/");
-      console.warn("Firefox took " + (window.hasCheckedBrowser * 250) + "ms after page load to render this error message.");
+      console.warn("Firefox took " + (Browsers.hasCheckedBrowser * 250) + "ms after page load to render this error message.");
     }
     if (browsers.isBrowser("Internet Explorer") || browsers.isBrowser("Safari")) {
       return $("#collapse-button").click(function() {
@@ -996,7 +1101,7 @@ browserBeware = function() {
     }
   } catch (_error) {
     e = _error;
-    if (window.hasCheckedBrowser === 100) {
+    if (Browsers.hasCheckedBrowser === 100) {
       console.warn("We can't check your browser!");
       console.warn("Known issues:");
       console.warn("Firefox: Some VERY buggy behaviour");
@@ -1004,7 +1109,7 @@ browserBeware = function() {
       return false;
     }
     return delay(250, function() {
-      window.hasCheckedBrowser++;
+      Browsers.hasCheckedBrowser++;
       return browserBeware();
     });
   }
