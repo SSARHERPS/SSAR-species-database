@@ -1,4 +1,4 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, bindPaperMenuButton, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, roundNumber, safariDialogHelper, searchParams, setHistory, setupServiceWorker, showBadSearchErrorMessage, showDownloadChooser, smartCalPhotosLink, smartReptileDatabaseLink, smartUpperCasing, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
+var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, bindPaperMenuButton, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, roundNumber, safariDialogHelper, safariSearchArgHelper, searchParams, setHistory, setupServiceWorker, showBadSearchErrorMessage, showDownloadChooser, smartCalPhotosLink, smartReptileDatabaseLink, smartUpperCasing, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
   slice = [].slice,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -573,7 +573,7 @@ animateLoad = function(elId) {
 };
 
 stopLoad = function(elId, fadeOut) {
-  var e, selector;
+  var e, endLoad, selector;
   if (elId == null) {
     elId = "loader";
   }
@@ -589,8 +589,13 @@ stopLoad = function(elId, fadeOut) {
   try {
     if ($(selector).exists()) {
       $(selector).addClass("good");
-      return delay(fadeOut, function() {
-        return $(selector).removeClass("good").attr("active", false).removeAttr("active");
+      (endLoad = function() {
+        return delay(fadeOut, function() {
+          return $(selector).removeClass("good").attr("active", false).removeAttr("active");
+        });
+      })();
+      return delay(fadeOut * 1.5, function() {
+        return endLoad();
       });
     }
   } catch (_error) {
@@ -600,7 +605,7 @@ stopLoad = function(elId, fadeOut) {
 };
 
 stopLoadError = function(message, elId, fadeOut) {
-  var e, selector;
+  var e, endLoad, selector;
   if (elId == null) {
     elId = "loader";
   }
@@ -619,8 +624,13 @@ stopLoadError = function(message, elId, fadeOut) {
       if (message != null) {
         toastStatusMessage(message, "", fadeOut);
       }
-      return delay(fadeOut, function() {
-        return $(selector).removeClass("bad").attr("active", false).removeAttr("active");
+      (endLoad = function() {
+        return delay(fadeOut, function() {
+          return $(selector).removeClass("bad").attr("active", false).removeAttr("active");
+        });
+      })();
+      return delay(fadeOut * 1.5, function() {
+        return endLoad();
       });
     }
   } catch (_error) {
@@ -1047,6 +1057,44 @@ checkFileVersion = function(forceNow) {
   if (forceNow || (ssar.lastMod == null)) {
     checkVersion();
     return true;
+  }
+  return false;
+};
+
+safariSearchArgHelper = function(value, didLateRecheck) {
+  var searchArg, trimmed;
+  if (didLateRecheck == null) {
+    didLateRecheck = false;
+  }
+
+  /*
+   * If the search argument has a "+" in it, remove it
+   * Then write the arg to search.
+   *
+   * Since Safari doesn't "take" it all the time, keep trying till it does.
+   */
+  if (value != null) {
+    searchArg = value;
+  } else {
+    searchArg = $("#search").val();
+  }
+  trimmed = false;
+  if (searchArg.search(/\+/) !== -1) {
+    trimmed = true;
+    searchArg = searchArg.replace(/\+/g, " ").trim();
+    console.log("Trimmed a plus");
+    delay(100, function() {
+      return safariSearchArgHelper();
+    });
+  }
+  if (trimmed || (value != null)) {
+    $("#search").attr("value", searchArg);
+    console.log("Updated the search args");
+    if (!didLateRecheck) {
+      delay(5000, function() {
+        return safariSearchArgHelper(void 0, true);
+      });
+    }
   }
   return false;
 };
@@ -2473,6 +2521,8 @@ $(function() {
         e = _error;
         fuzzyState = false;
       }
+      temp = loadArgs.split("&")[0];
+      safariSearchArgHelper(temp);
       (fixState = function() {
         var ref;
         if ((typeof Polymer !== "undefined" && Polymer !== null ? (ref = Polymer.Base) != null ? ref.$$ : void 0 : void 0) != null) {
@@ -2492,19 +2542,21 @@ $(function() {
           ssar.stateIter = 0;
         }
         ++ssar.stateIter;
-        if (ssar.stateIter > 10) {
+        if (ssar.stateIter > 30) {
           console.warn("Couldn't attach Polymer.Base.ready");
           return false;
         }
         try {
           return Polymer.Base.ready(function() {
             return delay(250, function() {
+              console.info("Doing a late Polymer.Base.ready call");
               if (looseState) {
                 d$("#loose").attr("checked", "checked");
               }
               if (fuzzyState) {
-                return d$("#fuzzy").attr("checked", "checked");
+                d$("#fuzzy").attr("checked", "checked");
               }
+              return safariSearchArgHelper();
             });
           });
         } catch (_error) {
@@ -2513,9 +2565,6 @@ $(function() {
           });
         }
       })();
-      temp = loadArgs.split("&")[0];
-      temp = temp.replace(/\+/g, " ").trim();
-      $("#search").attr("value", temp);
       try {
         f64 = queryUrl.param("filter");
         filterObj = JSON.parse(Base64.decode(f64));
@@ -2591,7 +2640,7 @@ $(function() {
         ssar.stateIter = 0;
       }
       ++ssar.stateIter;
-      if (ssar.stateIter > 10) {
+      if (ssar.stateIter > 30) {
         console.warn("Couldn't attach Polymer.Base.ready");
         return false;
       }

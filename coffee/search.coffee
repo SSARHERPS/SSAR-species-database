@@ -1498,6 +1498,9 @@ $ ->
         fuzzyState = queryUrl.param("fuzzy").toBool()
       catch e
         fuzzyState = false
+      temp = loadArgs.split("&")[0]
+      # Remove any plus signs in the query
+      safariSearchArgHelper(temp)
       # Delay these for polyfilled element registration
       # See
       # https://github.com/PolymerElements/paper-toggle-button/issues/29
@@ -1513,7 +1516,7 @@ $ ->
         unless ssar.stateIter?
           ssar.stateIter = 0
         ++ssar.stateIter
-        if ssar.stateIter > 10
+        if ssar.stateIter > 30
           console.warn("Couldn't attach Polymer.Base.ready")
           return false
         try
@@ -1521,17 +1524,15 @@ $ ->
             # The whenReady makes the toggle work, but it won't toggle
             # without this "real" delay
             delay 250, ->
+              console.info "Doing a late Polymer.Base.ready call"
               if looseState
                 d$("#loose").attr("checked", "checked")
               if fuzzyState
                 d$("#fuzzy").attr("checked", "checked")
+              safariSearchArgHelper()
         catch
           delay 250, ->
             fixState()
-      temp = loadArgs.split("&")[0]
-      # Remove any plus signs in the query
-      temp = temp.replace(/\+/g," ").trim()
-      $("#search").attr("value",temp)
       # Filters
       try
         f64 = queryUrl.param("filter")
@@ -1603,7 +1604,7 @@ $ ->
       unless ssar.stateIter?
         ssar.stateIter = 0
       ++ssar.stateIter
-      if ssar.stateIter > 10
+      if ssar.stateIter > 30
         console.warn("Couldn't attach Polymer.Base.ready")
         return false
       try

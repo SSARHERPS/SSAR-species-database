@@ -410,11 +410,16 @@ stopLoad = (elId = "loader", fadeOut = 1000) ->
   try
     if $(selector).exists()
       $(selector).addClass("good")
-      delay fadeOut, ->
-        $(selector)
-        .removeClass("good")
-        .attr("active",false)
-        .removeAttr("active")
+      do endLoad = ->
+        delay fadeOut, ->
+          $(selector)
+          .removeClass("good")
+          .attr("active",false)
+          .removeAttr("active")
+      # Wait, and call it again because Edge sometimes glitches out
+      # here
+      delay fadeOut * 1.5, ->
+        endLoad()
   catch e
     console.warn('Could not stop load animation', e.message)
 
@@ -429,12 +434,16 @@ stopLoadError = (message, elId = "loader", fadeOut = 7500) ->
     if $(selector).exists()
       $(selector).addClass("bad")
       if message? then toastStatusMessage(message,"",fadeOut)
-      delay fadeOut, ->
-        $(selector)
-        .removeClass("bad")
-        .attr("active",false)
-        .removeAttr("active")
-
+      do endLoad = ->
+        delay fadeOut, ->
+          $(selector)
+          .removeClass("bad")
+          .attr("active",false)
+          .removeAttr("active")
+      # Wait, and call it again because Edge sometimes glitches out
+      # here
+      delay fadeOut * 1.5, ->
+        endLoad()
   catch e
     console.warn('Could not stop load error animation', e.message)
 
@@ -774,6 +783,36 @@ checkFileVersion = (forceNow = false) ->
   if forceNow or not ssar.lastMod?
     checkVersion()
     return true
+  false
+
+safariSearchArgHelper = (value, didLateRecheck = false) ->
+  ###
+  # If the search argument has a "+" in it, remove it
+  # Then write the arg to search.
+  #
+  # Since Safari doesn't "take" it all the time, keep trying till it does.
+  ###
+  if value?
+    searchArg = value
+  else
+    searchArg = $("#search").val()
+  trimmed = false
+  if searchArg.search(/\+/) isnt -1
+    trimmed = true
+    searchArg = searchArg.replace(/\+/g," ").trim()
+    console.log("Trimmed a plus")
+    delay 100, ->
+      safariSearchArgHelper()
+  if trimmed or value?
+    $("#search").attr("value",searchArg)
+    console.log("Updated the search args")
+    unless didLateRecheck
+      delay 5000, ->
+        # What? Safari is VERY slow on older devices,
+        # and this check will fix them.
+        safariSearchArgHelper(undefined, true)
+
+
   false
 
 
