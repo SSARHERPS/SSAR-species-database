@@ -129,7 +129,7 @@ module.exports = (grunt) ->
     coffee:
       compile:
         options:
-          bare: true
+          bare: false
           join: true
           sourceMapDir: "js/maps"
           sourceMap: true
