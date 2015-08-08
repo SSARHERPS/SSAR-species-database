@@ -1,10 +1,9 @@
-# Basic inits
-root = exports ? this
-
 uri = new Object()
 uri.o = $.url()
 uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host')  + uri.o.attr("directory")
 uri.query = uri.o.attr("fragment")
+
+_metaStatus = new Object()
 
 window.locationData = new Object()
 locationData.params =
@@ -21,7 +20,6 @@ isNull = (str) ->
   try
     if isEmpty(str) or isBlank(str) or not str?
       unless str is false or str is 0 then return true
-  catch
   false
 
 isJson = (str) ->
@@ -29,7 +27,6 @@ isJson = (str) ->
   try
     JSON.parse(str)
     return true
-  catch
   false
 
 isNumber = (n) -> not isNaN(parseFloat(n)) and isFinite(n)
@@ -77,39 +74,46 @@ roundNumber = (number,digits = 0) ->
 
 jQuery.fn.exists = -> jQuery(this).length > 0
 
-jQuery.fn.polymerSelected = (setSelected = undefined) ->
+jQuery.fn.polymerSelected = (setSelected = undefined, attrLookup = "attrForSelected") ->
+  ###
   # See
-  # https://www.polymer-project.org/docs/elements/paper-elements.html#paper-dropdown-menu
+  # https://elements.polymer-project.org/elements/paper-menu
+  # https://elements.polymer-project.org/elements/paper-radio-group
+  #
+  # @param attrLookup is based on
+  # https://elements.polymer-project.org/elements/iron-selector?active=Polymer.IronSelectableBehavior
+  ###
+  unless attrLookup is true
+    attr = $(this).attr(attrLookup)
+  else
+    # If we pass the flag true, we get the label instead
+    attr = true
   if setSelected?
     if not isBool(setSelected)
       try
-        childDropdown = $(this).find("[valueattr]")
-        if isNull(childDropdown)
-          childDropdown = $(this)
-        prop = childDropdown.attr("valueattr")
-        # Find the element where the prop matches the selected
-        item = $(this).find("[#{prop}=#{setSelected}]")
-        index = item.index()
-        item.parent().prop("selected",index)
+        $(this).get(0).select(setSelected)
       catch e
         return false
     else
-      console.log("setSelected #{setSelected} is boolean")
-      $(this).parent().children().removeAttribute("selected")
+      $(this).parent().children().removeAttribute("aria-selected")
       $(this).parent().children().removeAttribute("active")
-      $(this).parent().children().removeClass("core-selected")
+      $(this).parent().children().removeClass("iron-selected")
       $(this).prop("selected",setSelected)
       $(this).prop("active",setSelected)
+      $(this).prop("aria-selected",setSelected)
       if setSelected is true
-        $(this).addClass("core-selected")
+        $(this).addClass("iron-selected")
   else
     val = undefined
     try
-      childDropdown = $(this).find("[valueattr]")
-      if isNull(childDropdown)
-        childDropdown = $(this)
-      prop = childDropdown.attr("valueattr")
-      val = $(this).find(".core-selected").attr(prop)
+      val = $(this).get(0).selected
+      if isNumber(val) and not isNull(attr)
+        itemSelector = $(this).find("paper-item")[toInt(val)]
+        unless attr is true
+          val = $(itemSelector).attr(attr)
+        else
+          # Fetch the label
+          val = $(itemSelector).text()
     catch e
       return false
     if val is "null" or not val?
@@ -169,7 +173,7 @@ Function::debounce = (threshold = 300, execAsap = false, timeout = window.deboun
   func = this
   delayed = ->
     func.apply(func, args) unless execAsap
-    console.log("Debounce applied")
+    # console.log("Debounce applied")
   if timeout?
     try
       clearTimeout(timeout)
@@ -177,7 +181,7 @@ Function::debounce = (threshold = 300, execAsap = false, timeout = window.deboun
       # just do nothing
   else if execAsap
     func.apply(obj, args)
-    console.log("Executed immediately")
+    # console.log("Executed immediately")
   window.debounce_timer = setTimeout(delayed, threshold)
 
 
@@ -291,6 +295,13 @@ String::toTitleCase = ->
     str = str.replace upperRegEx, upper.toUpperCase()
   str
 
+
+smartUpperCasing = (text) ->
+  replacer = (match) ->
+    return match.replace(match, match.toUpperCase())
+  text.replace(/((?=((?!-)[\W\s\r\n]))\s[A-Za-z]|^[A-Za-z])/g, replacer)
+
+
 mapNewWindows = (stopPropagation = true) ->
   # Do new windows
   $(".newwindow").each ->
@@ -318,6 +329,16 @@ toastStatusMessage = (message, className = "", duration = 3000, selector = "#sea
   ###
   # Pop up a status message
   ###
+  unless window.metaTracker?.isToasting?
+    unless window.metaTracker?
+      window.metaTracker = new Object()
+      window.metaTracker.isToasting = false
+  if window.metaTracker.isToasting
+    delay 250, ->
+      # Wait and call again
+      toastStatusMessage(message, className, duration, selector)
+    return false
+  window.metaTracker.isToasting = true
   if not isNumber(duration)
     duration = 3000
   if selector.slice(0,1) is not "#"
@@ -325,14 +346,17 @@ toastStatusMessage = (message, className = "", duration = 3000, selector = "#sea
   if not $(selector).exists()
     html = "<paper-toast id=\"#{selector.slice(1)}\" duration=\"#{duration}\"></paper-toast>"
     $(html).appendTo("body")
-  $(selector).attr("text",message)
-  $(selector).addClass(className)
-  $(selector)[0].show()
+  $(selector)
+  .attr("text",message)
+  .text(message)
+  .addClass(className)
+  $(selector).get(0).show()
   delay duration + 500, ->
     # A short time after it hides, clean it up
     $(selector).empty()
     $(selector).removeClass(className)
     $(selector).attr("text","")
+    window.metaTracker.isToasting = false
 
 
 openLink = (url) ->
@@ -348,7 +372,7 @@ goTo = (url) ->
   window.location.href = url
   false
 
-animateLoad = (elId = "loader") ->
+animateLoad = (elId = "loader", iteration = 0) ->
   ###
   # Suggested CSS to go with this:
   #
@@ -370,45 +394,162 @@ animateLoad = (elId = "loader") ->
     elId = elId.slice(1)
   else
     selector = "##{elId}"
+  ###
+  # This is there for Edge, which sometimes leaves an element
+  # We declare this early because Polymer tries to be smart and not
+  # actually activate when it's hidden. Thus, this is a prerequisite
+  # to actually re-showing it once hidden.
+  ###
+  $(selector).removeAttr("hidden")
   try
-    if not $(selector).exists()
+    if _metaStatus.isLoading
+      # Don't do this again until it's done loading.
+      if iteration < 100
+        iteration++
+        delay 100, ->
+          animateLoad(elId, iteration)
+        return false
+      else
+        # Still not done loading? This probably isn't important
+        # anymore.
+        console.warn("Loader timed out waiting for load completion")
+        return false
+    unless $(selector).exists()
       $("body").append("<paper-spinner id=\"#{elId}\" active></paper-spinner")
     else
-      $(selector).attr("active",true)
+      $(selector)
+      .attr("active",true) # Chrome, etc., want this
+      #.prop("active",true) # Edge wants this
+    _metaStatus.isLoading = true
     false
   catch e
     console.warn('Could not animate loader', e.message)
 
-stopLoad = (elId = "loader", fadeOut = 1000) ->
+stopLoad = (elId = "loader", fadeOut = 1000, iteration = 0) ->
   if elId.slice(0,1) is "#"
     selector = elId
     elId = elId.slice(1)
   else
     selector = "##{elId}"
   try
+    unless _metaStatus.isLoading
+      # Wait until it's loading before executing again
+      if iteration < 100
+        iteration++
+        delay 100, ->
+          stopLoad(elId, fadeOut, iteration)
+        return false
+      else
+        # Probably not worth waiting for anymore
+        return false
     if $(selector).exists()
       $(selector).addClass("good")
-      delay fadeOut, ->
-        $(selector).removeClass("good")
-        $(selector).attr("active",false)
-        $(selector).removeAttr("active")
+      do endLoad = ->
+        delay fadeOut, ->
+          $(selector)
+          .removeClass("good")
+          .attr("active",false)
+          .removeAttr("active")
+          # Timeout for animations. There aren't any at the moment,
+          # but leaving this as a placeholder.
+          delay 1, ->
+            $(selector).prop("hidden",true) # This is there for Edge, which sometimes leaves an element
+            ###
+            # Now, the slower part.
+            # Edge does weirdness with active being toggled off, but
+            # everyone else should have hidden removed so animateLoad()
+            # behaves well. So, we check our browser sniffing.
+            ###
+            if Browsers?.browser?
+              aliases = [
+                "Spartan"
+                "Project Spartan"
+                "Edge"
+                "Microsoft Edge"
+                "MS Edge"
+                ]
+              if Browsers.browser.browser.name in aliases or Browsers.browser.engine.name is "EdgeHTML"
+                # Nuke it from orbit. It's a slight performance hit, but
+                # it's the only way to be sure.
+                $(selector).remove()
+                _metaStatus.isLoading = false
+              else
+                $(selector).removeAttr("hidden")
+                delay 50, ->
+                  # Give the DOM a chance to reflect it's no longer hidden
+                  _metaStatus.isLoading = false
+            else
+              # Just default to "everything but Edge"
+              $(selector).removeAttr("hidden")
+              delay 50, ->
+                # Give the DOM a chance to reflect it's no longer hidden
+                _metaStatus.isLoading = false
+    false
   catch e
     console.warn('Could not stop load animation', e.message)
 
 
-stopLoadError = (message, elId = "loader", fadeOut = 7500) ->
+stopLoadError = (message, elId = "loader", fadeOut = 7500, iteration) ->
   if elId.slice(0,1) is "#"
     selector = elId
     elId = elId.slice(1)
   else
     selector = "##{elId}"
   try
+    unless _metaStatus.isLoading
+      # Wait until it's loading before executing again
+      if iteration < 100
+        iteration++
+        delay 100, ->
+          stopLoadError(message, elId, fadeOut, iteration)
+        return false
+      else
+        # Probably not worth waiting for anymore
+        return false
     if $(selector).exists()
       $(selector).addClass("bad")
       if message? then toastStatusMessage(message,"",fadeOut)
-      delay fadeOut, ->
-        $(selector).removeClass("bad")
-        $(selector).attr("active",false)
+      do endLoad = ->
+        delay fadeOut, ->
+          $(selector)
+          .removeClass("bad")
+          .prop("active",false)
+          .removeAttr("active")
+          # Timeout for animations. There aren't any at the moment,
+          # but leaving this as a placeholder.
+          delay 1, ->
+            $(selector).prop("hidden",true) # This is there for Edge, which sometimes leaves an element
+            ###
+            # Now, the slower part.
+            # Edge does weirdness with active being toggled off, but
+            # everyone else should have hidden removed so animateLoad()
+            # behaves well. So, we check our browser sniffing.
+            ###
+            if Browsers?.browser?
+              aliases = [
+                "Spartan"
+                "Project Spartan"
+                "Edge"
+                "Microsoft Edge"
+                "MS Edge"
+                ]
+              if Browsers.browser.browser.name in aliases or Browsers.browser.engine.name is "EdgeHTML"
+                # Nuke it from orbit. It's a slight performance hit, but
+                # it's the only way to be sure.
+                $(selector).remove()
+                _metaStatus.isLoading = false
+              else
+                $(selector).removeAttr("hidden")
+                delay 50, ->
+                  # Give the DOM a chance to reflect it's no longer hidden
+                  _metaStatus.isLoading = false
+            else
+              # Just default to "everything but Edge"
+              $(selector).removeAttr("hidden")
+              delay 50, ->
+                # Give the DOM a chance to reflect it's no longer hidden
+                _metaStatus.isLoading = false
+    false
   catch e
     console.warn('Could not stop load error animation', e.message)
 
@@ -485,6 +626,8 @@ deepJQuery = (selector) ->
     # https://w3c.github.io/webcomponents/spec/shadow/#composed-trees
     # This is current as of Chrome 44.0.2391.0 dev-m
     # See https://code.google.com/p/chromium/issues/detail?id=446051
+    #
+    # However, this is pending deprecation.
     unless $("html /deep/ #{selector}").exists()
       throw("Bad /deep/ selector")
     return $("html /deep/ #{selector}")
@@ -671,30 +814,33 @@ getMaxZ = ->
   Math.max.apply null, mapFunction()
 
 browserBeware = ->
-  unless window.hasCheckedBrowser?
-    window.hasCheckedBrowser = 0
+  unless Browsers?.hasCheckedBrowser?
+    unless Browsers?
+      window.Browsers = new Object()
+    Browsers.hasCheckedBrowser = 0
   try
     browsers = new WhichBrowser()
+    Browsers.browser = browsers
     # Firefox general buggieness
     if browsers.isBrowser("Firefox")
       warnBrowserHtml = """
       <div id="firefox-warning" class="alert alert-warning alert-dismissible fade in" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <strong>Warning!</strong> Firefox has buggy support for <a href="http://webcomponents.org/" class="alert-link">webcomponents</a> and the <a href="https://www.polymer-project.org" class="alert-link">Polymer project</a>. If you encounter bugs, try using Chrome (recommended), Opera, Safari, Internet Explorer, or your phone instead &#8212; they'll all be faster, too.
+        <strong>Warning!</strong> Firefox has buggy support for <a href="http://webcomponents.org/" class="alert-link">webcomponents</a> and the <a href="https://www.polymer-project.org" class="alert-link">Polymer project</a>. If you encounter bugs, try using <a href="https://www.google.com/chrome/" class="alert-link">Chrome</a> (recommended), <a href="www.opera.com/computer" class="alert-link">Opera</a>, Safari, <a href="https://www.microsoft.com/en-us/windows/microsoft-edge" class="alert-link">Edge</a>, or your phone instead &#8212; they'll all be faster, too.
       </div>
       """
       $("#title").after(warnBrowserHtml)
       # Firefox doesn't auto-initalize the dismissable
       $(".alert").alert()
       console.warn("We've noticed you're using Firefox. Firefox has problems with this site, we recommend trying Google Chrome instead:","https://www.google.com/chrome/")
-      console.warn("Firefox took #{window.hasCheckedBrowser * 250}ms after page load to render this error message.")
+      console.warn("Firefox took #{Browsers.hasCheckedBrowser * 250}ms after page load to render this error message.")
     # Fix the collapse behaviour in IE
     if browsers.isBrowser("Internet Explorer") or browsers.isBrowser("Safari")
       $("#collapse-button").click ->
         $(".collapse").collapse("toggle")
 
   catch e
-    if window.hasCheckedBrowser is 100
+    if Browsers.hasCheckedBrowser is 100
       # We've waited almost 15 seconds
       console.warn("We can't check your browser!")
       console.warn("Known issues:")
@@ -702,7 +848,7 @@ browserBeware = ->
       console.warn("IE & Safari: The advanced options may not open")
       return false
     delay 250, ->
-      window.hasCheckedBrowser++
+      Browsers.hasCheckedBrowser++
       browserBeware()
 
 
@@ -725,7 +871,7 @@ checkFileVersion = (forceNow = false) ->
       if result.last_mod > ssar.lastMod
         # File has updated
         html = """
-        <div id="outdated-warning" class="alert alert-info alert-dismissible fade in" role="alert">
+        <div id="outdated-warning" class="alert alert-warning alert-dismissible fade in" role="alert">
           <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <strong>We have page updates!</strong> This page has been updated since you last refreshed. <a class="alert-link" id="refresh-page" style="cursor:pointer">Click here to refresh now</a> and get bugfixes and updates.
         </div>
@@ -746,6 +892,19 @@ checkFileVersion = (forceNow = false) ->
   if forceNow or not ssar.lastMod?
     checkVersion()
     return true
+  false
+
+
+
+setupServiceWorker = ->
+  # http://www.html5rocks.com/en/tutorials/service-worker/introduction/
+  if "serviceworker" of navigator
+    navigator.serviceWorker
+    .register("js/serviceWorker.min.js")
+    .then (registration) ->
+      console.log("ServiceWorker registered with scope", registration.scope)
+    .catch (error) ->
+      console.warn("ServiceWorker registration failed:", error)
   false
 
 

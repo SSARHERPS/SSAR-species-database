@@ -498,7 +498,7 @@
 			}
 
 			/* Find os */
-			if (preg_match('/pf\(Linux\)/u', $ua) && preg_match('/ov\(Android ([0-9\.]+)/u', $ua, $match)) {
+			if (preg_match('/ov\(Android ([0-9\.]+)/u', $ua, $match)) {
 				$this->os->name = 'Android';
 				$this->os->version = new Version(array('value' => $match[1]));
 			}
@@ -537,7 +537,8 @@
 
 			/* Find device */
 			if (isset($this->os->name) && $this->os->name == 'Android') {
-				if (preg_match('/dv\((.*)\s+Build/u', $ua, $match)) {
+				if (preg_match('/dv\((.*)\)/uU', $ua, $match)) {
+					$match[1] = preg_replace("/\s+Build/u", '', $match[1]);
 					$device = DeviceModels::identify('android', $match[1]);
 
 					if ($device) {
@@ -833,7 +834,6 @@
 					$this->device->type = TYPE_DESKTOP;
 				}
 
-
 				if (preg_match('/Linux\/X2\/R1/u', $ua)) {
 					$this->os->name = 'LiMo';
 					$this->device->type = TYPE_MOBILE;
@@ -847,6 +847,11 @@
 				if (preg_match('/\(Ubuntu; Tablet/u', $ua)) $this->device->type = TYPE_TABLET;
 			}
 
+			else if (preg_match('/\(Ubuntu ([0-9.]+) like Android/u', $ua, $match)) {
+				$this->os->name = 'Ubuntu Touch';
+				$this->os->version = new Version(array('value' => $match[1]));
+				$this->device->type = TYPE_MOBILE;
+			}
 
 
 
@@ -904,6 +909,7 @@
 					if ($this->os->version->is('10.8')) $this->os->version->nickname = 'Mountain Lion';
 					if ($this->os->version->is('10.9')) $this->os->version->nickname = 'Mavericks';
 					if ($this->os->version->is('10.10')) $this->os->version->nickname = 'Yosemite';
+					if ($this->os->version->is('10.11')) $this->os->version->nickname = 'El Capitan';
 				}
 
 				$this->device->type = TYPE_DESKTOP;
@@ -1167,6 +1173,10 @@
 						$this->os->version = new Version(array('value' => '4.4', 'details' => 3));
 					}
 
+					if (preg_match('/Android 5.[01].99/u', $ua)) {
+						$this->os->version = new Version(array('value' => '5.2', 'details' => 3, 'alias' => 'M'));
+					}
+
 					$this->device->type = TYPE_MOBILE;
 					if ($this->os->version->toFloat() >= 3) $this->device->type = TYPE_TABLET;
 					if ($this->os->version->toFloat() >= 4 && preg_match('/Mobile/u', $ua)) $this->device->type = TYPE_MOBILE;
@@ -1420,7 +1430,7 @@
 				$this->device->model = $match[2];
 
 				if ($this->device->model == 'Kbd') {
-					$this->device->model = 'Q series';
+					$this->device->model = 'Q series or Passport';
 				}
 
 				if ($this->device->model == 'Touch') {
@@ -2277,7 +2287,7 @@
 				$this->device->generic = false;
 
 				if (preg_match('/VTE\//u', $ua, $match)) {
-					$this->device->model = 'Playstation Vita TV';
+					$this->device->model = 'Playstation TV';
 				}
 			}
 
@@ -2807,9 +2817,11 @@
 
 			/* NetCast */
 
-			if ($ua == "Mozilla/5.0 (X11; Linux; ko-KR) AppleWebKit/534.26+ (KHTML, like Gecko) Version/5.0 Safari/534.26+") {
+			if ($ua == "Mozilla/5.0 (X11; Linux; ko-KR) AppleWebKit/534.26+ (KHTML, like Gecko) Version/5.0 Safari/534.26+" ||
+				$ua == "Mozilla/5.0 (DirectFB; Linux; ko-KR) AppleWebKit/534.26+ (KHTML, like Gecko) Version/5.0 Safari/534.26+") 
+			{
 				$this->device->manufacturer = 'LG';
-				$this->device->series = 'NetCast TV';
+				$this->device->series = 'NetCast TV 2012';
 				$this->device->type = TYPE_TELEVISION;
 				$this->device->identified |= ID_MATCH_UA;
 			}
@@ -5521,6 +5533,7 @@
 				array('name' => 'OpenWebKitSharp',		'regexp' => '/OpenWebKitSharp/u'),
 				array('name' => 'Prism',				'regexp' => '/Prism\/([0-9.]*)/u'),
 				array('name' => 'Qt',					'regexp' => '/Qt\/([0-9.]*)/u'),
+				array('name' => 'Qt',					'regexp' => '/QtWebEngine\/([0-9.]*)/u'),
 				array('name' => 'QtEmbedded',			'regexp' => '/QtEmbedded/u'),
 				array('name' => 'QtEmbedded',			'regexp' => '/QtEmbedded.*Qt\/([0-9.]*)/u'),
 				array('name' => 'ReqwirelessWeb',		'regexp' => '/ReqwirelessWeb\/([0-9.]*)/u'),
@@ -5708,6 +5721,7 @@
 				array('name' => 'Bing', 				'regexp' => '/msnbot\/([0-9.]*)/u', 'type' => TYPE_BOT),
 				array('name' => 'Bing Preview', 		'regexp' => '/BingPreview\/([0-9.]*)/u', 'type' => TYPE_BOT),
 				array('name' => 'Bloglines', 			'regexp' => '/Bloglines\/([0-9.]*)/u', 'type' => TYPE_BOT),
+				array('name' => 'CiteSeerX',			'regexp' => '/heritrix\/([0-9.]*)/u', 'type' => TYPE_BOT),
 				array('name' => 'Facebook External Hit','regexp' => '/facebookexternalhit\/([0-9.]*)/u', 'type' => TYPE_BOT),
 				array('name' => 'Facebook Scraper', 	'regexp' => '/facebookscraper\/([0-9.]*)/u', 'type' => TYPE_BOT),
 				array('name' => 'Facebook Security', 	'regexp' => '/FacebookSecurity\/([0-9.]*)/u', 'type' => TYPE_BOT),
@@ -5725,10 +5739,12 @@
 				array('name' => 'Google Wireless Transcoder', 'regexp' => '/Google Wireless Transcoder/u', 'type' => TYPE_BOT),
 				array('name' => 'Grub', 				'regexp' => '/grub-client-([0-9.]*)/u', 'type' => TYPE_BOT),
 				array('name' => 'HeartRails Capture', 	'regexp' => '/HeartRails_Capture\/([0-9.]*)/u', 'type' => TYPE_BOT),
-				array('name' => 'CiteSeerX',			'regexp' => '/heritrix\/([0-9.]*)/u', 'type' => TYPE_BOT),
+				array('name' => 'iAsk Spider', 			'regexp' => '/iaskspider\/([0-9.]*)/u', 'type' => TYPE_BOT),
 				array('name' => 'PowerMapper',			'regexp' => '/CrawlerProcess \(http:\/\/www\.PowerMapper\.com\) \/([0-9.]*)/u', 'type' => TYPE_BOT),
+				array('name' => 'Sogou Web Spider',		'regexp' => '/sogou spider/u', 'type' => TYPE_BOT),
 				array('name' => 'Sogou Web Spider',		'regexp' => '/Sogou web spider\/([0-9.]*)/u', 'type' => TYPE_BOT),
 				array('name' => 'Yahoo Slurp', 			'regexp' => '/Yahoo\! Slurp\/([0-9.]*)/u', 'type' => TYPE_BOT),
+				array('name' => 'Yahoo Slurp', 			'regexp' => '/Yahoo\! Slurp China/u', 'type' => TYPE_BOT),
 				array('name' => 'Wget', 				'regexp' => '/Wget\/([0-9.]*)/u', 'type' => TYPE_BOT)
 			);
 
@@ -5887,6 +5903,11 @@
 					$this->browser->name = null;
 					$this->browser->version = null;
 				}
+
+				if ($this->os->name == 'Ubuntu Touch' && $this->browser->name == 'Chromium') {
+					$this->browser->name = null;
+					$this->browser->version = null;
+				}
 			}
 
 			if (isset($this->browser->name) && isset($this->engine->name)) {
@@ -6027,10 +6048,16 @@
 				$this->os->family = 'Android';
 				unset($this->os->version);
 
-				$this->browser->stock = true;
-				$this->browser->hidden = true;
-				unset($this->browser->channel);
+				if (preg_match('/Chrome\/19\.77\.34\.5/u', $ua)) {
+					$this->browser->name = "Wear Internet Browser";
+					$this->browser->version = null;
+				}
+				else {
+					$this->browser->stock = true;
+					$this->browser->hidden = true;
+				}
 
+				unset($this->browser->channel);
 				unset($this->device->flag);
 			}
 

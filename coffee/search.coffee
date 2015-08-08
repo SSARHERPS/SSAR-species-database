@@ -55,12 +55,12 @@ performSearch = (stateArgs = undefined) ->
       # be decoded at this point.
       args = "q=#{stateArgs}"
       sOrig = stateArgs.split("&")[0]
-    console.log("Searching on #{stateArgs}")
+    #console.log("Searching on #{stateArgs}")
   if s is "#" or (isNull(s) and isNull(args)) or (args is "q=" and stateArgs isnt true)
     return false
   animateLoad()
-  unless isNull(filters)
-    console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
+  # unless isNull(filters)
+  #   console.log("Got search value #{s}, hitting","#{searchParams.apiPath}?#{args}")
   $.get(searchParams.targetApi,args,"json")
   .done (result) ->
     # Populate the result container
@@ -197,7 +197,7 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
             # as an example
             niceKey = switch niceKey
               when "common name" then "english name"
-              when "major subtype" then "english subtype"
+              when "major subtype" then "english genus name"
               else niceKey
             htmlHead += "\n\t\t<th class='text-center'>#{niceKey}</th>"
             bootstrapColCount++
@@ -224,14 +224,18 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
               console.warn("There was an error parsing '#{col}', attempting to fix - ",e.message)
               split = col.split(":")
               year = split[1].slice(split[1].search("\"")+1,-2)
-              console.log("Examining #{year}")
+              # console.log("Examining #{year}")
               year = year.replace(/"/g,"'")
               split[1] = "\"#{year}\"}"
               col = split.join(":")
-              console.log("Reconstructed #{col}")
+              # console.log("Reconstructed #{col}")
               d = JSON.parse(col)
             genus = Object.keys(d)[0]
             species = d[genus]
+            if toInt(row.parens_auth_genus).toBool()
+              genus = "(#{genus})"
+            if toInt(row.parens_auth_species).toBool()
+              species = "(#{species})"
             col = "G: #{genus}<br/>S: #{species}"
           catch e
             # Render as-is
@@ -259,6 +263,9 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
             kClass = k
           if k is "genus_authority" or k is "species_authority"
             kClass += " authority"
+          if k is "common_name"
+            col = smartUpperCasing col
+            kClass += " no-cap"
           htmlRow += "\n\t\t<td id='#{k}-#{i}' class='#{kClass} #{colClass}'>#{col}</td>"
       l++
       if l is Object.size(row)
@@ -275,8 +282,25 @@ formatSearchResults = (result,container = searchParams.targetContainer) ->
       modalTaxon()
       doFontExceptions()
       $("#result-count").text(" - #{result.count} entries")
-      testCalPhotos()
       stopLoad()
+  if result.method is "space_common_fallback" and not $("#space-fallback-info").exists()
+    noticeHtml = """
+    <div id="space-fallback-info" class="alert alert-info alert-dismissible center-block fade in" role="alert">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <strong>Don't see what you want?</strong> We might use a slightly different name. Try <a href="" class="alert-link" id="do-instant-fuzzy">checking the "fuzzy" toggle and searching again</a>, or use a shorter search term.
+    </div>
+    """
+    $("#result_container").before(noticeHtml)
+    $("#do-instant-fuzzy").click (e) ->
+      e.preventDefault()
+      doBatch = ->
+        $("#fuzzy").get(0).checked = true
+        performSearch()
+      doBatch.debounce()
+  else if $("#space-fallback-info").exists()
+    # We only want to show it once, so we'll hide it now
+    $("#space-fallback-info").prop("hidden",true)
+    #$("#space-fallback-info").remove()
 
 
 
@@ -292,11 +316,11 @@ parseTaxonYear = (taxonYearString,strict = true) ->
     console.warn("There was an error parsing '#{taxonYearString}', attempting to fix - ",e.message)
     split = taxonYearString.split(":")
     year = split[1].slice(split[1].search('"')+1,-2)
-    console.log("Examining #{year}")
+    # console.log("Examining #{year}")
     year = year.replace(/"/g,"'")
     split[1] = "\"#{year}\"}"
     taxonYearString = split.join(":")
-    console.log("Reconstructed #{taxonYearString}")
+    # console.log("Reconstructed #{taxonYearString}")
     try
       d = JSON.parse(taxonYearString)
     catch e
@@ -333,7 +357,7 @@ formatAlien = (dataOrAlienBool, selector = "#is-alien-container") ->
     return false
   # Now we deal with the real bits
   iconHtml = """
-  <core-icon icon="maps:flight" class="small-icon alien-speices" id="modal-alien-species" data-toggle="tooltip"></core-icon>
+  <iron-icon icon="maps:flight" class="small-icon alien-speices" id="modal-alien-species" data-toggle="tooltip"></iron-icon>
   """
   d$(selector).html(iconHtml)
   tooltipHint = "This species is not native"
@@ -395,7 +419,7 @@ checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "#nea
     </div>
     """
     # Append it all
-    d$(selector).html("<core-icon icon='#{geoIcon}' class='small-icon #{cssClass} near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>")
+    d$(selector).html("<iron-icon icon='#{geoIcon}' class='small-icon #{cssClass} near-me' data-toggle='tooltip' id='near-me-icon'></iron-icon>")
     $(selector)
     .after(tooltipHtml)
     .mouseenter ->
@@ -436,7 +460,7 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     ###
     # Insert a lightboxed image into the modal taxon dialog. This must
     # be shadow-piercing, since the modal dialog is a
-    # paper-action-dialog.
+    # paper-dialog.
     #
     # @param image an object with parameters [thumbUri, imageUri,
     #   imageLicense, imageCredit], and optionally imageLinkUri
@@ -461,6 +485,20 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     </div>
     """
     d$("#meta-taxon-info").before(html)
+    do smartFit = (iteration = 0) ->
+      try
+        d$("#modal-taxon").get(0).fit()
+        delay 250, ->
+          d$("#modal-taxon").get(0).fit()
+          delay 750, ->
+            d$("#modal-taxon").get(0).fit()
+      catch e
+        if iteration < 10
+          iteration++
+          delay 100, ->
+            smartFit(iteration)
+        else
+          console.warn("Couldn't execute fit!")
     try
       # Call lightboxImages with the second argument "true" to do a
       # shadow-piercing lookup
@@ -494,6 +532,7 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
     # And finally, call our helper function
     insertImage(imageObject, taxonString, "ssarimg")
     return false
+
   ###
   # OK, we don't have it, do CalPhotos
   #
@@ -504,6 +543,7 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
   # http://calphotos.berkeley.edu/thumblink.html
   # for API reference.
   ###
+
   args = "getthumbinfo=1&num=all&cconly=1&taxon=#{taxonString}&format=xml"
   # console.log("Looking at","#{ssar.affiliateQueryUrl.calPhotos}?#{args}")
   ## CalPhotos doesn't have good headers set up. Try a CORS request.
@@ -511,9 +551,12 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
   doneCORS = (resultXml) ->
     result = xmlToJSON.parseString(resultXml)
     window.testData = result
-    data = result.calphotos[0]
+    try
+      data = result.calphotos[0]
+    catch e
+      data = undefined
     unless data?
-      console.warn("CalPhotos didn't return any valid images for this search!")
+      # console.warn("CalPhotos didn't return any valid images for this search! Looked for #{taxonString}")
       return false
     imageObject = new Object()
     try
@@ -544,17 +587,93 @@ insertModalImage = (imageObject = ssar.taxonImage, taxon = ssar.activeTaxon, cal
   false
 
 
-testCalPhotos = ->
-  args = "getthumbinfo=1&num=all&cconly=1&taxon=batrachoseps&format=xml"
-  try
-    $.get(ssar.affiliateQueryUrl.calPhotos, args)
-    .done ->
-      false
-    .fail ->
-      insertCORSWorkaround()
-  catch e
-    # We're not going to do anything
+smartReptileDatabaseLink = ->
+  ###
+  # We're going to check the remote for synonyms, and fix links
+  # After
+  # https://github.com/SSARHERPS/SSAR-species-database/issues/77
+  ###
+  url = "http://reptile-database.reptarium.cz/interfaces/services/check-taxon"
+  taxon = ssar.activeTaxon
+  taxonArray = [taxon.genus,taxon.species]
+  if taxon.subspecies?
+    taxonArray.push(taxon.subspecies)
+  taxonString = taxonArray.join("+")
+  humanTaxon = taxonArray.join(" ")
+  humanTaxon = humanTaxon[0...1].toUpperCase() + humanTaxon[1..]
+  args = "taxon=#{taxonString}"
+  $.get url, args, "json"
+  .done (result) ->
+    if result.response is "VALID"
+      # We're done
+      console.info("_#{humanTaxon}_ is the consensus taxon with Reptile Database")
+      return true
+    if result.response is "SYNONYM"
+      # Great, a synonym!
+      alternateTaxa = result.VALID[0]
+      alternateTaxonString = alternateTaxa.toLowerCase().replace(/\s/mg,"+")
+      alternateTaxonArray = alternateTaxa.split(/\s/)
+      data =
+        genus: alternateTaxonArray[0]
+        species: alternateTaxonArray[1]
+      buttonText = "Reptile Database"
+      button = """
+      <paper-button id='modal-alt-linkout' class="hidden-xs">#{buttonText}</paper-button>
+      """
+      outboundLink = "#{ssar.affiliateQueryUrl.reptileDatabase}?genus=#{data.genus}&species=#{data.species}"
+      if outboundLink?
+        # First, un-hide it in case it was hidden
+        $("#modal-alt-linkout")
+        .replaceWith(button)
+        $("#modal-alt-linkout")
+        .click ->
+          # console.log "Should outbound to", outboundLink
+          openTab(outboundLink)
+      console.info("Reptile Database uses recognizes _#{humanTaxon}_ as _#{alternateTaxa}_")
+      smartCalPhotosLink(data)
+    else
+      # The taxon doesn't exist
+      d$("#modal-alt-linkout").remove()
+      console.warn("Reptile Database couldn't find this taxon at all!")
+  .fail ->
+    # We're just going to do nothing here
+    console.warn("Unable to check the taxon on Reptile Database!")
     false
+  false
+
+
+smartCalPhotosLink = (overrideTaxon) ->
+  ###
+  # Called from smartReptileDatabaseLink()
+  # If there were no Cal Photos hits, try
+  # the reptile database genus/species with the
+  # SSAR species as the subspecies
+  ###
+  calPhotosTaxon =
+    genus: overrideTaxon.genus
+    species: overrideTaxon.species
+    subspecies: ssar.activeTaxon.species
+  taxonArray = [
+    calPhotosTaxon.genus
+    calPhotosTaxon.species
+    ]
+  if calPhotosTaxon.subspecies?
+    taxonArray.push(calPhotosTaxon.subspecies)
+  if d$(".modal-img-container").exists()
+    console.info("CalPhotos agrees with SSAR")
+    return true
+  postImageInsertion = ->
+    # We found a valid photo for this alternate taxon
+    humanTaxon = taxonArray.join(" ")
+    humanTaxon = humanTaxon[0...1].toUpperCase() + humanTaxon[1..]
+    console.info("CalPhotos agrees with Reptile Database, so we're linking to _#{humanTaxon}_ for CalPhotos")
+    # Rebind the paper-button
+    $("#modal-calphotos-linkout")
+    .unbind()
+    .click ->
+      openTab("#{ssar.affiliateQueryUrl.calPhotos}?rel-taxon=contains&where-taxon=#{taxonArray.join("+")}")
+    false
+  insertModalImage(ssar.taxonImage, calPhotosTaxon, postImageInsertion)
   false
 
 
@@ -569,21 +688,24 @@ modalTaxon = (taxon = undefined) ->
       modalTaxon($(this).attr("data-taxon"))
     return false
   # Pop open a paper action dialog ...
-  # https://www.polymer-project.org/docs/elements/paper-elements.html#paper-action-dialog
+  # https://elements.polymer-project.org/elements/paper-dialog
   animateLoad()
   if not $("#modal-taxon").exists()
     # On very small devices, for both real-estate and
     # optimization-related reasons, we'll hide calphotos and the alternate
     html = """
-    <paper-action-dialog backdrop layered closeSelector="[affirmative]" id='modal-taxon'>
-      <div id='modal-taxon-content'></div>
-      <paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button>
-      <paper-button dismissive id='modal-calphotos-linkout' class="hidden-xs">CalPhotos</paper-button>
-      <paper-button dismissive id='modal-alt-linkout' class="hidden-xs"></paper-button>
-      <paper-button affirmative autofocus>Close</paper-button>
-    </paper-action-dialog>
+    <paper-dialog modal id='modal-taxon' entry-animation="scale-up-animation" exit-animation="scale-down-animation">
+      <h2 id="modal-heading"></h2>
+      <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>
+      <div class="buttons">
+        <paper-button id='modal-inat-linkout'>iNaturalist</paper-button>
+        <paper-button id='modal-calphotos-linkout' class="hidden-xs">CalPhotos</paper-button>
+        <paper-button id='modal-alt-linkout' class="hidden-xs"></paper-button>
+        <paper-button dialog-dismiss autofocus>Close</paper-button>
+      </div>
+    </paper-dialog>
     """
-    $("#result_container").after(html)
+    $("body").append(html)
   $.get(searchParams.targetApi,"q=#{taxon}","json")
   .done (result) ->
     data = result.result[0]
@@ -634,7 +756,7 @@ modalTaxon = (taxon = undefined) ->
         console.error("There were deprecated scientific names, but the JSON was malformed.")
     minorTypeHtml = ""
     if not isNull(data.minor_type)
-      minorTypeHtml = " <core-icon icon='arrow-forward'></core-icon> <span id='taxon-minor-type'>#{data.minor_type}</span>"
+      minorTypeHtml = " <iron-icon icon='arrow-forward'></iron-icon> <span id='taxon-minor-type'>#{data.minor_type}</span>"
     # Populate the taxon
     if isNull(data.notes)
       data.notes = "Sorry, we have no notes on this taxon yet."
@@ -658,12 +780,12 @@ modalTaxon = (taxon = undefined) ->
     <div id='meta-taxon-info'>
       #{yearHtml}
       <p>
-        English name: <span id='taxon-common-name' class='common_name'>#{data.common_name}</span>
+        English name: <span id='taxon-common-name' class='common_name no-cap'>#{smartUpperCasing data.common_name}</span>
       </p>
       <p>
         Type: <span id='taxon-type' class="major_type">#{data.major_type}</span>
         #{commonType}
-        <core-icon icon='arrow-forward'></core-icon>
+        <iron-icon icon='arrow-forward'></iron-icon>
         <span id='taxon-subtype' class="major_subtype">#{data.major_subtype}</span>#{minorTypeHtml}
       </p>
       #{deprecatedHtml}
@@ -689,6 +811,11 @@ modalTaxon = (taxon = undefined) ->
     # https://github.com/tigerhawkvok/SSAR-species-database/issues/35
     outboundLink = null
     buttonText = null
+    taxonArray = taxon.split("+")
+    ssar.activeTaxon =
+      genus: taxonArray[0]
+      species: taxonArray[1]
+      subspecies: taxonArray[2]
     if data.linnean_order.toLowerCase() in ["caudata","anura","gymnophiona"]
       # Hey, we can always HOPE to find a North American caecilian ...
       # And, if you're reading this, here's some fun for you:
@@ -699,14 +826,19 @@ modalTaxon = (taxon = undefined) ->
     else unless isNull(data.linnean_order)
       # It's not an amphibian -- so we want a link to Reptile Database
       buttonText = "Reptile Database"
+      button = """
+      <paper-button id='modal-alt-linkout' class="hidden-xs">#{buttonText}</paper-button>
+      """
       outboundLink = "#{ssar.affiliateQueryUrl.reptileDatabase}?genus=#{data.genus}&species=#{data.species}"
+      # Now, lazily check this against the Reptile Database taxon API
+      smartReptileDatabaseLink()
     if outboundLink?
       # First, un-hide it in case it was hidden
       $("#modal-alt-linkout")
-      .removeClass("hidden")
-      .text(buttonText)
-      .unbind()
+      .replaceWith(button)
+      $("#modal-alt-linkout")
       .click ->
+        # console.log "Should outbound to", outboundLink
         openTab(outboundLink)
     else
       # Well, wasn't expecting this! But we'll handle it anyway.
@@ -719,13 +851,8 @@ modalTaxon = (taxon = undefined) ->
     # Set the heading
     humanTaxon = taxon.charAt(0).toUpperCase()+taxon[1...]
     humanTaxon = humanTaxon.replace(/\+/g," ")
-    $("#modal-taxon").attr("heading",humanTaxon)
+    d$("#modal-heading").text(humanTaxon)
     # Open it
-    taxonArray = taxon.split("+")
-    ssar.activeTaxon =
-      genus: taxonArray[0]
-      species: taxonArray[1]
-      subspecies: taxonArray[2]
     if isNull(data.image) then data.image = undefined
     ssar.taxonImage =
       imageUri: data.image
@@ -736,13 +863,29 @@ modalTaxon = (taxon = undefined) ->
     checkTaxonNear taxon, ->
       formatAlien(data)
       stopLoad()
-      $("#modal-taxon")[0].open()
+      modalElement = d$("#modal-taxon")[0]
+      d$("#modal-taxon").on "iron-overlay-opened", ->
+        modalElement.fit()
+        modalElement.scrollTop = 0
+        if toFloat($(modalElement).css("top").slice(0,-2)) > $(window).height()
+          # Firefox is weird about this sometimes ...
+          # Let's add a catch-all 'top' adjustment
+          $(modalElement).css("top","12.5vh")
+        delay 250, ->
+          modalElement.fit()
+      modalElement.sizingTarget = d$("#modal-taxon-content")[0]
+      safariDialogHelper("#modal-taxon")
+    bindDismissalRemoval()
   .fail (result,status) ->
     stopLoadError()
   false
 
 
-
+bindDismissalRemoval = ->
+  $("[dialog-dismiss]")
+  .unbind()
+  .click ->
+    $(this).parents("paper-dialog").remove()
 
 
 doFontExceptions = ->
@@ -929,24 +1072,27 @@ downloadCSVList = ->
       # OK, it's all been created. Download it.
       downloadable = "data:text/csv;charset=utf-8," + encodeURIComponent(csv)
       html = """
-      <paper-action-dialog class="download-file" id="download-csv-file" heading="Your file is ready">
-        <div class="dialog-content">
+      <paper-dialog class="download-file" id="download-csv-file" modal>
+        <h2>Your file is ready</h2>
+        <paper-dialog-scrollable class="dialog-content">
           <p>
-            Please note that some special characters in names may be decoded incorrectly by Microsoft Excel. If this is a problem, following the steps in <a href="https://github.com/SSARHERPS/SSAR-species-database/blob/master/meta/excel_unicode_readme.md"  onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'>this README <core-icon icon="launch"></core-icon></a> to force Excel to format it correctly.
+            Please note that some special characters in names may be decoded incorrectly by Microsoft Excel. If this is a problem, following the steps in <a href="https://github.com/SSARHERPS/SSAR-species-database/blob/master/meta/excel_unicode_readme.md"  onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'>this README <iron-icon icon="launch"></iron-icon></a> to force Excel to format it correctly.
           </p>
           <p class="text-center">
-            <a href="#{downloadable}" download="ssar-common-names-#{dateString}.csv" class="btn btn-default"><core-icon icon="file-download"></core-icon> Download Now</a>
+            <a href="#{downloadable}" download="ssar-common-names-#{dateString}.csv" class="btn btn-default"><iron-icon icon="file-download"></iron-icon> Download Now</a>
           </p>
+        </paper-dialog-scrollable>
+        <div class="buttons">
+          <paper-button dialog-dismiss>Close</paper-button>
         </div>
-        <paper-button dismissive>Close</paper-button>
-      </paper-action-dialog>
+      </paper-dialog>
       """
       unless $("#download-csv-file").exists()
         $("body").append(html)
       else
         $("#download-csv-file").replaceWith(html)
+      $("#download-chooser").get(0).close()
       safariDialogHelper("#download-csv-file")
-      stopLoad()
     catch e
       stopLoadError("There was a problem creating the CSV file. Please try again later.")
       console.error("Exception in downloadCSVList() - #{e.message}")
@@ -1004,7 +1150,7 @@ downloadHTMLList = ->
  * Bootstrap v3.3.5 (http://getbootstrap.com)
  * Copyright 2011-2015 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
- *//*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}article,aside,details,figcaption,figure,footer,header,hgroup,main,menu,nav,section,summary{display:block}audio,canvas,progress,video{display:inline-block;vertical-align:baseline}audio:not([controls]){display:none;height:0}[hidden],template{display:none}a{background-color:transparent}a:active,a:hover{outline:0}abbr[title]{border-bottom:1px dotted}b,strong{font-weight:bold}dfn{font-style:italic}h1{font-size:2em;margin:0.67em 0}mark{background:#ff0;color:#000}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sup{top:-0.5em}sub{bottom:-0.25em}img{border:0}svg:not(:root){overflow:hidden}figure{margin:1em 40px}hr{-webkit-box-sizing:content-box;-moz-box-sizing:content-box;box-sizing:content-box;height:0}pre{overflow:auto}code,kbd,pre,samp{font-family:monospace, monospace;font-size:1em}button,input,optgroup,select,textarea{color:inherit;font:inherit;margin:0}button{overflow:visible}button,select{text-transform:none}button,html input[type="button"],input[type="reset"],input[type="submit"]{-webkit-appearance:button;cursor:pointer}button[disabled],html input[disabled]{cursor:default}button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}input{line-height:normal}input[type="checkbox"],input[type="radio"]{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;padding:0}input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{height:auto}input[type="search"]{-webkit-appearance:textfield;-webkit-box-sizing:content-box;-moz-box-sizing:content-box;box-sizing:content-box}input[type="search"]::-webkit-search-cancel-button,input[type="search"]::-webkit-search-decoration{-webkit-appearance:none}fieldset{border:1px solid #c0c0c0;margin:0 2px;padding:0.35em 0.625em 0.75em}legend{border:0;padding:0}textarea{overflow:auto}optgroup{font-weight:bold}table{border-collapse:collapse;border-spacing:0}td,th{padding:0}/*! Source: https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css */@media print{*,*:before,*:after{background:transparent !important;color:#000 !important;-webkit-box-shadow:none !important;box-shadow:none !important;text-shadow:none !important}a,a:visited{text-decoration:underline}a[href]:after{content:" (" attr(href) ")"}abbr[title]:after{content:" (" attr(title) ")"}a[href^="#"]:after,a[href^="javascript:"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}p,h2,h3{orphans:3;widows:3}h2,h3{page-break-after:avoid}.navbar{display:none}.btn>.caret,.dropup>.btn>.caret{border-top-color:#000 !important}.label{border:1px solid #000}.table{border-collapse:collapse !important}.table td,.table th{background-color:#fff !important}.table-bordered th,.table-bordered td{border:1px solid #ddd !important}}*{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}*:before,*:after{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}html{font-size:10px;-webkit-tap-highlight-color:rgba(0,0,0,0)}body{font-family:"Roboto Slab","Droid Serif",Cambria,Georgia,"Times New Roman",Times,serif;font-size:14px;line-height:1.42857143;color:#333;background-color:#fff}input,button,select,textarea{font-family:inherit;font-size:inherit;line-height:inherit}a{color:#337ab7;text-decoration:none}a:hover,a:focus{color:#23527c;text-decoration:underline}a:focus{outline:thin dotted;outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}figure{margin:0}img{vertical-align:middle}.img-responsive{display:block;max-width:100%;height:auto}.img-rounded{border-radius:6px}.img-thumbnail{padding:4px;line-height:1.42857143;background-color:#fff;border:1px solid #ddd;border-radius:4px;-webkit-transition:all .2s ease-in-out;-o-transition:all .2s ease-in-out;transition:all .2s ease-in-out;display:inline-block;max-width:100%;height:auto}.img-circle{border-radius:50%}hr{margin-top:20px;margin-bottom:20px;border:0;border-top:1px solid #eee}.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);border:0}.sr-only-focusable:active,.sr-only-focusable:focus{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto}[role="button"]{cursor:pointer}h1,h2,h3,h4,h5,h6,.h1,.h2,.h3,.h4,.h5,.h6{font-family:inherit;font-weight:500;line-height:1.1;color:inherit}h1 small,h2 small,h3 small,h4 small,h5 small,h6 small,.h1 small,.h2 small,.h3 small,.h4 small,.h5 small,.h6 small,h1 .small,h2 .small,h3 .small,h4 .small,h5 .small,h6 .small,.h1 .small,.h2 .small,.h3 .small,.h4 .small,.h5 .small,.h6 .small{font-weight:normal;line-height:1;color:#777}h1,.h1,h2,.h2,h3,.h3{margin-top:20px;margin-bottom:10px}h1 small,.h1 small,h2 small,.h2 small,h3 small,.h3 small,h1 .small,.h1 .small,h2 .small,.h2 .small,h3 .small,.h3 .small{font-size:65%}h4,.h4,h5,.h5,h6,.h6{margin-top:10px;margin-bottom:10px}h4 small,.h4 small,h5 small,.h5 small,h6 small,.h6 small,h4 .small,.h4 .small,h5 .small,.h5 .small,h6 .small,.h6 .small{font-size:75%}h1,.h1{font-size:36px}h2,.h2{font-size:30px}h3,.h3{font-size:24px}h4,.h4{font-size:18px}h5,.h5{font-size:14px}h6,.h6{font-size:12px}p{margin:0 0 10px}.lead{margin-bottom:20px;font-size:16px;font-weight:300;line-height:1.4}@media (min-width:768px){.lead{font-size:21px}}small,.small{font-size:85%}mark,.mark{background-color:#fcf8e3;padding:.2em}.text-left{text-align:left}.text-right{text-align:right}.text-center{text-align:center}.text-justify{text-align:justify}.text-nowrap{white-space:nowrap}.text-lowercase{text-transform:lowercase}.text-uppercase{text-transform:uppercase}.text-capitalize{text-transform:capitalize}.text-muted{color:#777}.text-primary{color:#337ab7}a.text-primary:hover,a.text-primary:focus{color:#286090}.text-success{color:#3c763d}a.text-success:hover,a.text-success:focus{color:#2b542c}.text-info{color:#31708f}a.text-info:hover,a.text-info:focus{color:#245269}.text-warning{color:#8a6d3b}a.text-warning:hover,a.text-warning:focus{color:#66512c}.text-danger{color:#a94442}a.text-danger:hover,a.text-danger:focus{color:#843534}.bg-primary{color:#fff;background-color:#337ab7}a.bg-primary:hover,a.bg-primary:focus{background-color:#286090}.bg-success{background-color:#dff0d8}a.bg-success:hover,a.bg-success:focus{background-color:#c1e2b3}.bg-info{background-color:#d9edf7}a.bg-info:hover,a.bg-info:focus{background-color:#afd9ee}.bg-warning{background-color:#fcf8e3}a.bg-warning:hover,a.bg-warning:focus{background-color:#f7ecb5}.bg-danger{background-color:#f2dede}a.bg-danger:hover,a.bg-danger:focus{background-color:#e4b9b9}.page-header{padding-bottom:9px;margin:40px 0 20px;border-bottom:1px solid #eee}ul,ol{margin-top:0;margin-bottom:10px}ul ul,ol ul,ul ol,ol ol{margin-bottom:0}.list-unstyled{padding-left:0;list-style:none}.list-inline{padding-left:0;list-style:none;margin-left:-5px}.list-inline>li{display:inline-block;padding-left:5px;padding-right:5px}dl{margin-top:0;margin-bottom:20px}dt,dd{line-height:1.42857143}dt{font-weight:bold}dd{margin-left:0}@media (min-width:768px){.dl-horizontal dt{float:left;width:160px;clear:left;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dl-horizontal dd{margin-left:180px}}abbr[title],abbr[data-original-title]{cursor:help;border-bottom:1px dotted #777}.initialism{font-size:90%;text-transform:uppercase}blockquote{padding:10px 20px;margin:0 0 20px;font-size:17.5px;border-left:5px solid #eee}blockquote p:last-child,blockquote ul:last-child,blockquote ol:last-child{margin-bottom:0}blockquote footer,blockquote small,blockquote .small{display:block;font-size:80%;line-height:1.42857143;color:#777}blockquote footer:before,blockquote small:before,blockquote .small:before{content:'\2014 \00A0'}.blockquote-reverse,blockquote.pull-right{padding-right:15px;padding-left:0;border-right:5px solid #eee;border-left:0;text-align:right}.blockquote-reverse footer:before,blockquote.pull-right footer:before,.blockquote-reverse small:before,blockquote.pull-right small:before,.blockquote-reverse .small:before,blockquote.pull-right .small:before{content:''}.blockquote-reverse footer:after,blockquote.pull-right footer:after,.blockquote-reverse small:after,blockquote.pull-right small:after,.blockquote-reverse .small:after,blockquote.pull-right .small:after{content:'\00A0 \2014'}address{margin-bottom:20px;font-style:normal;line-height:1.42857143}.clearfix:before,.clearfix:after,.dl-horizontal dd:before,.dl-horizontal dd:after{content:" ";display:table}.clearfix:after,.dl-horizontal dd:after{clear:both}.center-block{display:block;margin-left:auto;margin-right:auto}.pull-right{float:right !important}.pull-left{float:left !important}.hide{display:none !important}.show{display:block !important}.invisible{visibility:hidden}.text-hide{font:0/0 a;color:transparent;text-shadow:none;background-color:transparent;border:0}.hidden{display:none !important}.affix{position:fixed}
+ *//*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}article,aside,details,figcaption,figure,footer,header,hgroup,main,menu,nav,section,summary{display:block}audio,canvas,progress,video{display:inline-block;vertical-align:baseline}audio:not([controls]){display:none;height:0}[hidden],template{display:none}a{background-color:transparent}a:active,a:hover{outline:0}abbr[title]{border-bottom:1px dotted}b,strong{font-weight:bold}dfn{font-style:italic}h1{font-size:2em;margin:0.67em 0}mark{background:#ff0;color:#000}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sup{top:-0.5em}sub{bottom:-0.25em}img{border:0}svg:not(:root){overflow:hidden}figure{margin:1em 40px}hr{-webkit-box-sizing:content-box;-moz-box-sizing:content-box;box-sizing:content-box;height:0}pre{overflow:auto}code,kbd,pre,samp{font-family:monospace, monospace;font-size:1em}button,input,optgroup,select,textarea{color:inherit;font:inherit;margin:0}button{overflow:visible}button,select{text-transform:none}button,html input[type="button"],input[type="reset"],input[type="submit"]{-webkit-appearance:button;cursor:pointer}button[disabled],html input[disabled]{cursor:default}button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}input{line-height:normal}input[type="checkbox"],input[type="radio"]{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;padding:0}input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{height:auto}input[type="search"]{-webkit-appearance:textfield;-webkit-box-sizing:content-box;-moz-box-sizing:content-box;box-sizing:content-box}input[type="search"]::-webkit-search-cancel-button,input[type="search"]::-webkit-search-decoration{-webkit-appearance:none}fieldset{border:1px solid #c0c0c0;margin:0 2px;padding:0.35em 0.625em 0.75em}legend{border:0;padding:0}textarea{overflow:auto}optgroup{font-weight:bold}table{border-collapse:collapse;border-spacing:0}td,th{padding:0}/*! Source: https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css */@media print{*,*:before,*:after{background:transparent !important;color:#000 !important;-webkit-box-shadow:none !important;box-shadow:none !important;text-shadow:none !important}a,a:visited{text-decoration:underline}a[href]:after{content:" (" attr(href) ")"}abbr[title]:after{content:" (" attr(title) ")"}a[href^="#"]:after,a[href^="javascript:"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}p,h2,h3{orphans:3;widows:3}h2,h3{page-break-after:avoid}.navbar{display:none}.btn>.caret,.dropup>.btn>.caret{border-top-color:#000 !important}.label{border:1px solid #000}.table{border-collapse:collapse !important}.table td,.table th{background-color:#fff !important}.table-bordered th,.table-bordered td{border:1px solid #ddd !important}}*{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}*:before,*:after{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}html{font-size:10px;-webkit-tap-highlight-color:rgba(0,0,0,0)}body{font-family:"Roboto Slab","Droid Serif",Cambria,Georgia,"Times New Roman",Times,serif;font-size:14px;line-height:1.42857143;color:#333;background-color:#fff}input,button,select,textarea{font-family:inherit;font-size:inherit;line-height:inherit}a{color:#337ab7;text-decoration:none}a:hover,a:focus{color:#23527c;text-decoration:underline}a:focus{outline:thin dotted;outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}figure{margin:0}img{vertical-align:middle}.img-responsive{display:block;max-width:100%;height:auto}.img-rounded{border-radius:6px}.img-thumbnail{padding:4px;line-height:1.42857143;background-color:#fff;border:1px solid #ddd;border-radius:4px;-webkit-transition:all .2s ease-in-out;-o-transition:all .2s ease-in-out;transition:all .2s ease-in-out;display:inline-block;max-width:100%;height:auto}.img-circle{border-radius:50%}hr{margin-top:20px;margin-bottom:20px;border:0;border-top:1px solid #eee}.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);border:0}.sr-only-focusable:active,.sr-only-focusable:focus{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto}[role="button"]{cursor:pointer}h1,h2,h3,h4,h5,h6,.h1,.h2,.h3,.h4,.h5,.h6{font-family:inherit;font-weight:500;line-height:1.1;color:inherit}h1 small,h2 small,h3 small,h4 small,h5 small,h6 small,.h1 small,.h2 small,.h3 small,.h4 small,.h5 small,.h6 small,h1 .small,h2 .small,h3 .small,h4 .small,h5 .small,h6 .small,.h1 .small,.h2 .small,.h3 .small,.h4 .small,.h5 .small,.h6 .small{font-weight:normal;line-height:1;color:#777}h1,.h1,h2,.h2,h3,.h3{margin-top:20px;margin-bottom:10px}h1 small,.h1 small,h2 small,.h2 small,h3 small,.h3 small,h1 .small,.h1 .small,h2 .small,.h2 .small,h3 .small,.h3 .small{font-size:65%}h4,.h4,h5,.h5,h6,.h6{margin-top:10px;margin-bottom:10px}h4 small,.h4 small,h5 small,.h5 small,h6 small,.h6 small,h4 .small,.h4 .small,h5 .small,.h5 .small,h6 .small,.h6 .small{font-size:75%}h1,.h1{font-size:36px}h2,.h2{font-size:30px}h3,.h3{font-size:24px}h4,.h4{font-size:18px}h5,.h5{font-size:14px}h6,.h6{font-size:12px}p{margin:0 0 10px}.lead{margin-bottom:20px;font-size:16px;font-weight:300;line-height:1.4}@media (min-width:768px){.lead{font-size:21px}}small,.small{font-size:85%}mark,.mark{background-color:#fcf8e3;padding:.2em}.text-left{text-align:left}.text-right{text-align:right}.text-center{text-align:center}.text-justify{text-align:justify}.text-nowrap{white-space:nowrap}.text-lowercase{text-transform:lowercase}.text-uppercase{text-transform:uppercase}.text-capitalize{text-transform:capitalize}.text-muted{color:#777}.text-primary{color:#337ab7}a.text-primary:hover,a.text-primary:focus{color:#286090}.text-success{color:#3c763d}a.text-success:hover,a.text-success:focus{color:#2b542c}.text-info{color:#31708f}a.text-info:hover,a.text-info:focus{color:#245269}.text-warning{color:#8a6d3b}a.text-warning:hover,a.text-warning:focus{color:#66512c}.text-danger{color:#a94442}a.text-danger:hover,a.text-danger:focus{color:#843534}.bg-primary{color:#fff;background-color:#337ab7}a.bg-primary:hover,a.bg-primary:focus{background-color:#286090}.bg-success{background-color:#dff0d8}a.bg-success:hover,a.bg-success:focus{background-color:#c1e2b3}.bg-info{background-color:#d9edf7}a.bg-info:hover,a.bg-info:focus{background-color:#afd9ee}.bg-warning{background-color:#fcf8e3}a.bg-warning:hover,a.bg-warning:focus{background-color:#f7ecb5}.bg-danger{background-color:#f2dede}a.bg-danger:hover,a.bg-danger:focus{background-color:#e4b9b9}.page-header{padding-bottom:9px;margin:40px 0 20px;border-bottom:1px solid #eee}ul,ol{margin-top:0;margin-bottom:10px}ul ul,ol ul,ul ol,ol ol{margin-bottom:0}.list-unstyled{padding-left:0;list-style:none}.list-inline{padding-left:0;list-style:none;margin-left:-5px}.list-inline>li{display:inline-block;padding-left:5px;padding-right:5px}dl{margin-top:0;margin-bottom:20px}dt,dd{line-height:1.42857143}dt{font-weight:bold}dd{margin-left:0}@media (min-width:768px){.dl-horizontal dt{float:left;width:160px;clear:left;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dl-horizontal dd{margin-left:180px}}abbr[title],abbr[data-original-title]{cursor:help;border-bottom:1px dotted #777}.initialism{font-size:90%;text-transform:uppercase}blockquote{padding:10px 20px;margin:0 0 20px;font-size:17.5px;border-left:5px solid #eee}blockquote p:last-child,blockquote ul:last-child,blockquote ol:last-child{margin-bottom:0}blockquote footer,blockquote small,blockquote .small{display:block;font-size:80%;line-height:1.42857143;color:#777}blockquote footer:before,blockquote small:before,blockquote .small:before{content:'\x2014 \x00A0'}.blockquote-reverse,blockquote.pull-right{padding-right:15px;padding-left:0;border-right:5px solid #eee;border-left:0;text-align:right}.blockquote-reverse footer:before,blockquote.pull-right footer:before,.blockquote-reverse small:before,blockquote.pull-right small:before,.blockquote-reverse .small:before,blockquote.pull-right .small:before{content:''}.blockquote-reverse footer:after,blockquote.pull-right footer:after,.blockquote-reverse small:after,blockquote.pull-right small:after,.blockquote-reverse .small:after,blockquote.pull-right .small:after{content:'\x00A0 \x2014'}address{margin-bottom:20px;font-style:normal;line-height:1.42857143}.clearfix:before,.clearfix:after,.dl-horizontal dd:before,.dl-horizontal dd:after{content:" ";display:table}.clearfix:after,.dl-horizontal dd:after{clear:both}.center-block{display:block;margin-left:auto;margin-right:auto}.pull-right{float:right !important}.pull-left{float:left !important}.hide{display:none !important}.show{display:block !important}.invisible{visibility:hidden}.text-hide{font:0/0 a;color:transparent;text-shadow:none;background-color:transparent;border:0}.hidden{display:none !important}.affix{position:fixed}
            /* Manual Overrides */
            .sciname {
              font-style: italic;
@@ -1137,8 +1283,8 @@ downloadHTMLList = ->
               #{speciesAuth}
             </span>
             &#8212;
-            <span class="common-name text-capitalize">
-              #{row.common_name}
+            <span class="common_name no-cap">
+              #{smartUpperCasing row.common_name}
             </span>
           </p>
           <div class="entry-content">
@@ -1159,22 +1305,24 @@ downloadHTMLList = ->
       """
       downloadable = "data:text/html;charset=utf-8,#{encodeURIComponent(htmlBody)}"
       dialogHtml = """
-      <paper-action-dialog class="download-file" id="download-html-file" heading="Your file is ready">
-        <div class="dialog-content">
+      <paper-dialog  modal class="download-file" id="download-html-file">
+        <h2>Your file is ready</h2>
+        <paper-dialog-scrollable class="dialog-content">
           <p class="text-center">
-            <a href="#{downloadable}" download="ssar-common-names-#{dateString}.html" class="btn btn-default"><core-icon icon="file-download"></core-icon> Download Now</a>
+            <a href="#{downloadable}" download="ssar-common-names-#{dateString}.html" class="btn btn-default"><iron-icon icon="file-download"></iron-icon> Download Now</a>
           </p>
+        </paper-dialog-scrollable>
+        <div class="buttons">
+          <paper-button dialog-dismiss>Close</paper-button>
         </div>
-        <paper-button dismissive>Close</paper-button>
-      </paper-action-dialog>
+      </paper-dialog>
       """
       unless $("#download-html-file").exists()
         $("body").append(dialogHtml)
       else
         $("#download-html-file").replaceWith(dialogHtml)
+      $("#download-chooser").get(0).close()
       safariDialogHelper("#download-html-file")
-      stopLoad()
-      console.log("Has read clades:",hasReadClade)
     catch e
       stopLoadError("There was a problem creating your file. Please try again later.")
       console.error("Exception in downloadHTMLList() - #{e.message}")
@@ -1186,33 +1334,28 @@ downloadHTMLList = ->
 
 showDownloadChooser = ->
   html = """
-  <paper-action-dialog id="download-chooser" heading="Select Download Type">
-    <div class="dialog-content">
+  <paper-dialog id="download-chooser" modal>
+    <h2>Select Download Type</h2>
+    <paper-dialog-scrollable class="dialog-content">
       <p>
         Once you select a file type, it will take a moment to prepare your download. Please be patient.
       </p>
+    </paper-dialog-scrollable>
+    <div class="buttons">
+      <paper-button dialog-dismiss>Cancel</paper-button>
+      <paper-button dialog-confirm id="initiate-csv-download">CSV</paper-button>
+      <paper-button dialog-confirm id="initiate-html-download">HTML</paper-button>
     </div>
-      <paper-button dismissive>Cancel</paper-button>
-      <paper-button affirmative id="initiate-csv-download">CSV</paper-button>
-      <paper-button affirmative id="initiate-html-download">HTML</paper-button>
-  </paper-action-dialog>
+  </paper-dialog>
   """
   unless $("#download-chooser").exists()
     $("body").append(html)
   d$("#initiate-csv-download").click ->
     downloadCSVList()
-    false
   d$("#initiate-html-download").click ->
     downloadHTMLList()
-    false
-  safariDialogHelper()
+  safariDialogHelper("#download-chooser")
   false
-
-bindDismissalRemoval = ->
-  $("[dialog-dismiss]")
-  .unbind()
-  .click ->
-    $(this).parents("paper-dialog").remove()
 
 safariDialogHelper = (selector = "#download-chooser", counter = 0, callback) ->
   ###
@@ -1241,6 +1384,33 @@ safariDialogHelper = (selector = "#download-chooser", counter = 0, callback) ->
     stopLoadError("Unable to show dialog. Please try again.")
 
 
+safariSearchArgHelper = (value, didLateRecheck = false) ->
+  ###
+  # If the search argument has a "+" in it, remove it
+  # Then write the arg to search.
+  #
+  # Since Safari doesn't "take" it all the time, keep trying till it does.
+  ###
+  if value?
+    searchArg = value
+  else
+    searchArg = $("#search").val()
+  trimmed = false
+  if searchArg.search(/\+/) isnt -1
+    trimmed = true
+    searchArg = searchArg.replace(/\+/g," ").trim()
+    # console.log("Trimmed a plus")
+    delay 100, ->
+      safariSearchArgHelper()
+  if trimmed or value?
+    $("#search").attr("value",searchArg)
+    # console.log("Updated the search args")
+    unless didLateRecheck
+      delay 5000, ->
+        # What? Safari is VERY slow on older devices,
+        # and this check will fix them.
+        safariSearchArgHelper(undefined, true)
+  false
 
 
 insertCORSWorkaround = ->
@@ -1306,6 +1476,32 @@ showBadSearchErrorMessage = (result) ->
 
 
 
+
+bindPaperMenuButton = (selector = "paper-menu-button", unbindTargets = true) ->
+  ###
+  # Use a paper-menu-button and make the
+  # .dropdown-label gain the selected value
+  #
+  # Reference:
+  # https://github.com/polymerelements/paper-menu-button
+  # https://elements.polymer-project.org/elements/paper-menu-button
+  ###
+  for dropdown in $(selector)
+    menu = $(dropdown).find("paper-menu")
+    if unbindTargets
+      $(menu).unbind()
+    do relabelSelectedItem = (target = menu, activeDropdown = dropdown) ->
+      # A menu item has been selected!
+      selectText = $(target).polymerSelected(null, true)
+      # console.log("iron-select fired! We fetched '#{selectText}'")
+      labelSpan = $(activeDropdown).find(".dropdown-label")
+      $(labelSpan).text(selectText)
+      $(target).polymerSelected()
+    $(menu).on "iron-select", ->
+      relabelSelectedItem this, dropdown
+  false
+
+
 $ ->
   devHello = """
   ****************************************************************************
@@ -1326,7 +1522,7 @@ $ ->
       loadArgs = Base64.decode(uri.query)
     catch e
       loadArgs = ""
-    console.log("Popping state to #{loadArgs}")
+    #console.log("Popping state to #{loadArgs}")
     performSearch(loadArgs)
     temp = loadArgs.split("&")[0]
     $("#search").attr("value",temp)
@@ -1337,9 +1533,9 @@ $ ->
     e.preventDefault()
     performSearch()
   $("#collapse-advanced").on "shown.bs.collapse", ->
-    $("#collapse-icon").attr("icon","unfold-less")
+    $("#collapse-icon").attr("icon","icons:unfold-less")
   $("#collapse-advanced").on "hidden.bs.collapse", ->
-    $("#collapse-icon").attr("icon","unfold-more")
+    $("#collapse-icon").attr("icon","icons:unfold-more")
   # Bind enter keydown
   $("#search_form").keypress (e) ->
     if e.which is 13 then performSearch()
@@ -1348,10 +1544,11 @@ $ ->
     performSearch()
   $("#do-search-all").click ->
     performSearch(true)
-  $("#linnean-order").on "core-select", ->
+  $("#linnean-order").on "iron-select", ->
     # We do want to auto-trigger this when there's a search value,
     # but not when it's empty (even though this is valid)
     if not isNull($("#search").val()) then performSearch()
+  bindPaperMenuButton()
   # Do a fill of the result container
   if isNull uri.query
     loadArgs = ""
@@ -1367,23 +1564,53 @@ $ ->
         fuzzyState = queryUrl.param("fuzzy").toBool()
       catch e
         fuzzyState = false
-      $("#loose").prop("checked",looseState)
-      $("#fuzzy").prop("checked",fuzzyState)
       temp = loadArgs.split("&")[0]
       # Remove any plus signs in the query
-      temp = temp.replace(/\+/g," ").trim()
-      $("#search").attr("value",temp)
+      safariSearchArgHelper(temp)
+      # Delay these for polyfilled element registration
+      # See
+      # https://github.com/PolymerElements/paper-toggle-button/issues/29
+      do fixState = ->
+        if Polymer?.Base?.$$?
+          unless isNull Polymer.Base.$$("#loose")
+            delay 250, ->
+              if looseState
+                d$("#loose").attr("checked", "checked")
+              if fuzzyState
+                d$("#fuzzy").attr("checked", "checked")
+            return false
+        unless ssar.stateIter?
+          ssar.stateIter = 0
+        ++ssar.stateIter
+        if ssar.stateIter > 30
+          console.warn("Couldn't attach Polymer.Base.ready")
+          return false
+        try
+          Polymer.Base.ready ->
+            # The whenReady makes the toggle work, but it won't toggle
+            # without this "real" delay
+            delay 250, ->
+              console.info "Doing a late Polymer.Base.ready call"
+              if looseState
+                d$("#loose").attr("checked", "checked")
+              if fuzzyState
+                d$("#fuzzy").attr("checked", "checked")
+              safariSearchArgHelper()
+        catch
+          delay 250, ->
+            fixState()
       # Filters
       try
         f64 = queryUrl.param("filter")
         filterObj = JSON.parse(Base64.decode(f64))
         openFilters = false
-        $.each filterObj, (col,val) ->
+        for col, val of filterObj
           col = col.replace(/_/g,"-")
           selector = "##{col}-filter"
           if col isnt "type"
             if col isnt "is-alien"
               $(selector).attr("value",val)
+              openFilters = true
             else
               selectedState = if toInt(val) is 1 then "alien-only" else "native-only"
               console.log("Setting alien-filter to #{selectedState}")
@@ -1392,7 +1619,6 @@ $ ->
                 # Sometimes, the load delay can make this not
                 # work. Let's be sure.
                 $("#alien-filter").get(0).selected = selectedState
-            openFilters = true
           else
             $("#linnean-order").polymerSelected(val)
         if openFilters
@@ -1432,4 +1658,27 @@ $ ->
   else
     stopLoad()
     $("#search").attr("disabled",false)
-    $("#loose").prop("checked",true)
+    # Delay this for polyfilled element registration
+    # See
+    # https://github.com/PolymerElements/paper-toggle-button/issues/29
+    do fixState = ->
+      if Polymer?.Base?.$$?
+        unless isNull Polymer.Base.$$("#loose")
+          delay 250, ->
+            d$("#loose").attr("checked", "checked")
+          return false
+      unless ssar.stateIter?
+        ssar.stateIter = 0
+      ++ssar.stateIter
+      if ssar.stateIter > 30
+        console.warn("Couldn't attach Polymer.Base.ready")
+        return false
+      try
+        Polymer.Base.ready ->
+          # The whenReady makes the toggle work, but it won't toggle
+          # without this "real" delay
+          delay 250, ->
+            d$("#loose").attr("checked", "checked")
+      catch
+        delay 250, ->
+          fixState()

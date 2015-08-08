@@ -1,8 +1,6 @@
-var activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, root, roundNumber, safariDialogHelper, searchParams, setHistory, showBadSearchErrorMessage, showDownloadChooser, sortResults, ssar, stopLoad, stopLoadError, testCalPhotos, toFloat, toInt, toObject, toastStatusMessage, uri,
-  __slice = [].slice,
-  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
-root = typeof exports !== "undefined" && exports !== null ? exports : this;
+var _metaStatus, activityIndicatorOff, activityIndicatorOn, animateLoad, bindClickTargets, bindClicks, bindDismissalRemoval, bindPaperMenuButton, browserBeware, byteCount, checkFileVersion, checkTaxonNear, clearSearch, d$, deepJQuery, delay, doCORSget, doFontExceptions, downloadCSVList, downloadHTMLList, foo, formatAlien, formatScientificNames, formatSearchResults, getFilters, getLocation, getMaxZ, goTo, insertCORSWorkaround, insertModalImage, isBlank, isBool, isEmpty, isJson, isNull, isNumber, isNumeric, lightboxImages, loadJS, mapNewWindows, modalTaxon, openLink, openTab, overlayOff, overlayOn, parseTaxonYear, performSearch, prepURI, randomInt, roundNumber, safariDialogHelper, safariSearchArgHelper, searchParams, setHistory, setupServiceWorker, showBadSearchErrorMessage, showDownloadChooser, smartCalPhotosLink, smartReptileDatabaseLink, smartUpperCasing, sortResults, ssar, stopLoad, stopLoadError, toFloat, toInt, toObject, toastStatusMessage, uri,
+  slice = [].slice,
+  indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 uri = new Object();
 
@@ -11,6 +9,8 @@ uri.o = $.url();
 uri.urlString = uri.o.attr('protocol') + '://' + uri.o.attr('host') + uri.o.attr("directory");
 
 uri.query = uri.o.attr("fragment");
+
+_metaStatus = new Object();
 
 window.locationData = new Object();
 
@@ -39,9 +39,7 @@ isNull = function(str) {
         return true;
       }
     }
-  } catch (_error) {
-
-  }
+  } catch (_error) {}
   return false;
 };
 
@@ -52,9 +50,7 @@ isJson = function(str) {
   try {
     JSON.parse(str);
     return true;
-  } catch (_error) {
-
-  }
+  } catch (_error) {}
   return false;
 };
 
@@ -144,46 +140,59 @@ jQuery.fn.exists = function() {
   return jQuery(this).length > 0;
 };
 
-jQuery.fn.polymerSelected = function(setSelected) {
-  var childDropdown, e, index, item, prop, val;
+jQuery.fn.polymerSelected = function(setSelected, attrLookup) {
+  var attr, e, itemSelector, val;
   if (setSelected == null) {
     setSelected = void 0;
+  }
+  if (attrLookup == null) {
+    attrLookup = "attrForSelected";
+  }
+
+  /*
+   * See
+   * https://elements.polymer-project.org/elements/paper-menu
+   * https://elements.polymer-project.org/elements/paper-radio-group
+   *
+   * @param attrLookup is based on
+   * https://elements.polymer-project.org/elements/iron-selector?active=Polymer.IronSelectableBehavior
+   */
+  if (attrLookup !== true) {
+    attr = $(this).attr(attrLookup);
+  } else {
+    attr = true;
   }
   if (setSelected != null) {
     if (!isBool(setSelected)) {
       try {
-        childDropdown = $(this).find("[valueattr]");
-        if (isNull(childDropdown)) {
-          childDropdown = $(this);
-        }
-        prop = childDropdown.attr("valueattr");
-        item = $(this).find("[" + prop + "=" + setSelected + "]");
-        index = item.index();
-        return item.parent().prop("selected", index);
+        return $(this).get(0).select(setSelected);
       } catch (_error) {
         e = _error;
         return false;
       }
     } else {
-      console.log("setSelected " + setSelected + " is boolean");
-      $(this).parent().children().removeAttribute("selected");
+      $(this).parent().children().removeAttribute("aria-selected");
       $(this).parent().children().removeAttribute("active");
-      $(this).parent().children().removeClass("core-selected");
+      $(this).parent().children().removeClass("iron-selected");
       $(this).prop("selected", setSelected);
       $(this).prop("active", setSelected);
+      $(this).prop("aria-selected", setSelected);
       if (setSelected === true) {
-        return $(this).addClass("core-selected");
+        return $(this).addClass("iron-selected");
       }
     }
   } else {
     val = void 0;
     try {
-      childDropdown = $(this).find("[valueattr]");
-      if (isNull(childDropdown)) {
-        childDropdown = $(this);
+      val = $(this).get(0).selected;
+      if (isNumber(val) && !isNull(attr)) {
+        itemSelector = $(this).find("paper-item")[toInt(val)];
+        if (attr !== true) {
+          val = $(itemSelector).attr(attr);
+        } else {
+          val = $(itemSelector).text();
+        }
       }
-      prop = childDropdown.attr("valueattr");
-      val = $(this).find(".core-selected").attr(prop);
     } catch (_error) {
       e = _error;
       return false;
@@ -231,7 +240,7 @@ function shuffle(o) { //v1.0
 };
 
 randomInt = function(lower, upper) {
-  var start, _ref, _ref1;
+  var ref, ref1, start;
   if (lower == null) {
     lower = 0;
   }
@@ -240,10 +249,10 @@ randomInt = function(lower, upper) {
   }
   start = Math.random();
   if (lower == null) {
-    _ref = [0, lower], lower = _ref[0], upper = _ref[1];
+    ref = [0, lower], lower = ref[0], upper = ref[1];
   }
   if (lower > upper) {
-    _ref1 = [upper, lower], lower = _ref1[0], upper = _ref1[1];
+    ref1 = [upper, lower], lower = ref1[0], upper = ref1[1];
   }
   return Math.floor(start * (upper - lower + 1) + lower);
 };
@@ -260,7 +269,7 @@ window.debounce_timer = null;
     }
     return function() {
       var args, delayed, obj;
-      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
       obj = this;
       delayed = function() {
         if (!execAsap) {
@@ -279,7 +288,7 @@ window.debounce_timer = null;
 
 Function.prototype.debounce = function() {
   var args, delayed, e, execAsap, func, threshold, timeout;
-  threshold = arguments[0], execAsap = arguments[1], timeout = arguments[2], args = 4 <= arguments.length ? __slice.call(arguments, 3) : [];
+  threshold = arguments[0], execAsap = arguments[1], timeout = arguments[2], args = 4 <= arguments.length ? slice.call(arguments, 3) : [];
   if (threshold == null) {
     threshold = 300;
   }
@@ -292,9 +301,8 @@ Function.prototype.debounce = function() {
   func = this;
   delayed = function() {
     if (!execAsap) {
-      func.apply(func, args);
+      return func.apply(func, args);
     }
-    return console.log("Debounce applied");
   };
   if (timeout != null) {
     try {
@@ -304,7 +312,6 @@ Function.prototype.debounce = function() {
     }
   } else if (execAsap) {
     func.apply(obj, args);
-    console.log("Executed immediately");
   }
   return window.debounce_timer = setTimeout(delayed, threshold);
 };
@@ -395,25 +402,33 @@ loadJS = function(src, callback, doCallbackOnError) {
 };
 
 String.prototype.toTitleCase = function() {
-  var lower, lowerRegEx, lowers, str, upper, upperRegEx, uppers, _i, _j, _len, _len1;
+  var len, len1, lower, lowerRegEx, lowers, m, o, str, upper, upperRegEx, uppers;
   str = this.replace(/([^\W_]+[^\s-]*) */g, function(txt) {
     return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
   });
   lowers = ["A", "An", "The", "And", "But", "Or", "For", "Nor", "As", "At", "By", "For", "From", "In", "Into", "Near", "Of", "On", "Onto", "To", "With"];
-  for (_i = 0, _len = lowers.length; _i < _len; _i++) {
-    lower = lowers[_i];
+  for (m = 0, len = lowers.length; m < len; m++) {
+    lower = lowers[m];
     lowerRegEx = new RegExp("\\s" + lower + "\\s", "g");
     str = str.replace(lowerRegEx, function(txt) {
       return txt.toLowerCase();
     });
   }
   uppers = ["Id", "Tv"];
-  for (_j = 0, _len1 = uppers.length; _j < _len1; _j++) {
-    upper = uppers[_j];
+  for (o = 0, len1 = uppers.length; o < len1; o++) {
+    upper = uppers[o];
     upperRegEx = new RegExp("\\b" + upper + "\\b", "g");
     str = str.replace(upperRegEx, upper.toUpperCase());
   }
   return str;
+};
+
+smartUpperCasing = function(text) {
+  var replacer;
+  replacer = function(match) {
+    return match.replace(match, match.toUpperCase());
+  };
+  return text.replace(/((?=((?!-)[\W\s\r\n]))\s[A-Za-z]|^[A-Za-z])/g, replacer);
 };
 
 mapNewWindows = function(stopPropagation) {
@@ -447,7 +462,7 @@ mapNewWindows = function(stopPropagation) {
 };
 
 toastStatusMessage = function(message, className, duration, selector) {
-  var html;
+  var html, ref;
   if (className == null) {
     className = "";
   }
@@ -461,6 +476,19 @@ toastStatusMessage = function(message, className, duration, selector) {
   /*
    * Pop up a status message
    */
+  if (((ref = window.metaTracker) != null ? ref.isToasting : void 0) == null) {
+    if (window.metaTracker == null) {
+      window.metaTracker = new Object();
+      window.metaTracker.isToasting = false;
+    }
+  }
+  if (window.metaTracker.isToasting) {
+    delay(250, function() {
+      return toastStatusMessage(message, className, duration, selector);
+    });
+    return false;
+  }
+  window.metaTracker.isToasting = true;
   if (!isNumber(duration)) {
     duration = 3000;
   }
@@ -471,13 +499,13 @@ toastStatusMessage = function(message, className, duration, selector) {
     html = "<paper-toast id=\"" + (selector.slice(1)) + "\" duration=\"" + duration + "\"></paper-toast>";
     $(html).appendTo("body");
   }
-  $(selector).attr("text", message);
-  $(selector).addClass(className);
-  $(selector)[0].show();
+  $(selector).attr("text", message).text(message).addClass(className);
+  $(selector).get(0).show();
   return delay(duration + 500, function() {
     $(selector).empty();
     $(selector).removeClass(className);
-    return $(selector).attr("text", "");
+    $(selector).attr("text", "");
+    return window.metaTracker.isToasting = false;
   });
 };
 
@@ -501,10 +529,13 @@ goTo = function(url) {
   return false;
 };
 
-animateLoad = function(elId) {
+animateLoad = function(elId, iteration) {
   var e, selector;
   if (elId == null) {
     elId = "loader";
+  }
+  if (iteration == null) {
+    iteration = 0;
   }
 
   /*
@@ -531,12 +562,33 @@ animateLoad = function(elId) {
   } else {
     selector = "#" + elId;
   }
+
+  /*
+   * This is there for Edge, which sometimes leaves an element
+   * We declare this early because Polymer tries to be smart and not
+   * actually activate when it's hidden. Thus, this is a prerequisite
+   * to actually re-showing it once hidden.
+   */
+  $(selector).removeAttr("hidden");
   try {
+    if (_metaStatus.isLoading) {
+      if (iteration < 100) {
+        iteration++;
+        delay(100, function() {
+          return animateLoad(elId, iteration);
+        });
+        return false;
+      } else {
+        console.warn("Loader timed out waiting for load completion");
+        return false;
+      }
+    }
     if (!$(selector).exists()) {
       $("body").append("<paper-spinner id=\"" + elId + "\" active></paper-spinner");
     } else {
       $(selector).attr("active", true);
     }
+    _metaStatus.isLoading = true;
     return false;
   } catch (_error) {
     e = _error;
@@ -544,13 +596,16 @@ animateLoad = function(elId) {
   }
 };
 
-stopLoad = function(elId, fadeOut) {
-  var e, selector;
+stopLoad = function(elId, fadeOut, iteration) {
+  var e, endLoad, selector;
   if (elId == null) {
     elId = "loader";
   }
   if (fadeOut == null) {
     fadeOut = 1000;
+  }
+  if (iteration == null) {
+    iteration = 0;
   }
   if (elId.slice(0, 1) === "#") {
     selector = elId;
@@ -559,22 +614,62 @@ stopLoad = function(elId, fadeOut) {
     selector = "#" + elId;
   }
   try {
+    if (!_metaStatus.isLoading) {
+      if (iteration < 100) {
+        iteration++;
+        delay(100, function() {
+          return stopLoad(elId, fadeOut, iteration);
+        });
+        return false;
+      } else {
+        return false;
+      }
+    }
     if ($(selector).exists()) {
       $(selector).addClass("good");
-      return delay(fadeOut, function() {
-        $(selector).removeClass("good");
-        $(selector).attr("active", false);
-        return $(selector).removeAttr("active");
-      });
+      (endLoad = function() {
+        return delay(fadeOut, function() {
+          $(selector).removeClass("good").attr("active", false).removeAttr("active");
+          return delay(1, function() {
+            var aliases, ref;
+            $(selector).prop("hidden", true);
+
+            /*
+             * Now, the slower part.
+             * Edge does weirdness with active being toggled off, but
+             * everyone else should have hidden removed so animateLoad()
+             * behaves well. So, we check our browser sniffing.
+             */
+            if ((typeof Browsers !== "undefined" && Browsers !== null ? Browsers.browser : void 0) != null) {
+              aliases = ["Spartan", "Project Spartan", "Edge", "Microsoft Edge", "MS Edge"];
+              if ((ref = Browsers.browser.browser.name, indexOf.call(aliases, ref) >= 0) || Browsers.browser.engine.name === "EdgeHTML") {
+                $(selector).remove();
+                return _metaStatus.isLoading = false;
+              } else {
+                $(selector).removeAttr("hidden");
+                return delay(50, function() {
+                  return _metaStatus.isLoading = false;
+                });
+              }
+            } else {
+              $(selector).removeAttr("hidden");
+              return delay(50, function() {
+                return _metaStatus.isLoading = false;
+              });
+            }
+          });
+        });
+      })();
     }
+    return false;
   } catch (_error) {
     e = _error;
     return console.warn('Could not stop load animation', e.message);
   }
 };
 
-stopLoadError = function(message, elId, fadeOut) {
-  var e, selector;
+stopLoadError = function(message, elId, fadeOut, iteration) {
+  var e, endLoad, selector;
   if (elId == null) {
     elId = "loader";
   }
@@ -588,16 +683,57 @@ stopLoadError = function(message, elId, fadeOut) {
     selector = "#" + elId;
   }
   try {
+    if (!_metaStatus.isLoading) {
+      if (iteration < 100) {
+        iteration++;
+        delay(100, function() {
+          return stopLoadError(message, elId, fadeOut, iteration);
+        });
+        return false;
+      } else {
+        return false;
+      }
+    }
     if ($(selector).exists()) {
       $(selector).addClass("bad");
       if (message != null) {
         toastStatusMessage(message, "", fadeOut);
       }
-      return delay(fadeOut, function() {
-        $(selector).removeClass("bad");
-        return $(selector).attr("active", false);
-      });
+      (endLoad = function() {
+        return delay(fadeOut, function() {
+          $(selector).removeClass("bad").prop("active", false).removeAttr("active");
+          return delay(1, function() {
+            var aliases, ref;
+            $(selector).prop("hidden", true);
+
+            /*
+             * Now, the slower part.
+             * Edge does weirdness with active being toggled off, but
+             * everyone else should have hidden removed so animateLoad()
+             * behaves well. So, we check our browser sniffing.
+             */
+            if ((typeof Browsers !== "undefined" && Browsers !== null ? Browsers.browser : void 0) != null) {
+              aliases = ["Spartan", "Project Spartan", "Edge", "Microsoft Edge", "MS Edge"];
+              if ((ref = Browsers.browser.browser.name, indexOf.call(aliases, ref) >= 0) || Browsers.browser.engine.name === "EdgeHTML") {
+                $(selector).remove();
+                return _metaStatus.isLoading = false;
+              } else {
+                $(selector).removeAttr("hidden");
+                return delay(50, function() {
+                  return _metaStatus.isLoading = false;
+                });
+              }
+            } else {
+              $(selector).removeAttr("hidden");
+              return delay(50, function() {
+                return _metaStatus.isLoading = false;
+              });
+            }
+          });
+        });
+      })();
     }
+    return false;
   } catch (_error) {
     e = _error;
     return console.warn('Could not stop load error animation', e.message);
@@ -638,7 +774,7 @@ doCORSget = function(url, args, callback, callbackFail) {
     e = _error;
     console.warn("There was an error using jQuery to perform the CORS request. Attemping manually.");
   }
-  url = "" + url + "?" + args;
+  url = url + "?" + args;
   createCORSRequest = function(method, url) {
     var xhr;
     if (method == null) {
@@ -894,12 +1030,12 @@ bindClicks = function(selector) {
           console.warn("tagname lower case error");
         }
         $(this).click(function() {
-          var _ref, _ref1, _ref2;
+          var ref, ref1, ref2;
           url = $(this).attr("data-href");
           if (isNull(url)) {
             url = $(this).attr("data-url");
           }
-          if (((_ref = $(this).attr("newTab")) != null ? _ref.toBool() : void 0) || ((_ref1 = $(this).attr("newtab")) != null ? _ref1.toBool() : void 0) || ((_ref2 = $(this).attr("data-newtab")) != null ? _ref2.toBool() : void 0)) {
+          if (((ref = $(this).attr("newTab")) != null ? ref.toBool() : void 0) || ((ref1 = $(this).attr("newtab")) != null ? ref1.toBool() : void 0) || ((ref2 = $(this).attr("data-newtab")) != null ? ref2.toBool() : void 0)) {
             return openTab(url);
           } else {
             return goTo(url);
@@ -942,17 +1078,21 @@ getMaxZ = function() {
 
 browserBeware = function() {
   var browsers, e, warnBrowserHtml;
-  if (window.hasCheckedBrowser == null) {
-    window.hasCheckedBrowser = 0;
+  if ((typeof Browsers !== "undefined" && Browsers !== null ? Browsers.hasCheckedBrowser : void 0) == null) {
+    if (typeof Browsers === "undefined" || Browsers === null) {
+      window.Browsers = new Object();
+    }
+    Browsers.hasCheckedBrowser = 0;
   }
   try {
     browsers = new WhichBrowser();
+    Browsers.browser = browsers;
     if (browsers.isBrowser("Firefox")) {
-      warnBrowserHtml = "<div id=\"firefox-warning\" class=\"alert alert-warning alert-dismissible fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Warning!</strong> Firefox has buggy support for <a href=\"http://webcomponents.org/\" class=\"alert-link\">webcomponents</a> and the <a href=\"https://www.polymer-project.org\" class=\"alert-link\">Polymer project</a>. If you encounter bugs, try using Chrome (recommended), Opera, Safari, Internet Explorer, or your phone instead &#8212; they'll all be faster, too.\n</div>";
+      warnBrowserHtml = "<div id=\"firefox-warning\" class=\"alert alert-warning alert-dismissible fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Warning!</strong> Firefox has buggy support for <a href=\"http://webcomponents.org/\" class=\"alert-link\">webcomponents</a> and the <a href=\"https://www.polymer-project.org\" class=\"alert-link\">Polymer project</a>. If you encounter bugs, try using <a href=\"https://www.google.com/chrome/\" class=\"alert-link\">Chrome</a> (recommended), <a href=\"www.opera.com/computer\" class=\"alert-link\">Opera</a>, Safari, <a href=\"https://www.microsoft.com/en-us/windows/microsoft-edge\" class=\"alert-link\">Edge</a>, or your phone instead &#8212; they'll all be faster, too.\n</div>";
       $("#title").after(warnBrowserHtml);
       $(".alert").alert();
       console.warn("We've noticed you're using Firefox. Firefox has problems with this site, we recommend trying Google Chrome instead:", "https://www.google.com/chrome/");
-      console.warn("Firefox took " + (window.hasCheckedBrowser * 250) + "ms after page load to render this error message.");
+      console.warn("Firefox took " + (Browsers.hasCheckedBrowser * 250) + "ms after page load to render this error message.");
     }
     if (browsers.isBrowser("Internet Explorer") || browsers.isBrowser("Safari")) {
       return $("#collapse-button").click(function() {
@@ -961,7 +1101,7 @@ browserBeware = function() {
     }
   } catch (_error) {
     e = _error;
-    if (window.hasCheckedBrowser === 100) {
+    if (Browsers.hasCheckedBrowser === 100) {
       console.warn("We can't check your browser!");
       console.warn("Known issues:");
       console.warn("Firefox: Some VERY buggy behaviour");
@@ -969,7 +1109,7 @@ browserBeware = function() {
       return false;
     }
     return delay(250, function() {
-      window.hasCheckedBrowser++;
+      Browsers.hasCheckedBrowser++;
       return browserBeware();
     });
   }
@@ -988,7 +1128,7 @@ checkFileVersion = function(forceNow) {
    * @param bool forceNow force a check now
    */
   checkVersion = function() {
-    return $.get("" + uri.urlString + "meta.php", "do=get_last_mod", "json").done(function(result) {
+    return $.get(uri.urlString + "meta.php", "do=get_last_mod", "json").done(function(result) {
       var html;
       if (forceNow) {
         console.log("Forced version check:", result);
@@ -1000,7 +1140,7 @@ checkFileVersion = function(forceNow) {
         ssar.lastMod = result.last_mod;
       }
       if (result.last_mod > ssar.lastMod) {
-        html = "<div id=\"outdated-warning\" class=\"alert alert-info alert-dismissible fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>We have page updates!</strong> This page has been updated since you last refreshed. <a class=\"alert-link\" id=\"refresh-page\" style=\"cursor:pointer\">Click here to refresh now</a> and get bugfixes and updates.\n</div>";
+        html = "<div id=\"outdated-warning\" class=\"alert alert-warning alert-dismissible fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>We have page updates!</strong> This page has been updated since you last refreshed. <a class=\"alert-link\" id=\"refresh-page\" style=\"cursor:pointer\">Click here to refresh now</a> and get bugfixes and updates.\n</div>";
         if (!$("#outdated-warning").exists()) {
           $("body").append(html);
           $("#refresh-page").click(function() {
@@ -1022,6 +1162,17 @@ checkFileVersion = function(forceNow) {
   if (forceNow || (ssar.lastMod == null)) {
     checkVersion();
     return true;
+  }
+  return false;
+};
+
+setupServiceWorker = function() {
+  if ("serviceworker" in navigator) {
+    navigator.serviceWorker.register("js/serviceWorker.min.js").then(function(registration) {
+      return console.log("ServiceWorker registered with scope", registration.scope);
+    })["catch"](function(error) {
+      return console.warn("ServiceWorker registration failed:", error);
+    });
   }
   return false;
 };
@@ -1108,13 +1259,13 @@ performSearch = function(stateArgs) {
     s = s.replace(/\./g, "");
     s = prepURI(s);
     if ($("#loose").polymerChecked()) {
-      s = "" + s + "&loose=true";
+      s = s + "&loose=true";
     }
     if ($("#fuzzy").polymerChecked()) {
-      s = "" + s + "&fuzzy=true";
+      s = s + "&fuzzy=true";
     }
     if (!isNull(filters)) {
-      s = "" + s + "&filter=" + filters;
+      s = s + "&filter=" + filters;
     }
     args = "q=" + s;
   } else {
@@ -1125,15 +1276,11 @@ performSearch = function(stateArgs) {
       args = "q=" + stateArgs;
       sOrig = stateArgs.split("&")[0];
     }
-    console.log("Searching on " + stateArgs);
   }
   if (s === "#" || (isNull(s) && isNull(args)) || (args === "q=" && stateArgs !== true)) {
     return false;
   }
   animateLoad();
-  if (!isNull(filters)) {
-    console.log("Got search value " + s + ", hitting", "" + searchParams.apiPath + "?" + args);
-  }
   return $.get(searchParams.targetApi, args, "json").done(function(result) {
     if (toInt(result.count) === 0) {
       showBadSearchErrorMessage(result);
@@ -1153,7 +1300,7 @@ performSearch = function(stateArgs) {
   }).fail(function(result, error) {
     console.error("There was an error performing the search");
     console.warn(result, error, result.statusText);
-    error = "" + result.status + " - " + result.statusText;
+    error = result.status + " - " + result.statusText;
     $("#search-status").attr("text", "Couldn't execute the search - " + error);
     $("#search-status")[0].show();
     return stopLoadError();
@@ -1161,7 +1308,7 @@ performSearch = function(stateArgs) {
     var b64s;
     b64s = Base64.encodeURI(s);
     if (s != null) {
-      setHistory("" + uri.urlString + "#" + b64s);
+      setHistory(uri.urlString + "#" + b64s);
     }
     return false;
   });
@@ -1221,7 +1368,7 @@ getFilters = function(selector, booleanType) {
 };
 
 formatSearchResults = function(result, container) {
-  var alt, bootstrapColCount, bootstrapColSize, col, colClass, d, data, dontShowColumns, e, externalCounter, genus, headers, html, htmlClose, htmlHead, htmlRow, i, j, k, kClass, l, niceKey, renderTimeout, row, species, split, targetCount, taxonQuery, v, year, _results;
+  var alt, bootstrapColCount, bootstrapColSize, col, colClass, d, data, dontShowColumns, e, externalCounter, genus, headers, html, htmlClose, htmlHead, htmlRow, i, j, k, kClass, l, niceKey, noticeHtml, renderTimeout, row, species, split, targetCount, taxonQuery, v, year;
   if (container == null) {
     container = searchParams.targetContainer;
   }
@@ -1250,7 +1397,6 @@ formatSearchResults = function(result, container) {
     console.warn(data);
     return false;
   });
-  _results = [];
   for (i in data) {
     row = data[i];
     externalCounter = i;
@@ -1260,7 +1406,7 @@ formatSearchResults = function(result, container) {
       for (k in row) {
         v = row[k];
         niceKey = k.replace(/_/g, " ");
-        if (__indexOf.call(dontShowColumns, k) < 0) {
+        if (indexOf.call(dontShowColumns, k) < 0) {
           if ($("#show-deprecated").polymerSelected() !== true) {
             alt = "deprecated_scientific";
           } else {
@@ -1272,7 +1418,7 @@ formatSearchResults = function(result, container) {
                 case "common name":
                   return "english name";
                 case "major subtype":
-                  return "english subtype";
+                  return "english genus name";
                 default:
                   return niceKey;
               }
@@ -1290,15 +1436,15 @@ formatSearchResults = function(result, container) {
         }
       }
     }
-    taxonQuery = "" + row.genus + "+" + row.species;
+    taxonQuery = row.genus + "+" + row.species;
     if (!isNull(row.subspecies)) {
-      taxonQuery = "" + taxonQuery + "+" + row.subspecies;
+      taxonQuery = taxonQuery + "+" + row.subspecies;
     }
     htmlRow = "\n\t<tr id='cndb-row" + i + "' class='cndb-result-entry' data-taxon=\"" + taxonQuery + "\">";
     l = 0;
     for (k in row) {
       col = row[k];
-      if (__indexOf.call(dontShowColumns, k) < 0) {
+      if (indexOf.call(dontShowColumns, k) < 0) {
         if (k === "authority_year") {
           try {
             try {
@@ -1308,15 +1454,19 @@ formatSearchResults = function(result, container) {
               console.warn("There was an error parsing '" + col + "', attempting to fix - ", e.message);
               split = col.split(":");
               year = split[1].slice(split[1].search("\"") + 1, -2);
-              console.log("Examining " + year);
               year = year.replace(/"/g, "'");
               split[1] = "\"" + year + "\"}";
               col = split.join(":");
-              console.log("Reconstructed " + col);
               d = JSON.parse(col);
             }
             genus = Object.keys(d)[0];
             species = d[genus];
+            if (toInt(row.parens_auth_genus).toBool()) {
+              genus = "(" + genus + ")";
+            }
+            if (toInt(row.parens_auth_species).toBool()) {
+              species = "(" + species + ")";
+            }
             col = "G: " + genus + "<br/>S: " + species;
           } catch (_error) {
             e = _error;
@@ -1338,12 +1488,16 @@ formatSearchResults = function(result, container) {
             }
           }
           if (k !== "genus" && k !== "species" && k !== "subspecies") {
-            kClass = "" + k + " text-center";
+            kClass = k + " text-center";
           } else {
             kClass = k;
           }
           if (k === "genus_authority" || k === "species_authority") {
             kClass += " authority";
+          }
+          if (k === "common_name") {
+            col = smartUpperCasing(col);
+            kClass += " no-cap";
           }
           htmlRow += "\n\t\t<td id='" + k + "-" + i + "' class='" + kClass + " " + colClass + "'>" + col + "</td>";
         }
@@ -1363,13 +1517,24 @@ formatSearchResults = function(result, container) {
       modalTaxon();
       doFontExceptions();
       $("#result-count").text(" - " + result.count + " entries");
-      testCalPhotos();
-      _results.push(stopLoad());
-    } else {
-      _results.push(void 0);
+      stopLoad();
     }
   }
-  return _results;
+  if (result.method === "space_common_fallback" && !$("#space-fallback-info").exists()) {
+    noticeHtml = "<div id=\"space-fallback-info\" class=\"alert alert-info alert-dismissible center-block fade in\" role=\"alert\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Don't see what you want?</strong> We might use a slightly different name. Try <a href=\"\" class=\"alert-link\" id=\"do-instant-fuzzy\">checking the \"fuzzy\" toggle and searching again</a>, or use a shorter search term.\n</div>";
+    $("#result_container").before(noticeHtml);
+    return $("#do-instant-fuzzy").click(function(e) {
+      var doBatch;
+      e.preventDefault();
+      doBatch = function() {
+        $("#fuzzy").get(0).checked = true;
+        return performSearch();
+      };
+      return doBatch.debounce();
+    });
+  } else if ($("#space-fallback-info").exists()) {
+    return $("#space-fallback-info").prop("hidden", true);
+  }
 };
 
 parseTaxonYear = function(taxonYearString, strict) {
@@ -1389,11 +1554,9 @@ parseTaxonYear = function(taxonYearString, strict) {
     console.warn("There was an error parsing '" + taxonYearString + "', attempting to fix - ", e.message);
     split = taxonYearString.split(":");
     year = split[1].slice(split[1].search('"') + 1, -2);
-    console.log("Examining " + year);
     year = year.replace(/"/g, "'");
     split[1] = "\"" + year + "\"}";
     taxonYearString = split.join(":");
-    console.log("Reconstructed " + taxonYearString);
     try {
       d = JSON.parse(taxonYearString);
     } catch (_error) {
@@ -1438,7 +1601,7 @@ formatAlien = function(dataOrAlienBool, selector) {
     d$(selector).css("display", "none");
     return false;
   }
-  iconHtml = "<core-icon icon=\"maps:flight\" class=\"small-icon alien-speices\" id=\"modal-alien-species\" data-toggle=\"tooltip\"></core-icon>";
+  iconHtml = "<iron-icon icon=\"maps:flight\" class=\"small-icon alien-speices\" id=\"modal-alien-species\" data-toggle=\"tooltip\"></iron-icon>";
   d$(selector).html(iconHtml);
   tooltipHint = "This species is not native";
   tooltipHtml = "<div class=\"tooltip fade top in right manual-placement-tooltip\" role=\"tooltip\" style=\"top: 6.5em; left: 4em; right:initial; display:none\" id=\"manual-alien-tooltip\">\n  <div class=\"tooltip-arrow\" style=\"top:50%;left:5px\"></div>\n  <div class=\"tooltip-inner\">" + tooltipHint + "</div>\n</div>";
@@ -1502,7 +1665,7 @@ checkTaxonNear = function(taxonQuery, callback, selector) {
   }).always(function() {
     var tooltipHtml;
     tooltipHtml = "<div class=\"tooltip fade top in right manual-placement-tooltip\" role=\"tooltip\" style=\"top: 6.5em; left: 4em; right:initial; display:none\" id=\"manual-location-tooltip\">\n  <div class=\"tooltip-arrow\" style=\"top:50%;left:5px\"></div>\n  <div class=\"tooltip-inner\">" + tooltipHint + "</div>\n</div>";
-    d$(selector).html("<core-icon icon='" + geoIcon + "' class='small-icon " + cssClass + " near-me' data-toggle='tooltip' id='near-me-icon'></core-icon>");
+    d$(selector).html("<iron-icon icon='" + geoIcon + "' class='small-icon " + cssClass + " near-me' data-toggle='tooltip' id='near-me-icon'></iron-icon>");
     $(selector).after(tooltipHtml).mouseenter(function() {
       d$("#manual-location-tooltip").css("display", "block");
       return false;
@@ -1552,7 +1715,7 @@ insertModalImage = function(imageObject, taxon, callback) {
     return false;
   }
   insertImage = function(image, taxonQueryString, classPrefix) {
-    var e, html, imgCredit, imgLicense, largeImg, largeImgLink, thumbnail;
+    var e, html, imgCredit, imgLicense, largeImg, largeImgLink, smartFit, thumbnail;
     if (classPrefix == null) {
       classPrefix = "calphoto";
     }
@@ -1560,7 +1723,7 @@ insertModalImage = function(imageObject, taxon, callback) {
     /*
      * Insert a lightboxed image into the modal taxon dialog. This must
      * be shadow-piercing, since the modal dialog is a
-     * paper-action-dialog.
+     * paper-dialog.
      *
      * @param image an object with parameters [thumbUri, imageUri,
      *   imageLicense, imageCredit], and optionally imageLinkUri
@@ -1572,6 +1735,28 @@ insertModalImage = function(imageObject, taxon, callback) {
     imgCredit = image.imageCredit;
     html = "<div class=\"modal-img-container\">\n  <a href=\"" + largeImg + "\" class=\"" + classPrefix + "-img-anchor center-block text-center\">\n    <img src=\"" + thumbnail + "\"\n      data-href=\"" + largeImgLink + "\"\n      class=\"" + classPrefix + "-img-thumb\"\n      data-taxon=\"" + taxonQueryString + "\" />\n  </a>\n  <p class=\"small text-muted text-center\">\n    Image by " + imgCredit + " under " + imgLicense + "\n  </p>\n</div>";
     d$("#meta-taxon-info").before(html);
+    (smartFit = function(iteration) {
+      var e;
+      try {
+        d$("#modal-taxon").get(0).fit();
+        return delay(250, function() {
+          d$("#modal-taxon").get(0).fit();
+          return delay(750, function() {
+            return d$("#modal-taxon").get(0).fit();
+          });
+        });
+      } catch (_error) {
+        e = _error;
+        if (iteration < 10) {
+          iteration++;
+          return delay(100, function() {
+            return smartFit(iteration);
+          });
+        } else {
+          return console.warn("Couldn't execute fit!");
+        }
+      }
+    })(0);
     try {
       lightboxImages("." + classPrefix + "-img-anchor", true);
     } catch (_error) {
@@ -1618,9 +1803,13 @@ insertModalImage = function(imageObject, taxon, callback) {
     var data, e, result;
     result = xmlToJSON.parseString(resultXml);
     window.testData = result;
-    data = result.calphotos[0];
+    try {
+      data = result.calphotos[0];
+    } catch (_error) {
+      e = _error;
+      data = void 0;
+    }
     if (data == null) {
-      console.warn("CalPhotos didn't return any valid images for this search!");
       return false;
     }
     imageObject = new Object();
@@ -1633,10 +1822,10 @@ insertModalImage = function(imageObject, taxon, callback) {
       imageObject.imageUri = data.enlarge_jpeg_url[0]["_text"];
       imageObject.imageLinkUri = data.enlarge_url[0]["_text"];
       imageObject.imageLicense = data.license[0]["_text"];
-      imageObject.imageCredit = "" + data.copyright[0]["_text"] + " (via CalPhotos)";
+      imageObject.imageCredit = data.copyright[0]["_text"] + " (via CalPhotos)";
     } catch (_error) {
       e = _error;
-      console.warn("CalPhotos didn't return any valid images for this search!", "" + ssar.affiliateQueryUrl.calPhotos + "?" + args);
+      console.warn("CalPhotos didn't return any valid images for this search!", ssar.affiliateQueryUrl.calPhotos + "?" + args);
       return false;
     }
     insertImage(imageObject, taxonString);
@@ -1656,19 +1845,93 @@ insertModalImage = function(imageObject, taxon, callback) {
   return false;
 };
 
-testCalPhotos = function() {
-  var args, e;
-  args = "getthumbinfo=1&num=all&cconly=1&taxon=batrachoseps&format=xml";
-  try {
-    $.get(ssar.affiliateQueryUrl.calPhotos, args).done(function() {
-      return false;
-    }).fail(function() {
-      return insertCORSWorkaround();
-    });
-  } catch (_error) {
-    e = _error;
-    false;
+smartReptileDatabaseLink = function() {
+
+  /*
+   * We're going to check the remote for synonyms, and fix links
+   * After
+   * https://github.com/SSARHERPS/SSAR-species-database/issues/77
+   */
+  var args, humanTaxon, taxon, taxonArray, taxonString, url;
+  url = "http://reptile-database.reptarium.cz/interfaces/services/check-taxon";
+  taxon = ssar.activeTaxon;
+  taxonArray = [taxon.genus, taxon.species];
+  if (taxon.subspecies != null) {
+    taxonArray.push(taxon.subspecies);
   }
+  taxonString = taxonArray.join("+");
+  humanTaxon = taxonArray.join(" ");
+  humanTaxon = humanTaxon.slice(0, 1).toUpperCase() + humanTaxon.slice(1);
+  args = "taxon=" + taxonString;
+  $.get(url, args, "json").done(function(result) {
+    var alternateTaxa, alternateTaxonArray, alternateTaxonString, button, buttonText, data, outboundLink;
+    if (result.response === "VALID") {
+      console.info("_" + humanTaxon + "_ is the consensus taxon with Reptile Database");
+      return true;
+    }
+    if (result.response === "SYNONYM") {
+      alternateTaxa = result.VALID[0];
+      alternateTaxonString = alternateTaxa.toLowerCase().replace(/\s/mg, "+");
+      alternateTaxonArray = alternateTaxa.split(/\s/);
+      data = {
+        genus: alternateTaxonArray[0],
+        species: alternateTaxonArray[1]
+      };
+      buttonText = "Reptile Database";
+      button = "<paper-button id='modal-alt-linkout' class=\"hidden-xs\">" + buttonText + "</paper-button>";
+      outboundLink = ssar.affiliateQueryUrl.reptileDatabase + "?genus=" + data.genus + "&species=" + data.species;
+      if (outboundLink != null) {
+        $("#modal-alt-linkout").replaceWith(button);
+        $("#modal-alt-linkout").click(function() {
+          return openTab(outboundLink);
+        });
+      }
+      console.info("Reptile Database uses recognizes _" + humanTaxon + "_ as _" + alternateTaxa + "_");
+      return smartCalPhotosLink(data);
+    } else {
+      d$("#modal-alt-linkout").remove();
+      return console.warn("Reptile Database couldn't find this taxon at all!");
+    }
+  }).fail(function() {
+    console.warn("Unable to check the taxon on Reptile Database!");
+    return false;
+  });
+  return false;
+};
+
+smartCalPhotosLink = function(overrideTaxon) {
+
+  /*
+   * Called from smartReptileDatabaseLink()
+   * If there were no Cal Photos hits, try
+   * the reptile database genus/species with the
+   * SSAR species as the subspecies
+   */
+  var calPhotosTaxon, postImageInsertion, taxonArray;
+  calPhotosTaxon = {
+    genus: overrideTaxon.genus,
+    species: overrideTaxon.species,
+    subspecies: ssar.activeTaxon.species
+  };
+  taxonArray = [calPhotosTaxon.genus, calPhotosTaxon.species];
+  if (calPhotosTaxon.subspecies != null) {
+    taxonArray.push(calPhotosTaxon.subspecies);
+  }
+  if (d$(".modal-img-container").exists()) {
+    console.info("CalPhotos agrees with SSAR");
+    return true;
+  }
+  postImageInsertion = function() {
+    var humanTaxon;
+    humanTaxon = taxonArray.join(" ");
+    humanTaxon = humanTaxon.slice(0, 1).toUpperCase() + humanTaxon.slice(1);
+    console.info("CalPhotos agrees with Reptile Database, so we're linking to _" + humanTaxon + "_ for CalPhotos");
+    $("#modal-calphotos-linkout").unbind().click(function() {
+      return openTab(ssar.affiliateQueryUrl.calPhotos + "?rel-taxon=contains&where-taxon=" + (taxonArray.join("+")));
+    });
+    return false;
+  };
+  insertModalImage(ssar.taxonImage, calPhotosTaxon, postImageInsertion);
   return false;
 };
 
@@ -1689,11 +1952,11 @@ modalTaxon = function(taxon) {
   }
   animateLoad();
   if (!$("#modal-taxon").exists()) {
-    html = "<paper-action-dialog backdrop layered closeSelector=\"[affirmative]\" id='modal-taxon'>\n  <div id='modal-taxon-content'></div>\n  <paper-button dismissive id='modal-inat-linkout'>iNaturalist</paper-button>\n  <paper-button dismissive id='modal-calphotos-linkout' class=\"hidden-xs\">CalPhotos</paper-button>\n  <paper-button dismissive id='modal-alt-linkout' class=\"hidden-xs\"></paper-button>\n  <paper-button affirmative autofocus>Close</paper-button>\n</paper-action-dialog>";
-    $("#result_container").after(html);
+    html = "<paper-dialog modal id='modal-taxon' entry-animation=\"scale-up-animation\" exit-animation=\"scale-down-animation\">\n  <h2 id=\"modal-heading\"></h2>\n  <paper-dialog-scrollable id='modal-taxon-content'></paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button id='modal-inat-linkout'>iNaturalist</paper-button>\n    <paper-button id='modal-calphotos-linkout' class=\"hidden-xs\">CalPhotos</paper-button>\n    <paper-button id='modal-alt-linkout' class=\"hidden-xs\"></paper-button>\n    <paper-button dialog-dismiss autofocus>Close</paper-button>\n  </div>\n</paper-dialog>";
+    $("body").append(html);
   }
   $.get(searchParams.targetApi, "q=" + taxon, "json").done(function(result) {
-    var buttonText, commonType, data, deprecatedHtml, e, genusAuthBlock, humanTaxon, i, minorTypeHtml, notes, outboundLink, sn, speciesAuthBlock, taxonArray, taxonCreditDate, year, yearHtml, _ref;
+    var button, buttonText, commonType, data, deprecatedHtml, e, genusAuthBlock, humanTaxon, i, minorTypeHtml, notes, outboundLink, ref, sn, speciesAuthBlock, taxonArray, taxonCreditDate, year, yearHtml;
     data = result.result[0];
     if (data == null) {
       toastStatusMessage("There was an error fetching the entry details. Please try again later.");
@@ -1737,7 +2000,7 @@ modalTaxon = function(taxon) {
     }
     minorTypeHtml = "";
     if (!isNull(data.minor_type)) {
-      minorTypeHtml = " <core-icon icon='arrow-forward'></core-icon> <span id='taxon-minor-type'>" + data.minor_type + "</span>";
+      minorTypeHtml = " <iron-icon icon='arrow-forward'></iron-icon> <span id='taxon-minor-type'>" + data.minor_type + "</span>";
     }
     if (isNull(data.notes)) {
       data.notes = "Sorry, we have no notes on this taxon yet.";
@@ -1759,25 +2022,34 @@ modalTaxon = function(taxon) {
     }
     notes = notes.replace(/\&amp;(([a-z]+|[0-9]+);)/mg, "&$1");
     commonType = !isNull(data.major_common_type) ? " (<span id='taxon-common-type'>" + data.major_common_type + "</span>) " : "";
-    html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name'>" + data.common_name + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type' class=\"major_type\">" + data.major_type + "</span>\n    " + commonType + "\n    <core-icon icon='arrow-forward'></core-icon>\n    <span id='taxon-subtype' class=\"major_subtype\">" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_credit + "</p>";
+    html = "<div id='meta-taxon-info'>\n  " + yearHtml + "\n  <p>\n    English name: <span id='taxon-common-name' class='common_name no-cap'>" + (smartUpperCasing(data.common_name)) + "</span>\n  </p>\n  <p>\n    Type: <span id='taxon-type' class=\"major_type\">" + data.major_type + "</span>\n    " + commonType + "\n    <iron-icon icon='arrow-forward'></iron-icon>\n    <span id='taxon-subtype' class=\"major_subtype\">" + data.major_subtype + "</span>" + minorTypeHtml + "\n  </p>\n  " + deprecatedHtml + "\n</div>\n<h3>Taxon Notes</h3>\n<p id='taxon-notes'>" + notes + "</p>\n<p class=\"text-right small text-muted\">" + data.taxon_credit + "</p>";
     $("#modal-taxon-content").html(html);
     $("#modal-inat-linkout").unbind().click(function() {
-      return openTab("" + ssar.affiliateQueryUrl.iNaturalist + "?q=" + taxon);
+      return openTab(ssar.affiliateQueryUrl.iNaturalist + "?q=" + taxon);
     });
     $("#modal-calphotos-linkout").unbind().click(function() {
-      return openTab("" + ssar.affiliateQueryUrl.calPhotos + "?rel-taxon=contains&where-taxon=" + taxon);
+      return openTab(ssar.affiliateQueryUrl.calPhotos + "?rel-taxon=contains&where-taxon=" + taxon);
     });
     outboundLink = null;
     buttonText = null;
-    if ((_ref = data.linnean_order.toLowerCase()) === "caudata" || _ref === "anura" || _ref === "gymnophiona") {
+    taxonArray = taxon.split("+");
+    ssar.activeTaxon = {
+      genus: taxonArray[0],
+      species: taxonArray[1],
+      subspecies: taxonArray[2]
+    };
+    if ((ref = data.linnean_order.toLowerCase()) === "caudata" || ref === "anura" || ref === "gymnophiona") {
       buttonText = "AmphibiaWeb";
-      outboundLink = "" + ssar.affiliateQueryUrl.amphibiaWeb + "?where-genus=" + data.genus + "&where-species=" + data.species;
+      outboundLink = ssar.affiliateQueryUrl.amphibiaWeb + "?where-genus=" + data.genus + "&where-species=" + data.species;
     } else if (!isNull(data.linnean_order)) {
       buttonText = "Reptile Database";
-      outboundLink = "" + ssar.affiliateQueryUrl.reptileDatabase + "?genus=" + data.genus + "&species=" + data.species;
+      button = "<paper-button id='modal-alt-linkout' class=\"hidden-xs\">" + buttonText + "</paper-button>";
+      outboundLink = ssar.affiliateQueryUrl.reptileDatabase + "?genus=" + data.genus + "&species=" + data.species;
+      smartReptileDatabaseLink();
     }
     if (outboundLink != null) {
-      $("#modal-alt-linkout").removeClass("hidden").text(buttonText).unbind().click(function() {
+      $("#modal-alt-linkout").replaceWith(button);
+      $("#modal-alt-linkout").click(function() {
         return openTab(outboundLink);
       });
     } else {
@@ -1787,13 +2059,7 @@ modalTaxon = function(taxon) {
     doFontExceptions();
     humanTaxon = taxon.charAt(0).toUpperCase() + taxon.slice(1);
     humanTaxon = humanTaxon.replace(/\+/g, " ");
-    $("#modal-taxon").attr("heading", humanTaxon);
-    taxonArray = taxon.split("+");
-    ssar.activeTaxon = {
-      genus: taxonArray[0],
-      species: taxonArray[1],
-      subspecies: taxonArray[2]
-    };
+    d$("#modal-heading").text(humanTaxon);
     if (isNull(data.image)) {
       data.image = void 0;
     }
@@ -1803,15 +2069,35 @@ modalTaxon = function(taxon) {
       imageLicense: data.image_license
     };
     insertModalImage();
-    return checkTaxonNear(taxon, function() {
+    checkTaxonNear(taxon, function() {
+      var modalElement;
       formatAlien(data);
       stopLoad();
-      return $("#modal-taxon")[0].open();
+      modalElement = d$("#modal-taxon")[0];
+      d$("#modal-taxon").on("iron-overlay-opened", function() {
+        modalElement.fit();
+        modalElement.scrollTop = 0;
+        if (toFloat($(modalElement).css("top").slice(0, -2)) > $(window).height()) {
+          $(modalElement).css("top", "12.5vh");
+        }
+        return delay(250, function() {
+          return modalElement.fit();
+        });
+      });
+      modalElement.sizingTarget = d$("#modal-taxon-content")[0];
+      return safariDialogHelper("#modal-taxon");
     });
+    return bindDismissalRemoval();
   }).fail(function(result, status) {
     return stopLoadError();
   });
   return false;
+};
+
+bindDismissalRemoval = function() {
+  return $("[dialog-dismiss]").unbind().click(function() {
+    return $(this).parents("paper-dialog").remove();
+  });
 };
 
 doFontExceptions = function() {
@@ -1904,21 +2190,21 @@ downloadCSVList = function() {
   d = new Date();
   month = d.getMonth().toString().length === 1 ? "0" + (d.getMonth() + 1) : d.getMonth() + 1;
   day = d.getDate().toString().length === 1 ? "0" + (d.getDate().toString()) : d.getDate();
-  dateString = "" + (d.getUTCFullYear()) + "-" + month + "-" + day;
+  dateString = (d.getUTCFullYear()) + "-" + month + "-" + day;
   $.get("" + searchParams.apiPath, args, "json").done(function(result) {
-    var authorityYears, col, colData, csv, csvBody, csvHeader, csvLiteralRow, csvRow, dirtyCol, dirtyColData, downloadable, e, genusYear, html, i, k, makeTitleCase, row, showColumn, speciesYear, tempCol, v, _ref;
+    var authorityYears, col, colData, csv, csvBody, csvHeader, csvLiteralRow, csvRow, dirtyCol, dirtyColData, downloadable, e, genusYear, html, i, k, makeTitleCase, ref, row, showColumn, speciesYear, tempCol, v;
     try {
       if (result.status !== true) {
         throw Error("Invalid Result");
       }
-      csvBody = "";
+      csvBody = "      ";
       csvHeader = new Array();
       showColumn = ["genus", "species", "subspecies", "common_name", "image", "image_credit", "image_license", "major_type", "major_common_type", "major_subtype", "minor_type", "linnean_order", "genus_authority", "species_authority", "deprecated_scientific", "notes", "taxon_credit", "taxon_credit_date"];
       makeTitleCase = ["genus", "common_name", "taxon_author", "major_subtype", "linnean_order"];
       i = 0;
-      _ref = result.result;
-      for (k in _ref) {
-        row = _ref[k];
+      ref = result.result;
+      for (k in ref) {
+        row = ref[k];
         csvRow = new Array();
         if (isNull(row.genus)) {
           continue;
@@ -1928,11 +2214,11 @@ downloadCSVList = function() {
           col = dirtyCol.replace(/"/g, '\"\"');
           colData = dirtyColData.replace(/"/g, '\"\"').replace(/&#39;/g, "'");
           if (i === 0) {
-            if (__indexOf.call(showColumn, col) >= 0) {
+            if (indexOf.call(showColumn, col) >= 0) {
               csvHeader.push(col.replace(/_/g, " ").toTitleCase());
             }
           }
-          if (__indexOf.call(showColumn, col) >= 0) {
+          if (indexOf.call(showColumn, col) >= 0) {
             if (/[a-z]+_authority/.test(col)) {
               try {
                 authorityYears = JSON.parse(row.authority_year);
@@ -1945,13 +2231,13 @@ downloadCSVList = function() {
                 }
                 switch (col.split("_")[0]) {
                   case "genus":
-                    tempCol = "" + (colData.toTitleCase()) + " " + genusYear;
+                    tempCol = (colData.toTitleCase()) + " " + genusYear;
                     if (toInt(row.parens_auth_genus).toBool()) {
                       tempCol = "(" + tempCol + ")";
                     }
                     break;
                   case "species":
-                    tempCol = "" + (colData.toTitleCase()) + " " + speciesYear;
+                    tempCol = (colData.toTitleCase()) + " " + speciesYear;
                     if (toInt(row.parens_auth_species).toBool()) {
                       tempCol = "(" + tempCol + ")";
                     }
@@ -1961,7 +2247,7 @@ downloadCSVList = function() {
                 e = _error;
               }
             }
-            if (__indexOf.call(makeTitleCase, col) >= 0) {
+            if (indexOf.call(makeTitleCase, col) >= 0) {
               colData = colData.toTitleCase();
             }
             if (col === "image" && !isNull(colData)) {
@@ -1974,21 +2260,21 @@ downloadCSVList = function() {
         csvLiteralRow = csvRow.join(",");
         csvBody += "\n" + csvLiteralRow;
       }
-      csv = "" + (csvHeader.join(",")) + "\n" + csvBody;
+      csv = (csvHeader.join(",")) + "\n" + csvBody;
       downloadable = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
-      html = "<paper-action-dialog class=\"download-file\" id=\"download-csv-file\" heading=\"Your file is ready\">\n  <div class=\"dialog-content\">\n    <p>\n      Please note that some special characters in names may be decoded incorrectly by Microsoft Excel. If this is a problem, following the steps in <a href=\"https://github.com/SSARHERPS/SSAR-species-database/blob/master/meta/excel_unicode_readme.md\"  onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'>this README <core-icon icon=\"launch\"></core-icon></a> to force Excel to format it correctly.\n    </p>\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".csv\" class=\"btn btn-default\"><core-icon icon=\"file-download\"></core-icon> Download Now</a>\n    </p>\n  </div>\n  <paper-button dismissive>Close</paper-button>\n</paper-action-dialog>";
+      html = "<paper-dialog class=\"download-file\" id=\"download-csv-file\" modal>\n  <h2>Your file is ready</h2>\n  <paper-dialog-scrollable class=\"dialog-content\">\n    <p>\n      Please note that some special characters in names may be decoded incorrectly by Microsoft Excel. If this is a problem, following the steps in <a href=\"https://github.com/SSARHERPS/SSAR-species-database/blob/master/meta/excel_unicode_readme.md\"  onclick='window.open(this.href); return false;' onkeypress='window.open(this.href); return false;'>this README <iron-icon icon=\"launch\"></iron-icon></a> to force Excel to format it correctly.\n    </p>\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".csv\" class=\"btn btn-default\"><iron-icon icon=\"file-download\"></iron-icon> Download Now</a>\n    </p>\n  </paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button dialog-dismiss>Close</paper-button>\n  </div>\n</paper-dialog>";
       if (!$("#download-csv-file").exists()) {
         $("body").append(html);
       } else {
         $("#download-csv-file").replaceWith(html);
       }
-      safariDialogHelper("#download-csv-file");
-      return stopLoad();
+      $("#download-chooser").get(0).close();
+      return safariDialogHelper("#download-csv-file");
     } catch (_error) {
       e = _error;
       stopLoadError("There was a problem creating the CSV file. Please try again later.");
       console.error("Exception in downloadCSVList() - " + e.message);
-      return console.warn("Got", result, "from", "" + searchParams.apiPath + "?" + args, result.status);
+      return console.warn("Got", result, "from", searchParams.apiPath + "?" + args, result.status);
     }
   }).fail(function() {
     return stopLoadError("There was a problem communicating with the server. Please try again later.");
@@ -2019,11 +2305,11 @@ downloadHTMLList = function() {
   d = new Date();
   month = d.getMonth().toString().length === 1 ? "0" + (d.getMonth() + 1) : d.getMonth() + 1;
   day = d.getDate().toString().length === 1 ? "0" + (d.getDate().toString()) : d.getDate();
-  dateString = "" + (d.getUTCFullYear()) + "-" + month + "-" + day;
-  htmlBody = "     <!doctype html>\n     <html lang=\"en\">\n       <head>\n         <title>SSAR Common Names Checklist ver. " + dateString + "</title>\n         <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n         <meta charset=\"UTF-8\"/>\n         <meta name=\"theme-color\" content=\"#445e14\"/>\n         <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n         <link href='http://fonts.googleapis.com/css?family=Droid+Serif:400,700,700italic,400italic|Roboto+Slab:400,700' rel='stylesheet' type='text/css' />\n         <style type=\"text/css\" id=\"ssar-checklist-inline-stylesheet\">\n/*!\n* Bootstrap v3.3.5 (http://getbootstrap.com)\n* Copyright 2011-2015 Twitter, Inc.\n* Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)\n*/\n\n/*!\n* Generated using the Bootstrap Customizer (http://getbootstrap.com/customize/?id=e14c62a4d4eee8f40b6b)\n* Config saved to config.json and https://gist.github.com/e14c62a4d4eee8f40b6b\n*//*!\n* Bootstrap v3.3.5 (http://getbootstrap.com)\n* Copyright 2011-2015 Twitter, Inc.\n* Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)\n*//*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}article,aside,details,figcaption,figure,footer,header,hgroup,main,menu,nav,section,summary{display:block}audio,canvas,progress,video{display:inline-block;vertical-align:baseline}audio:not([controls]){display:none;height:0}[hidden],template{display:none}a{background-color:transparent}a:active,a:hover{outline:0}abbr[title]{border-bottom:1px dotted}b,strong{font-weight:bold}dfn{font-style:italic}h1{font-size:2em;margin:0.67em 0}mark{background:#ff0;color:#000}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sup{top:-0.5em}sub{bottom:-0.25em}img{border:0}svg:not(:root){overflow:hidden}figure{margin:1em 40px}hr{-webkit-box-sizing:content-box;-moz-box-sizing:content-box;box-sizing:content-box;height:0}pre{overflow:auto}code,kbd,pre,samp{font-family:monospace, monospace;font-size:1em}button,input,optgroup,select,textarea{color:inherit;font:inherit;margin:0}button{overflow:visible}button,select{text-transform:none}button,html input[type=\"button\"],input[type=\"reset\"],input[type=\"submit\"]{-webkit-appearance:button;cursor:pointer}button[disabled],html input[disabled]{cursor:default}button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}input{line-height:normal}input[type=\"checkbox\"],input[type=\"radio\"]{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;padding:0}input[type=\"number\"]::-webkit-inner-spin-button,input[type=\"number\"]::-webkit-outer-spin-button{height:auto}input[type=\"search\"]{-webkit-appearance:textfield;-webkit-box-sizing:content-box;-moz-box-sizing:content-box;box-sizing:content-box}input[type=\"search\"]::-webkit-search-cancel-button,input[type=\"search\"]::-webkit-search-decoration{-webkit-appearance:none}fieldset{border:1px solid #c0c0c0;margin:0 2px;padding:0.35em 0.625em 0.75em}legend{border:0;padding:0}textarea{overflow:auto}optgroup{font-weight:bold}table{border-collapse:collapse;border-spacing:0}td,th{padding:0}/*! Source: https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css */@media print{*,*:before,*:after{background:transparent !important;color:#000 !important;-webkit-box-shadow:none !important;box-shadow:none !important;text-shadow:none !important}a,a:visited{text-decoration:underline}a[href]:after{content:\" (\" attr(href) \")\"}abbr[title]:after{content:\" (\" attr(title) \")\"}a[href^=\"#\"]:after,a[href^=\"javascript:\"]:after{content:\"\"}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}p,h2,h3{orphans:3;widows:3}h2,h3{page-break-after:avoid}.navbar{display:none}.btn>.caret,.dropup>.btn>.caret{border-top-color:#000 !important}.label{border:1px solid #000}.table{border-collapse:collapse !important}.table td,.table th{background-color:#fff !important}.table-bordered th,.table-bordered td{border:1px solid #ddd !important}}*{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}*:before,*:after{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}html{font-size:10px;-webkit-tap-highlight-color:rgba(0,0,0,0)}body{font-family:\"Roboto Slab\",\"Droid Serif\",Cambria,Georgia,\"Times New Roman\",Times,serif;font-size:14px;line-height:1.42857143;color:#333;background-color:#fff}input,button,select,textarea{font-family:inherit;font-size:inherit;line-height:inherit}a{color:#337ab7;text-decoration:none}a:hover,a:focus{color:#23527c;text-decoration:underline}a:focus{outline:thin dotted;outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}figure{margin:0}img{vertical-align:middle}.img-responsive{display:block;max-width:100%;height:auto}.img-rounded{border-radius:6px}.img-thumbnail{padding:4px;line-height:1.42857143;background-color:#fff;border:1px solid #ddd;border-radius:4px;-webkit-transition:all .2s ease-in-out;-o-transition:all .2s ease-in-out;transition:all .2s ease-in-out;display:inline-block;max-width:100%;height:auto}.img-circle{border-radius:50%}hr{margin-top:20px;margin-bottom:20px;border:0;border-top:1px solid #eee}.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);border:0}.sr-only-focusable:active,.sr-only-focusable:focus{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto}[role=\"button\"]{cursor:pointer}h1,h2,h3,h4,h5,h6,.h1,.h2,.h3,.h4,.h5,.h6{font-family:inherit;font-weight:500;line-height:1.1;color:inherit}h1 small,h2 small,h3 small,h4 small,h5 small,h6 small,.h1 small,.h2 small,.h3 small,.h4 small,.h5 small,.h6 small,h1 .small,h2 .small,h3 .small,h4 .small,h5 .small,h6 .small,.h1 .small,.h2 .small,.h3 .small,.h4 .small,.h5 .small,.h6 .small{font-weight:normal;line-height:1;color:#777}h1,.h1,h2,.h2,h3,.h3{margin-top:20px;margin-bottom:10px}h1 small,.h1 small,h2 small,.h2 small,h3 small,.h3 small,h1 .small,.h1 .small,h2 .small,.h2 .small,h3 .small,.h3 .small{font-size:65%}h4,.h4,h5,.h5,h6,.h6{margin-top:10px;margin-bottom:10px}h4 small,.h4 small,h5 small,.h5 small,h6 small,.h6 small,h4 .small,.h4 .small,h5 .small,.h5 .small,h6 .small,.h6 .small{font-size:75%}h1,.h1{font-size:36px}h2,.h2{font-size:30px}h3,.h3{font-size:24px}h4,.h4{font-size:18px}h5,.h5{font-size:14px}h6,.h6{font-size:12px}p{margin:0 0 10px}.lead{margin-bottom:20px;font-size:16px;font-weight:300;line-height:1.4}@media (min-width:768px){.lead{font-size:21px}}small,.small{font-size:85%}mark,.mark{background-color:#fcf8e3;padding:.2em}.text-left{text-align:left}.text-right{text-align:right}.text-center{text-align:center}.text-justify{text-align:justify}.text-nowrap{white-space:nowrap}.text-lowercase{text-transform:lowercase}.text-uppercase{text-transform:uppercase}.text-capitalize{text-transform:capitalize}.text-muted{color:#777}.text-primary{color:#337ab7}a.text-primary:hover,a.text-primary:focus{color:#286090}.text-success{color:#3c763d}a.text-success:hover,a.text-success:focus{color:#2b542c}.text-info{color:#31708f}a.text-info:hover,a.text-info:focus{color:#245269}.text-warning{color:#8a6d3b}a.text-warning:hover,a.text-warning:focus{color:#66512c}.text-danger{color:#a94442}a.text-danger:hover,a.text-danger:focus{color:#843534}.bg-primary{color:#fff;background-color:#337ab7}a.bg-primary:hover,a.bg-primary:focus{background-color:#286090}.bg-success{background-color:#dff0d8}a.bg-success:hover,a.bg-success:focus{background-color:#c1e2b3}.bg-info{background-color:#d9edf7}a.bg-info:hover,a.bg-info:focus{background-color:#afd9ee}.bg-warning{background-color:#fcf8e3}a.bg-warning:hover,a.bg-warning:focus{background-color:#f7ecb5}.bg-danger{background-color:#f2dede}a.bg-danger:hover,a.bg-danger:focus{background-color:#e4b9b9}.page-header{padding-bottom:9px;margin:40px 0 20px;border-bottom:1px solid #eee}ul,ol{margin-top:0;margin-bottom:10px}ul ul,ol ul,ul ol,ol ol{margin-bottom:0}.list-unstyled{padding-left:0;list-style:none}.list-inline{padding-left:0;list-style:none;margin-left:-5px}.list-inline>li{display:inline-block;padding-left:5px;padding-right:5px}dl{margin-top:0;margin-bottom:20px}dt,dd{line-height:1.42857143}dt{font-weight:bold}dd{margin-left:0}@media (min-width:768px){.dl-horizontal dt{float:left;width:160px;clear:left;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dl-horizontal dd{margin-left:180px}}abbr[title],abbr[data-original-title]{cursor:help;border-bottom:1px dotted #777}.initialism{font-size:90%;text-transform:uppercase}blockquote{padding:10px 20px;margin:0 0 20px;font-size:17.5px;border-left:5px solid #eee}blockquote p:last-child,blockquote ul:last-child,blockquote ol:last-child{margin-bottom:0}blockquote footer,blockquote small,blockquote .small{display:block;font-size:80%;line-height:1.42857143;color:#777}blockquote footer:before,blockquote small:before,blockquote .small:before{content:'\2014 \00A0'}.blockquote-reverse,blockquote.pull-right{padding-right:15px;padding-left:0;border-right:5px solid #eee;border-left:0;text-align:right}.blockquote-reverse footer:before,blockquote.pull-right footer:before,.blockquote-reverse small:before,blockquote.pull-right small:before,.blockquote-reverse .small:before,blockquote.pull-right .small:before{content:''}.blockquote-reverse footer:after,blockquote.pull-right footer:after,.blockquote-reverse small:after,blockquote.pull-right small:after,.blockquote-reverse .small:after,blockquote.pull-right .small:after{content:'\00A0 \2014'}address{margin-bottom:20px;font-style:normal;line-height:1.42857143}.clearfix:before,.clearfix:after,.dl-horizontal dd:before,.dl-horizontal dd:after{content:\" \";display:table}.clearfix:after,.dl-horizontal dd:after{clear:both}.center-block{display:block;margin-left:auto;margin-right:auto}.pull-right{float:right !important}.pull-left{float:left !important}.hide{display:none !important}.show{display:block !important}.invisible{visibility:hidden}.text-hide{font:0/0 a;color:transparent;text-shadow:none;background-color:transparent;border:0}.hidden{display:none !important}.affix{position:fixed}\n          /* Manual Overrides */\n          .sciname {\n            font-style: italic;\n            }\n          .entry-sciname {\n            font-style: italic;\n            font-weight: bold;\n            }\n           body { padding: 1rem; }\n           .species-entry aside:first-child {\n             margin-top: 5rem;\n             }\n           section .entry-header {\n             text-indent: 2em;\n             }\n           .clade-declaration {\n             font-variant: small-caps;\n             border-top: 1px solid #000;\n             border-bottom: 1px solid #000;\n             page-break-before: always;\n             break-before: always;\n             }\n           .species-entry {\n             page-break-inside: avoid;\n             break-inside: avoid;\n             }\n           @media print {\n             body {\n               font-size:12px;\n               }\n             .h4 {\n               font-size: 13px;\n               }\n             @page {\n               counter-increment: page;\n               /*counter-reset: page 1;*/\n                @bottom-right {\n                 content: counter(page);\n                }\n                /* margin: 0px auto; */\n               }\n           }\n         </style>\n       </head>\n       <body>\n         <div class=\"container-fluid\">\n           <article>\n             <h1 class=\"text-center\">SSAR Common Names Checklist ver. " + dateString + "</h1>";
+  dateString = (d.getUTCFullYear()) + "-" + month + "-" + day;
+  htmlBody = "     <!doctype html>\n     <html lang=\"en\">\n       <head>\n         <title>SSAR Common Names Checklist ver. " + dateString + "</title>\n         <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n         <meta charset=\"UTF-8\"/>\n         <meta name=\"theme-color\" content=\"#445e14\"/>\n         <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n         <link href='http://fonts.googleapis.com/css?family=Droid+Serif:400,700,700italic,400italic|Roboto+Slab:400,700' rel='stylesheet' type='text/css' />\n         <style type=\"text/css\" id=\"ssar-checklist-inline-stylesheet\">\n/*!\n* Bootstrap v3.3.5 (http://getbootstrap.com)\n* Copyright 2011-2015 Twitter, Inc.\n* Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)\n*/\n\n/*!\n* Generated using the Bootstrap Customizer (http://getbootstrap.com/customize/?id=e14c62a4d4eee8f40b6b)\n* Config saved to config.json and https://gist.github.com/e14c62a4d4eee8f40b6b\n*//*!\n* Bootstrap v3.3.5 (http://getbootstrap.com)\n* Copyright 2011-2015 Twitter, Inc.\n* Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)\n*//*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin:0}article,aside,details,figcaption,figure,footer,header,hgroup,main,menu,nav,section,summary{display:block}audio,canvas,progress,video{display:inline-block;vertical-align:baseline}audio:not([controls]){display:none;height:0}[hidden],template{display:none}a{background-color:transparent}a:active,a:hover{outline:0}abbr[title]{border-bottom:1px dotted}b,strong{font-weight:bold}dfn{font-style:italic}h1{font-size:2em;margin:0.67em 0}mark{background:#ff0;color:#000}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sup{top:-0.5em}sub{bottom:-0.25em}img{border:0}svg:not(:root){overflow:hidden}figure{margin:1em 40px}hr{-webkit-box-sizing:content-box;-moz-box-sizing:content-box;box-sizing:content-box;height:0}pre{overflow:auto}code,kbd,pre,samp{font-family:monospace, monospace;font-size:1em}button,input,optgroup,select,textarea{color:inherit;font:inherit;margin:0}button{overflow:visible}button,select{text-transform:none}button,html input[type=\"button\"],input[type=\"reset\"],input[type=\"submit\"]{-webkit-appearance:button;cursor:pointer}button[disabled],html input[disabled]{cursor:default}button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}input{line-height:normal}input[type=\"checkbox\"],input[type=\"radio\"]{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box;padding:0}input[type=\"number\"]::-webkit-inner-spin-button,input[type=\"number\"]::-webkit-outer-spin-button{height:auto}input[type=\"search\"]{-webkit-appearance:textfield;-webkit-box-sizing:content-box;-moz-box-sizing:content-box;box-sizing:content-box}input[type=\"search\"]::-webkit-search-cancel-button,input[type=\"search\"]::-webkit-search-decoration{-webkit-appearance:none}fieldset{border:1px solid #c0c0c0;margin:0 2px;padding:0.35em 0.625em 0.75em}legend{border:0;padding:0}textarea{overflow:auto}optgroup{font-weight:bold}table{border-collapse:collapse;border-spacing:0}td,th{padding:0}/*! Source: https://github.com/h5bp/html5-boilerplate/blob/master/src/css/main.css */@media print{*,*:before,*:after{background:transparent !important;color:#000 !important;-webkit-box-shadow:none !important;box-shadow:none !important;text-shadow:none !important}a,a:visited{text-decoration:underline}a[href]:after{content:\" (\" attr(href) \")\"}abbr[title]:after{content:\" (\" attr(title) \")\"}a[href^=\"#\"]:after,a[href^=\"javascript:\"]:after{content:\"\"}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}p,h2,h3{orphans:3;widows:3}h2,h3{page-break-after:avoid}.navbar{display:none}.btn>.caret,.dropup>.btn>.caret{border-top-color:#000 !important}.label{border:1px solid #000}.table{border-collapse:collapse !important}.table td,.table th{background-color:#fff !important}.table-bordered th,.table-bordered td{border:1px solid #ddd !important}}*{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}*:before,*:after{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}html{font-size:10px;-webkit-tap-highlight-color:rgba(0,0,0,0)}body{font-family:\"Roboto Slab\",\"Droid Serif\",Cambria,Georgia,\"Times New Roman\",Times,serif;font-size:14px;line-height:1.42857143;color:#333;background-color:#fff}input,button,select,textarea{font-family:inherit;font-size:inherit;line-height:inherit}a{color:#337ab7;text-decoration:none}a:hover,a:focus{color:#23527c;text-decoration:underline}a:focus{outline:thin dotted;outline:5px auto -webkit-focus-ring-color;outline-offset:-2px}figure{margin:0}img{vertical-align:middle}.img-responsive{display:block;max-width:100%;height:auto}.img-rounded{border-radius:6px}.img-thumbnail{padding:4px;line-height:1.42857143;background-color:#fff;border:1px solid #ddd;border-radius:4px;-webkit-transition:all .2s ease-in-out;-o-transition:all .2s ease-in-out;transition:all .2s ease-in-out;display:inline-block;max-width:100%;height:auto}.img-circle{border-radius:50%}hr{margin-top:20px;margin-bottom:20px;border:0;border-top:1px solid #eee}.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0, 0, 0, 0);border:0}.sr-only-focusable:active,.sr-only-focusable:focus{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto}[role=\"button\"]{cursor:pointer}h1,h2,h3,h4,h5,h6,.h1,.h2,.h3,.h4,.h5,.h6{font-family:inherit;font-weight:500;line-height:1.1;color:inherit}h1 small,h2 small,h3 small,h4 small,h5 small,h6 small,.h1 small,.h2 small,.h3 small,.h4 small,.h5 small,.h6 small,h1 .small,h2 .small,h3 .small,h4 .small,h5 .small,h6 .small,.h1 .small,.h2 .small,.h3 .small,.h4 .small,.h5 .small,.h6 .small{font-weight:normal;line-height:1;color:#777}h1,.h1,h2,.h2,h3,.h3{margin-top:20px;margin-bottom:10px}h1 small,.h1 small,h2 small,.h2 small,h3 small,.h3 small,h1 .small,.h1 .small,h2 .small,.h2 .small,h3 .small,.h3 .small{font-size:65%}h4,.h4,h5,.h5,h6,.h6{margin-top:10px;margin-bottom:10px}h4 small,.h4 small,h5 small,.h5 small,h6 small,.h6 small,h4 .small,.h4 .small,h5 .small,.h5 .small,h6 .small,.h6 .small{font-size:75%}h1,.h1{font-size:36px}h2,.h2{font-size:30px}h3,.h3{font-size:24px}h4,.h4{font-size:18px}h5,.h5{font-size:14px}h6,.h6{font-size:12px}p{margin:0 0 10px}.lead{margin-bottom:20px;font-size:16px;font-weight:300;line-height:1.4}@media (min-width:768px){.lead{font-size:21px}}small,.small{font-size:85%}mark,.mark{background-color:#fcf8e3;padding:.2em}.text-left{text-align:left}.text-right{text-align:right}.text-center{text-align:center}.text-justify{text-align:justify}.text-nowrap{white-space:nowrap}.text-lowercase{text-transform:lowercase}.text-uppercase{text-transform:uppercase}.text-capitalize{text-transform:capitalize}.text-muted{color:#777}.text-primary{color:#337ab7}a.text-primary:hover,a.text-primary:focus{color:#286090}.text-success{color:#3c763d}a.text-success:hover,a.text-success:focus{color:#2b542c}.text-info{color:#31708f}a.text-info:hover,a.text-info:focus{color:#245269}.text-warning{color:#8a6d3b}a.text-warning:hover,a.text-warning:focus{color:#66512c}.text-danger{color:#a94442}a.text-danger:hover,a.text-danger:focus{color:#843534}.bg-primary{color:#fff;background-color:#337ab7}a.bg-primary:hover,a.bg-primary:focus{background-color:#286090}.bg-success{background-color:#dff0d8}a.bg-success:hover,a.bg-success:focus{background-color:#c1e2b3}.bg-info{background-color:#d9edf7}a.bg-info:hover,a.bg-info:focus{background-color:#afd9ee}.bg-warning{background-color:#fcf8e3}a.bg-warning:hover,a.bg-warning:focus{background-color:#f7ecb5}.bg-danger{background-color:#f2dede}a.bg-danger:hover,a.bg-danger:focus{background-color:#e4b9b9}.page-header{padding-bottom:9px;margin:40px 0 20px;border-bottom:1px solid #eee}ul,ol{margin-top:0;margin-bottom:10px}ul ul,ol ul,ul ol,ol ol{margin-bottom:0}.list-unstyled{padding-left:0;list-style:none}.list-inline{padding-left:0;list-style:none;margin-left:-5px}.list-inline>li{display:inline-block;padding-left:5px;padding-right:5px}dl{margin-top:0;margin-bottom:20px}dt,dd{line-height:1.42857143}dt{font-weight:bold}dd{margin-left:0}@media (min-width:768px){.dl-horizontal dt{float:left;width:160px;clear:left;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dl-horizontal dd{margin-left:180px}}abbr[title],abbr[data-original-title]{cursor:help;border-bottom:1px dotted #777}.initialism{font-size:90%;text-transform:uppercase}blockquote{padding:10px 20px;margin:0 0 20px;font-size:17.5px;border-left:5px solid #eee}blockquote p:last-child,blockquote ul:last-child,blockquote ol:last-child{margin-bottom:0}blockquote footer,blockquote small,blockquote .small{display:block;font-size:80%;line-height:1.42857143;color:#777}blockquote footer:before,blockquote small:before,blockquote .small:before{content:'\x2014 \x00A0'}.blockquote-reverse,blockquote.pull-right{padding-right:15px;padding-left:0;border-right:5px solid #eee;border-left:0;text-align:right}.blockquote-reverse footer:before,blockquote.pull-right footer:before,.blockquote-reverse small:before,blockquote.pull-right small:before,.blockquote-reverse .small:before,blockquote.pull-right .small:before{content:''}.blockquote-reverse footer:after,blockquote.pull-right footer:after,.blockquote-reverse small:after,blockquote.pull-right small:after,.blockquote-reverse .small:after,blockquote.pull-right .small:after{content:'\x00A0 \x2014'}address{margin-bottom:20px;font-style:normal;line-height:1.42857143}.clearfix:before,.clearfix:after,.dl-horizontal dd:before,.dl-horizontal dd:after{content:\" \";display:table}.clearfix:after,.dl-horizontal dd:after{clear:both}.center-block{display:block;margin-left:auto;margin-right:auto}.pull-right{float:right !important}.pull-left{float:left !important}.hide{display:none !important}.show{display:block !important}.invisible{visibility:hidden}.text-hide{font:0/0 a;color:transparent;text-shadow:none;background-color:transparent;border:0}.hidden{display:none !important}.affix{position:fixed}\n          /* Manual Overrides */\n          .sciname {\n            font-style: italic;\n            }\n          .entry-sciname {\n            font-style: italic;\n            font-weight: bold;\n            }\n           body { padding: 1rem; }\n           .species-entry aside:first-child {\n             margin-top: 5rem;\n             }\n           section .entry-header {\n             text-indent: 2em;\n             }\n           .clade-declaration {\n             font-variant: small-caps;\n             border-top: 1px solid #000;\n             border-bottom: 1px solid #000;\n             page-break-before: always;\n             break-before: always;\n             }\n           .species-entry {\n             page-break-inside: avoid;\n             break-inside: avoid;\n             }\n           @media print {\n             body {\n               font-size:12px;\n               }\n             .h4 {\n               font-size: 13px;\n               }\n             @page {\n               counter-increment: page;\n               /*counter-reset: page 1;*/\n                @bottom-right {\n                 content: counter(page);\n                }\n                /* margin: 0px auto; */\n               }\n           }\n         </style>\n       </head>\n       <body>\n         <div class=\"container-fluid\">\n           <article>\n             <h1 class=\"text-center\">SSAR Common Names Checklist ver. " + dateString + "</h1>";
   args = "q=*&order=linnean_order,genus,species,subspecies";
   $.get("" + searchParams.apiPath, args, "json").done(function(result) {
-    var authorityYears, c, dialogHtml, downloadable, e, entryHtml, genusAuth, genusYear, hasReadClade, hasReadGenus, htmlCredit, htmlNotes, k, oneOffHtml, row, shortGenus, speciesAuth, speciesYear, taxonCreditDate, v, _ref, _ref1, _ref2;
+    var authorityYears, c, dialogHtml, downloadable, e, entryHtml, genusAuth, genusYear, hasReadClade, hasReadGenus, htmlCredit, htmlNotes, k, oneOffHtml, ref, ref1, ref2, row, shortGenus, speciesAuth, speciesYear, taxonCreditDate, v;
     try {
       if (result.status !== true) {
         throw Error("Invalid Result");
@@ -2037,9 +2323,9 @@ downloadHTMLList = function() {
        */
       hasReadGenus = new Array();
       hasReadClade = new Array();
-      _ref = result.result;
-      for (k in _ref) {
-        row = _ref[k];
+      ref = result.result;
+      for (k in ref) {
+        row = ref[k];
         if (isNull(row.genus) || isNull(row.species)) {
           continue;
         }
@@ -2052,11 +2338,11 @@ downloadHTMLList = function() {
             genusYear = c.replace(/&#39;/g, "'");
             speciesYear = v.replace(/&#39;/g, "'");
           }
-          genusAuth = "" + (row.genus_authority.toTitleCase()) + " " + genusYear;
+          genusAuth = (row.genus_authority.toTitleCase()) + " " + genusYear;
           if (toInt(row.parens_auth_genus).toBool()) {
             genusAuth = "(" + genusAuth + ")";
           }
-          speciesAuth = "" + (row.species_authority.toTitleCase()) + " " + speciesYear;
+          speciesAuth = (row.species_authority.toTitleCase()) + " " + speciesYear;
           if (toInt(row.parens_auth_species).toBool()) {
             speciesAuth = "(" + speciesAuth + ")";
           }
@@ -2082,34 +2368,33 @@ downloadHTMLList = function() {
           htmlCredit = "<p class=\"text-right small text-muted\">\n  <cite>\n    " + row.taxon_credit + taxonCreditDate + "\n  </cite>\n</p>";
         }
         oneOffHtml = "";
-        if (_ref1 = row.linnean_order.trim(), __indexOf.call(hasReadClade, _ref1) < 0) {
+        if (ref1 = row.linnean_order.trim(), indexOf.call(hasReadClade, ref1) < 0) {
           oneOffHtml += "<h2 class=\"clade-declaration text-capitalize text-center\">" + row.linnean_order + " &#8212; " + row.major_common_type + "</h2>";
           hasReadClade.push(row.linnean_order.trim());
         }
-        if (_ref2 = row.genus, __indexOf.call(hasReadGenus, _ref2) < 0) {
+        if (ref2 = row.genus, indexOf.call(hasReadGenus, ref2) < 0) {
           oneOffHtml += "<aside class=\"genus-declaration lead\">\n  <span class=\"entry-sciname text-capitalize\">" + row.genus + "</span>\n  <span class=\"entry-authority\">" + genusAuth + "</span>\n</aside>";
           hasReadGenus.push(row.genus);
         }
-        shortGenus = "" + (row.genus.slice(0, 1)) + ". ";
-        entryHtml = "<section class=\"species-entry\">\n  " + oneOffHtml + "\n  <p class=\"h4 entry-header\">\n    <span class=\"entry-sciname\">\n      <span class=\"text-capitalize\">" + shortGenus + "</span> " + row.species + " " + row.subspecies + "\n    </span>\n    <span class=\"entry-authority\">\n      " + speciesAuth + "\n    </span>\n    &#8212;\n    <span class=\"common-name text-capitalize\">\n      " + row.common_name + "\n    </span>\n  </p>\n  <div class=\"entry-content\">\n    " + htmlNotes + "\n    " + htmlCredit + "\n  </div>\n</section>";
+        shortGenus = (row.genus.slice(0, 1)) + ". ";
+        entryHtml = "<section class=\"species-entry\">\n  " + oneOffHtml + "\n  <p class=\"h4 entry-header\">\n    <span class=\"entry-sciname\">\n      <span class=\"text-capitalize\">" + shortGenus + "</span> " + row.species + " " + row.subspecies + "\n    </span>\n    <span class=\"entry-authority\">\n      " + speciesAuth + "\n    </span>\n    &#8212;\n    <span class=\"common_name no-cap\">\n      " + (smartUpperCasing(row.common_name)) + "\n    </span>\n  </p>\n  <div class=\"entry-content\">\n    " + htmlNotes + "\n    " + htmlCredit + "\n  </div>\n</section>";
         htmlBody += entryHtml;
       }
       htmlBody += "</article>\n</div>\n</body>\n</html>";
       downloadable = "data:text/html;charset=utf-8," + (encodeURIComponent(htmlBody));
-      dialogHtml = "<paper-action-dialog class=\"download-file\" id=\"download-html-file\" heading=\"Your file is ready\">\n  <div class=\"dialog-content\">\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".html\" class=\"btn btn-default\"><core-icon icon=\"file-download\"></core-icon> Download Now</a>\n    </p>\n  </div>\n  <paper-button dismissive>Close</paper-button>\n</paper-action-dialog>";
+      dialogHtml = "<paper-dialog  modal class=\"download-file\" id=\"download-html-file\">\n  <h2>Your file is ready</h2>\n  <paper-dialog-scrollable class=\"dialog-content\">\n    <p class=\"text-center\">\n      <a href=\"" + downloadable + "\" download=\"ssar-common-names-" + dateString + ".html\" class=\"btn btn-default\"><iron-icon icon=\"file-download\"></iron-icon> Download Now</a>\n    </p>\n  </paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button dialog-dismiss>Close</paper-button>\n  </div>\n</paper-dialog>";
       if (!$("#download-html-file").exists()) {
         $("body").append(dialogHtml);
       } else {
         $("#download-html-file").replaceWith(dialogHtml);
       }
-      safariDialogHelper("#download-html-file");
-      stopLoad();
-      return console.log("Has read clades:", hasReadClade);
+      $("#download-chooser").get(0).close();
+      return safariDialogHelper("#download-html-file");
     } catch (_error) {
       e = _error;
       stopLoadError("There was a problem creating your file. Please try again later.");
       console.error("Exception in downloadHTMLList() - " + e.message);
-      console.warn("Got", result, "from", "" + searchParams.apiPath + "?" + args, result.status);
+      console.warn("Got", result, "from", searchParams.apiPath + "?" + args, result.status);
       return console.warn(e.stack);
     }
   }).fail(function() {
@@ -2120,26 +2405,18 @@ downloadHTMLList = function() {
 
 showDownloadChooser = function() {
   var html;
-  html = "<paper-action-dialog id=\"download-chooser\" heading=\"Select Download Type\">\n  <div class=\"dialog-content\">\n    <p>\n      Once you select a file type, it will take a moment to prepare your download. Please be patient.\n    </p>\n  </div>\n    <paper-button dismissive>Cancel</paper-button>\n    <paper-button affirmative id=\"initiate-csv-download\">CSV</paper-button>\n    <paper-button affirmative id=\"initiate-html-download\">HTML</paper-button>\n</paper-action-dialog>";
+  html = "<paper-dialog id=\"download-chooser\" modal>\n  <h2>Select Download Type</h2>\n  <paper-dialog-scrollable class=\"dialog-content\">\n    <p>\n      Once you select a file type, it will take a moment to prepare your download. Please be patient.\n    </p>\n  </paper-dialog-scrollable>\n  <div class=\"buttons\">\n    <paper-button dialog-dismiss>Cancel</paper-button>\n    <paper-button dialog-confirm id=\"initiate-csv-download\">CSV</paper-button>\n    <paper-button dialog-confirm id=\"initiate-html-download\">HTML</paper-button>\n  </div>\n</paper-dialog>";
   if (!$("#download-chooser").exists()) {
     $("body").append(html);
   }
   d$("#initiate-csv-download").click(function() {
-    downloadCSVList();
-    return false;
+    return downloadCSVList();
   });
   d$("#initiate-html-download").click(function() {
-    downloadHTMLList();
-    return false;
+    return downloadHTMLList();
   });
-  safariDialogHelper();
+  safariDialogHelper("#download-chooser");
   return false;
-};
-
-bindDismissalRemoval = function() {
-  return $("[dialog-dismiss]").unbind().click(function() {
-    return $(this).parents("paper-dialog").remove();
-  });
 };
 
 safariDialogHelper = function(selector, counter, callback) {
@@ -2178,6 +2455,42 @@ safariDialogHelper = function(selector, counter, callback) {
   } else {
     return stopLoadError("Unable to show dialog. Please try again.");
   }
+};
+
+safariSearchArgHelper = function(value, didLateRecheck) {
+  var searchArg, trimmed;
+  if (didLateRecheck == null) {
+    didLateRecheck = false;
+  }
+
+  /*
+   * If the search argument has a "+" in it, remove it
+   * Then write the arg to search.
+   *
+   * Since Safari doesn't "take" it all the time, keep trying till it does.
+   */
+  if (value != null) {
+    searchArg = value;
+  } else {
+    searchArg = $("#search").val();
+  }
+  trimmed = false;
+  if (searchArg.search(/\+/) !== -1) {
+    trimmed = true;
+    searchArg = searchArg.replace(/\+/g, " ").trim();
+    delay(100, function() {
+      return safariSearchArgHelper();
+    });
+  }
+  if (trimmed || (value != null)) {
+    $("#search").attr("value", searchArg);
+    if (!didLateRecheck) {
+      delay(5000, function() {
+        return safariSearchArgHelper(void 0, true);
+      });
+    }
+  }
+  return false;
 };
 
 insertCORSWorkaround = function() {
@@ -2227,12 +2540,12 @@ showBadSearchErrorMessage = function(result) {
       $.each(result.query_params.filter.filter_params, function(col, val) {
         if (col !== "BOOLEAN_TYPE") {
           if (i !== 0) {
-            filterText = "" + filter_text + " " + result.filter.filter_params.BOOLEAN_TYPE;
+            filterText = filter_text + " " + result.filter.filter_params.BOOLEAN_TYPE;
           }
           if (isNumber(toInt(val, true))) {
             val = toInt(val) === 1 ? "true" : "false";
           }
-          return filterText = "" + filterText + " " + (col.replace(/_/g, " ")) + " is " + val;
+          return filterText = filterText + " " + (col.replace(/_/g, " ")) + " is " + val;
         }
       });
       text = "\"" + sOrig + "\" where " + filterText + " returned no results.";
@@ -2245,8 +2558,46 @@ showBadSearchErrorMessage = function(result) {
   return stopLoadError(text);
 };
 
+bindPaperMenuButton = function(selector, unbindTargets) {
+  var dropdown, len, m, menu, ref, relabelSelectedItem;
+  if (selector == null) {
+    selector = "paper-menu-button";
+  }
+  if (unbindTargets == null) {
+    unbindTargets = true;
+  }
+
+  /*
+   * Use a paper-menu-button and make the
+   * .dropdown-label gain the selected value
+   *
+   * Reference:
+   * https://github.com/polymerelements/paper-menu-button
+   * https://elements.polymer-project.org/elements/paper-menu-button
+   */
+  ref = $(selector);
+  for (m = 0, len = ref.length; m < len; m++) {
+    dropdown = ref[m];
+    menu = $(dropdown).find("paper-menu");
+    if (unbindTargets) {
+      $(menu).unbind();
+    }
+    (relabelSelectedItem = function(target, activeDropdown) {
+      var labelSpan, selectText;
+      selectText = $(target).polymerSelected(null, true);
+      labelSpan = $(activeDropdown).find(".dropdown-label");
+      $(labelSpan).text(selectText);
+      return $(target).polymerSelected();
+    })(menu, dropdown);
+    $(menu).on("iron-select", function() {
+      return relabelSelectedItem(this, dropdown);
+    });
+  }
+  return false;
+};
+
 $(function() {
-  var devHello, e, f64, filterObj, fuzzyState, loadArgs, looseState, openFilters, queryUrl, temp;
+  var col, devHello, e, f64, filterObj, fixState, fuzzyState, loadArgs, looseState, openFilters, queryUrl, selectedState, selector, temp, val;
   devHello = "****************************************************************************\nHello developer!\nIf you're looking for hints on our API information, this site is open-source\nand released under the GPL. Just click on the GitHub link on the bottom of\nthe page, or check out https://github.com/SSARHERPS\n****************************************************************************";
   console.log(devHello);
   animateLoad();
@@ -2259,7 +2610,6 @@ $(function() {
       e = _error;
       loadArgs = "";
     }
-    console.log("Popping state to " + loadArgs);
     performSearch(loadArgs);
     temp = loadArgs.split("&")[0];
     return $("#search").attr("value", temp);
@@ -2272,10 +2622,10 @@ $(function() {
     return performSearch();
   });
   $("#collapse-advanced").on("shown.bs.collapse", function() {
-    return $("#collapse-icon").attr("icon", "unfold-less");
+    return $("#collapse-icon").attr("icon", "icons:unfold-less");
   });
   $("#collapse-advanced").on("hidden.bs.collapse", function() {
-    return $("#collapse-icon").attr("icon", "unfold-more");
+    return $("#collapse-icon").attr("icon", "icons:unfold-more");
   });
   $("#search_form").keypress(function(e) {
     if (e.which === 13) {
@@ -2288,17 +2638,18 @@ $(function() {
   $("#do-search-all").click(function() {
     return performSearch(true);
   });
-  $("#linnean-order").on("core-select", function() {
+  $("#linnean-order").on("iron-select", function() {
     if (!isNull($("#search").val())) {
       return performSearch();
     }
   });
+  bindPaperMenuButton();
   if (isNull(uri.query)) {
     loadArgs = "";
   } else {
     try {
       loadArgs = Base64.decode(uri.query);
-      queryUrl = $.url("" + searchParams.apiPath + "?q=" + loadArgs);
+      queryUrl = $.url(searchParams.apiPath + "?q=" + loadArgs);
       try {
         looseState = queryUrl.param("loose").toBool();
       } catch (_error) {
@@ -2311,22 +2662,62 @@ $(function() {
         e = _error;
         fuzzyState = false;
       }
-      $("#loose").prop("checked", looseState);
-      $("#fuzzy").prop("checked", fuzzyState);
       temp = loadArgs.split("&")[0];
-      temp = temp.replace(/\+/g, " ").trim();
-      $("#search").attr("value", temp);
+      safariSearchArgHelper(temp);
+      (fixState = function() {
+        var ref;
+        if ((typeof Polymer !== "undefined" && Polymer !== null ? (ref = Polymer.Base) != null ? ref.$$ : void 0 : void 0) != null) {
+          if (!isNull(Polymer.Base.$$("#loose"))) {
+            delay(250, function() {
+              if (looseState) {
+                d$("#loose").attr("checked", "checked");
+              }
+              if (fuzzyState) {
+                return d$("#fuzzy").attr("checked", "checked");
+              }
+            });
+            return false;
+          }
+        }
+        if (ssar.stateIter == null) {
+          ssar.stateIter = 0;
+        }
+        ++ssar.stateIter;
+        if (ssar.stateIter > 30) {
+          console.warn("Couldn't attach Polymer.Base.ready");
+          return false;
+        }
+        try {
+          return Polymer.Base.ready(function() {
+            return delay(250, function() {
+              console.info("Doing a late Polymer.Base.ready call");
+              if (looseState) {
+                d$("#loose").attr("checked", "checked");
+              }
+              if (fuzzyState) {
+                d$("#fuzzy").attr("checked", "checked");
+              }
+              return safariSearchArgHelper();
+            });
+          });
+        } catch (_error) {
+          return delay(250, function() {
+            return fixState();
+          });
+        }
+      })();
       try {
         f64 = queryUrl.param("filter");
         filterObj = JSON.parse(Base64.decode(f64));
         openFilters = false;
-        $.each(filterObj, function(col, val) {
-          var selectedState, selector;
+        for (col in filterObj) {
+          val = filterObj[col];
           col = col.replace(/_/g, "-");
           selector = "#" + col + "-filter";
           if (col !== "type") {
             if (col !== "is-alien") {
               $(selector).attr("value", val);
+              openFilters = true;
             } else {
               selectedState = toInt(val) === 1 ? "alien-only" : "native-only";
               console.log("Setting alien-filter to " + selectedState);
@@ -2335,11 +2726,10 @@ $(function() {
                 return $("#alien-filter").get(0).selected = selectedState;
               });
             }
-            return openFilters = true;
           } else {
-            return $("#linnean-order").polymerSelected(val);
+            $("#linnean-order").polymerSelected(val);
           }
-        });
+        }
         if (openFilters) {
           $("#collapse-advanced").collapse("show");
         }
@@ -2349,7 +2739,7 @@ $(function() {
       }
     } catch (_error) {
       e = _error;
-      console.error("Bad argument " + uri.query + " => " + loadArgs + ", looseState, fuzzyState", looseState, fuzzyState, "" + searchParams.apiPath + "?q=" + loadArgs);
+      console.error("Bad argument " + uri.query + " => " + loadArgs + ", looseState, fuzzyState", looseState, fuzzyState, searchParams.apiPath + "?q=" + loadArgs);
       console.warn(e.message);
       loadArgs = "";
     }
@@ -2366,7 +2756,7 @@ $(function() {
     }).fail(function(result, error) {
       console.error("There was an error loading the generic table");
       console.warn(result, error, result.statusText);
-      error = "" + result.status + " - " + result.statusText;
+      error = result.status + " - " + result.statusText;
       $("#search-status").attr("text", "Couldn't load table - " + error);
       $("#search-status")[0].show();
       return stopLoadError();
@@ -2377,7 +2767,36 @@ $(function() {
   } else {
     stopLoad();
     $("#search").attr("disabled", false);
-    return $("#loose").prop("checked", true);
+    return (fixState = function() {
+      var ref;
+      if ((typeof Polymer !== "undefined" && Polymer !== null ? (ref = Polymer.Base) != null ? ref.$$ : void 0 : void 0) != null) {
+        if (!isNull(Polymer.Base.$$("#loose"))) {
+          delay(250, function() {
+            return d$("#loose").attr("checked", "checked");
+          });
+          return false;
+        }
+      }
+      if (ssar.stateIter == null) {
+        ssar.stateIter = 0;
+      }
+      ++ssar.stateIter;
+      if (ssar.stateIter > 30) {
+        console.warn("Couldn't attach Polymer.Base.ready");
+        return false;
+      }
+      try {
+        return Polymer.Base.ready(function() {
+          return delay(250, function() {
+            return d$("#loose").attr("checked", "checked");
+          });
+        });
+      } catch (_error) {
+        return delay(250, function() {
+          return fixState();
+        });
+      }
+    })();
   }
 });
 

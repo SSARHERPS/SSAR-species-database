@@ -67,6 +67,7 @@ module.exports = (grunt) ->
           sourceMapIn:"js/maps/c.js.map"
         files:
           "js/combined.min.js":["js/c.js","js/admin.js","bower_components/purl/purl.js","bower_components/xmlToJSON/lib/xmlToJSON.js","bower_components/jquery-cookie/jquery.cookie.js"]
+          "js/app.min.js":["js/c.js","js/admin.js"]
       dist:
         options:
           sourceMap:true
@@ -89,6 +90,7 @@ module.exports = (grunt) ->
         files:
           "js/c.min.js":["js/c.js"]
           "js/admin.min.js":["js/admin.js"]
+          "js/serviceWorker.min.js":["js/serviceWorker.js"]
       minpurl:
         options:
           sourceMap:true
@@ -134,6 +136,7 @@ module.exports = (grunt) ->
         files:
           "js/c.js":["coffee/core.coffee","coffee/search.coffee"]
           "js/admin.js":"coffee/admin.coffee"
+          "js/serviceWorker.js":"coffee/serviceWorker.coffee"
     watch:
       scripts:
         files: ["coffee/*.coffee"]
@@ -156,7 +159,7 @@ module.exports = (grunt) ->
       all:
         src: ["index.html","admin-page.html"]
       options:
-        ignore: [/XHTML element “[a-z-]+-[a-z-]+” not allowed as child of XHTML element.*/,"Bad value “X-UA-Compatible” for attribute “http-equiv” on XHTML element “meta”.",/Bad value “theme-color”.*/]
+        ignore: [/XHTML element “[a-z-]+-[a-z-]+” not allowed as child of XHTML element.*/,"Bad value “X-UA-Compatible” for attribute “http-equiv” on XHTML element “meta”.",/Bad value “theme-color”.*/,/Bad value “import” for attribute “rel” on element “link”.*/,/Element “.+” not allowed as child of element*/,/.*Illegal character in query: not a URL code point./]
   ## Now the tasks
   grunt.registerTask("default",["watch"])
   grunt.registerTask("vulcanize","Vulcanize web components",["shell:vulcanize","uglify:vulcanize","string-replace:vulcanize"])

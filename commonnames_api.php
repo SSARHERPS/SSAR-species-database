@@ -18,7 +18,7 @@
  *
  * Initial version by Philip Kahn
  * Started July 2014
- * https://github.com/tigerhawkvok/SSAR-species-database
+ * https://github.com/SSARHERPS/SSAR-species-database
  **********************************************************/
 
 /*****************
@@ -29,6 +29,8 @@
 
 require_once("CONFIG.php");
 require_once(dirname(__FILE__)."/core/core.php");
+# This is a public API
+header("Access-Control-Allow-Origin: *");
 
 $db = new DBHelper($default_database,$default_sql_user,$default_sql_password,$default_sql_url,$default_table,$db_cols);
 
@@ -332,7 +334,7 @@ function doSearch($overrideSearch = null)
             {
                 if(is_string($r)) $error = $r;
                 else $error = $e;
-            }            
+            }
         }
         else if(is_numeric($search))
         {
@@ -538,6 +540,20 @@ function doSearch($overrideSearch = null)
                             {
                                 $result_vector[] = $row;
                             }
+                            if ($loose) {
+                                # For a loose query, append deprecated results
+                                try {
+                                    $r2 = $db->doQuery(array("deprecated_scientific"=>$search),"*",$boolean_type,true,true,$order_by);
+                                    while($row = mysqli_fetch_assoc($r2))
+                                    {
+                                        $result_vector[] = $row;
+                                    }
+                                }
+                                catch(Exception $e)
+                                {
+                                    # Do nothing - we already have the main result
+                                }
+                            }
                         }
                         else
                         {
@@ -594,11 +610,13 @@ function doSearch($overrideSearch = null)
                         $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by,true);
                     }
                     else $r = false;
+                    $id_list = array();
                     try
                     {
                         while($row = mysqli_fetch_assoc($r))
                         {
                             $result_vector[] = $row;
+                            $id_list[] = intval($row["id"]);
                         }
                         if((sizeof($result_vector) == 0 && $loose) || $flag_fuzzy)
                         {
@@ -668,6 +686,37 @@ function doSearch($overrideSearch = null)
                     {
                         if(is_string($r)) $error = $r;
                         else $error = $e;
+                    }
+                    /*
+                     * If the method was
+                     * space_common_fallback, let's double
+                     * check and append the results for no
+                     * space.
+                     *
+                     * After 
+                     * https://github.com/SSARHERPS/SSAR-species-database/issues/70
+                     */
+                    if ($method == "space_common_fallback")
+                    {
+                        $params["common_name"] = str_replace(" ", "", $search);
+                        $r = $db->doQuery($params,"*",$boolean_type,$loose,true,$order_by);
+                        try
+                        {
+                            while($row = mysqli_fetch_assoc($r))
+                            {
+                                if ( !in_array( intval($row["id"]), $id_list) ) 
+                                {
+                                    $result_vector[] = $row;
+                                    $id_list[] = intval($row["id"]);   
+                                }
+                            }
+                        }
+                        catch(Exception $e)
+                        {
+                            if(is_string($r)) $error = $r;
+                            else $error = $e;
+                        }
+                                    
                     }
                 }
             }

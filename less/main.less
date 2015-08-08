@@ -1,5 +1,20 @@
+@import "../bower_components/bootstrap/less/bootstrap.less";
+
+// Here we can re-define the variables that Bootstrap uses to customize stuff
+// See http://stackoverflow.com/a/19514889/1877527
+// See here for the variable names and declarations:
+// http://getbootstrap.com/customize/#less-variables
+
+@import "lightbox.less";
+
+
+
+// Main content
+@font-family-sans-serif: Roboto, "Droid Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+@font-family-serif: "Roboto Slab", Droid, Cambria, Georgia, "Times New Roman", Times, serif;
+@font-family-monospace: "Droid Sans Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+
 body {
-    font-family:"Roboto","Droid Sans","Helvetica Neue","Helvetica","Veranda",sans-serif !important;
     padding:1rem;
 }
 
@@ -28,6 +43,10 @@ body {
     color:#fff;
 }
 
+paper-fab.materialblue.paper-fab-0 {
+    .materialblue();
+}
+
 /*
  * LESS is failing at these for now:
  * https://github.com/less/less.js/issues/2623
@@ -37,12 +56,10 @@ body {
  */
 
 @{hc} .materialblue {
-
-    background: @material-blue;
-    color:#fff;
+    .materialblue();
 }
 
-.materialgreen, .materialblue:hover {
+.materialgreen, .materialblue:hover, paper-fab.materialblue.paper-fab-0:hover {
     background: @material-green;
     color: #fff;
 }
@@ -110,6 +127,40 @@ body {
 
 }
 
+paper-dialog-scrollable {
+    padding: 1rem !important;
+    //min-height: 15rem;
+    //height: 40vh;
+}
+
+@{hc} paper-dialog-scrollable {
+    padding: 1rem !important;
+}
+
+@media (max-width: 767px) {
+    paper-dialog-scrollable {
+        //height: 50vh;
+    }
+}
+
+#modal-taxon {
+    position:fixed !important;
+    max-height:75vh; // For mobile
+}
+
+paper-dialog#modal-taxon .buttons {
+    background: #fff;
+}
+
+#modal-taxon-content {
+    // Why this? This fixes a bug where paper-dialog.fit()
+    // shrinks the max-width of this to something small, like
+    // 48px.
+    // See
+    // https://github.com/SSARHERPS/SSAR-species-database/issues/79
+    min-width: 95% !important; 
+}
+
 @{hc} .good-location {
     color: @material-green;
 }
@@ -164,7 +215,9 @@ footer {
     text-transform: lowercase !important;
 }
 
-
+.no-cap {
+    text-transform: none !important;
+}
 
 .capitalize,
 @{hc} .capitalize,
@@ -244,7 +297,7 @@ footer {
     .modal-img-container();
 }
 
-@media (min-width: 767px) {
+@media (min-width: 768px) {
     #modal-taxon {
         min-width:50em;
     }
@@ -257,7 +310,12 @@ footer {
     }
 }
 
+
 @media (max-width: 767px) {
+    #modal-taxon {
+        min-width: 85vw;
+    }
+    
   @{hc} .hidden-xs {
     display: none !important;
   }
@@ -273,9 +331,7 @@ footer {
     margin-bottom: 5em;
     border-bottom: 2px solid #ddd;
 }
-/* .cndb-result-entry:nth-child(2n) { */
-/*     background:rgba(50,50,50,.1); */
-/* } */
+
 .cndb-result-entry:hover {
     background: rgba(0,0,0,.2)!important;
     transition: all .2s ease-out;
@@ -361,6 +417,10 @@ form {
     /* margin-left:2rem; */
 }
 
+copyright-statement {
+    position: relative;
+    top: 1rem;
+}
 
 @{hc} .code {
     font-family: monospace;
@@ -372,7 +432,7 @@ form {
 }
 .help-block {
   display: block;
-  margin-top: 5px;
+  margin-top: 1.25rem;
   margin-bottom: 10px;
   color: #737373;
 }
@@ -388,8 +448,8 @@ form {
     display:block;
 }
 
-paper-autogrow-textarea textarea {
-    width:90%;
+paper-toast, paper-spinner {
+    z-index:1000;
 }
 
 #password_security + #login {
@@ -411,6 +471,26 @@ paper-autogrow-textarea textarea {
     width:50%;
     margin:0;
     left:25%;
+}
+
+@media (max-width: 767px) {
+    #outdated-warning {
+        width: 80%;
+        left: 10%;
+    }
+}
+
+iron-label {
+    margin-top: .5rem;
+    display: block;
+}
+
+iron-label + paper-icon-button, label + paper-icon-button {
+    padding-left: 0; // Fixes iPhone 5/s display glitch
+}
+
+#edit-notes {
+    // width: 100%;
 }
 
 paper-radio-button #radioContainer, paper-radio-button #radioContainer div {
@@ -435,86 +515,6 @@ paper-radio-button #radioContainer, paper-radio-button #radioContainer div {
 
 @{hc} .hidden {
   display: none !important;
-}
-
-/************
- * Lightbox
- ***************/
-
-/* IMAGE LIGHTBOX SELECTOR */
-
-#imagelightbox
-{
-    cursor: pointer;
-    position: fixed;
-    z-index: 10000;
-    touch-action: none; /* 50 */
-    box-shadow: 0 0 3.125em rgba( 0, 0, 0, .75 ); /* 50 */
-}
-
-
-/* ACTIVITY INDICATION */
-
-#imagelightbox-loading,
-#imagelightbox-loading div
-{
-    border-radius: 50%;
-}
-#imagelightbox-loading
-{
-    width: 2.5em; /* 40 */
-    height: 2.5em; /* 40 */
-    background-color: #444;
-    background-color: rgba( 0, 0, 0, .5 );
-    position: fixed;
-    z-index: 10003;
-    top: 50%;
-    left: 50%;
-    padding: 0.625em; /* 10 */
-    margin: -1.25em 0 0 -1.25em; /* 20 */ /* 40 */
-    box-shadow: 0 0 2.5em rgba( 0, 0, 0, .75 ); /* 40 */
-}
-#imagelightbox-loading div
-{
-    width: 1.25em; /* 20 */
-    height: 1.25em; /* 20 */
-    background-color: #fff;
-    margin:0;
-    padding:0;
-    position:relative;
-    left:0.0625em;
-    top:0.0625em;
-
-    -webkit-animation: imagelightbox-loading .5s ease infinite;
-    animation: imagelightbox-loading .5s ease infinite;
-}
-
-@-webkit-keyframes imagelightbox-loading
-{
-    from { opacity: .5;	-webkit-transform: scale( .75 ); }
-    50%	 { opacity: 1;	-webkit-transform: scale( 1 ); }
-    to	 { opacity: .5;	-webkit-transform: scale( .75 ); }
-}
-@keyframes imagelightbox-loading
-{
-    from { opacity: .5;	-webkit-transform: scale( .75 );	transform: scale( .75 ); }
-    50%	 { opacity: 1;	-webkit-transform: scale( 1 );	transform: scale( 1 ); }
-    to	 { opacity: .5;	-webkit-transform: scale( .75 );	transform: scale( .75 ); }
-}
-
-
-/* OVERLAY */
-
-#imagelightbox-overlay
-{
-    background-color: #fff;
-    background-color: rgba( 255, 255, 255, .9 );
-    position: fixed;
-    z-index: 9998;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
 }
 
 
@@ -859,10 +859,7 @@ html /deep/ #modal-taxon-editor paper-input {
 }
 
 html /deep/ .help-block {
-  display: block;
-  margin-top: 5px;
-  margin-bottom: 10px;
-  color: #737373;
+    .help-block()
 }
 
 html /deep/ paper-autogrow-textarea textarea {

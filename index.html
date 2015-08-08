@@ -8,7 +8,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <link rel="stylesheet" type="text/css" media="screen" href="css/main.min.css"/>
-    <link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.min.css"/>
     <link rel="stylesheet" type="text/css" href="bower_components/octicons/octicons/octicons.css"/>
 
 
@@ -25,17 +24,36 @@
     <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
     <link rel="manifest" href="/manifest.json" />
 
+    <script src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
+
     <link rel="import" href="bower_components/polymer/polymer.html"/>
-    <script src="bower_components/webcomponentsjs/webcomponents.js"></script>
     <link rel="import" href="bower_components/font-roboto/roboto.html"/>
-    <link rel="import" href="bower_components/paper-elements/paper-elements.html"/>
-    <link rel="import" href="bower_components/core-elements/core-elements.html"/>
-    <link rel="import" href="bower_components/core-icons/core-icons.html"/>
-    <link rel="import" href="bower_components/core-icons/image-icons.html"/>
-    <link rel="import" href="bower_components/core-icons/social-icons.html"/>
-    <link rel="import" href="bower_components/core-icons/communication-icons.html"/>
-    <link rel="import" href="bower_components/core-icons/maps-icons.html"/>
+    <link rel="import" href="bower_components/iron-icons/iron-icons.html"/>
+    <link rel="import" href="bower_components/iron-icons/image-icons.html"/>
+    <link rel="import" href="bower_components/iron-icons/social-icons.html"/>
+    <link rel="import" href="bower_components/iron-icons/communication-icons.html"/>
+    <link rel="import" href="bower_components/iron-icons/maps-icons.html"/>
+
+    <link rel="import" href="bower_components/paper-toggle-button/paper-toggle-button.html"/>
+    <link rel="import" href="bower_components/paper-toast/paper-toast.html"/>
+    <link rel="import" href="bower_components/paper-input/paper-input.html"/>
+    <link rel="import" href="bower_components/paper-spinner/paper-spinner.html"/>
+    <link rel="import" href="bower_components/paper-spinner/paper-spinner.html"/>
+    <link rel="import" href="bower_components/paper-menu/paper-menu.html"/>
+    <link rel="import" href="bower_components/paper-menu-button/paper-menu-button.html"/>
+    <link rel="import" href="bower_components/paper-dialog/paper-dialog.html"/>
+    <link rel="import" href="bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html"/>
+    <link rel="import" href="bower_components/paper-button/paper-button.html"/>
+    <link rel="import" href="bower_components/paper-radio-button/paper-radio-button.html"/>
+    <link rel="import" href="bower_components/paper-radio-group/paper-radio-group.html"/>
+    <link rel="import" href="bower_components/paper-icon-button/paper-icon-button.html"/>
+    <link rel="import" href="bower_components/paper-fab/paper-fab.html"/>
+    <link rel="import" href="bower_components/paper-item/paper-item.html"/>
+
+    <link rel="import" href="bower_components/neon-animation/neon-animation.html"/>
+
     <link rel="import" href="polymer-elements/copyright-statement.html"/>
+    <link rel="import" href="polymer-elements/glyphicon-social-icons.html"/>
 
     <script type="text/javascript">
       (function(){var p=[],w=window,d=document,e=f=0;p.push('ua='+encodeURIComponent(navigator.userAgent));e|=w.ActiveXObject?1:0;e|=w.opera?2:0;e|=w.chrome?4:0;
@@ -111,57 +129,58 @@
       <fieldset class="fullwidth">
         <legend>Options</legend>
         <div class="row">
-          <core-label class="col-md-4 col-xs-6">
-            Loose <paper-icon-button icon="info-outline" data-toggle="tooltip" title="Check this to do a partial-string search, rather than a strict exact match."></paper-icon-button>
+          <div class="col-md-4 col-xs-6">
+            <label for="loose">Loose</label> <paper-icon-button icon="info-outline" data-toggle="tooltip" title="Check this to do a partial-string search, rather than a strict exact match."></paper-icon-button>
             <paper-toggle-button id="loose"></paper-toggle-button>
-          </core-label>
-          <core-label class="col-md-4 col-xs-6">
-            Fuzzy  <paper-icon-button icon="info-outline" data-toggle="tooltip" title="Check this to do a 'close match' search. Check this if you're unsure of your spelling or only have part of the name, for example."></paper-icon-button>
+          </div>
+          <div class="col-md-4 col-xs-6">
+            <label for="fuzzy">Fuzzy</label>  <paper-icon-button icon="info-outline" data-toggle="tooltip" title="Check this to do a 'close match' search. Check this if you're unsure of your spelling or only have part of the name, for example."></paper-icon-button>
             <paper-toggle-button id="fuzzy"></paper-toggle-button>
-          </core-label>
-          <core-label class="col-md-4 col-sm-6 col-xs-12">
+          </div>
+          <div class="col-md-4 col-sm-6 col-xs-12">
             <!-- This is a filter column. We need a radio button for
             AND/OR, and then to walk through the filters and append the object to the query. -->
-            <span class="sr-only">Clade Restriction</span>
-            <paper-dropdown-menu label="Taxonomic Group" data-column="linnean_order" class="cndb-filter" id="linnean-order" for>
-              <paper-dropdown id="type" name="type" valueattr="data-type" class="dropdown">
-                <core-menu class="menu">
-                  <paper-item data-type="any">All</paper-item>
-                  <paper-item data-type="squamata">Non-Snake Lizards</paper-item>
-                  <paper-item data-type="serpentes">Snakes</paper-item>
-                  <paper-item data-type="testudines">Turtles</paper-item>
-                  <paper-item data-type="crocodylia">Crocodiles &amp; Alligators</paper-item>
-                  <paper-item data-type="caudata">Salamanders</paper-item>
-                  <paper-item data-type="anura">Frogs</paper-item>
-                  <paper-item data-type="gymnophiona">Caecilians</paper-item>
-                  <!-- As per flag 4 in readme -->
-                </core-menu>
-              </paper-dropdown>
-            </paper-dropdown-menu>
-          </core-label>
+            <label for="type" class="sr-only">Clade Restriction</label>
+            <paper-menu-button>
+              <paper-button class="dropdown-trigger"><iron-icon icon="icons:filter-list"></iron-icon><span id="filter-what" class="dropdown-label"></span></paper-button>
+              <paper-menu label="Group" data-column="linnean_order" class="cndb-filter dropdown-content" id="linnean-order" name="type" attrForSelected="data-type" selected="0">
+                <paper-item data-type="any">All</paper-item>
+                <paper-item data-type="squamata">Non-Snake Lizards</paper-item>
+                <paper-item data-type="serpentes">Snakes</paper-item>
+                <paper-item data-type="testudines">Turtles</paper-item>
+                <paper-item data-type="crocodilia">Crocodiles &amp; Alligators</paper-item>
+                <paper-item data-type="caudata">Salamanders</paper-item>
+                <paper-item data-type="anura">Frogs</paper-item>
+                <paper-item data-type="gymnophiona">Caecilians</paper-item>
+                <!-- As per flag 4 in readme -->
+              </paper-menu>
+            </paper-menu-button>
+          </div>
         </div>
-        <!-- Now, elements that are hidden by default -->
-        <paper-button data-toggle="collapse" data-target="#collapse-advanced" aria-expanded="false" aria-controls="collapse-advanced" class="materialbluegrey" id="collapse-button" raised>Advanced Options <core-icon icon="unfold-more" id="collapse-icon"></core-icon></paper-button>
-        <div class="collapse" id="collapse-advanced">
-          <!-- Clade -->
-          <paper-input label="Clade" id="major-type-filter" name="major-type-filter" class="cndb-filter" data-column="major_type" floatingLabel></paper-input>
-          <!-- Subtype -->
-          <paper-input label="Subtype" id="major-subtype-filter" name="major-subtype-filter" class="cndb-filter" data-column="major_subtype" floatingLabel></paper-input>
-          <!-- Family -->
-          <paper-input label="Minor Type / Family" id="minor-type-filter" name="minor-type-filter" class="cndb-filter" data-column="minor_type" floatingLabel></paper-input>
-          <!-- Genus authority -->
-          <paper-input label="Genus Authority" id="genus-authority-filter" name="species-authority-filter" class="cndb-filter" data-column="genus_authority" floatingLabel></paper-input>
-          <!-- Species authority -->
-          <paper-input label="Species Authority" id="species-authority-filter" name="species-authority-filter" class="cndb-filter" data-column="species_authority" floatingLabel></paper-input>
-          <br/>
-          <core-label>
-            <span class="sr-only">Alien Species</span>
-            <paper-radio-group id="alien-filter" selected="both">
-              <paper-radio-button name="both" id="radio-both" label="Show both alien and native species"></paper-radio-button>
-              <paper-radio-button name="native-only" id="radio-native" label="Show only native species"></paper-radio-button>
-              <paper-radio-button name="alien-only" id="radio-alien" label="Show only alien species"></paper-radio-button>
-            </paper-radio-group>
-          </core-label>
+        <div>
+          <!-- Now, elements that are hidden by default -->
+          <paper-button data-toggle="collapse" data-target="#collapse-advanced" aria-expanded="false" aria-controls="collapse-advanced" class="materialbluegrey" id="collapse-button" raised>Advanced Options <iron-icon icon="icons:unfold-more" id="collapse-icon"></iron-icon></paper-button>
+          <div class="collapse form-group" id="collapse-advanced">
+            <!-- Clade -->
+            <paper-input label="Clade" id="major-type-filter" name="major-type-filter" class="cndb-filter col-md-4 col-xs-6" data-column="major_type"></paper-input>
+            <!-- Subtype -->
+            <paper-input label="Subtype" id="major-subtype-filter" name="major-subtype-filter" class="cndb-filter col-md-4 col-xs-6" data-column="major_subtype"></paper-input>
+            <!-- Family -->
+            <paper-input label="Minor Type / Family" id="minor-type-filter" name="minor-type-filter" class="cndb-filter col-md-4 col-xs-6" data-column="minor_type"></paper-input>
+            <!-- Genus authority -->
+            <paper-input label="Genus Authority" id="genus-authority-filter" name="species-authority-filter" class="cndb-filter col-md-4 col-xs-6" data-column="genus_authority"></paper-input>
+            <!-- Species authority -->
+            <paper-input label="Species Authority" id="species-authority-filter" name="species-authority-filter" class="cndb-filter col-md-4 col-xs-6" data-column="species_authority"></paper-input>
+            <br/>
+            <div>
+              <label for="alien-filter" class="sr-only">Alien Species</label>
+              <paper-radio-group id="alien-filter" selected="both">
+                <paper-radio-button name="both" id="radio-both">Show both alien and native species</paper-radio-button>
+                <paper-radio-button name="native-only" id="radio-native">Show only native species</paper-radio-button>
+                <paper-radio-button name="alien-only" id="radio-alien">Show only alien species</paper-radio-button>
+              </paper-radio-group>
+            </div>
+          </div>
         </div>
       </fieldset>
       <input type="submit" style="display:none;" value="Search"/>
@@ -177,17 +196,17 @@
     </div>
     <footer class="row  hidden-xs">
       <div class="col-lg-7 col-sm-6">
-        <copyright-statement copyrightStart="2015" name="Society for the Study of Amphibians and Reptiles"></copyright-statement>
+        <copyright-statement copyrightStart="2015">Society for the Study of Amphibians and Reptiles</copyright-statement>
       </div>
       <div class="col-sm-2" id="git-footer">
-        <paper-icon-button icon="cloud-download" class="click" data-function="showDownloadChooser" data-toggle="tooltip" title="Download the complete list (HTML or CSV)"></paper-icon-button>
-        <paper-icon-button icon="social:post-github" class="click" data-url="https://github.com/SSARHERPS/SSAR-species-database" data-toggle="tooltip" title="Visit us on GitHub"></paper-icon-button>
+        <paper-icon-button icon="icons:cloud-download" class="click" data-function="showDownloadChooser" data-toggle="tooltip" title="Download the complete list (HTML or CSV)"></paper-icon-button>
+        <paper-icon-button icon="glyphicon-social:github" class="click" data-url="https://github.com/SSARHERPS/SSAR-species-database" data-toggle="tooltip" title="Visit us on GitHub"></paper-icon-button>
       </div>
       <div class="col-lg-1 col-sm-2" id="bug-footer">
-        <paper-icon-button icon="bug-report" class="click" data-url="https://github.com/SSARHERPS/SSAR-species-database/issues/new" data-toggle="tooltip" title="Report a bug"></paper-icon-button>
+        <paper-icon-button icon="icons:bug-report" class="click" data-url="https://github.com/SSARHERPS/SSAR-species-database/issues/new" data-toggle="tooltip" title="Report a bug"></paper-icon-button>
       </div>
       <div class="col-sm-2" id="polymer-footer">
-        Written with <paper-icon-button icon="polymer" class="click" data-url="https://www.polymer-project.org"></paper-icon-button>
+        Written with <paper-icon-button icon="icons:polymer" class="click" data-url="https://www.polymer-project.org"></paper-icon-button>
       </div>
     </footer>
   </body>
