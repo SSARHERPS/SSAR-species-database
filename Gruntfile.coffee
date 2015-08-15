@@ -58,6 +58,7 @@ module.exports = (grunt) ->
       default:
         options:
           stripComments: true
+          #inlineCss: true
           #abspath: "cndb/"
         files:
           "build.html": "index.html"
