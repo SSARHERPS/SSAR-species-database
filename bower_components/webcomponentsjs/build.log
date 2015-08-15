@@ -1,33 +1,33 @@
 BUILD LOG
 ---------
-Build Time: 2015-07-15T17:22:18-0700
+Build Time: 2015-08-13T12:57:18-0700
 
 NODEJS INFORMATION
 ==================
-nodejs: v2.3.4
+nodejs: v0.12.7
 gulp: 3.9.0
 gulp-audit: 1.0.0
 gulp-concat: 2.6.0
 gulp-header: 1.2.2
 gulp-uglify: 1.2.0
-run-sequence: 1.1.1
-web-component-tester: 3.3.1
+run-sequence: 1.1.2
+web-component-tester: 3.3.10
 
 REPO REVISIONS
 ==============
-webcomponentsjs: 83cd82b847c1fbeab6ba9a40d822c7d4cc96367a
+webcomponentsjs: 0fc12104ac6f39421c5105a3694aa740ed3835df
 
 BUILD HASHES
 ============
-CustomElements.js: f77fa5739800df7721b1e2bb86bdd8f260ef672d
-CustomElements.min.js: f1ba945213ce0495cb93919caa6d050ef114fbf5
-HTMLImports.js: c5473ac4fc64180ba40da4679479ed5903feb54f
-HTMLImports.min.js: 401ea71282cb28c1af168d7c08defecab18f5afb
-MutationObserver.js: 2cc42498f20f5b3842c6b5e8f7735d111967b579
-MutationObserver.min.js: 39a017771ac32f3edc8881b7ea20d0b2013d103e
-ShadowDOM.js: fd1d36923e47ed2c48719485dc7768a854e09015
-ShadowDOM.min.js: f771f33aab417207f8e198500918f74c1dce7314
-webcomponents-lite.js: 77d1bace03f086a89f9a8346fa1974205ba130b5
-webcomponents-lite.min.js: e87572819aedb8268109af569158d65911d8e398
-webcomponents.js: c4b4dd834dc76bba3b45e143adbfaae19bd0d340
-webcomponents.min.js: fd64b22600db44a3a428b538c468f18069435f4f
+CustomElements.js: 174a3a08af4a551dbd436f5dc527e29c4b989919
+CustomElements.min.js: 5d7f8991d0ce8a10307114de07d7ce0d1481f3a5
+HTMLImports.js: 6bb55981141fcf206496c34dad811e176f0d13f8
+HTMLImports.min.js: f956c8f8751b4e87fd93f5d4a3d053e6e8654d52
+MutationObserver.js: e0fce524fed93243c80971b72be846775bb74d53
+MutationObserver.min.js: 25c795fa01bd9d9feb3a52cf60ab2b6749b78c75
+ShadowDOM.js: 1874e157c0462484bbb34b812d6ec7a97cf63995
+ShadowDOM.min.js: 9a7fca60240b59961eba22b941ab0f890124e96b
+webcomponents-lite.js: 406c7a34b1ab536e7bdf943c22d4293fbbe464e9
+webcomponents-lite.min.js: 97f3d2215d0390bc2e246bd1c1f363b257050f70
+webcomponents.js: 8aa2b2a294e917ec792f6b52f27cfbf9b00f519f
+webcomponents.min.js: 4df2e85a7b0cd173494a9e8ab71660943734fcf9

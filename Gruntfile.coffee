@@ -17,6 +17,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-string-replace')
   grunt.loadNpmTasks('grunt-postcss')
   grunt.loadNpmTasks('grunt-contrib-less')
+  # https://github.com/Polymer/grunt-vulcanize
   grunt.loadNpmTasks('grunt-vulcanize')
   srcBower =
     pattern: /src=\"\/bower_components/ig,
