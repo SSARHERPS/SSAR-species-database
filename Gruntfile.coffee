@@ -17,6 +17,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-string-replace')
   grunt.loadNpmTasks('grunt-postcss')
   grunt.loadNpmTasks('grunt-contrib-less')
+  grunt.loadNpmTasks('grunt-vulcanize')
   grunt.initConfig
     pkg: grunt.file.readJSON('package.json')
     shell:
@@ -28,9 +29,6 @@ module.exports = (grunt) ->
         command: ["npm update"].join("&&")
       movesrc:
         command: ["mv js/c.src.coffee js/maps/c.src.coffee"].join("&&")
-      vulcanize:
-        # Should also use a command to replace js as per uglify:vulcanize
-        command: ["vulcanize --csp -o app-prerelease.html --strip app.html"].join("&&")
     'string-replace':
       vulcanize:
         options:
@@ -49,6 +47,12 @@ module.exports = (grunt) ->
         src: "css/main.css"
       drop:
         src: "css/shadow-dropzone.css"
+    vulcanize:
+      default:
+        options:
+          stripComments: true
+        files:
+          "app.html": "index.html"
     uglify:
       options:
         mangle:
@@ -162,7 +166,7 @@ module.exports = (grunt) ->
         ignore: [/XHTML element “[a-z-]+-[a-z-]+” not allowed as child of XHTML element.*/,"Bad value “X-UA-Compatible” for attribute “http-equiv” on XHTML element “meta”.",/Bad value “theme-color”.*/,/Bad value “import” for attribute “rel” on element “link”.*/,/Element “.+” not allowed as child of element*/,/.*Illegal character in query: not a URL code point./]
   ## Now the tasks
   grunt.registerTask("default",["watch"])
-  grunt.registerTask("vulcanize","Vulcanize web components",["shell:vulcanize","uglify:vulcanize","string-replace:vulcanize"])
+  grunt.registerTask("vulcanize-app","Vulcanize web components",["vulcanize","uglify:vulcanize","string-replace:vulcanize"])
   grunt.registerTask("compile","Compile coffeescript",["coffee:compile","uglify:dist","shell:movesrc"])
   ## The minification tasks
   # Part 1
