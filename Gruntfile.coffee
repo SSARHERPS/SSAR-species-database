@@ -18,6 +18,12 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-postcss')
   grunt.loadNpmTasks('grunt-contrib-less')
   grunt.loadNpmTasks('grunt-vulcanize')
+  srcBower =
+    pattern: /src=\"\/bower_components/ig,
+    replacement: "src=\"/cndb/bower_components"
+  hrefBower =
+    pattern: /href=\"\/bower_components/ig,
+    replacement: "href=\"/cndb/bower_components"
   grunt.initConfig
     pkg: grunt.file.readJSON('package.json')
     shell:
@@ -33,11 +39,11 @@ module.exports = (grunt) ->
       vulcanize:
         options:
           replacements: [
-            pattern: "app-prerelease.js",
-            replacement: "js/app.min.js"
+            srcBower
+            hrefBower
             ]
         files:
-          "index.html":"app-prerelease.html"
+          "app.html":"build.html"
     postcss:
       options:
         processors: [
@@ -51,8 +57,9 @@ module.exports = (grunt) ->
       default:
         options:
           stripComments: true
+          #abspath: "cndb/"
         files:
-          "app.html": "index.html"
+          "build.html": "index.html"
     uglify:
       options:
         mangle:
@@ -166,7 +173,7 @@ module.exports = (grunt) ->
         ignore: [/XHTML element “[a-z-]+-[a-z-]+” not allowed as child of XHTML element.*/,"Bad value “X-UA-Compatible” for attribute “http-equiv” on XHTML element “meta”.",/Bad value “theme-color”.*/,/Bad value “import” for attribute “rel” on element “link”.*/,/Element “.+” not allowed as child of element*/,/.*Illegal character in query: not a URL code point./]
   ## Now the tasks
   grunt.registerTask("default",["watch"])
-  grunt.registerTask("vulcanize-app","Vulcanize web components",["vulcanize","uglify:vulcanize","string-replace:vulcanize"])
+  grunt.registerTask("vulcanize-app","Vulcanize web components",["vulcanize","string-replace:vulcanize"])
   grunt.registerTask("compile","Compile coffeescript",["coffee:compile","uglify:dist","shell:movesrc"])
   ## The minification tasks
   # Part 1
