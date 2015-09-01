@@ -1646,7 +1646,7 @@
     if (elapsed > 15 * 60) {
       getLocation();
     }
-    apiUrl = "http://www.inaturalist.org/places.json";
+    apiUrl = "https://www.inaturalist.org/places.json";
     args = "taxon=" + taxonQuery + "&latitude=" + locationData.lat + "&longitude=" + locationData.lng + "&place_type=county";
     geoIcon = "";
     cssClass = "";
@@ -2071,7 +2071,9 @@
         imageCredit: data.image_credit,
         imageLicense: data.image_license
       };
-      insertModalImage();
+      try {
+        insertModalImage();
+      } catch (_error) {}
       checkTaxonNear(taxon, function() {
         var modalElement;
         formatAlien(data);

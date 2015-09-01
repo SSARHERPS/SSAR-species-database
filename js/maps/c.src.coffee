@@ -1339,7 +1339,7 @@ checkTaxonNear = (taxonQuery = undefined, callback = undefined, selector = "#nea
   if elapsed > 15*60 # 15 minutes
     getLocation()
   # Now actually check
-  apiUrl = "http://www.inaturalist.org/places.json"
+  apiUrl = "https://www.inaturalist.org/places.json"
   args = "taxon=#{taxonQuery}&latitude=#{locationData.lat}&longitude=#{locationData.lng}&place_type=county"
   geoIcon = ""
   cssClass = ""
@@ -1806,7 +1806,8 @@ modalTaxon = (taxon = undefined) ->
       imageCredit: data.image_credit
       imageLicense: data.image_license
     # Insert the image
-    insertModalImage()
+    try
+      insertModalImage()
     checkTaxonNear taxon, ->
       formatAlien(data)
       stopLoad()

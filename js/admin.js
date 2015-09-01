@@ -12,7 +12,7 @@
 
   adminParams.apiTarget = "admin_api.php";
 
-  adminParams.adminPageUrl = "http://ssarherps.org/cndb/admin-page.html";
+  adminParams.adminPageUrl = "https://ssarherps.org/cndb/admin-page.html";
 
   adminParams.loginDir = "admin/";
 
