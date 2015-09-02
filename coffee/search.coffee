@@ -861,6 +861,8 @@ modalTaxon = (taxon = undefined) ->
     # Insert the image
     try
       insertModalImage()
+    catch e
+      console.info("Unable to insert modal image! ")
     checkTaxonNear taxon, ->
       formatAlien(data)
       stopLoad()

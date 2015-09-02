@@ -2073,7 +2073,10 @@
       };
       try {
         insertModalImage();
-      } catch (_error) {}
+      } catch (_error) {
+        e = _error;
+        console.info("Unable to insert modal image! ");
+      }
       checkTaxonNear(taxon, function() {
         var modalElement;
         formatAlien(data);
