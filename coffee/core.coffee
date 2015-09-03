@@ -918,7 +918,9 @@ $ ->
   bindClicks()
   mapNewWindows()
   try
-    $('[data-toggle="tooltip"]').tooltip()
+    $("body").tooltip
+      selector: "[data-toggle='tooltip']"
+    # $('[data-toggle="tooltip"]').tooltip()
   catch e
     console.warn("Tooltips were attempted to be set up, but do not exist")
   try
@@ -940,7 +942,7 @@ $ ->
         """
         $("#bug-footer").append(html)
         bindClicks("#goto-admin")
-        $("#goto-admin").tooltip()
+        # $("#goto-admin").tooltip()
       false
   browserBeware()
   checkFileVersion()

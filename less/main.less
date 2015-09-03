@@ -143,12 +143,12 @@ paper-dialog-scrollable {
     }
 }
 
-#modal-taxon {
+#modal-taxon, #modal-taxon-edit {
     position:fixed !important;
     max-height:75vh; // For mobile
 }
 
-paper-dialog#modal-taxon .buttons {
+paper-dialog#modal-taxon .buttons, paper-dialog#modal-taxon-edit .buttons {
     background: #fff;
 }
 
@@ -452,6 +452,10 @@ paper-toast, paper-spinner {
     z-index:1000;
 }
 
+#login {
+    // Override otp
+    width: inherit !important;
+}
 #password_security + #login {
     float:left;
     min-width:60%;
