@@ -891,10 +891,13 @@ handleDragDropImage = function(uploadTargetSelector, callback) {
 
 $(function() {
   if ($("#next").exists()) {
-    return $("#next").unbind().click(function() {
+    $("#next").unbind().click(function() {
       return openTab(adminParams.adminPageUrl);
     });
   }
+  return loadJS("https://ssarherps.org/cndb/bower_components/bootstrap/dist/js/bootstrap.min.js", function() {
+    return $("[data-toggle='tooltip']").tooltip();
+  });
 });
 
 //# sourceMappingURL=maps/admin.js.map

@@ -956,4 +956,6 @@ $ ->
     .unbind()
     .click ->
       openTab(adminParams.adminPageUrl)
+  loadJS "https://ssarherps.org/cndb/bower_components/bootstrap/dist/js/bootstrap.min.js", ->
+    $("[data-toggle='tooltip']").tooltip()
   # The rest of the onload for the admin has been moved to the core.coffee file.

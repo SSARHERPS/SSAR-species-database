@@ -950,7 +950,12 @@ $ ->
     resetPassword()
     false
   try
-    loadJS "http://ssarherps.org/cndb/bower_components/bootstrap/dist/js/bootstrap.min.js", ->
+    # Use the CDN out of an abundance of caution
+    loadJS "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js", ->
+      bootstrapCSS = """
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" />
+      """
+      $("head").append bootstrapCSS
       $(".do-password-reset").unbind()
       $("#reset-password-icon").tooltip()
       $(".do-password-reset")
