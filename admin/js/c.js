@@ -1,5 +1,6 @@
-var animateLoad, apiUri, byteCount, checkMatchPassword, checkPasswordLive, delay, doAsyncCreate, doAsyncLogin, doEmailCheck, doRemoveAccountAction, doTOTPRemove, doTOTPSubmit, evalRequirements, finishPasswordResetHandler, giveAltVerificationOptions, isBlank, isBool, isEmpty, isJson, isNull, isNumber, loadJS, makeTOTP, mapNewWindows, noSubmit, popupSecret, removeAccount, resetPassword, root, roundNumber, saveTOTP, showAdvancedOptions, showInstructions, stopLoad, stopLoadError, toFloat, toInt, toggleNewUserSubmit, uri, verifyPhone, _base, _base1,
-  __slice = [].slice;
+var animateLoad, apiUri, beginChangePassword, byteCount, checkMatchPassword, checkPasswordLive, delay, doAsyncCreate, doAsyncLogin, doEmailCheck, doRemoveAccountAction, doTOTPRemove, doTOTPSubmit, evalRequirements, finishChangePassword, finishPasswordResetHandler, giveAltVerificationOptions, isBlank, isBool, isEmpty, isJson, isNull, isNumber, loadJS, makeTOTP, mapNewWindows, noSubmit, popupSecret, removeAccount, resetPassword, root, roundNumber, saveTOTP, showAdvancedOptions, showInstructions, stopLoad, stopLoadError, toFloat, toInt, toggleNewUserSubmit, uri, verifyPhone, _base, _base1,
+  __slice = [].slice,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 root = typeof exports !== "undefined" && exports !== null ? exports : this;
 
@@ -287,87 +288,227 @@ mapNewWindows = function() {
   });
 };
 
-animateLoad = function(d, elId) {
-  var big, e, offset, offset2, sm_d, small;
-  if (d == null) {
-    d = 50;
+if ((typeof _metaStatus !== "undefined" && _metaStatus !== null ? _metaStatus.isLoading : void 0) == null) {
+  if (typeof _metaStatus === "undefined" || _metaStatus === null) {
+    window._metaStatus = new Object();
   }
+  _metaStatus.isLoading = false;
+}
+
+animateLoad = function(elId, iteration) {
+  var e, selector, _ref;
   if (elId == null) {
-    elId = "#status-container";
+    elId = "loader";
+  }
+  if (iteration == null) {
+    iteration = 0;
+  }
+
+  /*
+   * Suggested CSS to go with this:
+   *
+   * #loader {
+   *     position:fixed;
+   *     top:50%;
+   *     left:50%;
+   * }
+   * #loader.good::shadow .circle {
+   *     border-color: rgba(46,190,17,0.9);
+   * }
+   * #loader.bad::shadow .circle {
+   *     border-color:rgba(255,0,0,0.9);
+   * }
+   */
+  if (isNumber(elId)) {
+    elId = "loader";
+  }
+  if (elId.slice(0, 1) === "#") {
+    selector = elId;
+    elId = elId.slice(1);
+  } else {
+    selector = "#" + elId;
+  }
+
+  /*
+   * This is there for Edge, which sometimes leaves an element
+   * We declare this early because Polymer tries to be smart and not
+   * actually activate when it's hidden. Thus, this is a prerequisite
+   * to actually re-showing it once hidden.
+   */
+  $(selector).removeAttr("hidden");
+  if (((_ref = window._metaStatus) != null ? _ref.isLoading : void 0) == null) {
+    if (window._metaStatus == null) {
+      window._metaStatus = new Object();
+    }
+    window._metaStatus.isLoading = false;
   }
   try {
-    if ($(elId).exists()) {
-      sm_d = roundNumber(d * .5);
-      big = $(elId).find('.ball');
-      small = $(elId).find('.ball1');
-      big.removeClass('stop hide');
-      big.css({
-        width: "" + d + "px",
-        height: "" + d + "px"
-      });
-      offset = roundNumber(d / 2 + sm_d / 2 + 9);
-      offset2 = roundNumber((d + 10) / 2 - (sm_d + 6) / 2);
-      small.removeClass('stop hide');
-      small.css({
-        width: "" + sm_d + "px",
-        height: "" + sm_d + "px",
-        top: "-" + offset + "px",
-        'margin-left': "" + offset2 + "px"
-      });
-      return true;
+    if (window._metaStatus.isLoading) {
+      if (iteration < 100) {
+        iteration++;
+        delay(100, function() {
+          return animateLoad(elId, iteration);
+        });
+        return false;
+      } else {
+        console.warn("Loader timed out waiting for load completion");
+        return false;
+      }
+    }
+    if (!$(selector).exists()) {
+      $("body").append("<paper-spinner id=\"" + elId + "\" active></paper-spinner");
+    } else {
+      $(selector).attr("active", true);
+    }
+    window._metaStatus.isLoading = true;
+    return false;
+  } catch (_error) {
+    e = _error;
+    return console.warn('Could not animate loader', e.message);
+  }
+};
+
+stopLoad = function(elId, fadeOut, iteration) {
+  var e, endLoad, selector;
+  if (elId == null) {
+    elId = "loader";
+  }
+  if (fadeOut == null) {
+    fadeOut = 1000;
+  }
+  if (iteration == null) {
+    iteration = 0;
+  }
+  if (elId.slice(0, 1) === "#") {
+    selector = elId;
+    elId = elId.slice(1);
+  } else {
+    selector = "#" + elId;
+  }
+  try {
+    if (!_metaStatus.isLoading) {
+      if (iteration < 100) {
+        iteration++;
+        delay(100, function() {
+          return stopLoad(elId, fadeOut, iteration);
+        });
+        return false;
+      } else {
+        return false;
+      }
+    }
+    if ($(selector).exists()) {
+      $(selector).addClass("good");
+      (endLoad = function() {
+        return delay(fadeOut, function() {
+          $(selector).removeClass("good").attr("active", false).removeAttr("active");
+          return delay(1, function() {
+            var aliases, _ref;
+            $(selector).prop("hidden", true);
+
+            /*
+             * Now, the slower part.
+             * Edge does weirdness with active being toggled off, but
+             * everyone else should have hidden removed so animateLoad()
+             * behaves well. So, we check our browser sniffing.
+             */
+            if ((typeof Browsers !== "undefined" && Browsers !== null ? Browsers.browser : void 0) != null) {
+              aliases = ["Spartan", "Project Spartan", "Edge", "Microsoft Edge", "MS Edge"];
+              if ((_ref = Browsers.browser.browser.name, __indexOf.call(aliases, _ref) >= 0) || Browsers.browser.engine.name === "EdgeHTML") {
+                $(selector).remove();
+                return _metaStatus.isLoading = false;
+              } else {
+                $(selector).removeAttr("hidden");
+                return delay(50, function() {
+                  return _metaStatus.isLoading = false;
+                });
+              }
+            } else {
+              $(selector).removeAttr("hidden");
+              return delay(50, function() {
+                return _metaStatus.isLoading = false;
+              });
+            }
+          });
+        });
+      })();
     }
     return false;
   } catch (_error) {
     e = _error;
-    return console.log('Could not animate loader', e.message);
+    return console.warn('Could not stop load animation', e.message);
   }
 };
 
-stopLoad = function(elId) {
-  var big, e, small;
+stopLoadError = function(message, elId, fadeOut, iteration) {
+  var e, endLoad, selector;
   if (elId == null) {
-    elId = "#status-container";
+    elId = "loader";
+  }
+  if (fadeOut == null) {
+    fadeOut = 7500;
+  }
+  if (elId.slice(0, 1) === "#") {
+    selector = elId;
+    elId = elId.slice(1);
+  } else {
+    selector = "#" + elId;
   }
   try {
-    if ($(elId).exists()) {
-      big = $(elId).find('.ball');
-      small = $(elId).find('.ball1');
-      big.addClass('bballgood ballgood');
-      small.addClass('bballgood ball1good');
-      return delay(250, function() {
-        big.addClass('stop hide');
-        big.removeClass('bballgood ballgood');
-        small.addClass('stop hide');
-        return small.removeClass('bballgood ballgood');
-      });
+    if (!_metaStatus.isLoading) {
+      if (iteration < 100) {
+        iteration++;
+        delay(100, function() {
+          return stopLoadError(message, elId, fadeOut, iteration);
+        });
+        return false;
+      } else {
+        return false;
+      }
     }
-  } catch (_error) {
-    e = _error;
-    return console.log('Could not stop load animation', e.message);
-  }
-};
+    if ($(selector).exists()) {
+      $(selector).addClass("bad");
+      if (message != null) {
+        toastStatusMessage(message, "", fadeOut);
+      }
+      (endLoad = function() {
+        return delay(fadeOut, function() {
+          $(selector).removeClass("bad").prop("active", false).removeAttr("active");
+          return delay(1, function() {
+            var aliases, _ref;
+            $(selector).prop("hidden", true);
 
-stopLoadError = function(elId) {
-  var big, e, small;
-  if (elId == null) {
-    elId = "#status-container";
-  }
-  try {
-    if ($(elId).exists()) {
-      big = $(elId).find('.ball');
-      small = $(elId).find('.ball1');
-      big.addClass('bballerror ballerror');
-      small.addClass('bballerror ball1error');
-      return delay(1500, function() {
-        big.addClass('stop hide');
-        big.removeClass('bballerror ballerror');
-        small.addClass('stop hide');
-        return small.removeClass('bballerror ballerror');
-      });
+            /*
+             * Now, the slower part.
+             * Edge does weirdness with active being toggled off, but
+             * everyone else should have hidden removed so animateLoad()
+             * behaves well. So, we check our browser sniffing.
+             */
+            if ((typeof Browsers !== "undefined" && Browsers !== null ? Browsers.browser : void 0) != null) {
+              aliases = ["Spartan", "Project Spartan", "Edge", "Microsoft Edge", "MS Edge"];
+              if ((_ref = Browsers.browser.browser.name, __indexOf.call(aliases, _ref) >= 0) || Browsers.browser.engine.name === "EdgeHTML") {
+                $(selector).remove();
+                return _metaStatus.isLoading = false;
+              } else {
+                $(selector).removeAttr("hidden");
+                return delay(50, function() {
+                  return _metaStatus.isLoading = false;
+                });
+              }
+            } else {
+              $(selector).removeAttr("hidden");
+              return delay(50, function() {
+                return _metaStatus.isLoading = false;
+              });
+            }
+          });
+        });
+      })();
     }
+    return false;
   } catch (_error) {
     e = _error;
-    return console.log('Could not stop load error animation', e.message);
+    return console.warn('Could not stop load error animation', e.message);
   }
 };
 
@@ -468,40 +609,59 @@ apiUri.apiTarget = apiUri.urlString + apiUri.targetApi;
 
 delete url;
 
-checkPasswordLive = function(selector) {
+checkPasswordLive = function(selector, firstPasswordSelector, secondPasswordSelector, requirementsSelector) {
   var pass, re;
   if (selector == null) {
     selector = "#createUser_submit";
   }
-  pass = $("#password").val();
+  if (firstPasswordSelector == null) {
+    firstPasswordSelector = "#password";
+  }
+  if (secondPasswordSelector == null) {
+    secondPasswordSelector = "#password2";
+  }
+  if (requirementsSelector == null) {
+    requirementsSelector = "#password_security";
+  }
+
+  /*
+   *
+   */
+  pass = $(firstPasswordSelector).val();
   re = new RegExp("^(?:(?=^.{" + window.passwords.minLength + ",}$)((?=.*\\d)|(?=.*\\W+))(?![.\\n])(?=.*[A-Z])(?=.*[a-z]).*$)$");
   if (pass.length > window.passwords.overrideLength || pass.match(re)) {
-    $("#password").css("background", window.passwords.goodbg).parent().parent().removeClass("has-error").addClass("has-success");
+    $(firstPasswordSelector).css("background", window.passwords.goodbg).parent().parent().removeClass("has-error").addClass("has-success");
     $("#feedback-status-1").replaceWith("<span id='feedback-status-1' class='glyphicon glyphicon-ok form-control-feedback' aria-hidden='true'></span>");
     window.passwords.basepwgood = true;
   } else {
-    $("#password").css("background", window.passwords.badbg).parent().parent().removeClass("has-success").addClass("has-error");
+    $(firstPasswordSelector).css("background", window.passwords.badbg).parent().parent().removeClass("has-success").addClass("has-error");
     $("#feedback-status-1").replaceWith("<span id='feedback-status-1' class='glyphicon glyphicon-remove form-control-feedback' aria-hidden='true'></span>");
     window.passwords.basepwgood = false;
   }
-  evalRequirements();
-  if (!isNull($("#password2").val())) {
-    checkMatchPassword(selector);
+  evalRequirements(requirementsSelector, firstPasswordSelector);
+  if (!isNull($(secondPasswordSelector).val())) {
+    checkMatchPassword(selector, firstPasswordSelector, secondPasswordSelector);
     toggleNewUserSubmit(selector);
   }
   return false;
 };
 
-checkMatchPassword = function(selector) {
+checkMatchPassword = function(selector, firstPasswordSelector, secondPasswordSelector) {
   if (selector == null) {
     selector = "#createUser_submit";
   }
-  if ($("#password").val() === $("#password2").val()) {
-    $('#password2').css('background', window.passwords.goodbg).parent().parent().removeClass("has-error").addClass("has-success");
+  if (firstPasswordSelector == null) {
+    firstPasswordSelector = "#password";
+  }
+  if (secondPasswordSelector == null) {
+    secondPasswordSelector = "#password2";
+  }
+  if ($(firstPasswordSelector).val() === $(secondPasswordSelector).val()) {
+    $(secondPasswordSelector).css('background', window.passwords.goodbg).parent().parent().removeClass("has-error").addClass("has-success");
     $("#feedback-status-2").replaceWith("<span id='feedback-status-2' class='glyphicon glyphicon-ok form-control-feedback' aria-hidden='true'></span>");
     window.passwords.passmatch = true;
   } else {
-    $('#password2').css('background', window.passwords.badbg).parent().parent().removeClass("has-success").addClass("has-error");
+    $(secondPasswordSelector).css('background', window.passwords.badbg).parent().parent().removeClass("has-success").addClass("has-error");
     $("#feedback-status-2").replaceWith("<span id='feedback-status-2' class='glyphicon glyphicon-remove form-control-feedback' aria-hidden='true'></span>");
     window.passwords.passmatch = false;
   }
@@ -516,7 +676,7 @@ toggleNewUserSubmit = function(selector) {
   }
   try {
     dbool = !(window.passwords.passmatch && window.passwords.basepwgood);
-    return $("#createUser_submit").attr("disabled", dbool);
+    return $(selector).attr("disabled", dbool);
   } catch (_error) {
     e = _error;
     window.passwords.passmatch = false;
@@ -524,15 +684,21 @@ toggleNewUserSubmit = function(selector) {
   }
 };
 
-evalRequirements = function() {
+evalRequirements = function(selector, passwordSelector) {
   var green_channel, html, moz_css, new_end, notice, pass, pstrength, red_channel, webkit_css;
+  if (selector == null) {
+    selector = "#password_security";
+  }
+  if (passwordSelector == null) {
+    passwordSelector = "#password";
+  }
   if (!$("#strength-meter").exists()) {
     html = "<h4>Password Requirements</h4><div id='strength-meter'><div id='strength-requirements'><p style='float:left;margin-top:2em;font-weight:700;'>Character Classes:</p><div id='strength-alpha'><p class='label'>a</p><div class='strength-eval'></div></div><div id='strength-alphacap'><p class='label'>A</p><div class='strength-eval'></div></div><div id='strength-numspecial'><p class='label'>1/!</p><div class='strength-eval'></div></div></div><div id='strength-bar'><label for='password-strength'>Strength: </label><progress id='password-strength' max='5'></progress><p>Time to crack: <span id='crack-time'></span></p></div></div>";
     notice = "<br/><br/><p>We require a password of at least " + window.passwords.minLength + " characters with at least one upper case letter, at least one lower case letter, and at least one digit or special character.</p><p>You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least " + window.passwords.overrideLength + " characters, with no security requirements.</p>";
-    $("#password_security").html(html + notice).removeClass('invisible');
+    $(selector).html(html + notice).removeClass('invisible');
     $("#helpText").removeClass("invisible");
   }
-  pass = $("#password").val();
+  pass = $(passwordSelector).val();
   pstrength = zxcvbn(pass);
   green_channel = (toInt(pstrength.score) + 1) * 51;
   red_channel = 255 - toInt(Math.pow(pstrength.score, 2) * 16);
@@ -945,18 +1111,24 @@ showInstructions = function(path) {
 };
 
 showAdvancedOptions = function(domain, has2fa) {
-  var advancedListId, html;
+  var advancedListId, html, optionsHtml, twoFactorClass, twoFactorPhrase;
   advancedListId = "advanced_options_list";
   if ($("#" + advancedListId).exists()) {
     $("#" + advancedListId).toggle("fast");
     return true;
   }
-  html = "<ul id='" + advancedListId + "'>";
-  html += "<li><a href='?2fa=t' role='button' class='btn btn-default'>Configure Two-Factor Authentication</a></li>";
-  html += "<li><a href='#' id='removeAccount' role='button' class='btn btn-default'>Remove Account</a></li>";
+  html = "<ul id='" + advancedListId + "' class='advanced-account-options'>";
+  twoFactorPhrase = has2fa ? "Configure" : "Add";
+  twoFactorClass = has2fa ? "btn-warning" : "btn-success";
+  optionsHtml = ["<li><button id='changePassword' class='btn btn-info change-password'>Change Password</button></li>", "<li><a href='?2fa=t' role='button' class='btn " + twoFactorClass + " configure-tfa btn-success'>" + twoFactorPhrase + " Two-Factor Authentication</a></li>", "<li><button id='removeAccount' role='button' class='btn btn-danger remove-account'>Remove Account</button></li>"];
+  html += optionsHtml.join("\n\t");
+  html += "</ul>";
   $("#settings_list").after(html);
-  return $("#removeAccount").click(function() {
+  $("#removeAccount").click(function() {
     return removeAccount(this, "" + domain + "_user", has2fa);
+  });
+  return $("#changePassword").click(function() {
+    return beginChangePassword();
   });
 };
 
@@ -1258,13 +1430,15 @@ finishPasswordResetHandler = function() {
   }
   args = "action=finishpasswordreset&key=" + key + "&verify=" + verify + "&username=" + username;
   $.post(apiUri.apiTarget, args, "json").done(function(result) {
-    if (!result.status) {
+    if (!(result.status && result.verification_data)) {
       if ($(".alert").exists()) {
         $(".alert").remove();
       }
-      html = "<div class=\"alert alert-danger\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>There was a problem resetting your password.</strong> " + result.human_error + "\n</div>";
+      html = "<div class=\"alert alert-danger\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>There was a problem resetting your password.</strong> " + result.human_error + ". We suggest going back and trying again.\n</div>";
       $("#login").before(html);
       $(".alert").alert();
+      console.error("Problem resetting password! Server said " + result.error);
+      console.warn(result);
       return false;
     }
     html = "<div class=\"alert alert-success\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Your password has been successfully reset</strong> Your new password is <strong>" + result.new_password + "</strong>. Write this down! You will NOT be able to generate or see this password again.\n</div>";
@@ -1281,8 +1455,91 @@ finishPasswordResetHandler = function() {
   return false;
 };
 
+beginChangePassword = function() {
+  var changePasswordForm, checkFirstPassword, cookie, username;
+  cookie = "" + window.totpParams.domain + "_user";
+  username = $.cookie(cookie);
+  changePasswordForm = "<form class='change-password-form form-horizontal'>\n  <fieldset>\n    <legend>Change Password</legend>\n    <div class=\"form-group\">\n      <label for=\"old-password\" class=\"col-sm-2 control-label\">Old Password</label>\n      <div class=\"col-sm-4\">\n        <input type=\"password\" class=\"form-control old-password\" id=\"old-password\" placeholder=\"Old Password\" required=\"required\"/>\n      </div>\n    </div>\n    <div class=\"new-password-group\">\n      <div class=\"form-group\">\n        <label for=\"new-password\" class=\"col-sm-2 control-label\">New Password</label>\n        <div class=\"col-sm-4 has-feedback\">\n          <input type=\"password\" class=\"form-control new-password\" id=\"new-password\" placeholder=\"New Password\" required=\"required\"/>\n          <span id=\"feedback-status-1\"></span>\n        </div>\n      </div>\n      <div class=\"form-group\">\n        <label for=\"new-password-confirm\" class=\"col-sm-2 control-label\">Confirm New Password</label>\n        <div class=\"col-sm-4 has-feedback\">\n          <input type=\"password\" class=\"form-control new-password\" id=\"new-password-confirm\" placeholder=\"Confirm New Password\" required=\"required\"/>\n          <span id=\"feedback-status-2\"></span>\n        </div>\n      </div>\n    </div>\n    <div id=\"password_security\" class=\"pull-right col-sm-5 password-reqs hidden-xs\"></div>\n    <button id=\"do-change-password\" class=\"btn btn-primary col-sm-offset-2\" disabled>Change Password for<br/> " + username + "</button>\n  </fieldset>\n</form>";
+  $("#account_settings").after(changePasswordForm);
+  loadJS(window.totpParams.relative + "js/zxcvbn/zxcvbn.js");
+  checkFirstPassword = function() {
+    var e;
+    try {
+      return checkPasswordLive("#do-change-password", "#new-password", "#new-password-confirm");
+    } catch (_error) {
+      e = _error;
+      console.error("Couldn't check password requirements! " + e.message);
+      return console.warn(e.stack);
+    }
+  };
+  $("#new-password").keyup(function() {
+    return checkFirstPassword();
+  }).change(function() {
+    return checkFirstPassword();
+  });
+  $("#new-password-confirm").change(function() {
+    return checkMatchPassword("#do-change-password", "#new-password", "#new-password-confirm");
+  }).keyup(function() {
+    return checkMatchPassword("#do-change-password", "#new-password", "#new-password-confirm");
+  });
+  $(".change-password-form input").blur(function() {
+    return checkFirstPassword();
+  });
+  $("#do-change-password").click(function() {
+    var args;
+    $(this).prop("disabled", true);
+    args = "action=changepassword&old_password=" + (encodeURIComponent($("#old-password").val())) + "&new_password=" + (encodeURIComponent($("#new-password").val())) + "&username=" + (encodeURIComponent(username));
+    return $.post(apiUri.apiTarget, args, "json").done(function(result) {
+      var errorHtml, successHtml;
+      if (result.status === false || result.action !== "changepassword") {
+        if (result.action !== "changepassword") {
+          result.error = "mismatched mode result";
+          result.human_error = "The server gave a nonsensical response. Your original password is still valid.";
+        }
+        if (result.human_error == null) {
+          result.human_error = "The server had an unexpected error";
+        }
+        errorHtml = "<div class=\"alert alert-danger center-block fade in\" role=\"alert\">\n  <strong>Couldn't update password</strong> " + result.human_error + "\n</div>";
+        $("#do-change-password").before(errorHtml);
+        $("#do-change-password").prop("disabled", false);
+        console.error("Couldn't update password! Server said " + result.error);
+        console.warn(result);
+        return false;
+      }
+      successHtml = "<div class=\"alert alert-success center-block fade in\" role=\"alert\">\n  <strong>Password Changed</strong> Your password has been successfully updated. <a class=\"alert-link\" id=\"refresh-page\" style=\"cursor:pointer\">Click here to refresh now</a> - you may have to log back in, using your new password.\n</div>";
+      $(".change-password-form").replaceWith(successHtml);
+      $("#refresh-page").click(function() {
+        return document.location.reload(true);
+      });
+      return false;
+    }).fail(function(result, status) {
+      var errorHtml;
+      errorHtml = "<div class=\"alert alert-danger center-block fade in\" role=\"alert\">\n  <strong>Couldn't update password</strong> There was a problem communicating with the server. Please try again later.\n</div>";
+      $("#do-change-password").replaceWith(errorHtml);
+      console.error("AJAX failure to change password!");
+      return console.warn("Got", result, status);
+    });
+  });
+  return false;
+};
+
+finishChangePassword = function() {
+  return false;
+};
+
 $(function() {
-  var e, selector;
+  var bootstrapCSS, e, needStylesheetImport, selector;
+  needStylesheetImport = true;
+  $("link[rel='stylesheet']").each(function() {
+    if ($(this).attr("href").search("bootstrap.min.css" !== -1)) {
+      needStylesheetImport = false;
+      return false;
+    }
+  });
+  if (needStylesheetImport) {
+    bootstrapCSS = "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css\" />";
+    $("head").append(bootstrapCSS);
+  }
   if (window.passwords.submitSelector == null) {
     selector = "#createUser_submit";
   } else {
@@ -1351,7 +1608,7 @@ $(function() {
     return false;
   });
   try {
-    loadJS("http://ssarherps.org/cndb/bower_components/bootstrap/dist/js/bootstrap.min.js", function() {
+    loadJS("https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js", function() {
       $(".do-password-reset").unbind();
       $("#reset-password-icon").tooltip();
       $(".do-password-reset").click(function() {

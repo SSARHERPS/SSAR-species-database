@@ -6872,11 +6872,13 @@ paper-dialog-scrollable {
 html >>> paper-dialog-scrollable {
   padding: 1rem !important;
 }
-#modal-taxon {
+#modal-taxon,
+#modal-taxon-edit {
   position: fixed !important;
   max-height: 75vh;
 }
-paper-dialog#modal-taxon .buttons {
+paper-dialog#modal-taxon .buttons,
+paper-dialog#modal-taxon-edit .buttons {
   background: #fff;
 }
 #modal-taxon-content {
@@ -7148,6 +7150,31 @@ html >>> paper-autogrow-textarea textarea {
 paper-toast,
 paper-spinner {
   z-index: 1000;
+}
+#login {
+  width: inherit !important;
+}
+#login .form-group {
+  clear: both;
+}
+@media (max-width: 767px) {
+  #login {
+    margin-left: 0!important;
+  }
+}
+.advanced-account-options li {
+  margin: 1rem;
+  list-style-type: none;
+}
+.change-password-form {
+  position: relative;
+}
+.change-password-form .password-reqs {
+  width: inherit !important;
+  position: absolute;
+  top: 1em;
+  right: 0;
+  background: #fff;
 }
 #password_security + #login {
   float: left;

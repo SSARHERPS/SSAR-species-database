@@ -6,24 +6,20 @@
  *
  * Why are we here? Because this gives us some nice bonuses on mobile!
  */
+var cacheName, urlsToCache;
 
-(function() {
-  var cacheName, urlsToCache;
+cacheName = "ssar_cndb_cache";
 
-  cacheName = "ssar_cndb_cache";
+urlsToCache = ["js/c.min.js", "css/main.min.css"];
 
-  urlsToCache = ["js/c.min.js", "css/main.min.css"];
-
-  self.addEventListener("install", function(event) {
-    var cacheHandler;
-    cacheHandler = function(cache) {
-      console.log("Opened cache");
-      return cache.addAll(urlsToCache);
-    };
-    event.waitUntil(caches.open(cacheName).then(cacheHandler(cache)));
-    return false;
-  });
-
-}).call(this);
+self.addEventListener("install", function(event) {
+  var cacheHandler;
+  cacheHandler = function(cache) {
+    console.log("Opened cache");
+    return cache.addAll(urlsToCache);
+  };
+  event.waitUntil(caches.open(cacheName).then(cacheHandler(cache)));
+  return false;
+});
 
 //# sourceMappingURL=maps/serviceWorker.js.map

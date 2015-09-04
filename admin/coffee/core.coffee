@@ -181,59 +181,198 @@ mapNewWindows = ->
       openInNewWindow(curHref)
 
 # Animations
-animateLoad = (d=50,elId="#status-container") ->
+
+unless _metaStatus?.isLoading?
+  unless _metaStatus?
+    window._metaStatus = new Object()
+  _metaStatus.isLoading = false
+  
+animateLoad = (elId = "loader", iteration = 0) ->
+  ###
+  # Suggested CSS to go with this:
+  #
+  # #loader {
+  #     position:fixed;
+  #     top:50%;
+  #     left:50%;
+  # }
+  # #loader.good::shadow .circle {
+  #     border-color: rgba(46,190,17,0.9);
+  # }
+  # #loader.bad::shadow .circle {
+  #     border-color:rgba(255,0,0,0.9);
+  # }
+  ###
+  if isNumber(elId) then elId = "loader"
+  if elId.slice(0,1) is "#"
+    selector = elId
+    elId = elId.slice(1)
+  else
+    selector = "##{elId}"
+  ###
+  # This is there for Edge, which sometimes leaves an element
+  # We declare this early because Polymer tries to be smart and not
+  # actually activate when it's hidden. Thus, this is a prerequisite
+  # to actually re-showing it once hidden.
+  ###
+  $(selector).removeAttr("hidden")
+  unless window._metaStatus?.isLoading?
+    unless window._metaStatus?
+      window._metaStatus = new Object()
+    window._metaStatus.isLoading = false
   try
-    if $(elId).exists()
-      sm_d = roundNumber(d * .5)
-      big = $(elId).find('.ball')
-      small = $(elId).find('.ball1')
-      big.removeClass('stop hide')
-      big.css
-        width:"#{d}px"
-        height:"#{d}px"
-      offset = roundNumber(d / 2 + sm_d/2 + 9)
-      offset2 = roundNumber((d + 10) / 2 - (sm_d+6)/2)
-      small.removeClass('stop hide')
-      small.css
-        width:"#{sm_d}px"
-        height:"#{sm_d}px"
-        top:"-#{offset}px"
-        'margin-left':"#{offset2}px"
-      return true
+    if window._metaStatus.isLoading
+      # Don't do this again until it's done loading.
+      if iteration < 100
+        iteration++
+        delay 100, ->
+          animateLoad(elId, iteration)
+        return false
+      else
+        # Still not done loading? This probably isn't important
+        # anymore.
+        console.warn("Loader timed out waiting for load completion")
+        return false
+    unless $(selector).exists()
+      $("body").append("<paper-spinner id=\"#{elId}\" active></paper-spinner")
+    else
+      $(selector)
+      .attr("active",true) # Chrome, etc., want this
+      #.prop("active",true) # Edge wants this
+    window._metaStatus.isLoading = true
     false
   catch e
-    console.log('Could not animate loader', e.message);
+    console.warn('Could not animate loader', e.message)
 
-stopLoad = (elId="#status-container") ->
-    try
-      if $(elId).exists()
-        big = $(elId).find('.ball')
-        small = $(elId).find('.ball1')
-        big.addClass('bballgood ballgood')
-        small.addClass('bballgood ball1good')
-        delay 250, ->
-          big.addClass('stop hide')
-          big.removeClass('bballgood ballgood')
-          small.addClass('stop hide')
-          small.removeClass('bballgood ballgood')
-    catch e
-      console.log('Could not stop load animation', e.message);
+stopLoad = (elId = "loader", fadeOut = 1000, iteration = 0) ->
+  if elId.slice(0,1) is "#"
+    selector = elId
+    elId = elId.slice(1)
+  else
+    selector = "##{elId}"
+  try
+    unless _metaStatus.isLoading
+      # Wait until it's loading before executing again
+      if iteration < 100
+        iteration++
+        delay 100, ->
+          stopLoad(elId, fadeOut, iteration)
+        return false
+      else
+        # Probably not worth waiting for anymore
+        return false
+    if $(selector).exists()
+      $(selector).addClass("good")
+      do endLoad = ->
+        delay fadeOut, ->
+          $(selector)
+          .removeClass("good")
+          .attr("active",false)
+          .removeAttr("active")
+          # Timeout for animations. There aren't any at the moment,
+          # but leaving this as a placeholder.
+          delay 1, ->
+            $(selector).prop("hidden",true) # This is there for Edge, which sometimes leaves an element
+            ###
+            # Now, the slower part.
+            # Edge does weirdness with active being toggled off, but
+            # everyone else should have hidden removed so animateLoad()
+            # behaves well. So, we check our browser sniffing.
+            ###
+            if Browsers?.browser?
+              aliases = [
+                "Spartan"
+                "Project Spartan"
+                "Edge"
+                "Microsoft Edge"
+                "MS Edge"
+                ]
+              if Browsers.browser.browser.name in aliases or Browsers.browser.engine.name is "EdgeHTML"
+                # Nuke it from orbit. It's a slight performance hit, but
+                # it's the only way to be sure.
+                $(selector).remove()
+                _metaStatus.isLoading = false
+              else
+                $(selector).removeAttr("hidden")
+                delay 50, ->
+                  # Give the DOM a chance to reflect it's no longer hidden
+                  _metaStatus.isLoading = false
+            else
+              # Just default to "everything but Edge"
+              $(selector).removeAttr("hidden")
+              delay 50, ->
+                # Give the DOM a chance to reflect it's no longer hidden
+                _metaStatus.isLoading = false
+    false
+  catch e
+    console.warn('Could not stop load animation', e.message)
 
 
-stopLoadError = (elId="#status-container") ->
-    try
-      if $(elId).exists()
-        big = $(elId).find('.ball')
-        small = $(elId).find('.ball1')
-        big.addClass('bballerror ballerror')
-        small.addClass('bballerror ball1error')
-        delay 1500, ->
-          big.addClass('stop hide')
-          big.removeClass('bballerror ballerror')
-          small.addClass('stop hide')
-          small.removeClass('bballerror ballerror')
-    catch e
-      console.log('Could not stop load error animation', e.message);
+stopLoadError = (message, elId = "loader", fadeOut = 7500, iteration) ->
+  if elId.slice(0,1) is "#"
+    selector = elId
+    elId = elId.slice(1)
+  else
+    selector = "##{elId}"
+  try
+    unless _metaStatus.isLoading
+      # Wait until it's loading before executing again
+      if iteration < 100
+        iteration++
+        delay 100, ->
+          stopLoadError(message, elId, fadeOut, iteration)
+        return false
+      else
+        # Probably not worth waiting for anymore
+        return false
+    if $(selector).exists()
+      $(selector).addClass("bad")
+      if message? then toastStatusMessage(message,"",fadeOut)
+      do endLoad = ->
+        delay fadeOut, ->
+          $(selector)
+          .removeClass("bad")
+          .prop("active",false)
+          .removeAttr("active")
+          # Timeout for animations. There aren't any at the moment,
+          # but leaving this as a placeholder.
+          delay 1, ->
+            $(selector).prop("hidden",true) # This is there for Edge, which sometimes leaves an element
+            ###
+            # Now, the slower part.
+            # Edge does weirdness with active being toggled off, but
+            # everyone else should have hidden removed so animateLoad()
+            # behaves well. So, we check our browser sniffing.
+            ###
+            if Browsers?.browser?
+              aliases = [
+                "Spartan"
+                "Project Spartan"
+                "Edge"
+                "Microsoft Edge"
+                "MS Edge"
+                ]
+              if Browsers.browser.browser.name in aliases or Browsers.browser.engine.name is "EdgeHTML"
+                # Nuke it from orbit. It's a slight performance hit, but
+                # it's the only way to be sure.
+                $(selector).remove()
+                _metaStatus.isLoading = false
+              else
+                $(selector).removeAttr("hidden")
+                delay 50, ->
+                  # Give the DOM a chance to reflect it's no longer hidden
+                  _metaStatus.isLoading = false
+            else
+              # Just default to "everything but Edge"
+              $(selector).removeAttr("hidden")
+              delay 50, ->
+                # Give the DOM a chance to reflect it's no longer hidden
+                _metaStatus.isLoading = false
+    false
+  catch e
+    console.warn('Could not stop load error animation', e.message)
+
+
 
 $ ->
   try

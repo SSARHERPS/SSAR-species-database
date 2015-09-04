@@ -372,6 +372,11 @@ goTo = (url) ->
   window.location.href = url
   false
 
+unless _metaStatus?.isLoading?
+  unless _metaStatus?
+    window._metaStatus = new Object()
+  _metaStatus.isLoading = false
+
 animateLoad = (elId = "loader", iteration = 0) ->
   ###
   # Suggested CSS to go with this:
@@ -401,6 +406,10 @@ animateLoad = (elId = "loader", iteration = 0) ->
   # to actually re-showing it once hidden.
   ###
   $(selector).removeAttr("hidden")
+  unless _metaStatus?.isLoading?
+    unless _metaStatus?
+      _metaStatus = new Object()
+    _metaStatus.isLoading = false
   try
     if _metaStatus.isLoading
       # Don't do this again until it's done loading.
@@ -918,7 +927,9 @@ $ ->
   bindClicks()
   mapNewWindows()
   try
-    $('[data-toggle="tooltip"]').tooltip()
+    $("body").tooltip
+      selector: "[data-toggle='tooltip']"
+    # $('[data-toggle="tooltip"]').tooltip()
   catch e
     console.warn("Tooltips were attempted to be set up, but do not exist")
   try
@@ -940,7 +951,7 @@ $ ->
         """
         $("#bug-footer").append(html)
         bindClicks("#goto-admin")
-        $("#goto-admin").tooltip()
+        # $("#goto-admin").tooltip()
       false
   browserBeware()
   checkFileVersion()

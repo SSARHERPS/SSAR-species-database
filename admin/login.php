@@ -208,17 +208,17 @@ $loginform = "<script src='bower_components/bootstrap/dist/js/bootstrap.min.js' 
 	    <form id='login' method='post' action='?q=submitlogin' class='form-horizontal'>
             <fieldset>
               <legend>Login</legend>
-<div class='form-group'>
-	      <label for='username' class='col-sm-3 col-md-2'>
+<div class='form-group col-sm-9 col-md-5'>
+	      <label for='username' class='control-label'>
 		Email:
 	      </label>
-	      <input class='col-sm-5 col-md-3' type='email' name='username' id='username' placeholder='user@domain.com' autofocus='autofocus' required='required'/>
+	      <input class='form-control' type='email' name='username' id='username' placeholder='user@domain.com' autofocus='autofocus' required='required'/>
 	      </div>
-<div class='form-group'>
-	      <label for='password' class='col-sm-3 col-md-2'>
+<div class='form-group col-sm-9 col-md-5 has-feedback'>
+	      <label for='password' class='control-label'>
 		Password:
 	      </label>
-	      <input class='col-sm-5 col-md-3' type='password' name='password' id='password' placeholder='Password' class='password-input' required='required'/> <span class='glyphicon glyphicon-question-sign do-password-reset' id='reset-password-icon' data-toggle='tooltip' title='Forgot Password?'></span>
+	      <input class='form-control' type='password' name='password' id='password' placeholder='Password' class='password-input' required='required'/> <span class='glyphicon glyphicon-question-sign do-password-reset form-control-feedback' style='pointer-events:all;' id='reset-password-icon' data-toggle='tooltip' title='Forgot Password?'></span>
 </div>
 </fieldset>";
 $loginform_close="	      <br/>
@@ -755,9 +755,9 @@ else
           if($redirect_to_home === true) $durl = $baseurl;
           else $durl = $redirect_url;
       }
-      
+
     if(!$logged_in) $login_output.=$login_preamble . $loginform.$loginform_close;
-    else $login_output.="<aside class='ssmall pull-right'><a href='?q=logout' class='btn btn-warning btn-sm'><span class='glyphicon glyphicon-log-out' aria-hidden='true'></span> Logout</a></aside><h1 id='signin_greeting'>Welcome back, $first_name</h1<br/><p id='logout_para'></p>".$settings_blob."<button id='next' name='next' class='btn btn-primary continue click' data-href='$durl'>Continue &#187;</button>";
+    else $login_output.="<aside class='ssmall pull-right'><a href='?q=logout' class='btn btn-warning btn-sm'><span class='glyphicon glyphicon-log-out' aria-hidden='true'></span> Logout</a></aside><h1 id='signin_greeting'>Welcome back, $first_name</h1><br/><p id='logout_para'></p>".$settings_blob."<button id='next' name='next' class='btn btn-primary continue click' data-href='$durl'>Continue &#187;</button>";
     $deferredJS .= "\n$(\"#next\").click(function(){window.location.href=\"".$durl."\";});";
   }
 $login_output.="</div>";
@@ -766,6 +766,7 @@ ob_end_flush();
 $totpOverride = !empty($redirect_url) ? "window.totpParams.home = \"".$redirect_url."\";\n":null;
 $totpOverride .= !empty($relative_path) ? "window.totpParams.relative = \"".$relative_path."\";\n":null;
 $totpOverride .= !empty($working_subdirectory) ? "window.totpParams.subdirectory = \"".$working_subdirectory."\";\n":null;
+$totpOverride .= "window.totpParams.domain = \"".$domain."\";\n";
 try
   {
     $need_tfa = !$user->has2FA();

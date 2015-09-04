@@ -181,59 +181,198 @@ mapNewWindows = ->
       openInNewWindow(curHref)
 
 # Animations
-animateLoad = (d=50,elId="#status-container") ->
+
+unless _metaStatus?.isLoading?
+  unless _metaStatus?
+    window._metaStatus = new Object()
+  _metaStatus.isLoading = false
+  
+animateLoad = (elId = "loader", iteration = 0) ->
+  ###
+  # Suggested CSS to go with this:
+  #
+  # #loader {
+  #     position:fixed;
+  #     top:50%;
+  #     left:50%;
+  # }
+  # #loader.good::shadow .circle {
+  #     border-color: rgba(46,190,17,0.9);
+  # }
+  # #loader.bad::shadow .circle {
+  #     border-color:rgba(255,0,0,0.9);
+  # }
+  ###
+  if isNumber(elId) then elId = "loader"
+  if elId.slice(0,1) is "#"
+    selector = elId
+    elId = elId.slice(1)
+  else
+    selector = "##{elId}"
+  ###
+  # This is there for Edge, which sometimes leaves an element
+  # We declare this early because Polymer tries to be smart and not
+  # actually activate when it's hidden. Thus, this is a prerequisite
+  # to actually re-showing it once hidden.
+  ###
+  $(selector).removeAttr("hidden")
+  unless window._metaStatus?.isLoading?
+    unless window._metaStatus?
+      window._metaStatus = new Object()
+    window._metaStatus.isLoading = false
   try
-    if $(elId).exists()
-      sm_d = roundNumber(d * .5)
-      big = $(elId).find('.ball')
-      small = $(elId).find('.ball1')
-      big.removeClass('stop hide')
-      big.css
-        width:"#{d}px"
-        height:"#{d}px"
-      offset = roundNumber(d / 2 + sm_d/2 + 9)
-      offset2 = roundNumber((d + 10) / 2 - (sm_d+6)/2)
-      small.removeClass('stop hide')
-      small.css
-        width:"#{sm_d}px"
-        height:"#{sm_d}px"
-        top:"-#{offset}px"
-        'margin-left':"#{offset2}px"
-      return true
+    if window._metaStatus.isLoading
+      # Don't do this again until it's done loading.
+      if iteration < 100
+        iteration++
+        delay 100, ->
+          animateLoad(elId, iteration)
+        return false
+      else
+        # Still not done loading? This probably isn't important
+        # anymore.
+        console.warn("Loader timed out waiting for load completion")
+        return false
+    unless $(selector).exists()
+      $("body").append("<paper-spinner id=\"#{elId}\" active></paper-spinner")
+    else
+      $(selector)
+      .attr("active",true) # Chrome, etc., want this
+      #.prop("active",true) # Edge wants this
+    window._metaStatus.isLoading = true
     false
   catch e
-    console.log('Could not animate loader', e.message);
+    console.warn('Could not animate loader', e.message)
 
-stopLoad = (elId="#status-container") ->
-    try
-      if $(elId).exists()
-        big = $(elId).find('.ball')
-        small = $(elId).find('.ball1')
-        big.addClass('bballgood ballgood')
-        small.addClass('bballgood ball1good')
-        delay 250, ->
-          big.addClass('stop hide')
-          big.removeClass('bballgood ballgood')
-          small.addClass('stop hide')
-          small.removeClass('bballgood ballgood')
-    catch e
-      console.log('Could not stop load animation', e.message);
+stopLoad = (elId = "loader", fadeOut = 1000, iteration = 0) ->
+  if elId.slice(0,1) is "#"
+    selector = elId
+    elId = elId.slice(1)
+  else
+    selector = "##{elId}"
+  try
+    unless _metaStatus.isLoading
+      # Wait until it's loading before executing again
+      if iteration < 100
+        iteration++
+        delay 100, ->
+          stopLoad(elId, fadeOut, iteration)
+        return false
+      else
+        # Probably not worth waiting for anymore
+        return false
+    if $(selector).exists()
+      $(selector).addClass("good")
+      do endLoad = ->
+        delay fadeOut, ->
+          $(selector)
+          .removeClass("good")
+          .attr("active",false)
+          .removeAttr("active")
+          # Timeout for animations. There aren't any at the moment,
+          # but leaving this as a placeholder.
+          delay 1, ->
+            $(selector).prop("hidden",true) # This is there for Edge, which sometimes leaves an element
+            ###
+            # Now, the slower part.
+            # Edge does weirdness with active being toggled off, but
+            # everyone else should have hidden removed so animateLoad()
+            # behaves well. So, we check our browser sniffing.
+            ###
+            if Browsers?.browser?
+              aliases = [
+                "Spartan"
+                "Project Spartan"
+                "Edge"
+                "Microsoft Edge"
+                "MS Edge"
+                ]
+              if Browsers.browser.browser.name in aliases or Browsers.browser.engine.name is "EdgeHTML"
+                # Nuke it from orbit. It's a slight performance hit, but
+                # it's the only way to be sure.
+                $(selector).remove()
+                _metaStatus.isLoading = false
+              else
+                $(selector).removeAttr("hidden")
+                delay 50, ->
+                  # Give the DOM a chance to reflect it's no longer hidden
+                  _metaStatus.isLoading = false
+            else
+              # Just default to "everything but Edge"
+              $(selector).removeAttr("hidden")
+              delay 50, ->
+                # Give the DOM a chance to reflect it's no longer hidden
+                _metaStatus.isLoading = false
+    false
+  catch e
+    console.warn('Could not stop load animation', e.message)
 
 
-stopLoadError = (elId="#status-container") ->
-    try
-      if $(elId).exists()
-        big = $(elId).find('.ball')
-        small = $(elId).find('.ball1')
-        big.addClass('bballerror ballerror')
-        small.addClass('bballerror ball1error')
-        delay 1500, ->
-          big.addClass('stop hide')
-          big.removeClass('bballerror ballerror')
-          small.addClass('stop hide')
-          small.removeClass('bballerror ballerror')
-    catch e
-      console.log('Could not stop load error animation', e.message);
+stopLoadError = (message, elId = "loader", fadeOut = 7500, iteration) ->
+  if elId.slice(0,1) is "#"
+    selector = elId
+    elId = elId.slice(1)
+  else
+    selector = "##{elId}"
+  try
+    unless _metaStatus.isLoading
+      # Wait until it's loading before executing again
+      if iteration < 100
+        iteration++
+        delay 100, ->
+          stopLoadError(message, elId, fadeOut, iteration)
+        return false
+      else
+        # Probably not worth waiting for anymore
+        return false
+    if $(selector).exists()
+      $(selector).addClass("bad")
+      if message? then toastStatusMessage(message,"",fadeOut)
+      do endLoad = ->
+        delay fadeOut, ->
+          $(selector)
+          .removeClass("bad")
+          .prop("active",false)
+          .removeAttr("active")
+          # Timeout for animations. There aren't any at the moment,
+          # but leaving this as a placeholder.
+          delay 1, ->
+            $(selector).prop("hidden",true) # This is there for Edge, which sometimes leaves an element
+            ###
+            # Now, the slower part.
+            # Edge does weirdness with active being toggled off, but
+            # everyone else should have hidden removed so animateLoad()
+            # behaves well. So, we check our browser sniffing.
+            ###
+            if Browsers?.browser?
+              aliases = [
+                "Spartan"
+                "Project Spartan"
+                "Edge"
+                "Microsoft Edge"
+                "MS Edge"
+                ]
+              if Browsers.browser.browser.name in aliases or Browsers.browser.engine.name is "EdgeHTML"
+                # Nuke it from orbit. It's a slight performance hit, but
+                # it's the only way to be sure.
+                $(selector).remove()
+                _metaStatus.isLoading = false
+              else
+                $(selector).removeAttr("hidden")
+                delay 50, ->
+                  # Give the DOM a chance to reflect it's no longer hidden
+                  _metaStatus.isLoading = false
+            else
+              # Just default to "everything but Edge"
+              $(selector).removeAttr("hidden")
+              delay 50, ->
+                # Give the DOM a chance to reflect it's no longer hidden
+                _metaStatus.isLoading = false
+    false
+  catch e
+    console.warn('Could not stop load error animation', e.message)
+
+
 
 $ ->
   try
@@ -296,39 +435,42 @@ apiUri.apiTarget = apiUri.urlString + apiUri.targetApi
 
 delete url
 
-checkPasswordLive = (selector = "#createUser_submit") ->
-  pass = $("#password").val()
+checkPasswordLive = (selector = "#createUser_submit", firstPasswordSelector = "#password", secondPasswordSelector = "#password2", requirementsSelector = "#password_security") ->
+  ###
+  #
+  ###
+  pass = $(firstPasswordSelector).val()
   re = new RegExp("^(?:(?=^.{#{window.passwords.minLength},}$)((?=.*\\d)|(?=.*\\W+))(?![.\\n])(?=.*[A-Z])(?=.*[a-z]).*$)$")
   if pass.length >window.passwords.overrideLength or pass.match(re)
-    $("#password")
+    $(firstPasswordSelector)
     .css("background",window.passwords.goodbg)
     .parent().parent().removeClass("has-error")
     .addClass("has-success")
     $("#feedback-status-1").replaceWith("<span id='feedback-status-1' class='glyphicon glyphicon-ok form-control-feedback' aria-hidden='true'></span>")
     window.passwords.basepwgood = true
   else
-    $("#password")
+    $(firstPasswordSelector)
     .css("background",window.passwords.badbg)
     .parent().parent().removeClass("has-success")
     .addClass("has-error")
     $("#feedback-status-1").replaceWith("<span id='feedback-status-1' class='glyphicon glyphicon-remove form-control-feedback' aria-hidden='true'></span>")
     window.passwords.basepwgood = false
-  evalRequirements()
-  if not isNull($("#password2").val())
-    checkMatchPassword(selector)
+  evalRequirements(requirementsSelector, firstPasswordSelector)
+  if not isNull($(secondPasswordSelector).val())
+    checkMatchPassword(selector, firstPasswordSelector, secondPasswordSelector)
     toggleNewUserSubmit(selector)
   return false
 
-checkMatchPassword = (selector = "#createUser_submit") ->
-  if $("#password").val() is $("#password2").val()
-    $('#password2')
+checkMatchPassword = (selector = "#createUser_submit", firstPasswordSelector = "#password", secondPasswordSelector = "#password2") ->
+  if $(firstPasswordSelector).val() is $(secondPasswordSelector).val()
+    $(secondPasswordSelector)
     .css('background', window.passwords.goodbg)
     .parent().parent().removeClass("has-error")
     .addClass("has-success")
     $("#feedback-status-2").replaceWith("<span id='feedback-status-2' class='glyphicon glyphicon-ok form-control-feedback' aria-hidden='true'></span>")
     window.passwords.passmatch = true
   else
-    $('#password2')
+    $(secondPasswordSelector)
     .css('background', window.passwords.badbg)
     .parent().parent().removeClass("has-success")
     .addClass("has-error")
@@ -340,20 +482,20 @@ checkMatchPassword = (selector = "#createUser_submit") ->
 toggleNewUserSubmit = (selector = "#createUser_submit") ->
   try
     dbool = not(window.passwords.passmatch && window.passwords.basepwgood)
-    $("#createUser_submit").attr("disabled",dbool)
+    $(selector).attr("disabled",dbool)
   catch e
     window.passwords.passmatch = false
     window.passwords.basepwgood = false
 
-evalRequirements = ->
+evalRequirements = (selector = "#password_security", passwordSelector = "#password") ->
   unless $("#strength-meter").exists()
     html = "<h4>Password Requirements</h4><div id='strength-meter'><div id='strength-requirements'><p style='float:left;margin-top:2em;font-weight:700;'>Character Classes:</p><div id='strength-alpha'><p class='label'>a</p><div class='strength-eval'></div></div><div id='strength-alphacap'><p class='label'>A</p><div class='strength-eval'></div></div><div id='strength-numspecial'><p class='label'>1/!</p><div class='strength-eval'></div></div></div><div id='strength-bar'><label for='password-strength'>Strength: </label><progress id='password-strength' max='5'></progress><p>Time to crack: <span id='crack-time'></span></p></div></div>"
     notice = "<br/><br/><p>We require a password of at least #{window.passwords.minLength} characters with at least one upper case letter, at least one lower case letter, and at least one digit or special character.</p><p>You can also use <a href='http://imgs.xkcd.com/comics/password_strength.png'>any long password</a> of at least #{window.passwords.overrideLength} characters, with no security requirements.</p>"
-    $("#password_security")
+    $(selector)
     .html(html + notice)
     .removeClass('invisible')
     $("#helpText").removeClass("invisible")
-  pass = $("#password").val()
+  pass = $(passwordSelector).val()
   pstrength = zxcvbn(pass)
   green_channel = (toInt(pstrength.score)+1) * 51
   red_channel = 255 - toInt(Math.pow(pstrength.score,2) * 16)
@@ -760,17 +902,33 @@ showInstructions = (path = "help/instructions_pop.html") ->
   .fail (result,status) ->
     console.error("Failed to load instructions @ #{path}",result,status)
 
-showAdvancedOptions = (domain,has2fa) ->
+
+
+
+
+showAdvancedOptions = (domain, has2fa) ->
   advancedListId = "advanced_options_list"
   if $("##{advancedListId}").exists()
     $("##{advancedListId}").toggle("fast")
     return true
-  html = "<ul id='#{advancedListId}'>"
-  html += "<li><a href='?2fa=t' role='button' class='btn btn-default'>Configure Two-Factor Authentication</a></li>"
-  html += "<li><a href='#' id='removeAccount' role='button' class='btn btn-default'>Remove Account</a></li>"
+  html = "<ul id='#{advancedListId}' class='advanced-account-options'>"
+  twoFactorPhrase = if has2fa then "Configure" else "Add"
+  twoFactorClass = if has2fa then "btn-warning" else "btn-success"
+  optionsHtml = [
+    # Change password
+    "<li><button id='changePassword' class='btn btn-info change-password'>Change Password</button></li>"
+    # Two factor
+    "<li><a href='?2fa=t' role='button' class='btn #{twoFactorClass} configure-tfa btn-success'>#{twoFactorPhrase} Two-Factor Authentication</a></li>"
+    # Account removal
+    "<li><button id='removeAccount' role='button' class='btn btn-danger remove-account'>Remove Account</button></li>"
+    ]
+  html += optionsHtml.join("\n\t")
+  html += "</ul>"
   $("#settings_list").after(html)
   $("#removeAccount").click ->
-    removeAccount(this,"#{domain}_user",has2fa)
+    removeAccount(this, "#{domain}_user", has2fa)
+  $("#changePassword").click ->
+    beginChangePassword()
 
 removeAccount = (caller,cookie_key,has2fa = true) ->
   # We only grab the username from the cookie to prevent any chance
@@ -822,6 +980,10 @@ doRemoveAccountAction = ->
     console.error("Ajax Failure",apiUrlString + "?" + args,result,status)
     stopLoadError()
 
+###########
+# Async user creation
+###########
+
 
 noSubmit = ->
   event.preventDefault()
@@ -850,6 +1012,12 @@ doAsyncCreate = ->
   $("#createUser_fail").remove()
   # Submit the user creation
   false
+
+
+###########
+# Password Reset
+###########
+
 
 
 resetPassword = ->
@@ -1113,17 +1281,19 @@ finishPasswordResetHandler = ->
   args = "action=finishpasswordreset&key=#{key}&verify=#{verify}&username=#{username}"
   $.post(apiUri.apiTarget, args, "json")
   .done (result) ->
-    unless result.status
+    unless result.status and result.verification_data
       if $(".alert").exists()
         $(".alert").remove()
       html = """
       <div class="alert alert-danger">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <strong>There was a problem resetting your password.</strong> #{result.human_error}
+        <strong>There was a problem resetting your password.</strong> #{result.human_error}. We suggest going back and trying again.
       </div>
       """
       $("#login").before(html)
       $(".alert").alert()
+      console.error "Problem resetting password! Server said #{result.error}"
+      console.warn result
       return false
     # It worked! Show them the new password.
     html = """
@@ -1148,9 +1318,127 @@ finishPasswordResetHandler = ->
     false
   false
 
+###########
+# Password Changing
+###########
+
+
+
+beginChangePassword = ->
+  cookie = "#{window.totpParams.domain}_user"
+  username = $.cookie(cookie)
+  changePasswordForm = """
+  <form class='change-password-form form-horizontal'>
+    <fieldset>
+      <legend>Change Password</legend>
+      <div class="form-group">
+        <label for="old-password" class="col-sm-2 control-label">Old Password</label>
+        <div class="col-sm-4">
+          <input type="password" class="form-control old-password" id="old-password" placeholder="Old Password" required="required"/>
+        </div>
+      </div>
+      <div class="new-password-group">
+        <div class="form-group">
+          <label for="new-password" class="col-sm-2 control-label">New Password</label>
+          <div class="col-sm-4 has-feedback">
+            <input type="password" class="form-control new-password" id="new-password" placeholder="New Password" required="required"/>
+            <span id="feedback-status-1"></span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="new-password-confirm" class="col-sm-2 control-label">Confirm New Password</label>
+          <div class="col-sm-4 has-feedback">
+            <input type="password" class="form-control new-password" id="new-password-confirm" placeholder="Confirm New Password" required="required"/>
+            <span id="feedback-status-2"></span>
+          </div>
+        </div>
+      </div>
+      <div id="password_security" class="pull-right col-sm-5 password-reqs hidden-xs"></div>
+      <button id="do-change-password" class="btn btn-primary col-sm-offset-2" disabled>Change Password for<br/> #{username}</button>
+    </fieldset>
+  </form>
+  """
+  $("#account_settings").after changePasswordForm
+  loadJS(window.totpParams.relative+"js/zxcvbn/zxcvbn.js")
+  checkFirstPassword = ->
+    try
+      checkPasswordLive("#do-change-password", "#new-password", "#new-password-confirm")
+    catch e
+      console.error "Couldn't check password requirements! #{e.message}"
+      console.warn e.stack
+  $("#new-password")
+  .keyup ->
+    checkFirstPassword()
+  .change ->
+    checkFirstPassword()
+  $("#new-password-confirm")
+  .change ->
+    checkMatchPassword("#do-change-password", "#new-password", "#new-password-confirm")
+  .keyup ->
+    checkMatchPassword("#do-change-password", "#new-password", "#new-password-confirm")
+  $(".change-password-form input")
+  .blur ->
+    checkFirstPassword()
+  # Bind the actual setter
+  $("#do-change-password").click ->
+    $(this).prop("disabled",true)
+    # Submit it to the async target
+    args = "action=changepassword&old_password=#{encodeURIComponent($("#old-password").val())}&new_password=#{encodeURIComponent($("#new-password").val())}&username=#{encodeURIComponent(username)}"
+    $.post apiUri.apiTarget, args, "json"
+    .done (result) ->
+      if result.status is false or result.action isnt "changepassword"
+        if result.action isnt "changepassword"
+          result.error = "mismatched mode result"
+          result.human_error = "The server gave a nonsensical response. Your original password is still valid."
+        unless result.human_error?
+          result.human_error = "The server had an unexpected error"
+        errorHtml = """
+  <div class="alert alert-danger center-block fade in" role="alert">
+    <strong>Couldn't update password</strong> #{result.human_error}
+  </div>
+        """
+        $("#do-change-password").before(errorHtml)
+        $("#do-change-password").prop("disabled",false)
+        console.error "Couldn't update password! Server said #{result.error}"
+        console.warn result
+        return false
+      # It worked
+      successHtml = """
+  <div class="alert alert-success center-block fade in" role="alert">
+    <strong>Password Changed</strong> Your password has been successfully updated. <a class="alert-link" id="refresh-page" style="cursor:pointer">Click here to refresh now</a> - you may have to log back in, using your new password.
+  </div>
+      """
+      $(".change-password-form").replaceWith(successHtml)
+      $("#refresh-page").click ->
+        document.location.reload(true)
+      false
+    .fail (result, status) ->
+      errorHtml = """
+<div class="alert alert-danger center-block fade in" role="alert">
+  <strong>Couldn't update password</strong> There was a problem communicating with the server. Please try again later.
+</div>
+      """
+      $("#do-change-password").replaceWith(errorHtml)
+      console.error "AJAX failure to change password!"
+      console.warn "Got", result, status
+  false
+
+
+finishChangePassword = ->
+  false
 
 
 $ ->
+  needStylesheetImport = true
+  $("link[rel='stylesheet']").each ->
+    if $(this).attr("href").search "bootstrap.min.css" isnt -1
+      needStylesheetImport = false
+      return false
+  if needStylesheetImport
+    bootstrapCSS = """
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" />
+    """
+    $("head").append bootstrapCSS
   if not window.passwords.submitSelector?
     selector = "#createUser_submit"
   else
@@ -1213,7 +1501,8 @@ $ ->
     resetPassword()
     false
   try
-    loadJS "http://ssarherps.org/cndb/bower_components/bootstrap/dist/js/bootstrap.min.js", ->
+    # Use the CDN out of an abundance of caution
+    loadJS "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js", ->
       $(".do-password-reset").unbind()
       $("#reset-password-icon").tooltip()
       $(".do-password-reset")

@@ -4,7 +4,7 @@
 ###
 adminParams = new Object()
 adminParams.apiTarget = "admin_api.php"
-adminParams.adminPageUrl = "http://ssarherps.org/cndb/admin-page.html"
+adminParams.adminPageUrl = "https://ssarherps.org/cndb/admin-page.html"
 adminParams.loginDir = "admin/"
 adminParams.loginApiTarget = "#{adminParams.loginDir}async_login_handler.php"
 
@@ -34,7 +34,7 @@ loadAdminUi = ->
       </div>
       """
       $("article #main-body").html(articleHtml)
-      $(".pib-wrapper").tooltip()
+      # $(".pib-wrapper").tooltip()
       bindClicks()
       ###
       # Render out the admin UI
@@ -508,7 +508,19 @@ lookupEditorSpecies = (taxon = undefined) ->
             catch e
               console.warn "Couldn't update the textarea! See", "https://github.com/PolymerElements/iron-autogrow-textarea/issues/24"
       # Finally, open the editor
-      $("#modal-taxon-edit")[0].open()
+      modalElement = $("#modal-taxon-edit")[0]
+      $("#modal-taxon-edit").on "iron-overlay-opened", ->
+        modalElement.fit()
+        modalElement.scrollTop = 0
+        if toFloat($(modalElement).css("top").slice(0,-2)) > $(window).height()
+          # Firefox is weird about this sometimes ...
+          # Let's add a catch-all 'top' adjustment
+          $(modalElement).css("top","12.5vh")
+        delay 250, ->
+          modalElement.fit()
+      modalElement.sizingTarget = d$("#modal-taxon-editor")[0]
+      safariDialogHelper("#modal-taxon-edit")
+      # $("#modal-taxon-edit")[0].open()
       stopLoad()
     catch e
       stopLoadError("Unable to populate the editor for this taxon - #{e.message}")
@@ -944,4 +956,6 @@ $ ->
     .unbind()
     .click ->
       openTab(adminParams.adminPageUrl)
+  loadJS "https://ssarherps.org/cndb/bower_components/bootstrap/dist/js/bootstrap.min.js", ->
+    $("[data-toggle='tooltip']").tooltip()
   # The rest of the onload for the admin has been moved to the core.coffee file.
