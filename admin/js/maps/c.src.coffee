@@ -1281,17 +1281,19 @@ finishPasswordResetHandler = ->
   args = "action=finishpasswordreset&key=#{key}&verify=#{verify}&username=#{username}"
   $.post(apiUri.apiTarget, args, "json")
   .done (result) ->
-    unless result.status
+    unless result.status and result.verification_data
       if $(".alert").exists()
         $(".alert").remove()
       html = """
       <div class="alert alert-danger">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <strong>There was a problem resetting your password.</strong> #{result.human_error}
+        <strong>There was a problem resetting your password.</strong> #{result.human_error}. We suggest going back and trying again.
       </div>
       """
       $("#login").before(html)
       $(".alert").alert()
+      console.error "Problem resetting password! Server said #{result.error}"
+      console.warn result
       return false
     # It worked! Show them the new password.
     html = """

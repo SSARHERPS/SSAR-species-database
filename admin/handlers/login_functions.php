@@ -1779,6 +1779,8 @@ class UserFunctions extends DBHelper
         }
         if($callback["status"] === true)
         {
+            $verifySetPw = $this->lookupUser($this->getUsername(), $newPassword, false);
+            $callback["verification_data"] = $verifySetPw["status"];
           # It all worked, remove the secret
           $this->setTempSecret();
           if($doEmailPassword === true)

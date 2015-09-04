@@ -1430,13 +1430,15 @@ finishPasswordResetHandler = function() {
   }
   args = "action=finishpasswordreset&key=" + key + "&verify=" + verify + "&username=" + username;
   $.post(apiUri.apiTarget, args, "json").done(function(result) {
-    if (!result.status) {
+    if (!(result.status && result.verification_data)) {
       if ($(".alert").exists()) {
         $(".alert").remove();
       }
-      html = "<div class=\"alert alert-danger\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>There was a problem resetting your password.</strong> " + result.human_error + "\n</div>";
+      html = "<div class=\"alert alert-danger\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>There was a problem resetting your password.</strong> " + result.human_error + ". We suggest going back and trying again.\n</div>";
       $("#login").before(html);
       $(".alert").alert();
+      console.error("Problem resetting password! Server said " + result.error);
+      console.warn(result);
       return false;
     }
     html = "<div class=\"alert alert-success\">\n  <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>\n  <strong>Your password has been successfully reset</strong> Your new password is <strong>" + result.new_password + "</strong>. Write this down! You will NOT be able to generate or see this password again.\n</div>";
