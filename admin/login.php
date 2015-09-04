@@ -208,17 +208,17 @@ $loginform = "<script src='bower_components/bootstrap/dist/js/bootstrap.min.js' 
 	    <form id='login' method='post' action='?q=submitlogin' class='form-horizontal'>
             <fieldset>
               <legend>Login</legend>
-<div class='form-group'>
-	      <label for='username' class='col-sm-3 col-md-2'>
+<div class='form-group col-sm-9 col-md-5'>
+	      <label for='username' class='control-label'>
 		Email:
 	      </label>
-	      <input class='col-sm-5 col-md-3' type='email' name='username' id='username' placeholder='user@domain.com' autofocus='autofocus' required='required'/>
+	      <input class='form-control' type='email' name='username' id='username' placeholder='user@domain.com' autofocus='autofocus' required='required'/>
 	      </div>
-<div class='form-group'>
-	      <label for='password' class='col-sm-3 col-md-2'>
+<div class='form-group col-sm-9 col-md-5 has-feedback'>
+	      <label for='password' class='control-label'>
 		Password:
 	      </label>
-	      <input class='col-sm-5 col-md-3' type='password' name='password' id='password' placeholder='Password' class='password-input' required='required'/> <span class='glyphicon glyphicon-question-sign do-password-reset' id='reset-password-icon' data-toggle='tooltip' title='Forgot Password?'></span>
+	      <input class='form-control' type='password' name='password' id='password' placeholder='Password' class='password-input' required='required'/> <span class='glyphicon glyphicon-question-sign do-password-reset form-control-feedback' style='pointer-events:all;' id='reset-password-icon' data-toggle='tooltip' title='Forgot Password?'></span>
 </div>
 </fieldset>";
 $loginform_close="	      <br/>

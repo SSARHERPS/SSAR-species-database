@@ -7154,6 +7154,14 @@ paper-spinner {
 #login {
   width: inherit !important;
 }
+#login .form-group {
+  clear: both;
+}
+@media (max-width: 767px) {
+  #login {
+    margin-left: 0!important;
+  }
+}
 .advanced-account-options li {
   margin: 1rem;
   list-style-type: none;

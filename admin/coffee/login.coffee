@@ -950,7 +950,7 @@ beginChangePassword = ->
         </div>
       </div>
       <div id="password_security" class="pull-right col-sm-5 password-reqs hidden-xs"></div>
-      <button id="do-change-password" class="btn btn-primary col-sm-offset-2" disabled>Change Password for #{username}</button>
+      <button id="do-change-password" class="btn btn-primary col-sm-offset-2" disabled>Change Password for<br/> #{username}</button>
     </fieldset>
   </form>
   """
