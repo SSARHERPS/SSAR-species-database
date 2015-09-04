@@ -980,9 +980,9 @@ beginChangePassword = ->
     $(this).prop("disabled",true)
     # Submit it to the async target
     args = "action=changepassword&old_password=#{encodeURIComponent($("#old-password").val())}&new_password=#{encodeURIComponent($("#new-password").val())}&username=#{encodeURIComponent(username)}"
-    $.post apiUri.targetApi, args, "json"
+    $.post apiUri.apiTarget, args, "json"
     .done (result) ->
-      if result.status is false or result.action is "changepassword"
+      if result.status is false or result.action isnt "changepassword"
         if result.action isnt "changepassword"
           result.error = "mismatched mode result"
           result.human_error = "The server gave a nonsensical response. Your original password is still valid."

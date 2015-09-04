@@ -174,7 +174,7 @@ class UserFunctions extends DBHelper
   public function getDomain() { return $this->domain; }
   public function getQualifiedDomain() { return $this->qualDomain; }
   public function getShortUrl() { return $this->shortUrl; }
-  private function getMinPasswordLength() { 
+  private function getMinPasswordLength() {
       if(!is_numeric($this->minPasswordLength)) {
           $this->minPasswordLength = 8;
       }
@@ -1816,16 +1816,17 @@ class UserFunctions extends DBHelper
         require_once(dirname(__FILE__).'/../core/stronghash/php-stronghash.php');
         $hash=new Stronghash;
         $hashedPw = $hash->hasher($newPassword);
-        $pwStore = json_encode($hasedPw);
+        $pwStore = json_encode($hashedPw);
         # We don't need or want to recalculate a hardlink. The old
         # salt isn't used anywhere where the old value is relevant.
-        $algo=$pw1['algo'];
-        $rounds=$pw1['rounds'];
+        $algo=$hashedPw['algo'];
+        $rounds=$hashedPw['rounds'];
         # We need to update the "data" column with the $algo and
         # $rounds data
         $xml = new Xml;
         $data = $currentUser["data"];
         $backupData = $data;
+        $backupPassword = $currentUser[$this->pwcol];
         $data = $xml->updateTag($data,"<rounds>",$this->sanitize($rounds));
         $data = $xml->updateTag($data,"<algo>",$this->sanitize($algo));
 
@@ -1834,14 +1835,16 @@ class UserFunctions extends DBHelper
          * validation, and the second part of the update will always fail.
          * So, we're going to manually construct the query here.
          */
+        $l=$this->openDB();
+        
         $query="UPDATE `".
               $this->getTable()."` SET `".
               $this->pwcol."`=\"".
-              $this->sanitize($pwStore)."\", `data`=\"".
-              $data."\" WHERE `".
+              mysqli_real_escape_string($l, $pwStore)."\", `data`=\"". 
+              mysqli_real_escape_string($l,$data)."\" WHERE `".
               $this->userColumn."`='".
               $this->getUsername()."'";
-        $l=$this->openDB();
+
         mysqli_query($l,'BEGIN');
         $r=mysqli_query($l,$query);
         $finish_query= $r ? 'COMMIT':'ROLLBACK';
@@ -1852,6 +1855,43 @@ class UserFunctions extends DBHelper
         }
         $r2=mysqli_query($l,$finish_query);
         $callback["status"] = $r && $r2;
+        if($callback["status"]) {
+            $verifySetPw = $this->lookupUser($this->getUsername(), $newPassword, false);
+            $callback["verification_data"] = $verifySetPw["status"];
+            if(!$verifySetPw["status"]) {
+                # verify setting with a lookup
+                # if bad, revert to old
+                # if reset, try again
+                $revert = array();
+                $query2="UPDATE `".
+                       $this->getTable()."` SET `".
+                       $this->pwcol."`=\"".
+                       $backupPassword."\", `data`=\"".
+                       $backupData."\" WHERE `".
+                       $this->userColumn."`='".
+                       $this->getUsername()."'";
+                mysqli_query($l,'BEGIN');
+                $r=mysqli_query($l,$query2);
+                $finish_query= $r ? 'COMMIT':'ROLLBACK';
+                $revert["action"] = $finish_query;
+                if($finish_query == 'ROLLBACK')
+                {
+                    $revert["error"] = mysqli_error($l);
+                }
+                $r2=mysqli_query($l,$finish_query);
+                $revert["status"] = $r && $r2;
+                $revert["debug"] = array(
+                    "new_data" => $data,
+                    "new_password" => $pwStore,
+                    "original_query" => $query,
+                    "restored_to" => $backupPassword,
+                    "old_data" => $backupData,
+                );
+                $callback["revert_status"] = $revert;
+                $callback["original_status"] = $callback["status"];
+                $callback["status"] = false;
+            }
+        }
         return $callback;
 
       }

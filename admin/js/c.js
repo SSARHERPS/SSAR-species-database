@@ -1487,9 +1487,9 @@ beginChangePassword = function() {
     var args;
     $(this).prop("disabled", true);
     args = "action=changepassword&old_password=" + (encodeURIComponent($("#old-password").val())) + "&new_password=" + (encodeURIComponent($("#new-password").val())) + "&username=" + (encodeURIComponent(username));
-    return $.post(apiUri.targetApi, args, "json").done(function(result) {
+    return $.post(apiUri.apiTarget, args, "json").done(function(result) {
       var errorHtml, successHtml;
-      if (result.status === false || result.action === "changepassword") {
+      if (result.status === false || result.action !== "changepassword") {
         if (result.action !== "changepassword") {
           result.error = "mismatched mode result";
           result.human_error = "The server gave a nonsensical response. Your original password is still valid.";
