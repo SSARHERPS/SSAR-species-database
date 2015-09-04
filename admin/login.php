@@ -755,9 +755,9 @@ else
           if($redirect_to_home === true) $durl = $baseurl;
           else $durl = $redirect_url;
       }
-      
+
     if(!$logged_in) $login_output.=$login_preamble . $loginform.$loginform_close;
-    else $login_output.="<aside class='ssmall pull-right'><a href='?q=logout' class='btn btn-warning btn-sm'><span class='glyphicon glyphicon-log-out' aria-hidden='true'></span> Logout</a></aside><h1 id='signin_greeting'>Welcome back, $first_name</h1<br/><p id='logout_para'></p>".$settings_blob."<button id='next' name='next' class='btn btn-primary continue click' data-href='$durl'>Continue &#187;</button>";
+    else $login_output.="<aside class='ssmall pull-right'><a href='?q=logout' class='btn btn-warning btn-sm'><span class='glyphicon glyphicon-log-out' aria-hidden='true'></span> Logout</a></aside><h1 id='signin_greeting'>Welcome back, $first_name</h1><br/><p id='logout_para'></p>".$settings_blob."<button id='next' name='next' class='btn btn-primary continue click' data-href='$durl'>Continue &#187;</button>";
     $deferredJS .= "\n$(\"#next\").click(function(){window.location.href=\"".$durl."\";});";
   }
 $login_output.="</div>";
@@ -766,6 +766,7 @@ ob_end_flush();
 $totpOverride = !empty($redirect_url) ? "window.totpParams.home = \"".$redirect_url."\";\n":null;
 $totpOverride .= !empty($relative_path) ? "window.totpParams.relative = \"".$relative_path."\";\n":null;
 $totpOverride .= !empty($working_subdirectory) ? "window.totpParams.subdirectory = \"".$working_subdirectory."\";\n":null;
+$totpOverride .= "window.totpParams.domain = \"".$domain."\";\n";
 try
   {
     $need_tfa = !$user->has2FA();

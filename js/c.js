@@ -529,6 +529,13 @@ goTo = function(url) {
   return false;
 };
 
+if ((_metaStatus != null ? _metaStatus.isLoading : void 0) == null) {
+  if (_metaStatus == null) {
+    window._metaStatus = new Object();
+  }
+  _metaStatus.isLoading = false;
+}
+
 animateLoad = function(elId, iteration) {
   var e, selector;
   if (elId == null) {
@@ -570,6 +577,12 @@ animateLoad = function(elId, iteration) {
    * to actually re-showing it once hidden.
    */
   $(selector).removeAttr("hidden");
+  if ((_metaStatus != null ? _metaStatus.isLoading : void 0) == null) {
+    if (_metaStatus == null) {
+      _metaStatus = new Object();
+    }
+    _metaStatus.isLoading = false;
+  }
   try {
     if (_metaStatus.isLoading) {
       if (iteration < 100) {
