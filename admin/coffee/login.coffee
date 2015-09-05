@@ -879,13 +879,17 @@ finishPasswordResetHandler = ->
   args = "action=finishpasswordreset&key=#{key}&verify=#{verify}&username=#{username}"
   $.post(apiUri.apiTarget, args, "json")
   .done (result) ->
+    unless result.verification_data?
+      result.verification_data = true
     unless result.status and result.verification_data
       if $(".alert").exists()
         $(".alert").remove()
+      if result.error is "Invalid credentials - Invalid reset tokens"
+        result.human_error += "<br/><br/>Remember, your reset link is only good for <strong>one</strong> reset. If you've already used that link, you'll need to generate another"
       html = """
       <div class="alert alert-danger">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <strong>There was a problem resetting your password.</strong> #{result.human_error}. We suggest going back and trying again.
+        <strong>There was a problem resetting your password.</strong> #{result.human_error}. We suggest <a href="#{apiUri.urlString}" class="alert-link">going back</a> and trying again.
       </div>
       """
       $("#login").before(html)
@@ -897,7 +901,7 @@ finishPasswordResetHandler = ->
     html = """
     <div class="alert alert-success">
       <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-      <strong>Your password has been successfully reset</strong> Your new password is <strong>#{result.new_password}</strong>. Write this down! You will NOT be able to generate or see this password again.
+      <strong>Your password has been successfully reset</strong> Your new password is <strong>#{result.new_password}</strong>. Write this down! You will NOT be able to generate or see this password again.<br/><br/>When you're done, <a href="#{apiUri.urlString}" class="alert-link">return to the login page</a> and log in with your new password.
     </div>
     """
     $("#login").replaceWith(html)
@@ -914,6 +918,9 @@ finishPasswordResetHandler = ->
     $(".alert").alert()
     console.error("Couldn't communicate with server! Tried to contact","#{apiUri.apiTarget}?#{args}")
     false
+  .always ->
+    $(".do-refresh-page").click ->
+      document.location.reload(true)
   false
 
 ###########
