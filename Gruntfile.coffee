@@ -48,7 +48,7 @@ module.exports = (grunt) ->
     postcss:
       options:
         processors: [
-          require('autoprefixer-core')({browsers: 'last 1 version'})
+          require('autoprefixer')({browsers: 'last 1 version'})
           ]
       dist:
         src: "css/main.css"
@@ -135,6 +135,7 @@ module.exports = (grunt) ->
       options:
         sourceMap: true
         advanced: false
+        # https://github.com/jakubpawlowicz/clean-css#how-to-use-clean-css-programmatically
       target:
         files:
           "css/main.min.css":["css/main.css"]
@@ -142,7 +143,7 @@ module.exports = (grunt) ->
     coffee:
       compile:
         options:
-          bare: true
+          bare: true # For release, set false and then debug!
           join: true
           sourceMapDir: "js/maps"
           sourceMap: true

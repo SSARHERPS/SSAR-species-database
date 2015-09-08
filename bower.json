@@ -1,7 +1,7 @@
 {
   "name": "SSAR Common Names Database for North America",
-  "version": "1.2.1",
-  "homepage": "https://github.com/tigerhawkvok/SSAR-species-database",
+  "version": "1.2.3",
+  "homepage": "https://ssarherps.org/cndb",
   "authors": [
     "Philip Kahn <tigerhawkvok@gmail.com>"
   ],
