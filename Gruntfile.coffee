@@ -134,8 +134,9 @@ module.exports = (grunt) ->
     cssmin:
       options:
         sourceMap: true
-        advanced: false
+        advanced: true # Selector merging may break some shadow dom stuff ...
         # https://github.com/jakubpawlowicz/clean-css#how-to-use-clean-css-programmatically
+        keepSpecialComments: 0
       target:
         files:
           "css/main.min.css":["css/main.css"]
@@ -143,7 +144,7 @@ module.exports = (grunt) ->
     coffee:
       compile:
         options:
-          bare: true # For release, set false and then debug!
+          bare: false # For release, set false and then debug!
           join: true
           sourceMapDir: "js/maps"
           sourceMap: true
@@ -196,4 +197,4 @@ module.exports = (grunt) ->
   ## Deploy
   grunt.registerTask "build","Compile and update, then watch", ->
     # ,"vulcanize"
-    grunt.task.run("updateNPM","updateBower","compile","minify")
+    grunt.task.run("updateNPM","updateBower","compile","minify", "vulcanize-app")

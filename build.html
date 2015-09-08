@@ -62,7 +62,7 @@ addEventListener('DOMContentLoaded', resolve);
 }
 }
 }());
-Polymer = {
+window.Polymer = {
 Settings: function () {
 var user = window.Polymer || {};
 location.search.slice(1).split('&').forEach(function (o) {
@@ -90,15 +90,21 @@ useNativeCustomElements: useNativeCustomElements
 (function () {
 var userPolymer = window.Polymer;
 window.Polymer = function (prototype) {
-var ctor = desugar(prototype);
-prototype = ctor.prototype;
+if (typeof prototype === 'function') {
+prototype = prototype.prototype;
+}
+if (!prototype) {
+prototype = {};
+}
+var factory = desugar(prototype);
+prototype = factory.prototype;
 var options = { prototype: prototype };
 if (prototype.extends) {
 options.extends = prototype.extends;
 }
 Polymer.telemetry._registrate(prototype);
 document.registerElement(prototype.is, options);
-return ctor;
+return factory;
 };
 var desugar = function (prototype) {
 var base = Polymer.Base;
@@ -175,6 +181,8 @@ _addFeature: function (feature) {
 this.extend(this, feature);
 },
 registerCallback: function () {
+this._desugarBehaviors();
+this._doBehavior('beforeRegister');
 this._registerFeatures();
 this._doBehavior('registered');
 },
@@ -259,6 +267,9 @@ Polymer.telemetry.instanceCount = 0;
 (function () {
 var modules = {};
 var lcModules = {};
+var findModule = function (id) {
+return modules[id] || lcModules[id.toLowerCase()];
+};
 var DomModule = function () {
 return document.createElement('dom-module');
 };
@@ -277,15 +288,17 @@ lcModules[id.toLowerCase()] = this;
 }
 },
 import: function (id, selector) {
-var m = modules[id] || lcModules[id.toLowerCase()];
+if (id) {
+var m = findModule(id);
 if (!m) {
 forceDocumentUpgrade();
-m = modules[id];
+m = findModule(id);
 }
 if (m && selector) {
 m = m.querySelector(selector);
 }
 return m;
+}
 }
 });
 var cePolyfill = window.CustomElements && !CustomElements.useNative;
@@ -294,8 +307,7 @@ function forceDocumentUpgrade() {
 if (cePolyfill) {
 var script = document._currentScript || document.currentScript;
 var doc = script && script.ownerDocument;
-if (doc && !doc.__customElementsForceUpgraded) {
-doc.__customElementsForceUpgraded = true;
+if (doc) {
 CustomElements.upgradeAll(doc);
 }
 }
@@ -317,11 +329,17 @@ this.is = this.is.toLowerCase();
 });
 Polymer.Base._addFeature({
 behaviors: [],
-_prepBehaviors: function () {
+_desugarBehaviors: function () {
 if (this.behaviors.length) {
-this.behaviors = this._flattenBehaviorsList(this.behaviors);
+this.behaviors = this._desugarSomeBehaviors(this.behaviors);
 }
-this._prepAllBehaviors(this.behaviors);
+},
+_desugarSomeBehaviors: function (behaviors) {
+behaviors = this._flattenBehaviorsList(behaviors);
+for (var i = behaviors.length - 1; i >= 0; i--) {
+this._mixinBehavior(behaviors[i]);
+}
+return behaviors;
 },
 _flattenBehaviorsList: function (behaviors) {
 var flat = [];
@@ -335,15 +353,6 @@ this._warn(this._logf('_flattenBehaviorsList', 'behavior is null, check for miss
 }
 }, this);
 return flat;
-},
-_prepAllBehaviors: function (behaviors) {
-for (var i = behaviors.length - 1; i >= 0; i--) {
-this._mixinBehavior(behaviors[i]);
-}
-for (var i = 0, l = behaviors.length; i < l; i++) {
-this._prepBehavior(behaviors[i]);
-}
-this._prepBehavior(this);
 },
 _mixinBehavior: function (b) {
 Object.getOwnPropertyNames(b).forEach(function (n) {
@@ -367,6 +376,15 @@ this.copyOwnProperty(n, b, this);
 break;
 }
 }, this);
+},
+_prepBehaviors: function () {
+this._prepFlattenedBehaviors(this.behaviors);
+},
+_prepFlattenedBehaviors: function (behaviors) {
+for (var i = 0, l = behaviors.length; i < l; i++) {
+this._prepBehavior(behaviors[i]);
+}
+this._prepBehavior(this);
 },
 _doBehavior: function (name, args) {
 this.behaviors.forEach(function (b) {
@@ -600,7 +618,7 @@ debouncer.stop();
 }
 }
 });
-Polymer.version = '1.1.0';
+Polymer.version = '1.1.3';
 Polymer.Base._addFeature({
 _registerFeatures: function () {
 this._prepIs();
@@ -1069,47 +1087,43 @@ Polymer.dom.addDebouncer(host.debounce('_distribute', host._distributeContent));
 }
 },
 appendChild: function (node) {
-var handled;
-this._ensureContentLogicalInfo(node);
-this._removeNodeFromHost(node, true);
-if (this._nodeIsInLogicalTree(this.node)) {
-this._addLogicalInfo(node, this.node);
-this._addNodeToHost(node);
-handled = this._maybeDistribute(node, this.node);
-} else {
-this._addNodeToHost(node);
-}
-if (!handled && !this._tryRemoveUndistributedNode(node)) {
-var container = this.node._isShadyRoot ? this.node.host : this.node;
-addToComposedParent(container, node);
-nativeAppendChild.call(container, node);
-}
-return node;
+return this._addNode(node);
 },
 insertBefore: function (node, ref_node) {
-if (!ref_node) {
-return this.appendChild(node);
-}
-var handled;
-this._ensureContentLogicalInfo(node);
+return this._addNode(node, ref_node);
+},
+_addNode: function (node, ref_node) {
 this._removeNodeFromHost(node, true);
-if (this._nodeIsInLogicalTree(this.node)) {
+var addedInsertionPoint;
+var root = this.getOwnerRoot();
+if (root) {
+addedInsertionPoint = this._maybeAddInsertionPoint(node, this.node);
+}
+if (this._nodeHasLogicalChildren(this.node)) {
+if (ref_node) {
 var children = this.childNodes;
 var index = children.indexOf(ref_node);
 if (index < 0) {
 throw Error('The ref_node to be inserted before is not a child ' + 'of this node');
 }
-this._addLogicalInfo(node, this.node, index);
-this._addNodeToHost(node);
-handled = this._maybeDistribute(node, this.node);
-} else {
-this._addNodeToHost(node);
 }
-if (!handled && !this._tryRemoveUndistributedNode(node)) {
+this._addLogicalInfo(node, this.node, index);
+}
+this._addNodeToHost(node);
+if (!this._maybeDistribute(node, this.node) && !this._tryRemoveUndistributedNode(node)) {
+if (ref_node) {
 ref_node = ref_node.localName === CONTENT ? this._firstComposedNode(ref_node) : ref_node;
+}
 var container = this.node._isShadyRoot ? this.node.host : this.node;
 addToComposedParent(container, node, ref_node);
+if (ref_node) {
 nativeInsertBefore.call(container, node, ref_node);
+} else {
+nativeAppendChild.call(container, node);
+}
+}
+if (addedInsertionPoint) {
+this._updateInsertionPoints(root.host);
 }
 return node;
 },
@@ -1117,14 +1131,8 @@ removeChild: function (node) {
 if (factory(node).parentNode !== this.node) {
 console.warn('The node to be removed is not a child of this node', node);
 }
-var handled;
-if (this._nodeIsInLogicalTree(this.node)) {
 this._removeNodeFromHost(node);
-handled = this._maybeDistribute(node, this.node);
-} else {
-this._removeNodeFromHost(node);
-}
-if (!handled) {
+if (!this._maybeDistribute(node, this.node)) {
 var container = this.node._isShadyRoot ? this.node.host : this.node;
 if (container === node.parentNode) {
 removeFromComposedParent(container, node);
@@ -1172,7 +1180,6 @@ if (hasContent) {
 var root = this._ownerShadyRootForNode(parent);
 if (root) {
 var host = root.host;
-this._updateInsertionPoints(host);
 this._lazyDistribute(host);
 }
 }
@@ -1182,10 +1189,30 @@ this._lazyDistribute(parent);
 }
 return parentNeedsDist || hasContent && !wrappedContent;
 },
+_maybeAddInsertionPoint: function (node, parent) {
+var added;
+if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE && !node.__noContent) {
+var c$ = factory(node).querySelectorAll(CONTENT);
+for (var i = 0, n, np, na; i < c$.length && (n = c$[i]); i++) {
+np = factory(n).parentNode;
+if (np === node) {
+np = parent;
+}
+na = this._maybeAddInsertionPoint(n, np);
+added = added || na;
+}
+} else if (node.localName === CONTENT) {
+saveLightChildrenIfNeeded(parent);
+saveLightChildrenIfNeeded(node);
+added = true;
+}
+return added;
+},
 _tryRemoveUndistributedNode: function (node) {
 if (this.node.shadyRoot) {
-if (node._composedParent) {
-nativeRemoveChild.call(node._composedParent, node);
+var parent = getComposedParent(node);
+if (parent) {
+nativeRemoveChild.call(parent, node);
 }
 return true;
 }
@@ -1198,20 +1225,8 @@ saveLightChildrenIfNeeded(c);
 saveLightChildrenIfNeeded(factory(c).parentNode);
 }
 },
-_nodeIsInLogicalTree: function (node) {
-return Boolean(node._lightParent !== undefined || node._isShadyRoot || node.shadyRoot);
-},
-_ensureContentLogicalInfo: function (node) {
-if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-saveLightChildrenIfNeeded(this.node);
-var c$ = Array.prototype.slice.call(node.childNodes);
-for (var i = 0, n; i < c$.length && (n = c$[i]); i++) {
-this._ensureContentLogicalInfo(n);
-}
-} else if (node.localName === CONTENT) {
-saveLightChildrenIfNeeded(this.node);
-saveLightChildrenIfNeeded(node);
-}
+_nodeHasLogicalChildren: function (node) {
+return Boolean(node._lightChildren !== undefined);
 },
 _parentNeedsDistribution: function (parent) {
 return parent && parent.shadyRoot && hasInsertionPoint(parent.shadyRoot);
@@ -1221,6 +1236,7 @@ var hostNeedsDist;
 var root;
 var parent = node._lightParent;
 if (parent) {
+factory(node)._distributeParent();
 root = this._ownerShadyRootForNode(node);
 if (root) {
 root.host._elementRemove(node);
@@ -1233,7 +1249,7 @@ if (root && hostNeedsDist) {
 this._updateInsertionPoints(root.host);
 this._lazyDistribute(root.host);
 } else if (ensureComposedRemoval) {
-removeFromComposedParent(parent || node.parentNode, node);
+removeFromComposedParent(getComposedParent(node), node);
 }
 },
 _removeDistributedChildren: function (root, container) {
@@ -1457,7 +1473,7 @@ configurable: true
 },
 parentNode: {
 get: function () {
-return this.node._lightParent || (this.node.__patched ? this.node._composedParent : this.node.parentNode);
+return this.node._lightParent || getComposedParent(this.node);
 },
 configurable: true
 },
@@ -1579,6 +1595,18 @@ DomApi.prototype._getComposedInnerHTML = function () {
 return getInnerHTML(this.node, true);
 };
 } else {
+var forwardMethods = [
+'cloneNode',
+'appendChild',
+'insertBefore',
+'removeChild',
+'replaceChild'
+];
+forwardMethods.forEach(function (name) {
+DomApi.prototype[name] = function () {
+return this.node[name].apply(this.node, arguments);
+};
+});
 DomApi.prototype.querySelectorAll = function (selector) {
 return Array.prototype.slice.call(this.node.querySelectorAll(selector));
 };
@@ -1590,9 +1618,6 @@ return n;
 }
 n = n.parentNode;
 }
-};
-DomApi.prototype.cloneNode = function (deep) {
-return this.node.cloneNode(deep);
 };
 DomApi.prototype.importNode = function (externalNode, deep) {
 var doc = this.node instanceof Document ? this.node : this.node.ownerDocument;
@@ -1640,7 +1665,7 @@ return this.node.innerHTML = value;
 configurable: true
 }
 });
-var forwards = [
+var forwardProperties = [
 'parentNode',
 'firstChild',
 'lastChild',
@@ -1651,7 +1676,7 @@ var forwards = [
 'nextElementSibling',
 'previousElementSibling'
 ];
-forwards.forEach(function (name) {
+forwardProperties.forEach(function (name) {
 Object.defineProperty(DomApi.prototype, name, {
 get: function () {
 return this.node[name];
@@ -1735,6 +1760,9 @@ node._composedChildren = null;
 addNodeToComposedChildren(node, parent, children, i);
 }
 }
+function getComposedParent(node) {
+return node.__patched ? node._composedParent : node.parentNode;
+}
 function addNodeToComposedChildren(node, parent, children, i) {
 node._composedParent = parent;
 children.splice(i >= 0 ? i : children.length, 0, node);
@@ -1759,12 +1787,13 @@ node._lightChildren = c$;
 }
 }
 function hasInsertionPoint(root) {
-return Boolean(root._insertionPoints.length);
+return Boolean(root && root._insertionPoints.length);
 }
 var p = Element.prototype;
 var matchesSelector = p.matches || p.matchesSelector || p.mozMatchesSelector || p.msMatchesSelector || p.oMatchesSelector || p.webkitMatchesSelector;
 return {
 getLightChildren: getLightChildren,
+getComposedParent: getComposedParent,
 getComposedChildren: getComposedChildren,
 removeFromComposedParent: removeFromComposedParent,
 saveLightChildrenIfNeeded: saveLightChildrenIfNeeded,
@@ -1953,7 +1982,9 @@ var composed = getComposedChildren(container);
 var splices = Polymer.ArraySplice.calculateSplices(children, composed);
 for (var i = 0, d = 0, s; i < splices.length && (s = splices[i]); i++) {
 for (var j = 0, n; j < s.removed.length && (n = s.removed[j]); j++) {
+if (getComposedParent(n) === container) {
 remove(n);
+}
 composed.splice(s.index + d, 1);
 }
 d -= s.addedCount;
@@ -1966,6 +1997,7 @@ insertBefore(container, n, next);
 composed.splice(j, 0, n);
 }
 }
+ensureComposedParent(container, children);
 },
 _matchesContentSelect: function (node, contentElement) {
 var select = contentElement.getAttribute('select');
@@ -1995,6 +2027,7 @@ var getLightChildren = Polymer.DomApi.getLightChildren;
 var matchesSelector = Polymer.DomApi.matchesSelector;
 var hasInsertionPoint = Polymer.DomApi.hasInsertionPoint;
 var getComposedChildren = Polymer.DomApi.getComposedChildren;
+var getComposedParent = Polymer.DomApi.getComposedParent;
 var removeFromComposedParent = Polymer.DomApi.removeFromComposedParent;
 function distributeNodeInto(child, insertionPoint) {
 insertionPoint._distributedNodes.push(child);
@@ -2048,8 +2081,10 @@ node._composedParent = null;
 nativeRemoveChild.call(parentNode, node);
 }
 }
-function getComposedParent(node) {
-return node.__patched ? node._composedParent : node.parentNode;
+function ensureComposedParent(parent, children) {
+for (var i = 0, n; i < children.length; i++) {
+children[i]._composedParent = parent;
+}
 }
 function getTopDistributingHost(host) {
 while (host && hostNeedsRedistribution(host)) {
@@ -2341,7 +2376,11 @@ if (!this._template) {
 this._notes = [];
 } else {
 Polymer.Annotations.prepElement = this._prepElement.bind(this);
+if (this._template._content && this._template._content._notes) {
+this._notes = this._template._content._notes;
+} else {
 this._notes = Polymer.Annotations.parseAnnotations(this._template);
+}
 this._processAnnotations(this._notes);
 Polymer.Annotations.prepElement = null;
 }
@@ -2788,9 +2827,9 @@ gd = gobj[dep];
 if (gd && gd[name]) {
 gd[name] = (gd[name] || 1) - 1;
 gd._count = (gd._count || 1) - 1;
-}
 if (gd._count === 0) {
 node.removeEventListener(dep, this.handleNative);
+}
 }
 }
 }
@@ -3761,6 +3800,9 @@ name: arg,
 model: this._modelForPath(arg)
 };
 var fc = arg[0];
+if (fc === '-') {
+fc = arg[1];
+}
 if (fc >= '0' && fc <= '9') {
 fc = '#';
 }
@@ -4335,6 +4377,9 @@ clearStyleRules: function (style) {
 style.__cssRules = null;
 },
 forEachStyleRule: function (node, callback) {
+if (!node) {
+return;
+}
 var s = node.parsedSelector;
 var skipRules = false;
 if (node.type === this.ruleTypes.STYLE_RULE) {
@@ -4363,47 +4408,44 @@ afterNode = n$[n$.length - 1];
 target.insertBefore(style, afterNode && afterNode.nextSibling || target.firstChild);
 return style;
 },
-cssFromModules: function (moduleIds) {
+cssFromModules: function (moduleIds, warnIfNotFound) {
 var modules = moduleIds.trim().split(' ');
 var cssText = '';
 for (var i = 0; i < modules.length; i++) {
-cssText += this.cssFromModule(modules[i]);
+cssText += this.cssFromModule(modules[i], warnIfNotFound);
 }
 return cssText;
 },
-cssFromModule: function (moduleId) {
+cssFromModule: function (moduleId, warnIfNotFound) {
 var m = Polymer.DomModule.import(moduleId);
 if (m && !m._cssText) {
 m._cssText = this._cssFromElement(m);
+}
+if (!m && warnIfNotFound) {
+console.warn('Could not find style data in module named', moduleId);
 }
 return m && m._cssText || '';
 },
 _cssFromElement: function (element) {
 var cssText = '';
 var content = element.content || element;
-var sourceDoc = element.ownerDocument;
 var e$ = Array.prototype.slice.call(content.querySelectorAll(this.MODULE_STYLES_SELECTOR));
-for (var i = 0, e, resolveDoc, addModule; i < e$.length; i++) {
+for (var i = 0, e; i < e$.length; i++) {
 e = e$[i];
-resolveDoc = sourceDoc;
-addModule = null;
 if (e.localName === 'template') {
 cssText += this._cssFromElement(e);
 } else {
 if (e.localName === 'style') {
-addModule = e.getAttribute(this.INCLUDE_ATTR);
+var include = e.getAttribute(this.INCLUDE_ATTR);
+if (include) {
+cssText += this.cssFromModules(include, true);
+}
 e = e.__appliedElement || e;
 e.parentNode.removeChild(e);
-} else {
-e = e.import && e.import.body;
-resolveDoc = e.ownerDocument;
+cssText += this.resolveCss(e.textContent, element.ownerDocument);
+} else if (e.import && e.import.body) {
+cssText += this.resolveCss(e.import.body.textContent, e.import);
 }
-if (e) {
-cssText += this.resolveCss(e.textContent, resolveDoc);
-}
-}
-if (addModule) {
-cssText += this.cssFromModules(addModule);
 }
 }
 return cssText;
@@ -5337,18 +5379,25 @@ observer.observe(e, { childList: true });
 _apply: function () {
 var e = this.__appliedElement || this;
 if (this.include) {
-e.textContent += styleUtil.cssFromModules(this.include);
+e.textContent = styleUtil.cssFromModules(this.include, true) + e.textContent;
 }
+if (e.textContent) {
+styleUtil.forEachStyleRule(styleUtil.rulesForStyle(e), function (rule) {
+styleTransformer.documentRule(rule);
+});
+this._applyCustomProperties(e);
+}
+},
+_applyCustomProperties: function (element) {
 this._computeStyleProperties();
 var props = this._styleProperties;
-var self = this;
-e.textContent = styleUtil.toCssText(styleUtil.rulesForStyle(e), function (rule) {
+var rules = styleUtil.rulesForStyle(element);
+element.textContent = styleUtil.toCssText(rules, function (rule) {
 var css = rule.cssText = rule.parsedCssText;
 if (rule.propertyInfo && rule.propertyInfo.cssText) {
 css = cssParse.removeCustomPropAssignment(css);
 rule.cssText = propertyUtils.valueForProperties(css, props);
 }
-styleTransformer.documentRule(rule);
 });
 }
 });
@@ -5904,6 +5953,9 @@ this._instances.splice(keys.length, this._instances.length - keys.length);
 _keySort: function (a, b) {
 return this.collection.getKey(a) - this.collection.getKey(b);
 },
+_numericSort: function (a, b) {
+return a - b;
+},
 _applySplicesUserSort: function (splices) {
 var c = this.collection;
 var instances = this._instances;
@@ -5931,7 +5983,7 @@ addedKeys.push(key);
 }
 }
 if (removedIdxs.length) {
-removedIdxs.sort();
+removedIdxs.sort(this._numericSort);
 for (var i = removedIdxs.length - 1; i >= 0; i--) {
 var idx = removedIdxs[i];
 if (idx !== undefined) {
@@ -6114,6 +6166,10 @@ selected: {
 type: Object,
 notify: true
 },
+selectedItem: {
+type: Object,
+notify: true
+},
 toggle: {
 type: Boolean,
 value: false
@@ -6136,6 +6192,7 @@ this._selectedColl = Polymer.Collection.get(this.selected);
 this.selected = null;
 this._selectedColl = null;
 }
+this.selectedItem = null;
 },
 isSelected: function (item) {
 if (this.multi) {
@@ -6153,7 +6210,9 @@ this.unlinkPaths('selected.' + skey);
 }
 } else {
 this.selected = null;
+this.selectedItem = null;
 this.unlinkPaths('selected');
+this.unlinkPaths('selectedItem');
 }
 },
 select: function (item) {
@@ -6173,8 +6232,10 @@ this.linkPaths('selected.' + skey, 'items.' + key);
 if (this.toggle && item == this.selected) {
 this.deselect();
 } else {
-this.linkPaths('selected', 'items.' + key);
 this.selected = item;
+this.selectedItem = item;
+this.linkPaths('selected', 'items.' + key);
+this.linkPaths('selectedItem', 'items.' + key);
 }
 }
 }
@@ -7900,8 +7961,13 @@ this.fire('dom-change');
     },
 
     _focusBlurHandler: function(event) {
-      var target = event.path ? event.path[0] : event.target;
-      if (target === this) {
+      // NOTE(cdata):  if we are in ShadowDOM land, `event.target` will
+      // eventually become `this` due to retargeting; if we are not in
+      // ShadowDOM land, `event.target` will eventually become `this` due
+      // to the second conditional which fires a synthetic event (that is also
+      // handled). In either case, we can disregard `event.path`.
+
+      if (event.target === this) {
         var focused = event.type === 'focus';
         this._setFocused(focused);
       } else if (!this.shadowRoot) {
@@ -8185,6 +8251,280 @@ this.fire('dom-change');
   ];
 
 </script>
+<script>
+
+  /**
+   * Use `Polymer.IronValidatableBehavior` to implement an element that validates user input.
+   *
+   * ### Accessibility
+   *
+   * Changing the `invalid` property, either manually or by calling `validate()` will update the
+   * `aria-invalid` attribute.
+   *
+   * @demo demo/index.html
+   * @polymerBehavior
+   */
+  Polymer.IronValidatableBehavior = {
+
+    properties: {
+
+      /**
+       * Namespace for this validator.
+       */
+      validatorType: {
+        type: String,
+        value: 'validator'
+      },
+
+      /**
+       * Name of the validator to use.
+       */
+      validator: {
+        type: String
+      },
+
+      /**
+       * True if the last call to `validate` is invalid.
+       */
+      invalid: {
+        notify: true,
+        reflectToAttribute: true,
+        type: Boolean,
+        value: false
+      },
+
+      _validatorMeta: {
+        type: Object
+      }
+
+    },
+
+    observers: [
+      '_invalidChanged(invalid)'
+    ],
+
+    get _validator() {
+      return this._validatorMeta && this._validatorMeta.byKey(this.validator);
+    },
+
+    ready: function() {
+      this._validatorMeta = new Polymer.IronMeta({type: this.validatorType});
+    },
+
+    _invalidChanged: function() {
+      if (this.invalid) {
+        this.setAttribute('aria-invalid', 'true');
+      } else {
+        this.removeAttribute('aria-invalid');
+      }
+    },
+
+    /**
+     * @return {boolean} True if the validator `validator` exists.
+     */
+    hasValidator: function() {
+      return this._validator != null;
+    },
+
+    /**
+     * Returns true if the `value` is valid, and updates `invalid`. If you want
+     * your element to have custom validation logic, do not override this method;
+     * override `_getValidity(value)` instead.
+
+     * @param {Object} value The value to be validated. By default, it is passed
+     * to the validator's `validate()` function, if a validator is set.
+     * @return {boolean} True if `value` is valid.
+     */
+    validate: function(value) {
+      this.invalid = !this._getValidity(value);
+      return !this.invalid;
+    },
+
+    /**
+     * Returns true if `value` is valid.  By default, it is passed
+     * to the validator's `validate()` function, if a validator is set. You
+     * should override this method if you want to implement custom validity
+     * logic for your element.
+     *
+     * @param {Object} value The value to be validated.
+     * @return {boolean} True if `value` is valid.
+     */
+
+    _getValidity: function(value) {
+      if (this.hasValidator()) {
+        return this._validator.validate(value);
+      }
+      return true;
+    }
+  };
+
+</script>
+<script>
+  /**
+  Polymer.IronFormElementBehavior enables a custom element to be included
+  in an `iron-form`.
+
+  @demo demo/index.html
+  @polymerBehavior
+  */
+  Polymer.IronFormElementBehavior = {
+
+    properties: {
+      /**
+       * Fired when the element is added to an `iron-form`.
+       *
+       * @event iron-form-element-register
+       */
+
+      /**
+       * Fired when the element is removed from an `iron-form`.
+       *
+       * @event iron-form-element-unregister
+       */
+
+      /**
+       * The name of this element.
+       */
+      name: {
+        type: String
+      },
+
+      /**
+       * The value for this element.
+       */
+      value: {
+        notify: true,
+        type: String
+      },
+
+      /**
+       * Set to true to mark the input as required. If used in a form, a
+       * custom element that uses this behavior should also use
+       * Polymer.IronValidatableBehavior and define a custom validation method.
+       * Otherwise, a `required` element will always be considered valid.
+       * It's also strongly recomended to provide a visual style for the element
+       * when it's value is invalid.
+       */
+      required: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * The form that the element is registered to.
+       */
+      _parentForm: {
+        type: Object
+      }
+    },
+
+    attached: function() {
+      // Note: the iron-form that this element belongs to will set this
+      // element's _parentForm property when handling this event.
+      this.fire('iron-form-element-register');
+    },
+
+    detached: function() {
+      if (this._parentForm) {
+        this._parentForm.fire('iron-form-element-unregister', {target: this});
+      }
+    }
+
+  };
+
+</script>
+<script>
+
+  /**
+   * Use `Polymer.IronCheckedElementBehavior` to implement a custom element
+   * that has a `checked` property, which can be used for validation if the
+   * element is also `required`. Element instances implementing this behavior
+   * will also be registered for use in an `iron-form` element.
+   *
+   * @demo demo/index.html
+   * @polymerBehavior Polymer.IronCheckedElementBehavior
+   */
+  Polymer.IronCheckedElementBehaviorImpl = {
+
+    properties: {
+      /**
+       * Fired when the checked state changes.
+       *
+       * @event iron-change
+       */
+
+      /**
+       * Gets or sets the state, `true` is checked and `false` is unchecked.
+       */
+      checked: {
+        type: Boolean,
+        value: false,
+        reflectToAttribute: true,
+        notify: true,
+        observer: '_checkedChanged'
+      },
+
+      /**
+       * If true, the button toggles the active state with each tap or press
+       * of the spacebar.
+       */
+      toggles: {
+        type: Boolean,
+        value: true,
+        reflectToAttribute: true
+      },
+
+      /* Overriden from Polymer.IronFormElementBehavior */
+      value: {
+        type: String,
+        value: ''
+      }
+    },
+
+    observers: [
+      '_requiredChanged(required)'
+    ],
+
+    /**
+     * Returns false if the element is required and not checked, and true otherwise.
+     * @return {boolean} true if `required` is false, or if `required` and `checked` are both true.
+     */
+    _getValidity: function(_value) {
+      return this.disabled || !this.required || (this.required && this.checked);
+    },
+
+    /**
+     * Update the aria-required label when `required` is changed.
+     */
+    _requiredChanged: function() {
+      if (this.required) {
+        this.setAttribute('aria-required', 'true');
+      } else {
+        this.removeAttribute('aria-required');
+      }
+    },
+
+    /**
+     * Update the element's value when checked.
+     */
+    _checkedChanged: function() {
+      this.active = this.checked;
+      // Unless the user has specified a value, a checked element has the
+      // default value "on" when checked.
+      if (this.value === '')
+        this.value = this.checked ? 'on' : '';
+      this.fire('iron-change');
+    }
+  };
+
+  /** @polymerBehavior Polymer.IronCheckedElementBehavior */
+  Polymer.IronCheckedElementBehavior = [
+    Polymer.IronFormElementBehavior,
+    Polymer.IronValidatableBehavior,
+    Polymer.IronCheckedElementBehaviorImpl
+  ];
+
+</script>
 
 
 <style is="custom-style">
@@ -8417,114 +8757,6 @@ this.fire('dom-change');
 
 <script>
 
-  /**
-   * Use `Polymer.IronValidatableBehavior` to implement an element that validates user input.
-   *
-   * ### Accessibility
-   *
-   * Changing the `invalid` property, either manually or by calling `validate()` will update the
-   * `aria-invalid` attribute.
-   *
-   * @demo demo/index.html
-   * @polymerBehavior
-   */
-  Polymer.IronValidatableBehavior = {
-
-    properties: {
-
-      /**
-       * Namespace for this validator.
-       */
-      validatorType: {
-        type: String,
-        value: 'validator'
-      },
-
-      /**
-       * Name of the validator to use.
-       */
-      validator: {
-        type: String
-      },
-
-      /**
-       * True if the last call to `validate` is invalid.
-       */
-      invalid: {
-        notify: true,
-        reflectToAttribute: true,
-        type: Boolean,
-        value: false
-      },
-
-      _validatorMeta: {
-        type: Object
-      }
-
-    },
-
-    observers: [
-      '_invalidChanged(invalid)'
-    ],
-
-    get _validator() {
-      return this._validatorMeta && this._validatorMeta.byKey(this.validator);
-    },
-
-    ready: function() {
-      this._validatorMeta = new Polymer.IronMeta({type: this.validatorType});
-    },
-
-    _invalidChanged: function() {
-      if (this.invalid) {
-        this.setAttribute('aria-invalid', 'true');
-      } else {
-        this.removeAttribute('aria-invalid');
-      }
-    },
-
-    /**
-     * @return {boolean} True if the validator `validator` exists.
-     */
-    hasValidator: function() {
-      return this._validator != null;
-    },
-
-    /**
-     * Returns true if the `value` is valid, and updates `invalid`. If you want
-     * your element to have custom validation logic, do not override this method;
-     * override `_getValidity(value)` instead.
-
-     * @param {Object} value The value to be validated. By default, it is passed
-     * to the validator's `validate()` function, if a validator is set.
-     * @return {boolean} True if `value` is valid.
-     */
-    validate: function(value) {
-      this.invalid = !this._getValidity(value);
-      return !this.invalid;
-    },
-
-    /**
-     * Returns true if `value` is valid.  By default, it is passed
-     * to the validator's `validate()` function, if a validator is set. You
-     * should override this method if you want to implement custom validity
-     * logic for your element.
-     *
-     * @param {Object} value The value to be validated.
-     * @return {boolean} True if `value` is valid.
-     */
-
-    _getValidity: function(value) {
-      if (this.hasValidator()) {
-        return this._validator.validate(value);
-      }
-      return true;
-    }
-  };
-
-</script>
-<script>
-
 /*
 `<iron-input>` adds two-way binding and custom validators using `Polymer.IronValidatorBehavior`
 to `<input>`.
@@ -8632,6 +8864,9 @@ is separate from validation, and `allowed-pattern` does not affect how the input
       this.bindValue = this.value;
     },
 
+    /**
+     * @suppress {checkTypes}
+     */
     _bindValueChanged: function() {
       if (this.value !== this.bindValue) {
         this.value = !(this.bindValue || this.bindValue === 0) ? '' : this.bindValue;
@@ -8754,80 +8989,6 @@ is separate from validation, and `allowed-pattern` does not affect how the input
 
 </script>
 <script>
-  /**
-  Polymer.IronFormElementBehavior enables a custom element to be included
-  in an `iron-form`.
-
-  @demo demo/index.html
-  @polymerBehavior
-  */
-  Polymer.IronFormElementBehavior = {
-
-    properties: {
-      /**
-       * Fired when the element is added to an `iron-form`.
-       *
-       * @event iron-form-element-register
-       */
-
-      /**
-       * Fired when the element is removed from an `iron-form`.
-       *
-       * @event iron-form-element-unregister
-       */
-
-      /**
-       * The name of this element.
-       */
-      name: {
-        type: String
-      },
-
-      /**
-       * The value for this element.
-       */
-      value: {
-        notify: true,
-        type: String
-      },
-
-      /**
-       * Set to true to mark the input as required. If used in a form, a
-       * custom element that uses this behavior should also use
-       * Polymer.IronValidatableBehavior and define a custom validation method.
-       * Otherwise, a `required` element will always be considered valid.
-       * It's also strongly recomended to provide a visual style for the element
-       * when it's value is invalid.
-       */
-      required: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * The form that the element is registered to.
-       */
-      _parentForm: {
-        type: Object
-      }
-    },
-
-    attached: function() {
-      // Note: the iron-form that this element belongs to will set this
-      // element's _parentForm property when handling this event.
-      this.fire('iron-form-element-register');
-    },
-
-    detached: function() {
-      if (this._parentForm) {
-        this._parentForm.fire('iron-form-element-unregister', {target: this});
-      }
-    }
-
-  };
-
-</script>
-<script>
 
   /**
    * Use `Polymer.PaperInputBehavior` to implement inputs with `<paper-input-container>`. This
@@ -8874,7 +9035,8 @@ is separate from validation, and `allowed-pattern` does not affect how the input
        */
       invalid: {
         type: Boolean,
-        value: false
+        value: false,
+        notify: true
       },
 
       /**
@@ -9138,10 +9300,20 @@ is separate from validation, and `allowed-pattern` does not affect how the input
 
     /**
      * Validates the input element and sets an error style if needed.
+     *
+     * @return {boolean}
      */
-     validate: function() {
-       return this.inputElement.validate();
-     },
+    validate: function() {
+      return this.inputElement.validate();
+    },
+
+    /**
+     * If `autoValidate` is true, then validates the element.
+     */
+    _handleAutoValidate: function() {
+      if (this.autoValidate)
+        this.validate();
+    },
 
     /**
      * Restores the cursor to its original position after updating the value.
@@ -10411,9 +10583,7 @@ is separate from validation, and `allowed-pattern` does not affect how the input
 
       /**
        * Returns the currently focused item.
-       *
-       * @attribute focusedItem
-       * @type Object
+       * @type {?Object}
        */
       focusedItem: {
         observer: '_focusedItemChanged',
@@ -10425,9 +10595,6 @@ is separate from validation, and `allowed-pattern` does not affect how the input
        * The attribute to use on menu items to look up the item title. Typing the first
        * letter of an item when the menu is open focuses that item. If unset, `textContent`
        * will be used.
-       *
-       * @attribute attrForItemTitle
-       * @type String
        */
       attrForItemTitle: {
         type: String
@@ -10504,6 +10671,7 @@ is separate from validation, and `allowed-pattern` does not affect how the input
         this._defaultFocusAsync = null;
       }
       var item = this._valueToItem(value);
+      if (item && item.hasAttribute('disabled')) return;
       this._setFocusedItem(item);
       Polymer.IronMultiSelectableBehaviorImpl.select.apply(this, arguments);
     },
@@ -11059,7 +11227,11 @@ CSS properties               | Action
     }
 
     function currentOverlay() {
-      return overlays[overlays.length-1];
+      var i = overlays.length - 1;
+      while (overlays[i] && !overlays[i].opened) {
+        --i;
+      }
+      return overlays[i];
     }
 
     function currentOverlayZ() {
@@ -11244,17 +11416,6 @@ context. You should place this element as a child of `<body>` whenever possible.
       }
 
     },
-
-/**
- * Fired after the `iron-overlay` opens.
- * @event iron-overlay-opened
- */
-
-/**
- * Fired after the `iron-overlay` closes.
- * @event iron-overlay-closed
- * @param {{canceled: (boolean|undefined)}} set to the `closingReason` attribute
- */
 
     listeners: {
       'click': '_onClick',
@@ -11532,6 +11693,16 @@ context. You should place this element as a child of `<body>` whenever possible.
       }
     }
 
+/**
+ * Fired after the `iron-overlay` opens.
+ * @event iron-overlay-opened
+ */
+
+/**
+ * Fired after the `iron-overlay` closes.
+ * @event iron-overlay-closed
+ * @param {{canceled: (boolean|undefined)}} set to the `closingReason` attribute
+ */
   };
 
   /** @polymerBehavior */
@@ -11611,7 +11782,7 @@ context. You should place this element as a child of `<body>` whenever possible.
   };
 
 </script>
-<script src="/bower_components/web-animations-js/web-animations-next-lite.min.js"></script>
+<script src="bower_components/web-animations-js/web-animations-next-lite.min.js"></script>
 
 
 <script>
@@ -13210,19 +13381,19 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
     <meta property="og:description" content="The Society for the Study of Amphibians and Reptiles's searchable database of North American reptiles and amphibians. Species accounts, photos, geolocation, and more.">
 
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    <script type="application/ld+json">
+      { "@context" : "http://schema.org",
+      "@type" : "Organization",
+      "name" : "SSAR North American Species Names Database",
+      "url" : "https://ssarherps.org/cndb/",
+      "logo" : "https://ssarherps.org/cndb/assets/favicon1024.png",
+      "image" : "https://ssarherps.org/wp-content/uploads/2015/03/Pseudacris_crucifer-1425x460.jpg",
+      "description" : "The Society for the Study of Amphibians and Reptiles's searchable database of North American reptiles and amphibians. Species accounts, photos, geolocation, and more."
+      }
+    </script>
 
   </head>
-  <body class="container-fluid"><div hidden="" by-vulcanize=""><dom-module id="iron-icon" assetpath="/bower_components/iron-icon/">
+  <body class="container-fluid"><div hidden="" by-vulcanize=""><dom-module id="iron-icon" assetpath="bower_components/iron-icon/">
 
   <style>
     :host {
@@ -13240,7 +13411,6 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
   </style>
 
   <template>
-    <iron-meta id="meta" type="iconset"></iron-meta>
   </template>
 
   <script>
@@ -13277,7 +13447,12 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
         src: {
           type: String,
           observer: '_srcChanged'
+        },
+        
+        _meta: {
+          value: Polymer.Base.create('iron-meta', {type: 'iconset'})
         }
+        
       },
 
       _DEFAULT_ICONSET: 'icons',
@@ -13301,7 +13476,7 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
       _updateIcon: function() {
         if (this._usesIconset()) {
           if (this._iconsetName) {
-            this._iconset = this.$.meta.byKey(this._iconsetName);
+            this._iconset = this._meta.byKey(this._iconsetName);
             if (this._iconset) {
               this._iconset.applyIcon(this, this._iconName, this.theme);
             } else {
@@ -13884,76 +14059,76 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
 <g id="traffic"><path d="M20 10h-3V8.86c1.72-.45 3-2 3-3.86h-3V4c0-.55-.45-1-1-1H8c-.55 0-1 .45-1 1v1H4c0 1.86 1.28 3.41 3 3.86V10H4c0 1.86 1.28 3.41 3 3.86V15H4c0 1.86 1.28 3.41 3 3.86V20c0 .55.45 1 1 1h8c.55 0 1-.45 1-1v-1.14c1.72-.45 3-2 3-3.86h-3v-1.14c1.72-.45 3-2 3-3.86zm-8 9c-1.11 0-2-.9-2-2s.89-2 2-2c1.1 0 2 .9 2 2s-.89 2-2 2zm0-5c-1.11 0-2-.9-2-2s.89-2 2-2c1.1 0 2 .9 2 2s-.89 2-2 2zm0-5c-1.11 0-2-.9-2-2 0-1.11.89-2 2-2 1.1 0 2 .89 2 2 0 1.1-.89 2-2 2z"></path></g>
 </defs></svg>
 </iron-iconset-svg>
-<dom-module id="paper-ripple" assetpath="/bower_components/paper-ripple/">
+<dom-module id="paper-ripple" assetpath="bower_components/paper-ripple/">
 
   
-
-  <style>
-    :host {
-      display: block;
-      position: absolute;
-      border-radius: inherit;
-      overflow: hidden;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-    }
-
-    :host([animating]) {
-      /* This resolves a rendering issue in Chrome (as of 40) where the
-         ripple is not properly clipped by its parent (which may have
-         rounded corners). See: http://jsbin.com/temexa/4
-
-         Note: We only apply this style conditionally. Otherwise, the browser
-         will create a new compositing layer for every ripple element on the
-         page, and that would be bad. */
-      -webkit-transform: translate(0, 0);
-      transform: translate3d(0, 0, 0);
-    }
-
-    :host([noink]) {
-      pointer-events: none;
-    }
-
-    #background,
-    #waves,
-    .wave-container,
-    .wave {
-      pointer-events: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    #background,
-    .wave {
-      opacity: 0;
-    }
-
-    #waves,
-    .wave {
-      overflow: hidden;
-    }
-
-    .wave-container,
-    .wave {
-      border-radius: 50%;
-    }
-
-    :host(.circle) #background,
-    :host(.circle) #waves {
-      border-radius: 50%;
-    }
-
-    :host(.circle) .wave-container {
-      overflow: hidden;
-    }
-
-  </style>
+  
   <template>
+    <style>
+      :host {
+        display: block;
+        position: absolute;
+        border-radius: inherit;
+        overflow: hidden;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+  
+      :host([animating]) {
+        /* This resolves a rendering issue in Chrome (as of 40) where the
+           ripple is not properly clipped by its parent (which may have
+           rounded corners). See: http://jsbin.com/temexa/4
+  
+           Note: We only apply this style conditionally. Otherwise, the browser
+           will create a new compositing layer for every ripple element on the
+           page, and that would be bad. */
+        -webkit-transform: translate(0, 0);
+        transform: translate3d(0, 0, 0);
+      }
+  
+      :host([noink]) {
+        pointer-events: none;
+      }
+  
+      #background,
+      #waves,
+      .wave-container,
+      .wave {
+        pointer-events: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+  
+      #background,
+      .wave {
+        opacity: 0;
+      }
+  
+      #waves,
+      .wave {
+        overflow: hidden;
+      }
+  
+      .wave-container,
+      .wave {
+        border-radius: 50%;
+      }
+  
+      :host(.circle) #background,
+      :host(.circle) #waves {
+        border-radius: 50%;
+      }
+  
+      :host(.circle) .wave-container {
+        overflow: hidden;
+      }
+    </style>
+    
     <div id="background"></div>
     <div id="waves"></div>
   </template>
@@ -13961,20 +14136,6 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
 <script>
   (function() {
     var Utility = {
-      cssColorWithAlpha: function(cssColor, alpha) {
-        var parts = cssColor.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
-
-        if (typeof alpha == 'undefined') {
-          alpha = 1;
-        }
-
-        if (!parts) {
-          return 'rgba(255, 255, 255, ' + alpha + ')';
-        }
-
-        return 'rgba(' + parts[1] + ', ' + parts[2] + ', ' + parts[3] + ', ' + alpha + ')';
-      },
-
       distance: function(x1, y1, x2, y2) {
         var xDelta = (x1 - x2);
         var yDelta = (y1 - y2);
@@ -13982,13 +14143,8 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
         return Math.sqrt(xDelta * xDelta + yDelta * yDelta);
       },
 
-      now: (function() {
-        if (window.performance && window.performance.now) {
-          return window.performance.now.bind(window.performance);
-        }
-
-        return Date.now;
-      })()
+      now: window.performance && window.performance.now ?
+          window.performance.now.bind(window.performance) : Date.now
     };
 
     /**
@@ -14525,11 +14681,114 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
     });
   })();
 </script>
-<dom-module id="paper-toggle-button" assetpath="/bower_components/paper-toggle-button/">
-
-  <link rel="import" type="css" href="/bower_components/paper-toggle-button/paper-toggle-button.css">
-
+<dom-module id="paper-toggle-button" assetpath="bower_components/paper-toggle-button/">
   <template>
+
+    <style>
+      :host {
+        display: inline-block;
+      }
+
+      :host([disabled]) {
+        pointer-events: none;
+      }
+
+      :host(:focus) {
+        outline:none;
+      }
+
+      :host .toggle-bar {
+        background-color: var(--paper-toggle-button-unchecked-bar-color, #000000);
+        @apply(--paper-toggle-button-unchecked-bar);
+      }
+
+      :host .toggle-button {
+        background-color: var(--paper-toggle-button-unchecked-button-color, --paper-grey-50);
+        @apply(--paper-toggle-button-unchecked-button);
+      }
+
+      :host([checked]) .toggle-bar {
+        background-color: var(--paper-toggle-button-checked-bar-color, --default-primary-color);
+        @apply(--paper-toggle-button-checked-bar);
+      }
+
+      :host([checked]) .toggle-button {
+        background-color: var(--paper-toggle-button-checked-button-color, --default-primary-color);
+        @apply(--paper-toggle-button-checked-button);
+      }
+
+      :host .toggle-ink {
+        color: var(--paper-toggle-button-unchecked-ink-color, --primary-text-color);
+      }
+
+      :host([checked]) .toggle-ink {
+        color: var(--paper-toggle-button-checked-ink-color, --default-primary-color);
+      }
+
+      /* ID selectors should not be overriden by users. */
+
+      #toggleContainer {
+        position: relative;
+        width: 36px;
+        height: 14px;
+      }
+
+      #toggleBar {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        border-radius: 8px;
+        pointer-events: none;
+        opacity: 0.4;
+        transition: background-color linear .08s;
+      }
+
+      :host([checked]) #toggleBar {
+        opacity: 0.5;
+      }
+
+      :host([disabled]) #toggleBar {
+        background-color: #000;
+        opacity: 0.12;
+      }
+
+      #toggleButton {
+        position: absolute;
+        top: -3px;
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.6);
+        transition: -webkit-transform linear .08s, background-color linear .08s;
+        transition: transform linear .08s, background-color linear .08s;
+        will-change: transform;
+      }
+
+      #toggleButton.dragging {
+        -webkit-transition: none;
+        transition: none;
+      }
+
+      :host([checked]) #toggleButton {
+        -webkit-transform: translate(16px, 0);
+        transform: translate(16px, 0);
+      }
+
+      :host([disabled]) #toggleButton {
+        background-color: #bdbdbd;
+        opacity: 1;
+      }
+
+      #ink {
+        position: absolute;
+        top: -14px;
+        left: -14px;
+        width: 48px;
+        height: 48px;
+        opacity: 0.5;
+        pointer-events: none;
+      }
+    </style>
 
     <div id="toggleContainer">
       <div id="toggleBar" class="toggle-bar"></div>
@@ -14545,7 +14804,8 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
       is: 'paper-toggle-button',
 
       behaviors: [
-        Polymer.PaperInkyFocusBehavior
+        Polymer.PaperInkyFocusBehavior,
+        Polymer.IronCheckedElementBehavior
       ],
 
       hostAttributes: {
@@ -14565,34 +14825,6 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
          *
          * @event iron-change
          */
-        /**
-         * Gets or sets the state, `true` is checked and `false` is unchecked.
-         *
-         * @attribute checked
-         * @type boolean
-         * @default false
-         */
-        checked: {
-          type: Boolean,
-          value: false,
-          reflectToAttribute: true,
-          notify: true,
-          observer: '_checkedChanged'
-        },
-
-        /**
-         * If true, the button toggles the active state with each tap or press
-         * of the spacebar.
-         *
-         * @attribute toggles
-         * @type boolean
-         * @default true
-         */
-        toggles: {
-          type: Boolean,
-          value: true,
-          reflectToAttribute: true
-        }
       },
 
       listeners: {
@@ -14611,11 +14843,6 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
         if (this._isReady) {
           this.checked = this.active;
         }
-      },
-
-      _checkedChanged: function(checked) {
-        this.active = this.checked;
-        this.fire('iron-change');
       },
 
       _ontrack: function(event) {
@@ -14654,9 +14881,8 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
 
     });
   </script>
-
 </dom-module>
-<dom-module id="iron-a11y-announcer" assetpath="/bower_components/iron-a11y-announcer/">
+<dom-module id="iron-a11y-announcer" assetpath="bower_components/iron-a11y-announcer/">
   <style>
     :host {
       display: inline-block;
@@ -14735,7 +14961,7 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
 
   </script>
 </dom-module>
-<dom-module id="paper-toast" assetpath="/bower_components/paper-toast/">
+<dom-module id="paper-toast" assetpath="bower_components/paper-toast/">
   <style>
     :host {
       display: inline-block;
@@ -14877,184 +15103,181 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
 
 })();
 </script>
-<dom-module id="paper-input-container" assetpath="/bower_components/paper-input/">
-
-  <style>
-
-    :host {
-      display: block;
-      padding: 8px 0;
-
-      @apply(--paper-input-container);
-    }
-
-    :host[inline] {
-      display: inline-block;
-    }
-
-    :host([disabled]) {
-      pointer-events: none;
-      opacity: 0.33;
-
-      @apply(--paper-input-container-disabled);
-    }
-
-    .floated-label-placeholder {
-      @apply(--paper-font-caption);
-    }
-
-    .underline {
-      position: relative;
-    }
-
-    .focused-line {
-      height: 2px;
-
-      -webkit-transform-origin: center center;
-      transform-origin: center center;
-      -webkit-transform: scale3d(0,1,1);
-      transform: scale3d(0,1,1);
-
-      background: var(--paper-input-container-focus-color, --default-primary-color);
-
-      @apply(--paper-input-container-underline-focus);
-    }
-
-    .underline.is-highlighted .focused-line {
-      -webkit-transform: none;
-      transform: none;
-      -webkit-transition: -webkit-transform 0.25s;
-      transition: transform 0.25s;
-
-      @apply(--paper-transition-easing);
-    }
-
-    .underline.is-invalid .focused-line {
-      background: var(--paper-input-container-invalid-color, --google-red-500);
-
-      -webkit-transform: none;
-      transform: none;
-      -webkit-transition: -webkit-transform 0.25s;
-      transition: transform 0.25s;
-
-      @apply(--paper-transition-easing);
-    }
-
-    .unfocused-line {
-      height: 1px;
-      background: var(--paper-input-container-color, --secondary-text-color);
-
-      @apply(--paper-input-container-underline);
-    }
-
-    :host([disabled]) .unfocused-line {
-      border-bottom: 1px dashed;
-      border-color: var(--paper-input-container-color, --secondary-text-color);
-      background: transparent;
-
-      @apply(--paper-input-container-underline-disabled);
-    }
-
-    .label-and-input-container {
-      @apply(--layout-flex);
-      @apply(--layout-relative);
-    }
-
-    .input-content {
-      position: relative;
-      @apply(--layout-horizontal);
-      @apply(--layout-end);
-    }
-
-    .input-content ::content label,
-    .input-content ::content .paper-input-label {
-      position: absolute;
-      top: 0;
-      right: 0;
-      left: 0;
-      font: inherit;
-      color: var(--paper-input-container-color, --secondary-text-color);
-
-      @apply(--paper-font-subhead);
-      @apply(--paper-input-container-label);
-    }
-
-    .input-content.label-is-floating ::content label,
-    .input-content.label-is-floating ::content .paper-input-label {
-      -webkit-transform: translate3d(0, -75%, 0) scale(0.75);
-      transform: translate3d(0, -75%, 0) scale(0.75);
-      -webkit-transform-origin: left top;
-      transform-origin: left top;
-      -webkit-transition: -webkit-transform 0.25s;
-      transition: transform 0.25s;
-
-      @apply(--paper-transition-easing);
-    }
-
-    .input-content.label-is-highlighted ::content label,
-    .input-content.label-is-highlighted ::content .paper-input-label {
-      color: var(--paper-input-container-focus-color, --default-primary-color);
-
-      @apply(--paper-input-container-label-focus);
-    }
-
-    .input-content.is-invalid ::content label,
-    .input-content.is-invalid ::content .paper-input-label {
-      color: var(--paper-input-container-invalid-color, --google-red-500);
-    }
-
-    .input-content.label-is-hidden ::content label,
-    .input-content.label-is-hidden ::content .paper-input-label {
-      visibility: hidden;
-    }
-
-    .input-content ::content input,
-    .input-content ::content textarea,
-    .input-content ::content iron-autogrow-textarea,
-    .input-content ::content .paper-input-input {
-      position: relative; /* to make a stacking context */
-      outline: none;
-      box-shadow: none;
-      padding: 0;
-      width: 100%;
-      background: transparent;
-      border: none;
-      color: var(--paper-input-container-input-color, --primary-text-color);
-
-      @apply(--paper-font-subhead);
-      @apply(--paper-input-container-input);
-    }
-
-    ::content [prefix] {
-      @apply(--paper-font-subhead);
-      @apply(--paper-input-prefix);
-    }
-
-    ::content [suffix] {
-      @apply(--paper-font-subhead);
-      @apply(--paper-input-suffix);
-    }
-
-    /* Firefox sets a min-width on the input, which can cause layout issues */
-    .input-content ::content input {
-      min-width: 0;
-    }
-
-    .input-content ::content textarea {
-      resize: none;
-    }
-
-    .add-on-content.is-invalid ::content * {
-      color: var(--paper-input-container-invalid-color, --google-red-500);
-    }
-
-    .add-on-content.is-highlighted ::content * {
-      color: var(--paper-input-container-focus-color, --default-primary-color);
-    }
-
-  </style>
-
+<dom-module id="paper-input-container" assetpath="bower_components/paper-input/">
   <template>
+
+    <style>
+      :host {
+        display: block;
+        padding: 8px 0;
+
+        @apply(--paper-input-container);
+      }
+
+      :host[inline] {
+        display: inline-block;
+      }
+
+      :host([disabled]) {
+        pointer-events: none;
+        opacity: 0.33;
+
+        @apply(--paper-input-container-disabled);
+      }
+
+      .floated-label-placeholder {
+        @apply(--paper-font-caption);
+      }
+
+      .underline {
+        position: relative;
+      }
+
+      .focused-line {
+        height: 2px;
+
+        -webkit-transform-origin: center center;
+        transform-origin: center center;
+        -webkit-transform: scale3d(0,1,1);
+        transform: scale3d(0,1,1);
+
+        background: var(--paper-input-container-focus-color, --default-primary-color);
+
+        @apply(--paper-input-container-underline-focus);
+      }
+
+      .underline.is-highlighted .focused-line {
+        -webkit-transform: none;
+        transform: none;
+        -webkit-transition: -webkit-transform 0.25s;
+        transition: transform 0.25s;
+
+        @apply(--paper-transition-easing);
+      }
+
+      .underline.is-invalid .focused-line {
+        background: var(--paper-input-container-invalid-color, --google-red-500);
+
+        -webkit-transform: none;
+        transform: none;
+        -webkit-transition: -webkit-transform 0.25s;
+        transition: transform 0.25s;
+
+        @apply(--paper-transition-easing);
+      }
+
+      .unfocused-line {
+        height: 1px;
+        background: var(--paper-input-container-color, --secondary-text-color);
+
+        @apply(--paper-input-container-underline);
+      }
+
+      :host([disabled]) .unfocused-line {
+        border-bottom: 1px dashed;
+        border-color: var(--paper-input-container-color, --secondary-text-color);
+        background: transparent;
+
+        @apply(--paper-input-container-underline-disabled);
+      }
+
+      .label-and-input-container {
+        @apply(--layout-flex);
+        @apply(--layout-relative);
+      }
+
+      .input-content {
+        position: relative;
+        @apply(--layout-horizontal);
+        @apply(--layout-end);
+      }
+
+      .input-content ::content label,
+      .input-content ::content .paper-input-label {
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        font: inherit;
+        color: var(--paper-input-container-color, --secondary-text-color);
+
+        @apply(--paper-font-subhead);
+        @apply(--paper-input-container-label);
+      }
+
+      .input-content.label-is-floating ::content label,
+      .input-content.label-is-floating ::content .paper-input-label {
+        -webkit-transform: translate3d(0, -75%, 0) scale(0.75);
+        transform: translate3d(0, -75%, 0) scale(0.75);
+        -webkit-transform-origin: left top;
+        transform-origin: left top;
+        -webkit-transition: -webkit-transform 0.25s;
+        transition: transform 0.25s;
+
+        @apply(--paper-transition-easing);
+      }
+
+      .input-content.label-is-highlighted ::content label,
+      .input-content.label-is-highlighted ::content .paper-input-label {
+        color: var(--paper-input-container-focus-color, --default-primary-color);
+
+        @apply(--paper-input-container-label-focus);
+      }
+
+      .input-content.is-invalid ::content label,
+      .input-content.is-invalid ::content .paper-input-label {
+        color: var(--paper-input-container-invalid-color, --google-red-500);
+      }
+
+      .input-content.label-is-hidden ::content label,
+      .input-content.label-is-hidden ::content .paper-input-label {
+        visibility: hidden;
+      }
+
+      .input-content ::content input,
+      .input-content ::content textarea,
+      .input-content ::content iron-autogrow-textarea,
+      .input-content ::content .paper-input-input {
+        position: relative; /* to make a stacking context */
+        outline: none;
+        box-shadow: none;
+        padding: 0;
+        width: 100%;
+        background: transparent;
+        border: none;
+        color: var(--paper-input-container-input-color, --primary-text-color);
+
+        @apply(--paper-font-subhead);
+        @apply(--paper-input-container-input);
+      }
+
+      ::content [prefix] {
+        @apply(--paper-font-subhead);
+        @apply(--paper-input-prefix);
+      }
+
+      ::content [suffix] {
+        @apply(--paper-font-subhead);
+        @apply(--paper-input-suffix);
+      }
+
+      /* Firefox sets a min-width on the input, which can cause layout issues */
+      .input-content ::content input {
+        min-width: 0;
+      }
+
+      .input-content ::content textarea {
+        resize: none;
+      }
+
+      .add-on-content.is-invalid ::content * {
+        color: var(--paper-input-container-invalid-color, --google-red-500);
+      }
+
+      .add-on-content.is-highlighted ::content * {
+        color: var(--paper-input-container-focus-color, --default-primary-color);
+      }
+    </style>
 
     <template is="dom-if" if="[[!noLabelFloat]]">
       <div class="floated-label-placeholder">&nbsp;</div>
@@ -15078,18 +15301,13 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
     </div>
 
   </template>
-
 </dom-module>
 
 <script>
-(function() {
-
   Polymer({
-
     is: 'paper-input-container',
 
     properties: {
-
       /**
        * Set to true to disable the floating label. The label disappears when the input value is
        * not null.
@@ -15139,7 +15357,8 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
       focused: {
         readOnly: true,
         type: Boolean,
-        value: false
+        value: false,
+        notify: true
       },
 
       _addons: {
@@ -15186,7 +15405,6 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
           return this._onValueChanged.bind(this);
         }
       }
-
     },
 
     listeners: {
@@ -15206,6 +15424,10 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
       return Polymer.dom(this).querySelector(this._inputSelector);
     },
 
+    get _inputElementValue() {
+      return this._inputElement[this._propertyForValue] || this._inputElement.value;
+    },
+
     ready: function() {
       if (!this._addons) {
         this._addons = [];
@@ -15220,7 +15442,12 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
     },
 
     attached: function() {
-      this._handleValue(this._inputElement);
+      // Only validate when attached if the input already has a value.
+      if (this._inputElementValue != '') {
+        this._handleValueAndAutoValidate(this._inputElement);
+      } else {
+        this._handleValue(this._inputElement);
+      }
     },
 
     _onAddonAttached: function(event) {
@@ -15242,28 +15469,19 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
 
     _onBlur: function() {
       this._setFocused(false);
+      this._handleValueAndAutoValidate(this._inputElement);
     },
 
     _onInput: function(event) {
-      this._handleValue(event.target);
+      this._handleValueAndAutoValidate(event.target);
     },
 
     _onValueChanged: function(event) {
-      this._handleValue(event.target);
+      this._handleValueAndAutoValidate(event.target);
     },
 
     _handleValue: function(inputElement) {
-      var value = inputElement[this._propertyForValue] || inputElement.value;
-
-      if (this.autoValidate) {
-        var valid;
-        if (inputElement.validate) {
-          valid = inputElement.validate(value);
-        } else {
-          valid = inputElement.checkValidity();
-        }
-        this.invalid = !valid;
-      }
+      var value = this._inputElementValue;
 
       // type="number" hack needed because this.value is empty until it's valid
       if (value || value === 0 || (inputElement.type === 'number' && !inputElement.checkValidity())) {
@@ -15277,6 +15495,21 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
         value: value,
         invalid: this.invalid
       });
+    },
+
+    _handleValueAndAutoValidate: function(inputElement) {
+      if (this.autoValidate) {
+        var valid;
+        if (inputElement.validate) {
+          valid = inputElement.validate(this._inputElementValue);
+        } else {
+          valid = inputElement.checkValidity();
+        }
+        this.invalid = !valid;
+      }
+
+      // Call this last to notify the add-ons.
+      this._handleValue(inputElement);
     },
 
     _onIronInputValidate: function(event) {
@@ -15350,46 +15583,35 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
       }
       return cls;
     }
-
   });
-
-})();
 </script>
-<dom-module id="paper-input-error" assetpath="/bower_components/paper-input/">
-
-  <style>
-
-    :host {
-      display: inline-block;
-      visibility: hidden;
-      float: left;
-
-      color: var(--paper-input-container-invalid-color, --google-red-500);
-
-      @apply(--paper-font-caption);
-      @apply(--paper-input-error);
-    }
-
-    :host([invalid]) {
-      visibility: visible;
-    };
-
-  </style>
-
+<dom-module id="paper-input-error" assetpath="bower_components/paper-input/">
   <template>
+
+    <style>
+      :host {
+        display: inline-block;
+        visibility: hidden;
+        float: left;
+
+        color: var(--paper-input-container-invalid-color, --google-red-500);
+
+        @apply(--paper-font-caption);
+        @apply(--paper-input-error);
+      }
+
+      :host([invalid]) {
+        visibility: visible;
+      };
+    </style>
 
     <content></content>
 
   </template>
-
 </dom-module>
 
 <script>
-
-(function() {
-
   Polymer({
-
     is: 'paper-input-error',
 
     behaviors: [
@@ -15397,7 +15619,6 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
     ],
 
     properties: {
-
       /**
        * True if the error is showing.
        */
@@ -15406,46 +15627,33 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
         reflectToAttribute: true,
         type: Boolean
       }
-
     },
 
     update: function(state) {
       this._setInvalid(state.invalid);
     }
-
-  })
-
-})();
-
+  });
 </script>
-<dom-module id="paper-input-char-counter" assetpath="/bower_components/paper-input/">
-
-  <style>
-
-    :host {
-      display: inline-block;
-      float: right;
-
-      @apply(--paper-font-caption);
-      @apply(--paper-input-char-counter);
-    }
-
-  </style>
-
+<dom-module id="paper-input-char-counter" assetpath="bower_components/paper-input/">
   <template>
+
+    <style>
+      :host {
+        display: inline-block;
+        float: right;
+
+        @apply(--paper-font-caption);
+        @apply(--paper-input-char-counter);
+      }
+    </style>
 
     <span>[[_charCounterStr]]</span>
 
   </template>
-
 </dom-module>
 
 <script>
-
-(function() {
-
   Polymer({
-
     is: 'paper-input-char-counter',
 
     behaviors: [
@@ -15453,12 +15661,10 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
     ],
 
     properties: {
-
       _charCounterStr: {
         type: String,
         value: '0'
       }
-
     },
 
     update: function(state) {
@@ -15476,39 +15682,32 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
       }
       this._charCounterStr = str;
     }
-
   });
-
-})();
-
 </script>
-<dom-module id="paper-input" assetpath="/bower_components/paper-input/">
-
-  <style>
-
-    :host {
-      display: block;
-    }
-
-    input::-webkit-input-placeholder {
-      color: var(--paper-input-container-color, --secondary-text-color);
-    }
-
-    input:-moz-placeholder {
-      color: var(--paper-input-container-color, --secondary-text-color);
-    }
-
-    input::-moz-placeholder {
-      color: var(--paper-input-container-color, --secondary-text-color);
-    }
-
-    input:-ms-input-placeholder {
-      color: var(--paper-input-container-color, --secondary-text-color);
-    }
-
-  </style>
-
+<dom-module id="paper-input" assetpath="bower_components/paper-input/">
   <template>
+
+    <style>
+      :host {
+        display: block;
+      }
+
+      input::-webkit-input-placeholder {
+        color: var(--paper-input-container-color, --secondary-text-color);
+      }
+
+      input:-moz-placeholder {
+        color: var(--paper-input-container-color, --secondary-text-color);
+      }
+
+      input::-moz-placeholder {
+        color: var(--paper-input-container-color, --secondary-text-color);
+      }
+
+      input:-ms-input-placeholder {
+        color: var(--paper-input-container-color, --secondary-text-color);
+      }
+    </style>
 
     <paper-input-container no-label-float="[[noLabelFloat]]" always-float-label="[[_computeAlwaysFloatLabel(alwaysFloatLabel,placeholder)]]" auto-validate$="[[autoValidate]]" disabled$="[[disabled]]" invalid="[[invalid]]">
 
@@ -15531,15 +15730,10 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
     </paper-input-container>
 
   </template>
-
 </dom-module>
 
 <script>
-
-(function() {
-
   Polymer({
-
     is: 'paper-input',
 
     behaviors: [
@@ -15547,15 +15741,11 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
       Polymer.PaperInputBehavior,
       Polymer.IronControlState
     ]
-
-  })
-
-})();
-
+  });
 </script>
-<dom-module id="paper-spinner" assetpath="/bower_components/paper-spinner/">
+<dom-module id="paper-spinner" assetpath="bower_components/paper-spinner/">
 
-  <link rel="import" type="css" href="/bower_components/paper-spinner/paper-spinner.css">
+  <link rel="import" type="css" href="bower_components/paper-spinner/paper-spinner.css">
 
   <template>
 
@@ -15704,8 +15894,8 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
   </script>
 
 </dom-module>
-<dom-module id="paper-menu" assetpath="/bower_components/paper-menu/">
-  <link rel="import" type="css" href="/bower_components/paper-menu/paper-menu-shared.css">
+<dom-module id="paper-menu" assetpath="bower_components/paper-menu/">
+  <link rel="import" type="css" href="bower_components/paper-menu/paper-menu-shared.css">
 
   <style>
     :host {
@@ -15745,7 +15935,7 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
 })();
 
 </script>
-<dom-module id="iron-overlay-backdrop" assetpath="/bower_components/iron-overlay-behavior/">
+<dom-module id="iron-overlay-backdrop" assetpath="bower_components/iron-overlay-behavior/">
 
   <style>
 
@@ -15848,7 +16038,7 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
 })();
 
 </script>
-<dom-module id="iron-dropdown" assetpath="/bower_components/iron-dropdown/">
+<dom-module id="iron-dropdown" assetpath="bower_components/iron-dropdown/">
   <style>
     :host {
       position: fixed;
@@ -15951,6 +16141,14 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
           },
 
           /**
+           * If provided, this will be the element that will be focused when
+           * the dropdown opens.
+           */
+          focusTarget: {
+            type: Object
+          },
+
+          /**
            * Set to true to disable animations when opening and closing the
            * dropdown.
            */
@@ -15990,6 +16188,17 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
           return Polymer.dom(this.$.content).getDistributedNodes()[0];
         },
 
+        /**
+         * The element that should be focused when the dropdown opens.
+         */
+        get _focusTarget() {
+          return this.focusTarget || this.containedElement;
+        },
+
+        /**
+         * The element that should be used to position the dropdown when
+         * it opens, if no position target is configured.
+         */
         get _defaultPositionTarget() {
           var parent = Polymer.dom(this).parentNode;
 
@@ -16000,6 +16209,9 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
           return parent;
         },
 
+        /**
+         * The bounding rect of the position target.
+         */
         get _positionRect() {
           if (!this._positionRectMemo && this.positionTarget) {
             this._positionRectMemo = this.positionTarget.getBoundingClientRect();
@@ -16008,6 +16220,9 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
           return this._positionRectMemo;
         },
 
+        /**
+         * The horizontal offset value used to position the dropdown.
+         */
         get _horizontalAlignTargetValue() {
           var target;
 
@@ -16022,6 +16237,9 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
           return Math.max(target, 0);
         },
 
+        /**
+         * The vertical offset value used to position the dropdown.
+         */
         get _verticalAlignTargetValue() {
           var target;
 
@@ -16036,27 +16254,41 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
           return Math.max(target, 0);
         },
 
+        /**
+         * Called when the value of `opened` changes.
+         *
+         * @param {boolean} opened True if the dropdown is opened.
+         */
         _openedChanged: function(opened) {
           if (opened && this.disabled) {
             this.cancel();
           } else {
-            this._cancelAnimations();
+            this.cancelAnimation();
             this._prepareDropdown();
             Polymer.IronOverlayBehaviorImpl._openedChanged.apply(this, arguments);
           }
+
+          if (this.opened) {
+            this._focusContent();
+          }
         },
 
+        /**
+         * Overridden from `IronOverlayBehavior`.
+         */
         _renderOpened: function() {
           Polymer.IronDropdownScrollManager.pushScrollLock(this);
           if (!this.noAnimations && this.animationConfig && this.animationConfig.open) {
             this.$.contentWrapper.classList.add('animating');
             this.playAnimation('open');
           } else {
-            this._focusContent();
             Polymer.IronOverlayBehaviorImpl._renderOpened.apply(this, arguments);
           }
         },
 
+        /**
+         * Overridden from `IronOverlayBehavior`.
+         */
         _renderClosed: function() {
           Polymer.IronDropdownScrollManager.removeScrollLock(this);
           if (!this.noAnimations && this.animationConfig && this.animationConfig.close) {
@@ -16067,6 +16299,12 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
           }
         },
 
+        /**
+         * Called when animation finishes on the dropdown (when opening or
+         * closing). Responsible for "completing" the process of opening or
+         * closing the dropdown by positioning it or setting its display to
+         * none.
+         */
         _onNeonAnimationFinish: function() {
           this.$.contentWrapper.classList.remove('animating');
           if (this.opened) {
@@ -16076,6 +16314,9 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
           }
         },
 
+        /**
+         * Called when an `iron-resize` event fires.
+         */
         _onIronResize: function() {
           var containedElement = this.containedElement;
           var scrollTop;
@@ -16098,14 +16339,17 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
           }
         },
 
+        /**
+         * Called when the `positionTarget` property changes.
+         */
         _positionTargetChanged: function() {
           this._updateOverlayPosition();
         },
 
-        _cancelAnimations: function() {
-          this.cancelAnimation();
-        },
-
+        /**
+         * Constructs the final animation config from different properties used
+         * to configure specific parts of the opening and closing animations.
+         */
         _updateAnimationConfig: function() {
           var animationConfig = {};
           var animations = [];
@@ -16133,12 +16377,21 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
           this.animationConfig = animationConfig;
         },
 
+        /**
+         * Prepares the dropdown for opening by updating measured layout
+         * values.
+         */
         _prepareDropdown: function() {
           this.sizingTarget = this.containedElement || this.sizingTarget;
           this._updateAnimationConfig();
           this._updateOverlayPosition();
         },
 
+        /**
+         * Updates the overlay position based on configured horizontal
+         * and vertical alignment, and re-memoizes these values for the sake
+         * of behavior in `IronFitBehavior`.
+         */
         _updateOverlayPosition: function() {
           this._positionRectMemo = null;
 
@@ -16164,21 +16417,31 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
           }
         },
 
+        /**
+         * Focuses the configured focus target.
+         */
         _focusContent: function() {
-          if (this.containedElement) {
-            this.containedElement.focus();
-          }
+          // NOTE(cdata): This is async so that it can attempt the focus after
+          // `display: none` is removed from the element.
+          this.async(function() {
+            if (this._focusTarget) {
+              this._focusTarget.focus();
+            }
+          });
         }
       });
     })();
   </script>
 </dom-module>
 
-<dom-module id="paper-material" assetpath="/bower_components/paper-material/">
+<dom-module id="paper-material" assetpath="bower_components/paper-material/">
   <style>
     :host {
       display: block;
       position: relative;
+    }
+
+    :host([animated]) {
       @apply(--shadow-transition);
     }
 
@@ -16243,7 +16506,7 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
     }
   });
 </script>
-<dom-module id="paper-menu-button" assetpath="/bower_components/paper-menu-button/">
+<dom-module id="paper-menu-button" assetpath="bower_components/paper-menu-button/">
   <style>
     :host {
       display: inline-block;
@@ -16284,9 +16547,9 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
     <div id="trigger" on-tap="open">
       <content select=".dropdown-trigger"></content>
     </div>
-    <iron-dropdown id="dropdown" opened="{{opened}}" horizontal-align="[[horizontalAlign]]" vertical-align="[[verticalAlign]]" horizontal-offset="[[horizontalOffset]]" vertical-offset="[[verticalOffset]]" open-animation-config="[[openAnimationConfig]]" close-animation-config="[[closeAnimationConfig]]" no-animations="[[noAnimations]]">
+    <iron-dropdown id="dropdown" opened="{{opened}}" horizontal-align="[[horizontalAlign]]" vertical-align="[[verticalAlign]]" horizontal-offset="[[horizontalOffset]]" vertical-offset="[[verticalOffset]]" open-animation-config="[[openAnimationConfig]]" close-animation-config="[[closeAnimationConfig]]" no-animations="[[noAnimations]]" focus-target="[[_dropdownContent]]">
       <paper-material class="dropdown-content">
-        <content select=".dropdown-content"></content>
+        <content id="content" select=".dropdown-content"></content>
       </paper-material>
     </iron-dropdown>
   </template>
@@ -16323,7 +16586,8 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
         opened: {
           type: Boolean,
           value: false,
-          notify: true
+          notify: true,
+          observer: '_openedChanged'
         },
 
         /**
@@ -16381,7 +16645,7 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
          * Set to true to disable automatically closing the dropdown after
          * a selection has been made.
          */
-        ignoreActivate: {
+        ignoreSelect: {
           type: Boolean,
           value: false
         },
@@ -16444,6 +16708,14 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
               }
             }];
           }
+        },
+
+        /**
+         * This is the element intended to be bound as the focus target
+         * for the `iron-dropdown` contained by `paper-menu-button`.
+         */
+        _dropdownContent: {
+          type: Object
         }
       },
 
@@ -16453,7 +16725,14 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
       },
 
       listeners: {
-        'iron-activate': '_onIronActivate'
+        'iron-select': '_onIronSelect'
+      },
+
+      /**
+       * The content element that is contained by the menu button, if any.
+       */
+      get contentElement() {
+        return Polymer.dom(this.$.content).getDistributedNodes()[0];
       },
 
       /**
@@ -16476,14 +16755,14 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
       },
 
       /**
-       * When an `iron-activate` event is received, the dropdown should
+       * When an `iron-select` event is received, the dropdown should
        * automatically close on the assumption that a value has been chosen.
        *
        * @param {CustomEvent} event A CustomEvent instance with type
-       * set to `"iron-activate"`.
+       * set to `"iron-select"`.
        */
-      _onIronActivate: function(event) {
-        if (!this.ignoreActivate) {
+      _onIronSelect: function(event) {
+        if (!this.ignoreSelect) {
           this.close();
         }
       },
@@ -16497,6 +16776,12 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
        */
       _openedChanged: function(opened, oldOpened) {
         if (opened) {
+          // TODO(cdata): Update this when we can measure changes in distributed
+          // children in an idiomatic way.
+          // We poke this property in case the element has changed. This will
+          // cause the focus target for the `iron-dropdown` to be updated as
+          // necessary:
+          this._dropdownContent = this.contentElement;
           this.fire('paper-dropdown-open');
         } else if (oldOpened != null) {
           this.fire('paper-dropdown-close');
@@ -16523,9 +16808,9 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
     Polymer.PaperMenuButton = PaperMenuButton;
   })();
 </script>
-<dom-module id="paper-dialog" assetpath="/bower_components/paper-dialog/">
+<dom-module id="paper-dialog" assetpath="bower_components/paper-dialog/">
 
-  <link rel="import" type="css" href="/bower_components/paper-dialog-behavior/paper-dialog-common.css">
+  <link rel="import" type="css" href="bower_components/paper-dialog-behavior/paper-dialog-common.css">
 
   <template>
     <content></content>
@@ -16577,7 +16862,7 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
 })();
 
 </script>
-<dom-module id="paper-dialog-scrollable" assetpath="/bower_components/paper-dialog-scrollable/">
+<dom-module id="paper-dialog-scrollable" assetpath="bower_components/paper-dialog-scrollable/">
 
   <style>
 
@@ -16688,63 +16973,61 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
 })();
 
 </script>
-<dom-module id="paper-button" assetpath="/bower_components/paper-button/">
-
-  <style>
-
-    :host {
-      display: inline-block;
-      position: relative;
-      box-sizing: border-box;
-      min-width: 5.14em;
-      margin: 0 0.29em;
-      background: transparent;
-      text-align: center;
-      font: inherit;
-      text-transform: uppercase;
-      outline: none;
-      border-radius: 3px;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      -webkit-user-select: none;
-      user-select: none;
-      cursor: pointer;
-      z-index: 0;
-
-      @apply(--paper-button);
-    }
-
-    .keyboard-focus {
-      font-weight: bold;
-    }
-
-    :host([disabled]) {
-      background: #eaeaea;
-      color: #a8a8a8;
-      cursor: auto;
-      pointer-events: none;
-
-      @apply(--paper-button-disabled);
-    }
-
-    :host([noink]) paper-ripple {
-      display: none;
-    }
-
-    paper-material {
-      border-radius: inherit;
-    }
-
-    .content > ::content * {
-      text-transform: inherit;
-    }
-
-    .content {
-      padding: 0.7em 0.57em
-    }
-  </style>
-
+<dom-module id="paper-button" assetpath="bower_components/paper-button/">
   <template>
+
+    <style>
+      :host {
+        display: inline-block;
+        position: relative;
+        box-sizing: border-box;
+        min-width: 5.14em;
+        margin: 0 0.29em;
+        background: transparent;
+        text-align: center;
+        font: inherit;
+        text-transform: uppercase;
+        outline-width: 0;
+        border-radius: 3px;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        -webkit-user-select: none;
+        user-select: none;
+        cursor: pointer;
+        z-index: 0;
+
+        @apply(--paper-button);
+      }
+
+      .keyboard-focus {
+        font-weight: bold;
+      }
+
+      :host([disabled]) {
+        background: #eaeaea;
+        color: #a8a8a8;
+        cursor: auto;
+        pointer-events: none;
+
+        @apply(--paper-button-disabled);
+      }
+
+      :host([noink]) paper-ripple {
+        display: none;
+      }
+
+      paper-material {
+        border-radius: inherit;
+      }
+
+      .content > ::content * {
+        text-transform: inherit;
+      }
+
+      .content {
+        padding: 0.7em 0.57em
+      }
+    </style>
 
     <paper-ripple></paper-ripple>
 
@@ -16753,13 +17036,10 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
     </paper-material>
 
   </template>
-
 </dom-module>
 
 <script>
-
   Polymer({
-
     is: 'paper-button',
 
     behaviors: [
@@ -16767,7 +17047,6 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
     ],
 
     properties: {
-
       /**
        * If true, the button should be styled with a shadow.
        */
@@ -16795,11 +17074,10 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
       return className;
     }
   });
-
 </script>
-<dom-module id="paper-radio-button" assetpath="/bower_components/paper-radio-button/">
+<dom-module id="paper-radio-button" assetpath="bower_components/paper-radio-button/">
 
-  <link rel="import" type="css" href="/bower_components/paper-radio-button/paper-radio-button.css">
+  <link rel="import" type="css" href="bower_components/paper-radio-button/paper-radio-button.css">
 
   <template>
 
@@ -16809,7 +17087,7 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
       <paper-ripple id="ink" class="circle" center="" checked$="[[checked]]"></paper-ripple>
     </div>
 
-    <div id="radioLabel" aria-hidden="true"><content></content></div>
+    <div id="radioLabel"><content></content></div>
 
   </template>
 
@@ -16818,7 +17096,8 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
       is: 'paper-radio-button',
 
       behaviors: [
-        Polymer.PaperInkyFocusBehavior
+        Polymer.PaperInkyFocusBehavior,
+        Polymer.IronCheckedElementBehavior
       ],
 
       hostAttributes: {
@@ -16840,38 +17119,30 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
          * @event iron-change
          */
 
-        /**
-         * Gets or sets the state, `true` is checked and `false` is unchecked.
-         */
-        checked: {
-          type: Boolean,
-          value: false,
-          reflectToAttribute: true,
-          notify: true,
-          observer: '_checkedChanged'
-        },
-
-        /**
-         * If true, the button toggles the active state with each tap or press
-         * of the spacebar.
-         */
-        toggles: {
-          type: Boolean,
-          value: true,
-          reflectToAttribute: true
-        }
+         ariaActiveAttribute: {
+           value: 'aria-checked'
+         }
       },
 
       attached: function() {
-        var trimmedText = Polymer.dom(this).textContent.trim();
-        if (trimmedText === '') {
-          this.$.radioLabel.hidden = true;
-        }
-        // Don't stomp over a user-set aria-label.
-        if (trimmedText !== '' && !this.getAttribute('aria-label')) {
-          this.setAttribute('aria-label', trimmedText);
-        }
         this._isReady = true;
+
+        // Don't stomp over a user-set aria-label.
+        if (!this.getAttribute('aria-label')) {
+          this.updateAriaLabel();
+        }
+      },
+
+      /**
+       * Update the checkbox aria-label. This is a temporary workaround not
+       * being able to observe changes in <content>
+       * (see: https://github.com/Polymer/polymer/issues/1773)
+       *
+       * Call this if you manually change the contents of the checkbox
+       * and want the aria-label to match the new contents.
+       */
+      updateAriaLabel: function() {
+        this.setAttribute('aria-label', Polymer.dom(this).textContent.trim());
       },
 
       _buttonStateChanged: function() {
@@ -16881,12 +17152,6 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
         if (this._isReady) {
           this.checked = this.active;
         }
-      },
-
-      _checkedChanged: function() {
-        this.setAttribute('aria-checked', this.checked ? 'true' : 'false');
-        this.active = this.checked;
-        this.fire('iron-change');
       }
     })
   </script>
@@ -17006,7 +17271,7 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
     },
   });
 </script>
-<dom-module id="paper-icon-button" assetpath="/bower_components/paper-icon-button/">
+<dom-module id="paper-icon-button" assetpath="bower_components/paper-icon-button/">
   <style>
 
     :host {
@@ -17092,7 +17357,7 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
     }
   });
 </script>
-<dom-module id="paper-fab" assetpath="/bower_components/paper-fab/">
+<dom-module id="paper-fab" assetpath="bower_components/paper-fab/">
   <style>
 
     :host {
@@ -17102,6 +17367,7 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
       -moz-user-select: none;
       -ms-user-select: none;
       -webkit-user-select: none;
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
       user-select: none;
       cursor: pointer;
 
@@ -17196,7 +17462,8 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
        */
       mini: {
         type: Boolean,
-        value: false
+        value: false,
+        reflectToAttribute: true
       }
     },
 
@@ -17210,9 +17477,9 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
 
   });
 </script>
-<dom-module id="paper-item" assetpath="/bower_components/paper-item/">
+<dom-module id="paper-item" assetpath="bower_components/paper-item/">
 
-  <link rel="import" type="css" href="/bower_components/paper-item/paper-item-shared.css">
+  <link rel="import" type="css" href="bower_components/paper-item/paper-item-shared.css">
 
   <style>
 
@@ -17249,7 +17516,7 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
 })();
 
 </script>
-<dom-module id="neon-animated-pages" assetpath="/bower_components/neon-animation/">
+<dom-module id="neon-animated-pages" assetpath="bower_components/neon-animation/">
 
   <style>
 
@@ -17448,7 +17715,7 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
 
 })();
 </script>
-<dom-module id="neon-animatable" assetpath="/bower_components/neon-animation/">
+<dom-module id="neon-animatable" assetpath="bower_components/neon-animation/">
 
   <style>
 
@@ -17477,7 +17744,7 @@ The `aria-labelledby` attribute will be set to the header element, if one exists
   });
 
 </script>
-<dom-module id="copyright-statement" assetpath="/polymer-elements/">
+<dom-module id="copyright-statement" assetpath="polymer-elements/">
   <style>
 
   </style>
