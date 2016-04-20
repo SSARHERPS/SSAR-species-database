@@ -1,24 +1,5 @@
 <?php
 
-if(!class_exists("DBHelper"))
-  {
-    require_once(dirname(__FILE__)."/db/DBHelper.php");
-  }
-if(!class_exists("Stronghash"))
-{
-    require_once(dirname(__FILE__)."/stronghash/php-stronghash.php");
-}
-if(!class_exists("Xml"))
-  {
-    require_once(dirname(__FILE__)."/xml/xml.php");
-  }
-if(!class_exists("Wysiwyg"))
-  {
-    require_once(dirname(__FILE__)."/wysiwyg/wysiwyg.php");
-    # Non-classed old things for project compatibility
-    include(dirname(__FILE__)."/wysiwyg/classic-wysiwyg.php");
-  }
-
 if(!function_exists('microtime_float'))
   {
     function microtime_float()
@@ -79,23 +60,7 @@ if(!function_exists('dirListPHP'))
     }
   }
 
-if(!function_exists('array_find'))
-  {
-    function array_find($needle, $haystack, $search_keys = false, $strict = false)
-    {
-      if(!is_array($haystack)) return false;
-      foreach($haystack as $key=>$value)
-        {
-          $what = ($search_keys) ? $key : $value;
-          if($strict)
-            {
-              if($value==$needle) return $key;
-            }
-          else if(@strpos($what, $needle)!==false) return $key;
-        }
-      return false;
-    }
-  }
+
 if(!function_exists('encode64'))
   {
     function encode64($data) { return base64_encode($data); }
@@ -112,46 +77,6 @@ if(!function_exists('encode64'))
     }
   }
 
-if(!function_exists('smart_decode64'))
-  {
-    function smart_decode64($data,$clean_this=true)
-    {
-      /*
-       * Take in a base 64 object, decode it. Pass back an array
-       * if it's a JSON, and sanitize the elements in any case.
-       */
-      if(is_null($data)) return null; // in case emptyness of data is meaningful
-      #$r = urldecode(base64_decode($data));
-      $r = base64_decode(urldecode($data));
-      if($r===false) return false;
-      $jd=json_decode($r,true);
-      $working= is_null($jd) ? $r:$jd;
-      if($clean_this)
-        {
-          try
-            {
-              // clean
-              if(is_array($working))
-                {
-                  foreach($working as $k=>$v)
-                    {
-                      $ck=DBHelper::staticSanitize($k);
-                      $cv=DBHelper::staticSanitize($v);
-                      $prepped_data[$ck]=$cv;
-                    }
-                }
-              else $prepped_data=DBHelper::staticSanitize($working);
-            }
-          catch (Exception $e)
-            {
-              // Something broke, probably an invalid data format.
-              return false;
-            }
-        }
-      else $prepped_data=$working;
-      return $prepped_data;
-    }
-  }
 
 if(!function_exists('strbool'))
   {
@@ -173,48 +98,6 @@ if(!function_exists('strbool'))
       }
       if(preg_match("/[0-1]/",$string)) return $string == 1 ? true:false;
       return false;
-    }
-  }
-
-if(!function_exists('shuffle_assoc'))
-  {
-    function shuffle_assoc(&$array)
-    {
-      $keys = array_keys($array);
-
-      shuffle($keys);
-
-      foreach($keys as $key) {
-        $new[$key] = $array[$key];
-      }
-
-      $array = $new;
-
-      return true;
-    }
-  }
-
-if(!function_exists('displayDebug'))
-  {
-    function displayDebug($string)
-    {
-      # alias
-      return debugDisplay($string);
-    }
-    function debugDisplay($string)
-    {
-      if(is_array($string))
-        {
-          foreach($string as $k=>$el)
-            {
-              if(is_bool($el)) $string[$k]="(bool) ".strbool($el);
-            }
-          $string=print_r($string,true);
-        }
-      $string=str_replace("&","&amp;",$string);
-      $string=str_replace("<","&lt;",$string);
-      $string=str_replace(">","&gt;",$string);
-      return "<pre style='background:white;color:black;'>".$string."</pre>";
     }
   }
 
@@ -255,36 +138,6 @@ if(!function_exists('deEscape'))
   {
     function deEscape($input) {
       return htmlspecialchars_decode(html_entity_decode(urldecode($input)));
-    }
-  }
-
-
-if(!function_exists('curPageURL'))
-  {
-
-    function curPageURL() {
-      $pageURL = 'http';
-      if ($_SERVER["HTTPS"] == "on") {$pageURL .= "s";}
-      $pageURL .= "://";
-      if ($_SERVER["SERVER_PORT"] != "80") {
-        $pageURL .= $_SERVER["SERVER_NAME"].":".$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"];
-      } else {
-        $pageURL .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
-      }
-      require_once(dirname(__FILE__).'/DBHelper.php');
-      return DBHelper::cleanInput($pageURL);
-    }
-  }
-
-if(!function_exists('appendQuery'))
-  {
-
-    function appendQuery($query) {
-      $url = curPageURL();
-      $url=str_replace("&","&amp;",$url);
-      if(strpos($url,"?")!==FALSE) $url .= "&amp;" . $query;
-      else $url .= "?" . $query;
-      return $url;
     }
   }
 
