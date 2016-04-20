@@ -49,3 +49,4 @@ errors/
 *.M
 *.out
 *.aux
+node_modules/
