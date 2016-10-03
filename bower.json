@@ -18,7 +18,7 @@
   "dependencies": {
     "iron-elements": "PolymerElements/iron-elements#^1.0.0",
     "paper-elements": "PolymerElements/paper-elements#^1.0.1",
-      "gold-elements": "PolymerElements/gold-elements#^1.0.0",
+    "gold-elements": "PolymerElements/gold-elements#^1.0.0",
     "polymer": "Polymer/polymer#^1.0.0",
     "bootstrap": "~3.3.5",
     "imagelightbox": "git://github.com/rejas/imagelightbox.git#~0.3.2",
@@ -34,5 +34,8 @@
     "markdown": "~0.5.0",
     "dropzone": "~4.0.1",
     "JavaScript-MD5": "~1.1.0"
+  },
+  "resolutions": {
+    "web-animations-js": "^2.2.0"
   }
 }
