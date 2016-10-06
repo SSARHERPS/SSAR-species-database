@@ -6876,6 +6876,7 @@ html >>> paper-dialog-scrollable {
 #modal-taxon-edit {
   position: fixed !important;
   max-height: 75vh;
+  top: 12.5vh;
 }
 paper-dialog#modal-taxon .buttons,
 paper-dialog#modal-taxon-edit .buttons {
