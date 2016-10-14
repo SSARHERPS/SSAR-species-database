@@ -433,7 +433,7 @@ smartUpperCasing = function(text) {
   try {
     for (m = 0, len = specialLowerCaseWords.length; m < len; m++) {
       word = specialLowerCaseWords[m];
-      searchUpper = word.toUpperCase();
+      searchUpper = word.toTitleCase();
       replaceLower = word.toLowerCase();
       r = new RegExp(searchUpper, "g");
       smartCased = smartCased.replace(r, replaceLower);

@@ -306,7 +306,7 @@ smartUpperCasing = (text) ->
     ]
   try
     for word in specialLowerCaseWords
-      searchUpper = word.toUpperCase()
+      searchUpper = word.toTitleCase()
       replaceLower = word.toLowerCase()
       r = new RegExp searchUpper, "g"
       smartCased = smartCased.replace r, replaceLower 
