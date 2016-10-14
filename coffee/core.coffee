@@ -303,13 +303,18 @@ smartUpperCasing = (text) ->
   specialLowerCaseWords = [
     "of"
     "and"
+    "for"
+    "the"
+    "a"
+    "an"
+    "to"
     ]
   try
     for word in specialLowerCaseWords
       searchUpper = word.toTitleCase()
       replaceLower = word.toLowerCase()
-      r = new RegExp searchUpper, "g"
-      smartCased = smartCased.replace r, replaceLower 
+      r = new RegExp " #{searchUpper} ", "g"
+      smartCased = smartCased.replace r, " #{replaceLower} "
   smartCased
 
 
