@@ -6878,6 +6878,11 @@ html >>> paper-dialog-scrollable {
   max-height: 75vh;
   top: 12.5vh;
 }
+#modal-taxon paper-dialog-scrollable#modal-taxon-editor,
+#modal-taxon-edit paper-dialog-scrollable#modal-taxon-editor {
+  max-height: 66vh;
+  overflow-y: scroll;
+}
 paper-dialog#modal-taxon .buttons,
 paper-dialog#modal-taxon-edit .buttons {
   background: #fff;
