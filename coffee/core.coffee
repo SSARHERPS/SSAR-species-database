@@ -304,11 +304,12 @@ smartUpperCasing = (text) ->
     "of"
     "and"
     ]
-  for word in specialLowerCaseWords
-    searchUpper = word.toUpperCase()
-    replaceLower = word.toLowerCase()
-    r = new RegExp searchUpper, "g"
-    smartCased = smartCased.replace r, replaceLower 
+  try
+    for word in specialLowerCaseWords
+      searchUpper = word.toUpperCase()
+      replaceLower = word.toLowerCase()
+      r = new RegExp searchUpper, "g"
+      smartCased = smartCased.replace r, replaceLower 
   smartCased
 
 

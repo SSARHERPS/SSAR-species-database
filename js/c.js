@@ -430,13 +430,15 @@ smartUpperCasing = function(text) {
   };
   smartCased = text.replace(/((?=((?!-)[\W\s\r\n]))\s[A-Za-z]|^[A-Za-z])/g, replacer);
   specialLowerCaseWords = ["of", "and"];
-  for (m = 0, len = specialLowerCaseWords.length; m < len; m++) {
-    word = specialLowerCaseWords[m];
-    searchUpper = word.toUpperCase();
-    replaceLower = word.toLowerCase();
-    r = new RegExp(searchUpper, "g");
-    smartCased = smartCased.replace(r, replaceLower);
-  }
+  try {
+    for (m = 0, len = specialLowerCaseWords.length; m < len; m++) {
+      word = specialLowerCaseWords[m];
+      searchUpper = word.toUpperCase();
+      replaceLower = word.toLowerCase();
+      r = new RegExp(searchUpper, "g");
+      smartCased = smartCased.replace(r, replaceLower);
+    }
+  } catch (_error) {}
   return smartCased;
 };
 
