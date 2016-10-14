@@ -973,7 +973,8 @@ downloadCSVList = ->
   #args = "filter=#{filterArg}"
   args = "q=*"
   d = new Date()
-  month = if d.getMonth().toString().length is 1 then "0#{d.getMonth() + 1}" else d.getMonth() + 1
+  adjMonth = d.getMonth() + 1
+  month = if adjMonth.toString().length is 1 then "0#{adjMonth}" else adjMonth
   day = if d.getDate().toString().length is 1 then "0#{d.getDate().toString()}" else d.getDate()
   dateString = "#{d.getUTCFullYear()}-#{month}-#{day}"
   $.get "#{searchParams.apiPath}", args, "json"
@@ -1126,7 +1127,8 @@ downloadHTMLList = ->
   ###
   animateLoad()
   d = new Date()
-  month = if d.getMonth().toString().length is 1 then "0#{d.getMonth() + 1}" else d.getMonth() + 1
+  adjMonth = d.getMonth() + 1
+  month = if adjMonth.toString().length is 1 then "0#{adjMonth}" else adjMonth
   day = if d.getDate().toString().length is 1 then "0#{d.getDate().toString()}" else d.getDate()
   dateString = "#{d.getUTCFullYear()}-#{month}-#{day}"
   htmlBody = """

@@ -299,7 +299,17 @@ String::toTitleCase = ->
 smartUpperCasing = (text) ->
   replacer = (match) ->
     return match.replace(match, match.toUpperCase())
-  text.replace(/((?=((?!-)[\W\s\r\n]))\s[A-Za-z]|^[A-Za-z])/g, replacer)
+  smartCased = text.replace(/((?=((?!-)[\W\s\r\n]))\s[A-Za-z]|^[A-Za-z])/g, replacer)
+  specialLowerCaseWords = [
+    "of"
+    "and"
+    ]
+  for word in specialLowerCaseWords
+    searchUpper = word.toUpperCase()
+    replaceLower = word.toLowerCase()
+    r = new RegExp searchUpper, "g"
+    smartCased = smartCased.replace r, replaceLower 
+  smartCased
 
 
 mapNewWindows = (stopPropagation = true) ->
@@ -1931,7 +1941,8 @@ downloadCSVList = ->
   #args = "filter=#{filterArg}"
   args = "q=*"
   d = new Date()
-  month = if d.getMonth().toString().length is 1 then "0#{d.getMonth() + 1}" else d.getMonth() + 1
+  adjMonth = d.getMonth() + 1
+  month = if adjMonth.toString().length is 1 then "0#{adjMonth}" else adjMonth
   day = if d.getDate().toString().length is 1 then "0#{d.getDate().toString()}" else d.getDate()
   dateString = "#{d.getUTCFullYear()}-#{month}-#{day}"
   $.get "#{searchParams.apiPath}", args, "json"
@@ -2084,7 +2095,8 @@ downloadHTMLList = ->
   ###
   animateLoad()
   d = new Date()
-  month = if d.getMonth().toString().length is 1 then "0#{d.getMonth() + 1}" else d.getMonth() + 1
+  adjMonth = d.getMonth() + 1
+  month = if adjMonth.toString().length is 1 then "0#{adjMonth}" else adjMonth
   day = if d.getDate().toString().length is 1 then "0#{d.getDate().toString()}" else d.getDate()
   dateString = "#{d.getUTCFullYear()}-#{month}-#{day}"
   htmlBody = """

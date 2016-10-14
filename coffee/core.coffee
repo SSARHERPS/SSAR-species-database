@@ -299,7 +299,17 @@ String::toTitleCase = ->
 smartUpperCasing = (text) ->
   replacer = (match) ->
     return match.replace(match, match.toUpperCase())
-  text.replace(/((?=((?!-)[\W\s\r\n]))\s[A-Za-z]|^[A-Za-z])/g, replacer)
+  smartCased = text.replace(/((?=((?!-)[\W\s\r\n]))\s[A-Za-z]|^[A-Za-z])/g, replacer)
+  specialLowerCaseWords = [
+    "of"
+    "and"
+    ]
+  for word in specialLowerCaseWords
+    searchUpper = word.toUpperCase()
+    replaceLower = word.toLowerCase()
+    r = new RegExp searchUpper, "g"
+    smartCased = smartCased.replace r, replaceLower 
+  smartCased
 
 
 mapNewWindows = (stopPropagation = true) ->
