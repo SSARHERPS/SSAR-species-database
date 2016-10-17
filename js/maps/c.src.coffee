@@ -315,6 +315,19 @@ smartUpperCasing = (text) ->
       replaceLower = word.toLowerCase()
       r = new RegExp " #{searchUpper} ", "g"
       smartCased = smartCased.replace r, " #{replaceLower} "
+  try
+    ###
+    # Uppercase the second part of a dash
+    #
+    # See:
+    # http://regexr.com/3ef57
+    #
+    # https://github.com/SSARHERPS/SSAR-species-database/issues/87#issuecomment-254108675
+    ###
+    if smartCased.match /([a-zA-Z]+ )?[a-zA-Z]+-([a-z]+)( [a-zA-Z]+)?/m
+      secondWord = smartCased.replace /([a-zA-Z]+ )?[a-zA-Z]+-([a-z]+)( [a-zA-Z]+)?/mg, "$2"
+      secondWordCased = secondWord.toTitleCase()
+      smartCased = smartCased.replace secondWord, secondWordCased
   smartCased
 
 
