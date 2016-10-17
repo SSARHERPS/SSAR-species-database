@@ -17,6 +17,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-string-replace')
   grunt.loadNpmTasks('grunt-postcss')
   grunt.loadNpmTasks('grunt-contrib-less')
+  grunt.loadNpmTasks("grunt-phplint")
   # https://github.com/Polymer/grunt-vulcanize
   grunt.loadNpmTasks('grunt-vulcanize')
   srcBower =
@@ -163,6 +164,10 @@ module.exports = (grunt) ->
       app:
         files: ["app.html"]
         tasks: ["bootlint","shell:vulcanize","uglify:vulcanize","string-replace:vulcanize"]
+    phplint:
+      root: ["*.php", "helpers/*.php", "core/*/*.php", "core/*.php"]
+      admin: ["admin/*.php", "admin/handlers/*.php", "admin/core/*.php", "admin/core/*/*.php"]
+      pdf: ["pdf/*.php"]
     bootlint:
       options:
         stoponerror: false
