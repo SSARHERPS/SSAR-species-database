@@ -1328,6 +1328,17 @@ downloadHTMLList = ->
         $("#download-html-file").replaceWith(dialogHtml)
       $("#download-chooser").get(0).close()
       safariDialogHelper("#download-html-file")
+      $.post "pdf/pdfwrapper.php", "html=#{encodeURIComponent(htmlBody)}", "json"
+      .done (result) ->
+        console.debug "PDF result", result
+        if result.status
+          pdfDownloadPath = "#{uri.urlString}#{result.file}"
+          console.debug pdfDownloadPath
+        else
+          console.error "Couldn't make PDF file"
+        false
+      .error (result, status) ->
+        console.error "Wasn't able to fetch PDF"
     catch e
       stopLoadError("There was a problem creating your file. Please try again later.")
       console.error("Exception in downloadHTMLList() - #{e.message}")

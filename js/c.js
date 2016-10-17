@@ -2439,7 +2439,20 @@ downloadHTMLList = function() {
         $("#download-html-file").replaceWith(dialogHtml);
       }
       $("#download-chooser").get(0).close();
-      return safariDialogHelper("#download-html-file");
+      safariDialogHelper("#download-html-file");
+      return $.post("pdf/pdfwrapper.php", "html=" + (encodeURIComponent(htmlBody)), "json").done(function(result) {
+        var pdfDownloadPath;
+        console.debug("PDF result", result);
+        if (result.status) {
+          pdfDownloadPath = "" + uri.urlString + result.file;
+          console.debug(pdfDownloadPath);
+        } else {
+          console.error("Couldn't make PDF file");
+        }
+        return false;
+      }).error(function(result, status) {
+        return console.error("Wasn't able to fetch PDF");
+      });
     } catch (_error) {
       e = _error;
       stopLoadError("There was a problem creating your file. Please try again later.");
