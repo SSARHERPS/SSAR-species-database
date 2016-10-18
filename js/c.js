@@ -429,7 +429,7 @@ smartUpperCasing = function(text) {
     return match.replace(match, match.toUpperCase());
   };
   smartCased = text.replace(/((?=((?!-)[\W\s\r\n]))\s[A-Za-z]|^[A-Za-z])/g, replacer);
-  specialLowerCaseWords = ["of", "and", "for", "the", "a", "an", "to"];
+  specialLowerCaseWords = ["a", "an", "and", "at", "but", "by", "for", "in", "nor", "of", "on", "or", "out", "so", "to", "the", "up", "yet"];
   try {
     for (m = 0, len = specialLowerCaseWords.length; m < len; m++) {
       word = specialLowerCaseWords[m];
@@ -445,7 +445,7 @@ smartUpperCasing = function(text) {
      * Uppercase the second part of a dash
      *
      * See:
-     * http://regexr.com/3ef57
+     * http://regexr.com/3ef62
      *
      * https://github.com/SSARHERPS/SSAR-species-database/issues/87#issuecomment-254108675
      */

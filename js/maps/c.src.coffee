@@ -300,14 +300,28 @@ smartUpperCasing = (text) ->
   replacer = (match) ->
     return match.replace(match, match.toUpperCase())
   smartCased = text.replace(/((?=((?!-)[\W\s\r\n]))\s[A-Za-z]|^[A-Za-z])/g, replacer)
+  # List of words that should be lower-cased in a title sentence
+  # Uses the Associated Press simple list
+  # http://www.quickanddirtytips.com/education/grammar/capitalizing-titles?page=2
   specialLowerCaseWords = [
-    "of"
-    "and"
-    "for"
-    "the"
     "a"
     "an"
+    "and"
+    "at"
+    "but"
+    "by"
+    "for"
+    "in"
+    "nor"
+    "of"
+    "on"
+    "or"
+    "out"
+    "so"
     "to"
+    "the"
+    "up"
+    "yet"
     ]
   try
     for word in specialLowerCaseWords
@@ -320,7 +334,7 @@ smartUpperCasing = (text) ->
     # Uppercase the second part of a dash
     #
     # See:
-    # http://regexr.com/3ef57
+    # http://regexr.com/3ef62
     #
     # https://github.com/SSARHERPS/SSAR-species-database/issues/87#issuecomment-254108675
     ###
