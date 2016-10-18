@@ -449,8 +449,8 @@ smartUpperCasing = function(text) {
      *
      * https://github.com/SSARHERPS/SSAR-species-database/issues/87#issuecomment-254108675
      */
-    if (smartCased.match(/([a-zA-Z]+ )?[a-zA-Z]+-([a-z]+)( [a-zA-Z]+)?/m)) {
-      secondWord = smartCased.replace(/([a-zA-Z]+ )?[a-zA-Z]+-([a-z]+)( [a-zA-Z]+)?/mg, "$2");
+    if (smartCased.match(/([a-zA-Z]+ )*[a-zA-Z]+-([a-z]+)( [a-zA-Z]+)*/m)) {
+      secondWord = smartCased.replace(/([a-zA-Z]+ )*[a-zA-Z]+-([a-z]+)( [a-zA-Z]+)*/mg, "$2");
       secondWordCased = secondWord.toTitleCase();
       smartCased = smartCased.replace(secondWord, secondWordCased);
     }
