@@ -1,9 +1,18 @@
 <?php
+# $debug = true;
+
+
+if ($debug) {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+    error_log('PDFwrapper is running in debug mode!');
+}
+
 parse_str($_SERVER['QUERY_STRING'], $_GET);
 $_REQUEST = array_merge($_REQUEST, $_GET, $_POST);
 $htmlBuildable = $_REQUEST["html"];
 
-require_once dirname(__FILE__)."../core/core.php";
+require_once dirname(__FILE__)."/../core/core.php";
 
 $buildLead = "data:text/html;charset=utf-8,";
 if(strpos($htmlBuildable, $buildLead) !== false) {
@@ -19,6 +28,7 @@ $pdfResponse = array();
 
 $filePath = "pdf-gen/".microtime_float()."-to-gen.html";
 $bits = file_put_contents($filePath, $html);
+chmod($filePath, 0777);
 $pdfResponse["html_bits_written"] = $bits;
 
 # check OS bits
@@ -27,19 +37,37 @@ $pathBits = PHP_INT_SIZE == 8 ? "64" : "32";
 $pdfResponse["OS_Architecture"] = $pathBits;
 
 try {
-    $execPath = $pathBits . "/bin/wkhtmltopdf";
+    #$execPath = dirname(__FILE__)."/" . $pathBits . "/bin/wkhtmltopdf";
+    $execPath = "./" . $pathBits . "/bin/wkhtmltopdf";
     $destFile = "pdf-gen/ssar-common-names-pdf-".microtime_float().".pdf";
     $pdfResponse["file"] = $destFile;
-    $execCmd = $execPath . " " . $filePath . " ".$destFile;
+    $execCmd = $execPath . " ./" . $filePath . " ".$destFile . " 2>&1";
     # Exec shell
     # https://secure.php.net/manual/en/function.shell-exec.php
     # http://wkhtmltopdf.org/
-    $shellResponse = shell_exec($execCmd);
-    $pdfResponse["status"] = true;
+    $shellResponse = array();
+    $shellReturn = "";
+    exec($execCmd, $shellResponse, $shellReturn);
+    #$shellResponse = system($execCmd);
+    #$shellResponse = passthru($execCmd);
+    #$shellResponse = shell_exec($execCmd);
     $pdfResponse["response"] = $shellResponse;
-    
+    $pdfResponse["return"] = $shellReturn;
+    if(empty($shellResponse)) {
+        $pdfResponse["status"] = false;
+        $pdfResponse["error"] = "NO_SHELL_RESPONSE";
+        $pdfResponse["cmd"] = $execCmd;
+    } else {
+        if(strpos($shellResponse, "Permission denied") !== false) {
+            $pdfResponse["status"] = false;
+            $pdfResponse["error"] = "PERMISSION_DENIED";
+            $pdfResponse["cmd"] = $execCmd;
+        } else {
+            $pdfResponse["status"] = true;
+        }
+    }
     # Check the files in pdf-gen, remove all over 24hrs old
-    
+
 
 } catch (Exception $e) {
     $pdfResponse["status"] = false;
