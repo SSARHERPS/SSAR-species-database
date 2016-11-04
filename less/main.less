@@ -164,6 +164,11 @@ paper-dialog#modal-taxon .buttons, paper-dialog#modal-taxon-edit .buttons {
     // See
     // https://github.com/SSARHERPS/SSAR-species-database/issues/79
     min-width: 95% !important; 
+    @media(max-width: @screen-sm-max) {
+        position: relative;
+        overflow-y: scroll;
+        max-height: 70vh!important;
+    }
 }
 
 @{hc} .good-location {
