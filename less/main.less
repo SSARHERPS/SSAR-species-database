@@ -147,6 +147,9 @@ paper-dialog-scrollable {
     position:fixed !important;
     max-height:75vh; // For mobile
     top: 12.5vh;
+    @media(max-width: @screen-sm-max) {
+        top: 6.5vh;
+    }
     paper-dialog-scrollable#modal-taxon-editor {
         max-height: 66vh;
         overflow-y: scroll;
@@ -163,11 +166,11 @@ paper-dialog#modal-taxon .buttons, paper-dialog#modal-taxon-edit .buttons {
     // 48px.
     // See
     // https://github.com/SSARHERPS/SSAR-species-database/issues/79
-    min-width: 95% !important; 
+    min-width: 95% !important;
     @media(max-width: @screen-sm-max) {
         position: relative;
         overflow-y: scroll;
-        max-height: 70vh!important;
+        max-height: 62vh!important;
     }
 }
 
@@ -314,7 +317,7 @@ footer {
     @{hc} #modal-taxon {
         #modal-taxon();
     }
-    
+
     html /deep/ #modal-taxon {
         #modal-taxon();
     }
@@ -324,8 +327,9 @@ footer {
 @media (max-width: 767px) {
     #modal-taxon {
         min-width: 85vw;
+        left: -3.25vw;
     }
-    
+
   @{hc} .hidden-xs {
     display: none !important;
   }
