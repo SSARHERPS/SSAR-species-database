@@ -42,9 +42,12 @@ try {
     $destFile = "pdf-gen/ssar-common-names-pdf-".microtime_float().".pdf";
     $pdfResponse["file"] = $destFile;
     $execCmd = $execPath . " ./" . $filePath . " ".$destFile . " 2>&1";
+    /***
     # Exec shell
     # https://secure.php.net/manual/en/function.shell-exec.php
     # http://wkhtmltopdf.org/
+    # https://github.com/wkhtmltopdf/wkhtmltopdf
+    ***/
     $shellResponse = array();
     $shellReturn = "";
     exec($execCmd, $shellResponse, $shellReturn);
