@@ -1,6 +1,6 @@
 {
   "name": "SSAR-species-database",
-  "version": "1.2.1",
+  "version": "1.2.5",
   "description": "SSAR Common Names Database",
   "main": "commonnamnes_api.php",
   "scripts": {
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tigerhawkvok/SSAR-species-database.git"
+    "url": "https://github.com/SSARHERPS/SSAR-species-database.git"
   },
   "author": "Philip Kahn <tigerhawkvok@gmail.com>",
   "license": "GPL-3.0",
   "bugs": {
-    "url": "https://github.com/tigerhawkvok/SSAR-species-database/issues"
+    "url": "https://github.com/SSARHERPS/SSAR-species-database/issues"
   },
-  "homepage": "https://github.com/tigerhawkvok/SSAR-species-database",
+  "homepage": "https://github.com/SSARHERPS/SSAR-species-database",
   "devDependencies": {
     "autoprefixer-core": "^5.2.1",
     "bootlint": "^0.12.0",
