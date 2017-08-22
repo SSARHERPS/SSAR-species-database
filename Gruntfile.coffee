@@ -64,9 +64,6 @@ module.exports = (grunt) ->
         files:
           "build.html": "index.html"
     uglify:
-      options:
-        mangle:
-          except:['jQuery']
       vulcanize:
         options:
           sourceMap:true
