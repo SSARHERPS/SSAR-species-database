@@ -80,6 +80,9 @@ if($debug === true)
   {
     /*if($r===true) echo "<p>(Database OK)</p>";
       else echo "<p>(Database Error - ' $r ')</p>";*/
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+error_log('login is running in debug mode!');
     echo "<p>Visiting $baseurl on '$shorturl' with a human domain '$domain'</p>";
     echo displayDebug($_REQUEST);
     echo "<p>".displayDebug(DBHelper::staticSanitize('tigerhawk_vok-goes.special@gmail.com'))."</p>";
@@ -444,6 +447,7 @@ else if($_REQUEST['q']=='create')
     // Create a new user
     // display login form
     // include a captcha and honeypot
+if ($debug === true) echo "<p>Creation branch</p>";
     $login_output .= "<link rel='stylesheet' type='text/css' href='".$relative_path."css/otp.min.css'/>";
     if(!empty($recaptcha_public_key) && !empty($recaptcha_private_key))
       {
@@ -531,6 +535,7 @@ else if($_REQUEST['q']=='create')
 
         if($_REQUEST['s']=='next')
           {
+if ($debug === true) echo "<p>Submission subbranch</p>";
             $email_preg="/[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2}|com|org|net|edu|gov|mil|biz|info|mobi|name|aero|asia|jobs|museum)\b/";
             if(!empty($_POST['honey']))
               {
@@ -544,24 +549,36 @@ else if($_REQUEST['q']=='create')
               "response" => $_POST["g-recaptcha-response"],
               "remoteip" => $_SERVER["REMOTE_ADDR"]
             );
+if ($debug === true) echo "<p>about to post the recaptcha</p>";
             $resp = json_decode(do_post_request($recaptcha_uri,$recaptcha_params),true);
-
+if ($debug === true) {
+echo "<p>Full recaptcha response:</p>";
+echo displayDebug ($resp);
+}
             if (!$resp["success"] && !$debug)
               {
                 // What happens when the CAPTCHA was entered incorrectly
                 $login_output.=("The reCAPTCHA wasn't entered correctly. Go back and try it again." .
-                "(reCAPTCHA said: " . $resp["error-codes"] . ")");
+                "(reCAPTCHA said: " . $resp["error-codes"][0] . ")");
               }
             else
               {
+if (!$resp["success"] && $debug) echo "<p>Allowing creation despite reCAPTCHA failure in debug mode</p>";
                 // Successful verification
                 if(preg_match($email_preg,$_POST['username']))
                   {
+if ($debug === true) echo "<p>Valid regex match against username</p>";
                     if($_POST['password']==$_POST['password2'])
                       {
+if ($debug === true) echo "<p>Confirm password match</p>";
                         if(preg_match('/(?=^.{'.$minimum_password_length.',}$)((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/',$_POST['password']) || strlen($_POST['password'])>=$password_threshold_length) // validate email, use in validation to notify user.
                           {
+if ($debug === true) echo "<p>Password meets requirements</p>";
                             $res=$user->createUser($_POST['username'],$_POST['password'],array($_POST['fname'],$_POST['lname']),$_POST['dname'],$_POST['phone']);
+if ($debug === true) {
+echo "<p>Creation response:</p>";
+echo displayDebug($res);
+}
                             if($res["status"])
                               {
                                 $login_output.="<h3>".$res["message"]."</h3>"; //jumpto1
